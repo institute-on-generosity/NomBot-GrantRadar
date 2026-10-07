@@ -8,7 +8,7 @@ import { sources, type Source } from "./sources";
 export type Requirement = { label: string; pattern: string }; // pattern: Postgres/JS regex alternation
 export type Sort = "match" | "largest" | "smallest";
 export type SearchInput = {
-  q: string; semantic?: string; states?: string[]; maxRevenue?: number; ntee?: string;
+  q: string; semantic?: string; states?: string[]; cities?: string[]; maxRevenue?: number; ntee?: string; nteeHint?: string;
   requirements?: Requirement[]; includeInactive?: boolean; sort?: Sort; limit?: number; offset?: number;
 };
 
@@ -21,7 +21,7 @@ export type Result = {
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
 };
 
-export async function search({ q, semantic, states = [], maxRevenue, ntee, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
@@ -44,7 +44,8 @@ export async function search({ q, semantic, states = [], maxRevenue, ntee, requi
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
        FROM orgs o LEFT JOIN t USING (ein) LEFT JOIN f USING (ein)
        WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
-         AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')),
+         AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
+         AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))),  -- headquarters city
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
@@ -59,7 +60,8 @@ export async function search({ q, semantic, states = [], maxRevenue, ntee, requi
        FROM v
        WHERE ($5::bigint IS NULL OR rev <= $5)
          AND ($9 OR rev IS NULL OR rev > 0))   -- hide $0 / inactive orgs unless asked
-     SELECT *, coalesce(sim, 0) + least(kw * 5, 0.5) AS score,
+     SELECT *, coalesce(sim, 0) + least(kw * 5, 0.5)
+              + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END AS score,  -- guessed cause: a nudge, not a filter
             count(*) OVER () AS total, count(*) FILTER (WHERE exact) OVER () AS exact_total
      FROM scored WHERE $1 = '' OR kw > 0 OR sim IS NOT NULL OR exact
      ORDER BY exact DESC NULLS LAST,
@@ -67,7 +69,7 @@ export async function search({ q, semantic, states = [], maxRevenue, ntee, requi
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null],
   );
   return {
     total: Number(rows[0]?.total ?? 0),
@@ -88,7 +90,7 @@ export async function search({ q, semantic, states = [], maxRevenue, ntee, requi
       exact: r.exact,
       score: Math.round(Number(r.score) * 100) / 100,
       data_completeness: r.has_text && r.has_fin ? "full" : r.has_text || r.has_fin ? "partial" : "basic",
-      sources: sources({ ein: r.ein, state: r.state, revSrc: r.rev_src, finForm: r.fin_form, objectId: r.object_id, textYear: r.text_year, textForm: r.text_form }),
+      sources: sources({ ein: r.ein, state: r.state, revSrc: r.rev_src, finForm: r.fin_form, finYear: r.fin_year, objectId: r.object_id, textYear: r.text_year, textForm: r.text_form }),
     })),
   };
 }

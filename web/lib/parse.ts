@@ -8,7 +8,9 @@ import type { Requirement } from "./search";
 import { z } from "zod";
 
 export type Filters = {
-  q: string; semantic: string; states: string[]; maxRevenue?: number; ntee?: string;
+  q: string; semantic: string; states: string[]; cities: string[]; maxRevenue?: number;
+  ntee?: string;      // cause the user picked: a hard filter
+  nteeHint?: string;  // cause NomBot guessed from the question: a ranking boost only (orgs are often coded elsewhere)
   requirements: Requirement[]; parser: "llm" | "rules";
   topic: string;        // what the organizations do, for display
   placeLabel?: string;  // the place as the user said it ("Appalachia"), for display
@@ -24,7 +26,8 @@ const REQS: [RegExp, string, string[]][] = [
 
 const SYSTEM = `You turn a plain-language US nonprofit search into database filters.
 - topic: what the organizations do, as search words, without places or budget.
-- states: two-letter codes; expand named regions (e.g. Appalachia).
+- states: two-letter codes; expand named regions (e.g. Appalachia). When the user names a city, include its state.
+- cities: city names exactly as the user wrote them (e.g. "Louisville"), only for an actual city or town; empty for states, regions or counties.
 - placeLabel: the place as the user said it ("Appalachia", "Kentucky"), or null.
 - ntee: an NTEE prefix ONLY when the main cause clearly maps: food banks/pantries K3, animals D, arts A, education B, environment C, health E, mental health F, employment J, housing L, youth development O, human services P. Otherwise null.
 - requirements: specific activities the organization MUST do beyond its main cause (e.g. "that do workforce training"). Each gets 4-8 lowercase words or short phrases likely to appear in IRS mission text. Empty if none.`;
@@ -32,6 +35,7 @@ const SYSTEM = `You turn a plain-language US nonprofit search into database filt
 const schema = z.object({
   topic: z.string(),
   states: z.array(z.string()),
+  cities: z.array(z.string()),
   placeLabel: z.string().nullable(),
   maxRevenue: z.number().nullable().describe("Upper revenue/budget limit in dollars, or null"),
   ntee: z.string().nullable(),
@@ -43,7 +47,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse", 1000, 24 * 3600_000);
+const cached = memo<Filters>("parse:v3", 1000, 24 * 3600_000); // bump the name when Filters changes shape
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }
@@ -65,7 +69,8 @@ async function parseFresh(question: string): Promise<Filters> {
       if (o) {
         const states = o.states.map((s) => s.toUpperCase()).filter((s) => /^[A-Z]{2}$/.test(s));
         const requirements = o.requirements.filter((r) => r.label.trim()).map((r) => toReq(r.label, r.synonyms));
-        return { q: o.topic, semantic: o.topic, states, maxRevenue: o.maxRevenue ?? undefined, ntee: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined };
+        const cities = o.cities.map((c) => c.trim().toUpperCase()).filter(Boolean);
+        return { q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined };
       }
     } catch (err) {
       console.error("Claude parse failed; using rule-based parser", err);
@@ -92,5 +97,5 @@ async function parseFresh(question: string): Promise<Filters> {
   const words = (t: string) => t.replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((w) => w && !stop.has(w)).join(" ");
   const q = words(rest);
   const semantic = words(topic);
-  return { q, semantic, states: [...states], maxRevenue, ntee, requirements, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined };
+  return { q, semantic, states: [...states], cities: [], maxRevenue, nteeHint: ntee, requirements, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined };
 }

@@ -188,7 +188,7 @@ const lines = [
   ...[...rows].sort((a, b) => (precision(a) ?? 2) - (precision(b) ?? 2)).map((r) => {
     const p = precision(r);
     const f = r.filters;
-    const readAs = [f.topic, f.states.length ? f.states.join(",") : null, f.maxRevenue ? `≤$${f.maxRevenue.toLocaleString("en-US")}` : null, f.ntee ? `cause ${f.ntee}` : null, ...f.requirements.map((x) => `must: ${x}`)].filter(Boolean).join(" · ");
+    const readAs = [f.topic, f.cities?.length ? f.cities.join(",") : null, f.states.length ? f.states.join(",") : null, f.maxRevenue ? `≤$${f.maxRevenue.toLocaleString("en-US")}` : null, f.ntee ? `cause ${f.ntee}` : null, f.nteeHint ? `likely ${f.nteeHint}` : null, ...f.requirements.map((x) => `must: ${x}`)].filter(Boolean).join(" · ");
     return `| ${p == null ? "—" : pct(p)} | ${r.q} | ${readAs.replace(/\|/g, "/")} | ${r.total} | ${r.ms}ms |`;
   }),
   "",

@@ -71,12 +71,24 @@ function score(question: string, results: Result[]) {
   }));
 }
 
-// Search, then score the top POOL candidates and order by score (ties and unscored keep search order).
-export async function rankedSearch(question: string, filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }) {
-  const res = await search({ ...filters, includeInactive, limit: Math.max(limit, POOL) });
+type Found = Awaited<ReturnType<typeof search>>;
+
+// Step 1: search candidates (fast, ~0.5s): enough for the page to show results right away.
+export function searchCandidates(filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }) {
+  return search({ ...filters, includeInactive, limit: Math.max(limit, POOL) });
+}
+
+// Step 2: score the top POOL candidates and order by score (ties and unscored keep search order).
+export async function rank(question: string, res: Found, limit: number) {
   const scores = await score(question, res.results.slice(0, POOL));
   const ranked: Ranked[] = res.results.map((r) => ({ ...r, relevance: scores.get(r.ein) ?? null }));
   const order = new Map(ranked.map((r, i) => [r.ein, i]));
   ranked.sort((a, b) => (b.relevance?.score ?? -1) - (a.relevance?.score ?? -1) || order.get(a.ein)! - order.get(b.ein)!);
-  return { ...res, results: ranked.slice(0, limit), scored: scores.size > 0 };
+  return { results: ranked.slice(0, limit), scored: scores.size > 0 };
+}
+
+// Both steps, for callers that want the final order in one go (CSV export, eval).
+export async function rankedSearch(question: string, filters: Filters, opts: { limit: number; includeInactive?: boolean }) {
+  const res = await searchCandidates(filters, opts);
+  return { ...res, ...(await rank(question, res, opts.limit)) };
 }

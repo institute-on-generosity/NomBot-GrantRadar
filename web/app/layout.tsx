@@ -18,13 +18,14 @@ export const viewport: Viewport = {
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#ffffff" }, { media: "(prefers-color-scheme: dark)", color: "#000000" }],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, panel }: LayoutProps<"/">) {
   return (
     <html lang="en" className={geistMono.variable}>
       <body>
         <div className="shell">
           <Sidebar />
           <div className="content">{children}</div>
+          {panel}
         </div>
       </body>
     </html>

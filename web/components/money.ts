@@ -1,4 +1,6 @@
+// Compact dollars: $1.2M, $59K, $840; losses get a leading minus (−$234K).
 export function money(n: number) {
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  return n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`;
+  const a = Math.abs(n), sign = n < 0 ? "−" : "";
+  if (a >= 1e6) return `${sign}$${(a / 1e6).toFixed(1)}M`;
+  return a >= 1e3 ? `${sign}$${Math.round(a / 1e3)}K` : `${sign}$${a}`;
 }

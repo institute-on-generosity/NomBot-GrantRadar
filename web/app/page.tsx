@@ -4,13 +4,16 @@ import { FilterChips, type Chip } from "@/components/FilterChips";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
+import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
+import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
 import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
-import { rankedSearch } from "@/lib/rerank";
+import { rank, searchCandidates, type Ranked } from "@/lib/rerank";
+import type { Result } from "@/lib/search";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string } & Overrides;
 type SearchParams = Promise<Params>;
@@ -50,38 +53,62 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, max: p.max, cause: p.cause, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, max: p.max, cause: p.cause, drop: p.drop };
   const filters = applyOverrides(await parseQuestion(question), overrides);
-  const res = await rankedSearch(question, filters, { includeInactive, limit: n });
+  // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
+  const res = await searchCandidates(filters, { includeInactive, limit: n });
+  const ranking = rank(question, res, n);
   const patterns = filters.requirements.map((r) => r.pattern);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
   const shown = describeFilters(filters);
   const must = filters.requirements.map((r) => r.label).join(" + ");
+  const rowProps = { question, patterns, back, focus, must, shown };
 
   return (
     <>
       <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
-      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
+      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
-      <div className="bar"><span>{res.total} results</span>{res.scored && <span>Most relevant first</span>}</div>
+      <ResearchBuddy key={url(p, { focus: "" })} question={question} overrides={overrides} all={includeInactive} back={back} />
 
       {res.exact_total === 0 && <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>}
-      {res.results.map((r, i) => (
-        <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-          relevance={r.relevance} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
-      ))}
+      <Suspense fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
+        <RankedList ranking={ranking} total={res.total} {...rowProps} />
+      </Suspense>
 
       <div className="more">
         {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
         <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
-      <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
       <Footer />
     </>
+  );
+}
+
+type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown> };
+
+async function RankedList({ ranking, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; total: number }) {
+  const { results, scored } = await ranking;
+  return <ResultList rows={results} total={total} scored={scored} {...p} />;
+}
+
+// pending: search order, while relevance scores are still being computed.
+function ResultList({ rows, total, pending = false, scored = false, question, patterns, back, focus, must, shown }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean }) {
+  return (
+    <div className={`results${pending ? " ranking" : ""}`}>
+      <div className="bar">
+        <span>{total} results</span>
+        {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first</span>}
+      </div>
+      {rows.map((r, i) => (
+        <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
+          relevance={"relevance" in r ? r.relevance : null} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
+      ))}
+    </div>
   );
 }
 
@@ -93,10 +120,14 @@ function filterChips(f: Filters, p: Params): Chip[] {
     ...(f.topic ? [{ key: "topic", kind: "topic", label: f.topic } as Chip] : []),
     {
       key: "place", kind: f.states.length ? "set" : "unset",
-      label: f.placeLabel ?? (f.states.length > 3 ? `${f.states.length} states` : f.states.join(", ") || "Any state"),
-      removeHref: f.states.length ? go({ st: "all" }) : undefined,
-      options: [{ label: "Any state", href: go({ st: "all" }), on: !f.states.length },
-        ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: f.states.length === 1 && f.states[0] === code }))],
+      label: f.cities.length
+        ? `${f.cities.map(titleCase).join(", ")}${f.states.length === 1 ? `, ${f.states[0]}` : ""}`
+        : f.placeLabel ?? (f.states.length > 3 ? `${f.states.length} states` : f.states.join(", ") || "Any state"),
+      removeHref: f.cities.length ? go({ city: "any" }) : f.states.length ? go({ st: "all" }) : undefined,
+      options: [
+        ...(f.cities.length && f.states.length === 1 ? [{ label: `Anywhere in ${LOADED_STATES.find(([c]) => c === f.states[0])?.[1] ?? f.states[0]}`, href: go({ city: "any" }), on: false }] : []),
+        { label: "Any state", href: go({ st: "all" }), on: !f.states.length },
+        ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: !f.cities.length && f.states.length === 1 && f.states[0] === code }))],
     },
     {
       key: "budget", kind: f.maxRevenue ? "set" : "unset",

@@ -1,6 +1,7 @@
 // Everything NomBot knows about one organization, with sources.
 import { db } from "./db";
 import { nteeLabel } from "./ntee";
+import { soiViewerUrl } from "./soi";
 import { propublicaOrg, sources, type Source } from "./sources";
 
 export async function getOrg(einParam: string) {
@@ -16,11 +17,10 @@ export async function getOrg(einParam: string) {
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
 
-  const soiZip = (form: string) => `https://www.irs.gov/pub/irs-soi/24eoextract${form === "990EZ" ? "990EZ" : "990"}.zip`;
-  const src = sources({ ein, state: o.state, revSrc, finForm: latestSoi?.form ?? null, objectId: t?.object_id ?? null, textYear: t?.tax_year ?? null, textForm: t?.form ?? null });
+  const src = sources({ ein, state: o.state, revSrc, finForm: latestSoi?.form ?? null, finYear: latestSoi?.tax_year ?? null, objectId: t?.object_id ?? null, textYear: t?.tax_year ?? null, textForm: t?.form ?? null });
   const bmfUrl = src.find((s) => s.label === "IRS master file")?.url ?? "https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf";
   const soiExtra: Source[] = latestSoi && !src.some((x) => x.label === "IRS SOI extract")
-    ? [{ label: "IRS SOI extract", detail: `Past revenue, expenses, assets (${soiZip(latestSoi.form).split("/").pop()})`, url: soiZip(latestSoi.form) }]
+    ? [{ label: "IRS SOI extract", detail: `Past revenue, expenses, assets (Form ${latestSoi.form}, ${latestSoi.tax_year})`, url: soiViewerUrl(ein, latestSoi.tax_year, latestSoi.form), internal: true }]
     : [];
   const allSources: Source[] = [...src, ...soiExtra, { label: "All filings on ProPublica", detail: "Every return this organization has e-filed", url: propublicaOrg(ein) }];
 
@@ -28,7 +28,7 @@ export async function getOrg(einParam: string) {
     ...(o.revenue_amt != null && bmfYear && (!latestSoi || bmfYear > latestSoi.tax_year)
       ? [{ year: bmfYear, revenue: Number(o.revenue_amt), expenses: null as number | null, assets: o.asset_amt != null ? Number(o.asset_amt) : null, source: "IRS master file", url: bmfUrl }]
       : []),
-    ...fin.map((f) => ({ year: f.tax_year as number, revenue: Number(f.revenue), expenses: Number(f.expenses), assets: Number(f.assets), source: `IRS SOI (Form ${f.form})`, url: soiZip(f.form) })),
+    ...fin.map((f) => ({ year: f.tax_year as number, revenue: Number(f.revenue), expenses: Number(f.expenses), assets: Number(f.assets), source: `IRS SOI (Form ${f.form})`, url: soiViewerUrl(ein, f.tax_year, f.form) })),
   ];
 
   return {

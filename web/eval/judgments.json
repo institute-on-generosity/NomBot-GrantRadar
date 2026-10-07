@@ -1,7 +1,17 @@
 {
+ "addiction recovery programs in west virginia|270823151": {
+  "relevant": true,
+  "why": "Recovery house in Buckhannon, WV, under mental health cause.",
+  "model": "claude-opus-5-5"
+ },
  "addiction recovery programs in west virginia|383654768": {
   "relevant": false,
   "why": "Foster children programs, not addiction recovery.",
+  "model": "claude-opus-5-5"
+ },
+ "addiction recovery programs in west virginia|422271950": {
+  "relevant": true,
+  "why": "Recovery foundation in Huntington, WV, under mental health cause.",
   "model": "claude-opus-5-5"
  },
  "addiction recovery programs in west virginia|550525391": {
@@ -12,6 +22,11 @@
  "addiction recovery programs in west virginia|550616563": {
   "relevant": false,
   "why": "Sexual assault help center, unrelated to addiction.",
+  "model": "claude-opus-5-5"
+ },
+ "addiction recovery programs in west virginia|825053095": {
+  "relevant": true,
+  "why": "Recovery-focused behavioral health organization in West Virginia.",
   "model": "claude-opus-5-5"
  },
  "addiction recovery programs in west virginia|825350281": {
@@ -29,6 +44,11 @@
   "why": "Prevention education for students, not recovery programs.",
   "model": "claude-opus-5-5"
  },
+ "addiction recovery programs in west virginia|844940612": {
+  "relevant": true,
+  "why": "WV coalition promoting substance use treatment and support services.",
+  "model": "claude-opus-5-5"
+ },
  "addiction recovery programs in west virginia|850586081": {
   "relevant": true,
   "why": "Direct services for people impacted by drug use in Charleston, WV.",
@@ -37,6 +57,11 @@
  "addiction recovery programs in west virginia|853305905": {
   "relevant": true,
   "why": "Supports treatment and recovery reintegration in Raleigh County, WV.",
+  "model": "claude-opus-5-5"
+ },
+ "addiction recovery programs in west virginia|854340016": {
+  "relevant": true,
+  "why": "Recovery housing network in Morgantown, WV.",
   "model": "claude-opus-5-5"
  },
  "addiction recovery programs in west virginia|872146924": {
@@ -49,9 +74,19 @@
   "why": "Name indicates WV recovery outreach organization.",
   "model": "claude-opus-5-5"
  },
+ "addiction recovery programs in west virginia|992884097": {
+  "relevant": true,
+  "why": "Recovery organization in Beckley, WV, under mental health cause.",
+  "model": "claude-opus-5-5"
+ },
  "adult literacy programs in ohio under $250k|201596783": {
   "relevant": false,
   "why": "Alzheimer's research and scholarships.",
+  "model": "claude-opus-5-5"
+ },
+ "adult literacy programs in ohio under $250k|261095804": {
+  "relevant": false,
+  "why": "Scholarships and community grants, not literacy.",
   "model": "claude-opus-5-5"
  },
  "adult literacy programs in ohio under $250k|271203008": {
@@ -69,9 +104,24 @@
   "why": "Student literacy at elementary school, not adults.",
   "model": "claude-opus-5-5"
  },
+ "adult literacy programs in ohio under $250k|341731515": {
+  "relevant": true,
+  "why": "Ohio literacy program for at-risk learners, small budget.",
+  "model": "claude-opus-5-5"
+ },
+ "adult literacy programs in ohio under $250k|346520957": {
+  "relevant": false,
+  "why": "PTA scholarships, not adult literacy.",
+  "model": "claude-opus-5-5"
+ },
  "adult literacy programs in ohio under $250k|352211577": {
   "relevant": false,
   "why": "K-5 student reading support, not adult literacy.",
+  "model": "claude-opus-5-5"
+ },
+ "adult literacy programs in ohio under $250k|464080906": {
+  "relevant": false,
+  "why": "Basic needs for children, not adult literacy.",
   "model": "claude-opus-5-5"
  },
  "adult literacy programs in ohio under $250k|464513957": {
@@ -94,9 +144,19 @@
   "why": "School band boosters.",
   "model": "claude-opus-5-5"
  },
+ "adult literacy programs in ohio under $250k|825380314": {
+  "relevant": false,
+  "why": "Library capital fundraising, not adult literacy programs.",
+  "model": "claude-opus-5-5"
+ },
  "adult literacy programs in ohio under $250k|861805590": {
   "relevant": false,
   "why": "School athletics and STEM support.",
+  "model": "claude-opus-5-5"
+ },
+ "adult literacy programs in ohio under $250k|871665619": {
+  "relevant": false,
+  "why": "High school tech coaching, not adult literacy.",
   "model": "claude-opus-5-5"
  },
  "after-school stem programs in virginia|274927477": {
@@ -129,6 +189,11 @@
   "why": "Private K-12 school, not an after-school STEM program.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|540662863": {
+  "relevant": false,
+  "why": "Private day school; after-school enrichment not STEM-specific.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|541440734": {
   "relevant": false,
   "why": "College access advising, not STEM.",
@@ -144,14 +209,49 @@
   "why": "Full-time gifted school, no after-school STEM focus.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|541758356": {
+  "relevant": false,
+  "why": "School foundation funding vocational programs, not after-school STEM.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|821408294": {
   "relevant": true,
   "why": "Virginia org providing after-school STEM classes for girls.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|822107962": {
+  "relevant": false,
+  "why": "General after-school academic services, no STEM focus stated.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|834141224": {
+  "relevant": false,
+  "why": "In-school financial literacy, not after-school STEM.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|882408724": {
+  "relevant": false,
+  "why": "Youth poverty program, no STEM or after-school focus described.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|932999747": {
+  "relevant": true,
+  "why": "Virginia robotics engineering program for middle/high school students.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters in ohio|237293589": {
+  "relevant": true,
+  "why": "Warren County, Ohio shelter for homeless dogs and cats.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters in ohio|300024366": {
   "relevant": false,
   "why": "Spay/neuter clinic, not an animal shelter.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters in ohio|310537073": {
+  "relevant": true,
+  "why": "Dayton humane society housing unwanted pets until adoption.",
   "model": "claude-opus-5-5"
  },
  "animal shelters in ohio|310588218": {
@@ -194,6 +294,16 @@
   "why": "Ohio animal shelter for homeless dogs.",
   "model": "claude-opus-5-5"
  },
+ "animal shelters in ohio|344429093": {
+  "relevant": true,
+  "why": "Toledo-area humane society operating an animal shelter with adoptions.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters in ohio|474404158": {
+  "relevant": true,
+  "why": "Ohio refuge sheltering and adopting abandoned dogs and cats.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters in ohio|814584763": {
   "relevant": true,
   "why": "Ohio no-kill shelter and foster-based rescue.",
@@ -202,6 +312,16 @@
  "animal shelters that offer low-cost spay and neuter|208986267": {
   "relevant": false,
   "why": "Shelter only encourages spay/neuter; no low-cost service described.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|260970194": {
+  "relevant": true,
+  "why": "Cat shelter offering low and no cost spay/neuter.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|310588218": {
+  "relevant": true,
+  "why": "Shelter with low-cost spay/neuter programs.",
   "model": "claude-opus-5-5"
  },
  "animal shelters that offer low-cost spay and neuter|310956829": {
@@ -214,14 +334,29 @@
   "why": "Shelter with explicit low cost spay and neuter program.",
   "model": "claude-opus-5-5"
  },
+ "animal shelters that offer low-cost spay and neuter|311009520": {
+  "relevant": true,
+  "why": "Humane society with low-income spay/neuter assistance.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters that offer low-cost spay and neuter|311135707": {
   "relevant": false,
   "why": "Spays adopted animals only; no low-cost public program.",
   "model": "claude-opus-5-5"
  },
+ "animal shelters that offer low-cost spay and neuter|311779083": {
+  "relevant": true,
+  "why": "Animal shelter with low-income spay/neuter programs.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters that offer low-cost spay and neuter|341119409": {
   "relevant": true,
   "why": "Shelter providing spay/neuter opportunities to the public.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|540929478": {
+  "relevant": true,
+  "why": "Shelter with public spay/neuter assistance program.",
   "model": "claude-opus-5-5"
  },
  "animal shelters that offer low-cost spay and neuter|541266821": {
@@ -234,9 +369,24 @@
   "why": "Supports city shelter and offers community spay/neuter services.",
   "model": "claude-opus-5-5"
  },
+ "animal shelters that offer low-cost spay and neuter|542021941": {
+  "relevant": true,
+  "why": "Shelter plus low-cost community pet clinic.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|611459979": {
+  "relevant": true,
+  "why": "Shelter offering low-cost spay/neuter to families.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters that offer low-cost spay and neuter|621651766": {
   "relevant": true,
   "why": "Subsidizes spay/neuter costs for pets adopted from shelter.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|813644894": {
+  "relevant": false,
+  "why": "Rescue supporting a shelter, not itself a shelter.",
   "model": "claude-opus-5-5"
  },
  "animal shelters that offer low-cost spay and neuter|814584763": {
@@ -252,6 +402,11 @@
  "appalachian music and folk heritage preservation|237425054": {
   "relevant": true,
   "why": "Appalachian festival and grants promoting Appalachian culture.",
+  "model": "claude-opus-5-5"
+ },
+ "appalachian music and folk heritage preservation|261571577": {
+  "relevant": true,
+  "why": "Promotes Appalachian music and culture via public TV program.",
   "model": "claude-opus-5-5"
  },
  "appalachian music and folk heritage preservation|273418093": {
@@ -274,6 +429,11 @@
   "why": "African American history, not Appalachian music.",
   "model": "claude-opus-5-5"
  },
+ "appalachian music and folk heritage preservation|510523797": {
+  "relevant": true,
+  "why": "Preserves West Virginia music, core Appalachian heritage.",
+  "model": "claude-opus-5-5"
+ },
  "appalachian music and folk heritage preservation|522026434": {
   "relevant": false,
   "why": "Tibetan culture preservation.",
@@ -289,6 +449,11 @@
   "why": "Historic building revitalization, not music or folk heritage.",
   "model": "claude-opus-5-5"
  },
+ "appalachian music and folk heritage preservation|561884763": {
+  "relevant": false,
+  "why": "Southern gospel music, not Appalachian folk heritage specifically.",
+  "model": "claude-opus-5-5"
+ },
  "appalachian music and folk heritage preservation|581867950": {
   "relevant": true,
   "why": "Explicitly preserves Appalachian music and arts.",
@@ -297,6 +462,16 @@
  "appalachian music and folk heritage preservation|620753887": {
   "relevant": false,
   "why": "Country music history broadly, not specifically Appalachian folk heritage.",
+  "model": "claude-opus-5-5"
+ },
+ "appalachian music and folk heritage preservation|621502600": {
+  "relevant": false,
+  "why": "General architectural and historical preservation, not music-focused.",
+  "model": "claude-opus-5-5"
+ },
+ "appalachian music and folk heritage preservation|991744647": {
+  "relevant": false,
+  "why": "Broad American roots and Cajun music, not specifically Appalachian heritage.",
   "model": "claude-opus-5-5"
  },
  "arts organizations in west virginia|205132843": {
@@ -312,6 +487,11 @@
  "arts organizations in west virginia|237441348": {
   "relevant": true,
   "why": "Children's theatre in Charleston, WV.",
+  "model": "claude-opus-5-5"
+ },
+ "arts organizations in west virginia|301008149": {
+  "relevant": true,
+  "why": "Community theatre company in Huntington, West Virginia.",
   "model": "claude-opus-5-5"
  },
  "arts organizations in west virginia|550484580": {
@@ -347,6 +527,11 @@
  "arts organizations in west virginia|872383367": {
   "relevant": true,
   "why": "Arts presenter and educator in Huntington, WV.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|263369094": {
+  "relevant": false,
+  "why": "Religious teen center, not a Boys and Girls Club.",
   "model": "claude-opus-5-5"
  },
  "boys and girls clubs in tennessee|273459151": {
@@ -389,6 +574,11 @@
   "why": "Boys & Girls Club in Murfreesboro, Tennessee.",
   "model": "claude-opus-5-5"
  },
+ "boys and girls clubs in tennessee|621589188": {
+  "relevant": false,
+  "why": "Academic after-school program, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
  "boys and girls clubs in tennessee|621634566": {
   "relevant": true,
   "why": "Operates Boys & Girls Club units in Monroe County, TN.",
@@ -399,14 +589,39 @@
   "why": "Foundation supporting Boys & Girls Clubs of Greater Memphis.",
   "model": "claude-opus-5-5"
  },
+ "boys and girls clubs in tennessee|813509923": {
+  "relevant": false,
+  "why": "Generic county youth center, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|203065115": {
+  "relevant": true,
+  "why": "Nashville faith-based center doing food distribution.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|203705668": {
+  "relevant": true,
+  "why": "Faith-based Tennessee ministry running a food pantry.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|237196359": {
   "relevant": false,
   "why": "Fraternal group donating food, not a church running a pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|271699146": {
+  "relevant": true,
+  "why": "Christian ministry in Tennessee distributing food boxes and meals.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|320258525": {
   "relevant": true,
   "why": "Faith-based Tennessee food assistance ministry supported by churches.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|452383624": {
+  "relevant": true,
+  "why": "Christian ministry in Tennessee providing pantry items and meals.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|472856955": {
@@ -419,9 +634,19 @@
   "why": "Faith-based TN ministry operating a food pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|811783173": {
+  "relevant": true,
+  "why": "Tennessee ministry providing food boxes and a blessing box.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|843239885": {
   "relevant": false,
   "why": "TN food pantry with no church affiliation indicated.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|851655981": {
+  "relevant": true,
+  "why": "Tennessee food and clothing ministry distributing food weekly.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|882222394": {
@@ -509,6 +734,11 @@
   "why": "Promotes coal industry, not miner health advocacy.",
   "model": "claude-opus-5-5"
  },
+ "coal miner black lung advocacy groups|270094262": {
+  "relevant": false,
+  "why": "Rare lung disease PAP, not black lung in miners.",
+  "model": "claude-opus-5-5"
+ },
  "coal miner black lung advocacy groups|314387540": {
   "relevant": false,
   "why": "General lung health and energy assistance, not coal miners.",
@@ -517,6 +747,21 @@
  "coal miner black lung advocacy groups|362210015": {
   "relevant": false,
   "why": "School boards association, unrelated.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|471487480": {
+  "relevant": false,
+  "why": "Voter engagement, unrelated to coal miners.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|521393896": {
+  "relevant": false,
+  "why": "Peace and racial justice work, not coal miner black lung advocacy.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|521609875": {
+  "relevant": false,
+  "why": "General medical research advocacy, not black lung.",
   "model": "claude-opus-5-5"
  },
  "coal miner black lung advocacy groups|550765268": {
@@ -539,6 +784,11 @@
   "why": "Provides legal help and policy advocacy for black lung victims.",
   "model": "claude-opus-5-5"
  },
+ "coal miner black lung advocacy groups|750756831": {
+  "relevant": false,
+  "why": "Pipeline contractor trade association, unrelated.",
+  "model": "claude-opus-5-5"
+ },
  "coal miner black lung advocacy groups|823985002": {
   "relevant": false,
   "why": "Black children development, unrelated to black lung.",
@@ -547,6 +797,11 @@
  "coal miner black lung advocacy groups|871841713": {
   "relevant": false,
   "why": "RET-positive cancer advocacy, not black lung.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|873076467": {
+  "relevant": false,
+  "why": "Energy justice advocacy, not black lung or coal miners.",
   "model": "claude-opus-5-5"
  },
  "community foundations in ohio|202815662": {
@@ -559,9 +814,24 @@
   "why": "Supports a blood center, not a community foundation.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|208314921": {
+  "relevant": true,
+  "why": "Community foundation serving Sandusky County, Ohio.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|237241045": {
   "relevant": true,
   "why": "Granville, Ohio community foundation.",
+  "model": "claude-opus-5-5"
+ },
+ "community foundations in ohio|311620483": {
+  "relevant": true,
+  "why": "Regional community foundation for Appalachian Ohio.",
+  "model": "claude-opus-5-5"
+ },
+ "community foundations in ohio|314446189": {
+  "relevant": true,
+  "why": "Community foundation in Marion, Ohio.",
   "model": "claude-opus-5-5"
  },
  "community foundations in ohio|316027662": {
@@ -569,14 +839,34 @@
   "why": "Church support foundation, not a geographic community foundation.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|340714588": {
+  "relevant": true,
+  "why": "Major community foundation serving Cleveland area, Ohio.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|341229521": {
   "relevant": true,
   "why": "Community foundation granting for Lisbon, Ohio.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|341281026": {
+  "relevant": true,
+  "why": "Community foundation serving Wayne County, Ohio.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|341500445": {
   "relevant": false,
   "why": "Supports a single health center, not a community foundation.",
+  "model": "claude-opus-5-5"
+ },
+ "community foundations in ohio|341623983": {
+  "relevant": true,
+  "why": "Donor-fund community foundation in Fairfield County, Ohio.",
+  "model": "claude-opus-5-5"
+ },
+ "community foundations in ohio|341790526": {
+  "relevant": true,
+  "why": "Community foundation in Bowling Green, Ohio.",
   "model": "claude-opus-5-5"
  },
  "community foundations in ohio|341846035": {
@@ -594,14 +884,29 @@
   "why": "Hudson, Ohio community foundation with donor advised funds.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|833133653": {
+  "relevant": true,
+  "why": "Community foundation for Adams County, Ohio.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|880712219": {
   "relevant": false,
   "why": "Childcare provider, not a foundation.",
   "model": "claude-opus-5-5"
  },
+ "disaster relief after floods in eastern kentucky|201718693": {
+  "relevant": false,
+  "why": "Local fire department in Casey County, not flood relief.",
+  "model": "claude-opus-5-5"
+ },
  "disaster relief after floods in eastern kentucky|201892180": {
   "relevant": false,
   "why": "Employee-only emergency fund, not regional flood relief.",
+  "model": "claude-opus-5-5"
+ },
+ "disaster relief after floods in eastern kentucky|262720454": {
+  "relevant": true,
+  "why": "Explicitly provides flood relief support for Eastern Kentucky.",
   "model": "claude-opus-5-5"
  },
  "disaster relief after floods in eastern kentucky|453736701": {
@@ -624,6 +929,11 @@
   "why": "Legal work on mining and environment, not disaster relief.",
   "model": "claude-opus-5-5"
  },
+ "disaster relief after floods in eastern kentucky|621555740": {
+  "relevant": false,
+  "why": "General disaster relief mission trips; no eastern Kentucky flood focus.",
+  "model": "claude-opus-5-5"
+ },
  "disaster relief after floods in eastern kentucky|825174662": {
   "relevant": false,
   "why": "Addiction recovery housing, not disaster relief.",
@@ -639,6 +949,16 @@
   "why": "Western Kentucky community services, not eastern floods.",
   "model": "claude-opus-5-5"
  },
+ "disaster relief after floods in eastern kentucky|874331334": {
+  "relevant": false,
+  "why": "Tornado recovery in Graves County, western Kentucky, not floods.",
+  "model": "claude-opus-5-5"
+ },
+ "disaster relief after floods in eastern kentucky|882368658": {
+  "relevant": true,
+  "why": "Provides housing and essential-needs relief to eastern Kentucky disaster victims.",
+  "model": "claude-opus-5-5"
+ },
  "disaster relief after floods in eastern kentucky|920572841": {
   "relevant": false,
   "why": "Western Kentucky disaster readiness, not eastern floods.",
@@ -647,6 +967,11 @@
  "disaster relief after floods in eastern kentucky|923660355": {
   "relevant": true,
   "why": "Pikeville-based immediate natural disaster relief in eastern Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "domestic violence shelters in kentucky|261498186": {
+  "relevant": false,
+  "why": "Homeless rehousing ministry, not domestic violence shelter.",
   "model": "claude-opus-5-5"
  },
  "domestic violence shelters in kentucky|262914155": {
@@ -689,9 +1014,19 @@
   "why": "Children's shelter for abuse/neglect, not domestic violence shelter.",
   "model": "claude-opus-5-5"
  },
+ "domestic violence shelters in kentucky|611339305": {
+  "relevant": false,
+  "why": "General family support center; no domestic violence shelter mentioned.",
+  "model": "claude-opus-5-5"
+ },
  "domestic violence shelters in kentucky|611387338": {
   "relevant": false,
   "why": "General rescue mission, not domestic violence focused.",
+  "model": "claude-opus-5-5"
+ },
+ "domestic violence shelters in kentucky|611399197": {
+  "relevant": false,
+  "why": "Child abuse advocacy center, not a domestic violence shelter.",
   "model": "claude-opus-5-5"
  },
  "domestic violence shelters in kentucky|873230530": {
@@ -709,14 +1044,34 @@
   "why": "Alexandria VA is not in Appalachia.",
   "model": "claude-opus-5-5"
  },
+ "farmers markets and local food systems in appalachia|311124220": {
+  "relevant": true,
+  "why": "Appalachian Ohio org supporting family farms and regional economy.",
+  "model": "claude-opus-5-5"
+ },
+ "farmers markets and local food systems in appalachia|311512991": {
+  "relevant": true,
+  "why": "Operates farmers market for West Virginia farmers in Charleston.",
+  "model": "claude-opus-5-5"
+ },
  "farmers markets and local food systems in appalachia|431963927": {
   "relevant": true,
   "why": "Supports Blacksburg farmers market in Appalachian southwest Virginia.",
   "model": "claude-opus-5-5"
  },
+ "farmers markets and local food systems in appalachia|463787141": {
+  "relevant": true,
+  "why": "Farmers market in southwest Virginia, Appalachian region.",
+  "model": "claude-opus-5-5"
+ },
  "farmers markets and local food systems in appalachia|473293365": {
   "relevant": true,
   "why": "Licking County OH is Appalachian Ohio; runs a farmers market.",
+  "model": "claude-opus-5-5"
+ },
+ "farmers markets and local food systems in appalachia|475470193": {
+  "relevant": false,
+  "why": "Paris, KY is Bluegrass region, not Appalachia.",
   "model": "claude-opus-5-5"
  },
  "farmers markets and local food systems in appalachia|522237568": {
@@ -749,6 +1104,11 @@
   "why": "Cleveland, northeast Ohio is not Appalachia.",
   "model": "claude-opus-5-5"
  },
+ "farmers markets and local food systems in appalachia|853090164": {
+  "relevant": false,
+  "why": "Lexington Bluegrass farm incubator, not Appalachia or farmers markets.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|200862587": {
   "relevant": false,
   "why": "Kentucky pantry, no workforce training.",
@@ -774,6 +1134,21 @@
   "why": "Food pantry only, no workforce training.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|474588954": {
+  "relevant": false,
+  "why": "Food provision only; no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|550716785": {
+  "relevant": false,
+  "why": "Appalachian food bank but no workforce training mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|550770708": {
+  "relevant": false,
+  "why": "Food and clothing ministry; no workforce training.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|800446036": {
   "relevant": false,
   "why": "Suburban Cleveland grocery delivery, no workforce training.",
@@ -789,9 +1164,24 @@
   "why": "WV food program with workforce program for people in recovery, under $500K.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|822509912": {
+  "relevant": false,
+  "why": "Elizabethtown KY not rural Appalachia; job search help is minor.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|884290832": {
   "relevant": false,
   "why": "Rural WV pantry and aid, no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|923160266": {
+  "relevant": false,
+  "why": "Food and supplies distribution; no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|933737388": {
+  "relevant": false,
+  "why": "Food pantry only; no workforce training.",
   "model": "claude-opus-5-5"
  },
  "food banks in rural appalachia that do workforce training, under $500k|991027322": {
@@ -814,9 +1204,24 @@
   "why": "Honduran children's ministry, not a food bank with job training.",
   "model": "claude-opus-5-5"
  },
+ "food banks that also offer job training|320258525": {
+  "relevant": false,
+  "why": "Food assistance only; no job training described.",
+  "model": "claude-opus-5-5"
+ },
  "food banks that also offer job training|341441016": {
   "relevant": false,
   "why": "Food bank distribution; no job training mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks that also offer job training|341446685": {
+  "relevant": false,
+  "why": "Food bank distribution; no job training described.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks that also offer job training|371616816": {
+  "relevant": false,
+  "why": "Food pantry only; no job training mentioned.",
   "model": "claude-opus-5-5"
  },
  "food banks that also offer job training|541285793": {
@@ -844,14 +1249,44 @@
   "why": "Nutrition education and kitchen workforce plan, not a food bank.",
   "model": "claude-opus-5-5"
  },
+ "food banks that also offer job training|822509912": {
+  "relevant": false,
+  "why": "Feeding homeless with job search help, not job training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks that also offer job training|831064692": {
+  "relevant": true,
+  "why": "Food distribution plus skill development and education program.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks that also offer job training|843239885": {
+  "relevant": false,
+  "why": "Food pantry only; no job training.",
+  "model": "claude-opus-5-5"
+ },
  "food banks that also offer job training|900801730": {
   "relevant": false,
   "why": "Food bank encouraging self-sufficiency, but no explicit job training.",
   "model": "claude-opus-5-5"
  },
+ "food pantries in knoxville|223969109": {
+  "relevant": false,
+  "why": "Located in Talbott, not Knoxville.",
+  "model": "claude-opus-5-5"
+ },
  "food pantries in knoxville|320258525": {
   "relevant": false,
   "why": "Food pantry in Spring Hill, not Knoxville.",
+  "model": "claude-opus-5-5"
+ },
+ "food pantries in knoxville|422858135": {
+  "relevant": false,
+  "why": "Food ministry in Tazewell, not Knoxville.",
+  "model": "claude-opus-5-5"
+ },
+ "food pantries in knoxville|621303822": {
+  "relevant": false,
+  "why": "Food bank based in Kingsport, far from Knoxville.",
   "model": "claude-opus-5-5"
  },
  "food pantries in knoxville|621340755": {
@@ -862,6 +1297,16 @@
  "food pantries in knoxville|621448193": {
   "relevant": true,
   "why": "Knoxville org providing emergency food packages.",
+  "model": "claude-opus-5-5"
+ },
+ "food pantries in knoxville|621530501": {
+  "relevant": false,
+  "why": "Serves Blount County in Alcoa, not Knoxville.",
+  "model": "claude-opus-5-5"
+ },
+ "food pantries in knoxville|621584500": {
+  "relevant": true,
+  "why": "Food pantry organization located in Knoxville, TN.",
   "model": "claude-opus-5-5"
  },
  "food pantries in knoxville|621805117": {
@@ -889,6 +1334,11 @@
   "why": "Mason, TN ministry, not Knoxville.",
   "model": "claude-opus-5-5"
  },
+ "food pantries in knoxville|852735207": {
+  "relevant": false,
+  "why": "Food pantry in Norris, outside Knoxville.",
+  "model": "claude-opus-5-5"
+ },
  "food pantries in knoxville|873100153": {
   "relevant": false,
   "why": "Joelton farm program, not Knoxville pantry.",
@@ -904,6 +1354,21 @@
   "why": "Food pantry only; no job training mentioned.",
   "model": "claude-opus-5-5"
  },
+ "foodbank workforce trainng in kentuky|320051968": {
+  "relevant": false,
+  "why": "Kentucky food bank; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
+ "foodbank workforce trainng in kentuky|392081911": {
+  "relevant": false,
+  "why": "Food pantry; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
+ "foodbank workforce trainng in kentuky|393165350": {
+  "relevant": false,
+  "why": "Food pantry; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
  "foodbank workforce trainng in kentuky|453865957": {
   "relevant": false,
   "why": "Meal packaging for international hunger; no training.",
@@ -914,14 +1379,34 @@
   "why": "Child weekend meals; no workforce training.",
   "model": "claude-opus-5-5"
  },
+ "foodbank workforce trainng in kentuky|462304960": {
+  "relevant": false,
+  "why": "Food pantry; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
+ "foodbank workforce trainng in kentuky|463533225": {
+  "relevant": false,
+  "why": "Food pantry; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
  "foodbank workforce trainng in kentuky|471116289": {
   "relevant": false,
   "why": "Volunteer food pantry; no workforce training.",
   "model": "claude-opus-5-5"
  },
+ "foodbank workforce trainng in kentuky|611042417": {
+  "relevant": false,
+  "why": "Kentucky food bank; no workforce training indicated.",
+  "model": "claude-opus-5-5"
+ },
  "foodbank workforce trainng in kentuky|611080388": {
   "relevant": false,
   "why": "Men's shelter and meals; no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "foodbank workforce trainng in kentuky|611093218": {
+  "relevant": false,
+  "why": "Kentucky food bank; no workforce training indicated.",
   "model": "claude-opus-5-5"
  },
  "foodbank workforce trainng in kentuky|611262974": {
@@ -939,9 +1424,19 @@
   "why": "Haiti feeding program and school; no workforce training.",
   "model": "claude-opus-5-5"
  },
+ "foodbank workforce trainng in kentuky|814823977": {
+  "relevant": false,
+  "why": "Kentucky food coalition; no evidence of workforce training.",
+  "model": "claude-opus-5-5"
+ },
  "foodbank workforce trainng in kentuky|822509912": {
   "relevant": false,
   "why": "Homeless feeding with job search help, not workforce training program.",
+  "model": "claude-opus-5-5"
+ },
+ "foodbank workforce trainng in kentuky|861305334": {
+  "relevant": false,
+  "why": "Kentucky food bank; no workforce training indicated.",
   "model": "claude-opus-5-5"
  },
  "foodbank workforce trainng in kentuky|883352027": {
@@ -959,9 +1454,19 @@
   "why": "Early childhood/Head Start, not foster care or adoption.",
   "model": "claude-opus-5-5"
  },
+ "foster care and adoption agencies in kentucky|263299513": {
+  "relevant": false,
+  "why": "Pregnancy care center, not foster care or adoption.",
+  "model": "claude-opus-5-5"
+ },
  "foster care and adoption agencies in kentucky|464105551": {
   "relevant": true,
   "why": "Kentucky adoption and foster care services.",
+  "model": "claude-opus-5-5"
+ },
+ "foster care and adoption agencies in kentucky|610461729": {
+  "relevant": false,
+  "why": "Residential treatment and therapy; no foster care or adoption described.",
   "model": "claude-opus-5-5"
  },
  "foster care and adoption agencies in kentucky|610595497": {
@@ -979,9 +1484,24 @@
   "why": "Senior services, unrelated.",
   "model": "claude-opus-5-5"
  },
+ "foster care and adoption agencies in kentucky|611297776": {
+  "relevant": false,
+  "why": "Children's residential services, not foster care or adoption placement.",
+  "model": "claude-opus-5-5"
+ },
+ "foster care and adoption agencies in kentucky|611311338": {
+  "relevant": false,
+  "why": "Emergency shelter and residential care, not foster care or adoption.",
+  "model": "claude-opus-5-5"
+ },
  "foster care and adoption agencies in kentucky|616054655": {
   "relevant": false,
   "why": "Advocacy and job training, not foster care.",
+  "model": "claude-opus-5-5"
+ },
+ "foster care and adoption agencies in kentucky|823302400": {
+  "relevant": false,
+  "why": "Supports orphans in South Sudan, not Kentucky foster care or adoption.",
   "model": "claude-opus-5-5"
  },
  "foster care and adoption agencies in kentucky|833228011": {
@@ -997,6 +1517,11 @@
  "foster care and adoption agencies in kentucky|872442210": {
   "relevant": true,
   "why": "Supports foster and kinship children and families in KY.",
+  "model": "claude-opus-5-5"
+ },
+ "free health clinics in virginia|043739083": {
+  "relevant": true,
+  "why": "Virginia healthcare provider serving underserved communities, free clinic style.",
   "model": "claude-opus-5-5"
  },
  "free health clinics in virginia|201468244": {
@@ -1024,9 +1549,19 @@
   "why": "Mammography voucher program, not a clinic itself.",
   "model": "claude-opus-5-5"
  },
+ "free health clinics in virginia|475194456": {
+  "relevant": true,
+  "why": "Lynchburg network providing affordable care to neighbors, includes free clinic services.",
+  "model": "claude-opus-5-5"
+ },
  "free health clinics in virginia|540620889": {
   "relevant": false,
   "why": "Large hospital system, not a free clinic.",
+  "model": "claude-opus-5-5"
+ },
+ "free health clinics in virginia|541287905": {
+  "relevant": true,
+  "why": "Virginia health center with sliding fee scale for low-income patients.",
   "model": "claude-opus-5-5"
  },
  "free health clinics in virginia|541373296": {
@@ -1039,9 +1574,19 @@
   "why": "Free clinic in Virginia providing no-cost care.",
   "model": "claude-opus-5-5"
  },
+ "free health clinics in virginia|541632194": {
+  "relevant": true,
+  "why": "Virginia clinic providing free medical care to indigent patients.",
+  "model": "claude-opus-5-5"
+ },
  "free health clinics in virginia|541904435": {
   "relevant": false,
   "why": "Primarily outpatient surgical hospital; free clinic care is secondary.",
+  "model": "claude-opus-5-5"
+ },
+ "free health clinics in virginia|830435138": {
+  "relevant": true,
+  "why": "Virginia community health center serving underserved, low-cost care.",
   "model": "claude-opus-5-5"
  },
  "free health clinics in virginia|923479502": {
@@ -1049,14 +1594,34 @@
   "why": "Reproductive clinic, not described as free.",
   "model": "claude-opus-5-5"
  },
+ "free legal aid for low-income families in tennessee|270849601": {
+  "relevant": false,
+  "why": "Housing and financial counseling, not legal aid.",
+  "model": "claude-opus-5-5"
+ },
  "free legal aid for low-income families in tennessee|320176348": {
   "relevant": false,
   "why": "Child care center, not legal aid.",
   "model": "claude-opus-5-5"
  },
+ "free legal aid for low-income families in tennessee|451596703": {
+  "relevant": false,
+  "why": "Basic needs financial assistance, not legal services.",
+  "model": "claude-opus-5-5"
+ },
+ "free legal aid for low-income families in tennessee|581436933": {
+  "relevant": false,
+  "why": "Education and workforce programs, not legal aid.",
+  "model": "claude-opus-5-5"
+ },
  "free legal aid for low-income families in tennessee|581851127": {
   "relevant": false,
   "why": "Housing provider, not legal aid.",
+  "model": "claude-opus-5-5"
+ },
+ "free legal aid for low-income families in tennessee|620587285": {
+  "relevant": false,
+  "why": "Disability and childhood services, no legal aid.",
   "model": "claude-opus-5-5"
  },
  "free legal aid for low-income families in tennessee|620721984": {
@@ -1067,6 +1632,11 @@
  "free legal aid for low-income families in tennessee|620757461": {
   "relevant": false,
   "why": "Community action services, no legal aid mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "free legal aid for low-income families in tennessee|621142561": {
+  "relevant": false,
+  "why": "Legal aid only for law enforcement members.",
   "model": "claude-opus-5-5"
  },
  "free legal aid for low-income families in tennessee|621166322": {
@@ -1094,6 +1664,21 @@
   "why": "Dental clinic, not legal services.",
   "model": "claude-opus-5-5"
  },
+ "free legal aid for low-income families in tennessee|812992991": {
+  "relevant": true,
+  "why": "Pro bono and low-cost legal representation for modest-means clients in TN.",
+  "model": "claude-opus-5-5"
+ },
+ "free legal aid for low-income families in tennessee|900672177": {
+  "relevant": false,
+  "why": "Refugee community programs, not legal aid.",
+  "model": "claude-opus-5-5"
+ },
+ "free legal aid for low-income families in tennessee|920336773": {
+  "relevant": true,
+  "why": "Free eviction defense for low-income Nashville residents.",
+  "model": "claude-opus-5-5"
+ },
  "free legal aid for low-income families in tennessee|921708745": {
   "relevant": true,
   "why": "Low-cost legal aid for immigrant families in Tennessee.",
@@ -1102,6 +1687,11 @@
  "groups that teach coding to girls in ohio|161703355": {
   "relevant": true,
   "why": "Ohio tech education programs for K-12, highlights girls in technology.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|311636383": {
+  "relevant": false,
+  "why": "Culinary and academic enrichment, not coding for girls.",
   "model": "claude-opus-5-5"
  },
  "groups that teach coding to girls in ohio|311784310": {
@@ -1124,9 +1714,29 @@
   "why": "Extracurricular athletics support, not coding.",
   "model": "claude-opus-5-5"
  },
+ "groups that teach coding to girls in ohio|432046123": {
+  "relevant": false,
+  "why": "General K-8 charter school, no girls' coding focus.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|451266409": {
+  "relevant": false,
+  "why": "K-8 charter school, not girls' coding instruction.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|454670785": {
+  "relevant": false,
+  "why": "Blended-learning charter school, no girls' coding program.",
+  "model": "claude-opus-5-5"
+ },
  "groups that teach coding to girls in ohio|472093422": {
   "relevant": false,
   "why": "Social-emotional learning, not coding.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|850836881": {
+  "relevant": false,
+  "why": "General charter school; no girls' coding program described.",
   "model": "claude-opus-5-5"
  },
  "groups that teach coding to girls in ohio|861466613": {
@@ -1159,6 +1769,11 @@
   "why": "Habitat for Humanity Virginia, state support org for VA affiliates.",
   "model": "claude-opus-5-5"
  },
+ "habitat for humanity affiliates in virginia|352636133": {
+  "relevant": false,
+  "why": "Catholic Charities housing corp, not Habitat for Humanity.",
+  "model": "claude-opus-5-5"
+ },
  "habitat for humanity affiliates in virginia|475629011": {
   "relevant": false,
   "why": "Community land trust, not a Habitat affiliate.",
@@ -1167,6 +1782,16 @@
  "habitat for humanity affiliates in virginia|541026365": {
   "relevant": false,
   "why": "Affordable rental developer, not Habitat affiliate.",
+  "model": "claude-opus-5-5"
+ },
+ "habitat for humanity affiliates in virginia|541479059": {
+  "relevant": false,
+  "why": "Affordable housing developer, not a Habitat affiliate.",
+  "model": "claude-opus-5-5"
+ },
+ "habitat for humanity affiliates in virginia|541483482": {
+  "relevant": true,
+  "why": "Habitat for Humanity entity in Exmore, Virginia building homes.",
   "model": "claude-opus-5-5"
  },
  "habitat for humanity affiliates in virginia|541533426": {
@@ -1214,9 +1839,34 @@
   "why": "Housing and job training for former felons reentering society.",
   "model": "claude-opus-5-5"
  },
+ "help for people getting out of prison|454792187": {
+  "relevant": true,
+  "why": "Provides IDs, bus passes for people reentering society.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|461134670": {
+  "relevant": true,
+  "why": "Reentry business education and career transition support.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|461881414": {
+  "relevant": true,
+  "why": "Pre-release vocational services for returning citizens.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|510201327": {
+  "relevant": true,
+  "why": "Helps women reenter community after incarceration.",
+  "model": "claude-opus-5-5"
+ },
  "help for people getting out of prison|541111718": {
   "relevant": true,
   "why": "Statewide prisoner reentry and post-release services.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|541203682": {
+  "relevant": true,
+  "why": "Halfway house and job help for ex-prisoners.",
   "model": "claude-opus-5-5"
  },
  "help for people getting out of prison|620988294": {
@@ -1249,6 +1899,16 @@
   "why": "Homelessness and veteran shelter, not prison reentry.",
   "model": "claude-opus-5-5"
  },
+ "homeless shelters in louisville|237346463": {
+  "relevant": false,
+  "why": "Rental voucher administration, not a homeless shelter.",
+  "model": "claude-opus-5-5"
+ },
+ "homeless shelters in louisville|260851019": {
+  "relevant": false,
+  "why": "Shelter located in Covington, not Louisville.",
+  "model": "claude-opus-5-5"
+ },
  "homeless shelters in louisville|271281819": {
   "relevant": false,
   "why": "Shelter located in Winchester, not Louisville.",
@@ -1264,6 +1924,11 @@
   "why": "Homeless shelter but in Covington, not Louisville.",
   "model": "claude-opus-5-5"
  },
+ "homeless shelters in louisville|611245271": {
+  "relevant": false,
+  "why": "Shelter located in Owensboro, not Louisville.",
+  "model": "claude-opus-5-5"
+ },
  "homeless shelters in louisville|611334374": {
   "relevant": false,
   "why": "Transitional housing in La Grange, not a Louisville shelter.",
@@ -1272,6 +1937,11 @@
  "homeless shelters in louisville|611335313": {
   "relevant": false,
   "why": "Shelter in Henderson, not Louisville.",
+  "model": "claude-opus-5-5"
+ },
+ "homeless shelters in louisville|753170363": {
+  "relevant": false,
+  "why": "Shelter located in Frankfort, not Louisville.",
   "model": "claude-opus-5-5"
  },
  "homeless shelters in louisville|811936272": {
@@ -1299,6 +1969,16 @@
   "why": "Housing assistance grants in Lexington, not shelter.",
   "model": "claude-opus-5-5"
  },
+ "homeless shelters in louisville|882474137": {
+  "relevant": false,
+  "why": "Affordable housing provider, not a homeless shelter.",
+  "model": "claude-opus-5-5"
+ },
+ "homeless shelters in louisville|931599985": {
+  "relevant": false,
+  "why": "Homeless shelter but in Salyersville, not Louisville.",
+  "model": "claude-opus-5-5"
+ },
  "hospice care nonprofits in kentucky|010706736": {
   "relevant": false,
   "why": "Nursing homes and senior living, not hospice.",
@@ -1319,14 +1999,34 @@
   "why": "Meal delivery; hospice patients are one served group, not hospice care.",
   "model": "claude-opus-5-5"
  },
+ "hospice care nonprofits in kentucky|350895832": {
+  "relevant": false,
+  "why": "Acute care hospital in Indiana; hospice is minor service.",
+  "model": "claude-opus-5-5"
+ },
  "hospice care nonprofits in kentucky|383976272": {
   "relevant": true,
   "why": "Supporting organization for Heritage Hospice in Kentucky.",
   "model": "claude-opus-5-5"
  },
+ "hospice care nonprofits in kentucky|452696517": {
+  "relevant": false,
+  "why": "Hospital and clinics; no hospice mentioned.",
+  "model": "claude-opus-5-5"
+ },
  "hospice care nonprofits in kentucky|472547715": {
   "relevant": false,
   "why": "Free medical/dental clinic, not hospice.",
+  "model": "claude-opus-5-5"
+ },
+ "hospice care nonprofits in kentucky|520795508": {
+  "relevant": false,
+  "why": "Large hospital system; no hospice mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "hospice care nonprofits in kentucky|610523290": {
+  "relevant": false,
+  "why": "Nursing and personal care home, not hospice.",
   "model": "claude-opus-5-5"
  },
  "hospice care nonprofits in kentucky|610729915": {
@@ -1339,6 +2039,11 @@
   "why": "General hospital, no hospice mentioned.",
   "model": "claude-opus-5-5"
  },
+ "hospice care nonprofits in kentucky|611028725": {
+  "relevant": false,
+  "why": "Hospital system; no hospice focus described.",
+  "model": "claude-opus-5-5"
+ },
  "hospice care nonprofits in kentucky|611317442": {
   "relevant": true,
   "why": "Raises funds for Hospice of the Bluegrass in Kentucky.",
@@ -1349,6 +2054,16 @@
   "why": "Disability services, not hospice.",
   "model": "claude-opus-5-5"
  },
+ "hospice care nonprofits in kentucky|822577178": {
+  "relevant": false,
+  "why": "Regional medical center; no hospice mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "hospice care nonprofits in kentucky|881270031": {
+  "relevant": false,
+  "why": "Long-term care facility, not hospice.",
+  "model": "claude-opus-5-5"
+ },
  "housing nonprofits in tennessee that help veterans|200543348": {
   "relevant": false,
   "why": "Disabled housing; no veteran focus.",
@@ -1357,6 +2072,16 @@
  "housing nonprofits in tennessee that help veterans|200576618": {
   "relevant": false,
   "why": "Disabled/elderly housing; no veteran focus.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits in tennessee that help veterans|208088951": {
+  "relevant": false,
+  "why": "Low-income housing for seniors and disabled, not veterans.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits in tennessee that help veterans|273514899": {
+  "relevant": false,
+  "why": "General homeless outreach and housing; no veteran focus.",
   "model": "claude-opus-5-5"
  },
  "housing nonprofits in tennessee that help veterans|311537151": {
@@ -1372,6 +2097,11 @@
  "housing nonprofits in tennessee that help veterans|342051062": {
   "relevant": false,
   "why": "General affordable housing/HMIS; no veteran focus stated.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits in tennessee that help veterans|463112227": {
+  "relevant": false,
+  "why": "General homeless shelter in Memphis, not veteran-specific.",
   "model": "claude-opus-5-5"
  },
  "housing nonprofits in tennessee that help veterans|581525533": {
@@ -1399,6 +2129,16 @@
   "why": "Elderly housing; not veteran-specific.",
   "model": "claude-opus-5-5"
  },
+ "housing nonprofits in tennessee that help veterans|825140203": {
+  "relevant": false,
+  "why": "Recovery housing for men; no mention of veterans.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits in tennessee that help veterans|844108221": {
+  "relevant": false,
+  "why": "Housing for homeless men in TN, but no veteran focus stated.",
+  "model": "claude-opus-5-5"
+ },
  "housing nonprofits that provide financial literacy classes|113711773": {
   "relevant": false,
   "why": "Senior housing only; no financial education.",
@@ -1412,6 +2152,16 @@
  "housing nonprofits that provide financial literacy classes|261579944": {
   "relevant": false,
   "why": "Senior housing only; no financial education.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits that provide financial literacy classes|270849601": {
+  "relevant": true,
+  "why": "Housing org offering financial counseling and financial management help.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits that provide financial literacy classes|311304319": {
+  "relevant": false,
+  "why": "Home building; no financial literacy classes mentioned.",
   "model": "claude-opus-5-5"
  },
  "housing nonprofits that provide financial literacy classes|311487799": {
@@ -1429,6 +2179,11 @@
   "why": "Housing development and management; no financial literacy mentioned.",
   "model": "claude-opus-5-5"
  },
+ "housing nonprofits that provide financial literacy classes|352636133": {
+  "relevant": false,
+  "why": "Affordable housing development; no financial education mentioned.",
+  "model": "claude-opus-5-5"
+ },
  "housing nonprofits that provide financial literacy classes|474044537": {
   "relevant": true,
   "why": "Affordable housing with weekly money management classes.",
@@ -1444,9 +2199,24 @@
   "why": "Homebuilding program; financial classes not mentioned.",
   "model": "claude-opus-5-5"
  },
+ "housing nonprofits that provide financial literacy classes|541995917": {
+  "relevant": false,
+  "why": "Homeless family housing; financial education not stated.",
+  "model": "claude-opus-5-5"
+ },
  "housing nonprofits that provide financial literacy classes|611020382": {
   "relevant": true,
   "why": "Homeless services include budgeting and financial education.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits that provide financial literacy classes|611334374": {
+  "relevant": false,
+  "why": "Transitional housing; no financial literacy classes described.",
+  "model": "claude-opus-5-5"
+ },
+ "land trusts protecting farmland in virginia|205000905": {
+  "relevant": false,
+  "why": "Advocacy for state conservation funding, not a land trust.",
   "model": "claude-opus-5-5"
  },
  "land trusts protecting farmland in virginia|208685310": {
@@ -1464,6 +2234,11 @@
   "why": "Stewards Virginia open space including agricultural land and farming.",
   "model": "claude-opus-5-5"
  },
+ "land trusts protecting farmland in virginia|510198762": {
+  "relevant": false,
+  "why": "Conservation advocacy network, not a farmland land trust.",
+  "model": "claude-opus-5-5"
+ },
  "land trusts protecting farmland in virginia|521497470": {
   "relevant": false,
   "why": "Global conservation, not Virginia farmland.",
@@ -1472,6 +2247,11 @@
  "land trusts protecting farmland in virginia|540935569": {
   "relevant": true,
   "why": "Virginia land conservation via easements protecting rural land.",
+  "model": "claude-opus-5-5"
+ },
+ "land trusts protecting farmland in virginia|540984656": {
+  "relevant": false,
+  "why": "Watershed education and advocacy, not a land trust holding farmland easements.",
   "model": "claude-opus-5-5"
  },
  "land trusts protecting farmland in virginia|541150211": {
@@ -1489,6 +2269,16 @@
   "why": "Wildlife and military readiness programs, not farmland trust.",
   "model": "claude-opus-5-5"
  },
+ "land trusts protecting farmland in virginia|541903204": {
+  "relevant": false,
+  "why": "Scenic viewshed preservation, not farmland protection land trust.",
+  "model": "claude-opus-5-5"
+ },
+ "land trusts protecting farmland in virginia|811220603": {
+  "relevant": false,
+  "why": "Promotes sustainable forestry, not a farmland land trust.",
+  "model": "claude-opus-5-5"
+ },
  "land trusts protecting farmland in virginia|833910834": {
   "relevant": true,
   "why": "Promotes land conservation in rural northern Virginia piedmont.",
@@ -1504,9 +2294,29 @@
   "why": "Hospital endowment fund, ~$3M, not a large hospital.",
   "model": "claude-opus-5-5"
  },
+ "large hospitals in ohio over $100m|310537504": {
+  "relevant": true,
+  "why": "Ohio hospital with $1.6B revenue.",
+  "model": "claude-opus-5-5"
+ },
+ "large hospitals in ohio over $100m|310785684": {
+  "relevant": true,
+  "why": "Ohio hospitals operator with $392M revenue.",
+  "model": "claude-opus-5-5"
+ },
+ "large hospitals in ohio over $100m|310833936": {
+  "relevant": true,
+  "why": "Large Cincinnati children's hospital, $3.6B revenue.",
+  "model": "claude-opus-5-5"
+ },
  "large hospitals in ohio over $100m|311724085": {
   "relevant": false,
   "why": "Ohio hospital but revenue ~$35M, under $100M.",
+  "model": "claude-opus-5-5"
+ },
+ "large hospitals in ohio over $100m|314379443": {
+  "relevant": true,
+  "why": "Ohio hospital system with $704M revenue.",
   "model": "claude-opus-5-5"
  },
  "large hospitals in ohio over $100m|314394942": {
@@ -1549,6 +2359,11 @@
   "why": "Ohio hospital reporting ~$357M revenue.",
   "model": "claude-opus-5-5"
  },
+ "large hospitals in ohio over $100m|521301088": {
+  "relevant": true,
+  "why": "Ohio-based hospital system, $11.5B revenue.",
+  "model": "claude-opus-5-5"
+ },
  "literacy nonprofits under $50k in west virginia|203589159": {
   "relevant": false,
   "why": "Football boosters, unrelated to literacy.",
@@ -1584,6 +2399,11 @@
   "why": "NE Ohio child and family therapy services.",
   "model": "claude-opus-5-5"
  },
+ "mental health counseling for teens in ohio|310897161": {
+  "relevant": true,
+  "why": "Ohio mental health and family counseling with school-based student services.",
+  "model": "claude-opus-5-5"
+ },
  "mental health counseling for teens in ohio|310963263": {
   "relevant": false,
   "why": "General adult substance abuse treatment; youth only prevention.",
@@ -1604,6 +2424,11 @@
   "why": "Ohio outpatient counseling and treatment for youth.",
   "model": "claude-opus-5-5"
  },
+ "mental health counseling for teens in ohio|340901680": {
+  "relevant": true,
+  "why": "Ohio counseling center providing psychotherapy to many children.",
+  "model": "claude-opus-5-5"
+ },
  "mental health counseling for teens in ohio|341172458": {
   "relevant": true,
   "why": "Ohio youth mental health treatment, ages 6-21.",
@@ -1614,9 +2439,19 @@
   "why": "Ohio mental health counseling for youth and families.",
   "model": "claude-opus-5-5"
  },
+ "mental health counseling for teens in ohio|834569993": {
+  "relevant": true,
+  "why": "Ohio adolescent psychiatric mental health services for youth.",
+  "model": "claude-opus-5-5"
+ },
  "mental health counseling for teens in ohio|871989534": {
   "relevant": true,
   "why": "Mental health counseling for Toledo adolescents.",
+  "model": "claude-opus-5-5"
+ },
+ "mental health counseling for teens in ohio|884248106": {
+  "relevant": true,
+  "why": "Ohio group funding therapy for adolescents.",
   "model": "claude-opus-5-5"
  },
  "mental health counseling for teens in ohio|923669183": {
@@ -1629,9 +2464,29 @@
   "why": "Museum in Harrisonburg, not Richmond.",
   "model": "claude-opus-5-5"
  },
+ "museums in richmond, virginia|203699693": {
+  "relevant": false,
+  "why": "Supports museum at Fort Lee, not Richmond.",
+  "model": "claude-opus-5-5"
+ },
  "museums in richmond, virginia|261290004": {
   "relevant": false,
   "why": "Museum in Virginia Beach, not Richmond.",
+  "model": "claude-opus-5-5"
+ },
+ "museums in richmond, virginia|262758962": {
+  "relevant": false,
+  "why": "Museum in West Point, VA, not Richmond.",
+  "model": "claude-opus-5-5"
+ },
+ "museums in richmond, virginia|270876594": {
+  "relevant": false,
+  "why": "Community print studio, not a museum.",
+  "model": "claude-opus-5-5"
+ },
+ "museums in richmond, virginia|274211747": {
+  "relevant": false,
+  "why": "Museum in North Chesterfield, not Richmond proper; borderline location.",
   "model": "claude-opus-5-5"
  },
  "museums in richmond, virginia|460803504": {
@@ -1639,14 +2494,29 @@
   "why": "Museums in Fredericksburg, not Richmond.",
   "model": "claude-opus-5-5"
  },
+ "museums in richmond, virginia|540505959": {
+  "relevant": false,
+  "why": "Monticello is in Charlottesville, not Richmond.",
+  "model": "claude-opus-5-5"
+ },
  "museums in richmond, virginia|540541801": {
   "relevant": false,
   "why": "Museum in Newport News, not Richmond.",
   "model": "claude-opus-5-5"
  },
+ "museums in richmond, virginia|540676990": {
+  "relevant": false,
+  "why": "Heritage education foundation; no museum described.",
+  "model": "claude-opus-5-5"
+ },
  "museums in richmond, virginia|541027436": {
   "relevant": false,
   "why": "Museum in Roanoke, not Richmond.",
+  "model": "claude-opus-5-5"
+ },
+ "museums in richmond, virginia|541633907": {
+  "relevant": false,
+  "why": "Cultural festivals and center, not primarily a museum.",
   "model": "claude-opus-5-5"
  },
  "museums in richmond, virginia|541637667": {
@@ -1664,6 +2534,11 @@
   "why": "Supports a Hampton museum, not Richmond.",
   "model": "claude-opus-5-5"
  },
+ "museums in richmond, virginia|541864320": {
+  "relevant": true,
+  "why": "Holocaust museum located in Richmond, VA.",
+  "model": "claude-opus-5-5"
+ },
  "museums in richmond, virginia|546055922": {
   "relevant": false,
   "why": "Museum in Newport News, not Richmond.",
@@ -1677,6 +2552,16 @@
  "nonprofits fighting hunger|200862587": {
   "relevant": true,
   "why": "Community food pantry to stamp out hunger.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|201894247": {
+  "relevant": true,
+  "why": "Food pantry providing nutritious food to families in need.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|310842947": {
+  "relevant": true,
+  "why": "Choice food pantry serving thousands of families in Franklin County.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|341374549": {
@@ -1694,6 +2579,11 @@
   "why": "Food bank distributing food to fight hunger.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|453813117": {
+  "relevant": true,
+  "why": "Food pantry serving families in need in Rappahannock County.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|454699812": {
   "relevant": true,
   "why": "Distributes food boxes for hunger assistance.",
@@ -1702,6 +2592,21 @@
  "nonprofits fighting hunger|541285793": {
   "relevant": true,
   "why": "Gleans produce to feed hungry neighbors.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|621340755": {
+  "relevant": true,
+  "why": "Food bank distributing food to agencies serving people in need.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|621448193": {
+  "relevant": true,
+  "why": "Soup kitchen providing free hot meals and emergency food.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|800446036": {
+  "relevant": true,
+  "why": "Pantry delivering free groceries to alleviate hunger among seniors.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|811957375": {
@@ -1729,9 +2634,19 @@
   "why": "Tennessee coalition running opioid abuse prevention program.",
   "model": "claude-opus-5-5"
  },
+ "opioid overdose prevention in appalachia|262584597": {
+  "relevant": true,
+  "why": "Chattanooga coalition reducing opioid fatalities in Appalachian SE Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "opioid overdose prevention in appalachia|310805576": {
   "relevant": false,
   "why": "Alcohol-focused treatment, no opioid overdose emphasis.",
+  "model": "claude-opus-5-5"
+ },
+ "opioid overdose prevention in appalachia|310935440": {
+  "relevant": false,
+  "why": "General addiction rehab; Circleville not clearly Appalachian; no overdose focus.",
   "model": "claude-opus-5-5"
  },
  "opioid overdose prevention in appalachia|311182430": {
@@ -1749,9 +2664,29 @@
   "why": "Akron general substance treatment, not Appalachian opioid prevention.",
   "model": "claude-opus-5-5"
  },
+ "opioid overdose prevention in appalachia|621325543": {
+  "relevant": false,
+  "why": "Focus is HIV/HCV prevention, not overdose prevention.",
+  "model": "claude-opus-5-5"
+ },
+ "opioid overdose prevention in appalachia|831487663": {
+  "relevant": false,
+  "why": "Statewide Nashville-based prescriber education, not specifically Appalachian region.",
+  "model": "claude-opus-5-5"
+ },
+ "opioid overdose prevention in appalachia|832100850": {
+  "relevant": true,
+  "why": "Huntington WV addiction treatment and prevention, Appalachian opioid epicenter.",
+  "model": "claude-opus-5-5"
+ },
  "opioid overdose prevention in appalachia|842643977": {
   "relevant": true,
   "why": "Opioid misuse prevention education in West Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "opioid overdose prevention in appalachia|850586081": {
+  "relevant": true,
+  "why": "WV harm reduction outreach directly mitigating overdose crisis.",
   "model": "claude-opus-5-5"
  },
  "opioid overdose prevention in appalachia|853305905": {
@@ -1779,6 +2714,11 @@
   "why": "Housing voucher administration, not refugee resettlement.",
   "model": "claude-opus-5-5"
  },
+ "organizations that help refugees resettle in kentucky|261498186": {
+  "relevant": false,
+  "why": "Homeless rehousing ministry, not refugee resettlement.",
+  "model": "claude-opus-5-5"
+ },
  "organizations that help refugees resettle in kentucky|271268575": {
   "relevant": false,
   "why": "Aid in sub-Saharan Africa.",
@@ -1787,6 +2727,21 @@
  "organizations that help refugees resettle in kentucky|271270425": {
   "relevant": false,
   "why": "Overseas aid to widows abroad, not refugee resettlement.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|562661632": {
+  "relevant": false,
+  "why": "Supports persecuted Christians abroad, not resettlement in Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|610650121": {
+  "relevant": false,
+  "why": "Anti-poverty and Head Start, no refugee resettlement focus.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|610916523": {
+  "relevant": false,
+  "why": "General legal aid for low-income Kentuckians, not refugee resettlement.",
   "model": "claude-opus-5-5"
  },
  "organizations that help refugees resettle in kentucky|611020382": {
@@ -1802,6 +2757,16 @@
  "organizations that help refugees resettle in kentucky|611271054": {
   "relevant": false,
   "why": "Local low-income assistance, not refugees.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|611307117": {
+  "relevant": false,
+  "why": "General emergency assistance for county residents, not refugees.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|621419758": {
+  "relevant": false,
+  "why": "Affordable housing for needy residents, not refugee-specific.",
   "model": "claude-opus-5-5"
  },
  "organizations that help refugees resettle in kentucky|851827556": {
@@ -1829,9 +2794,19 @@
   "why": "Arts-infused out-of-school SEL, not specifically music learning.",
   "model": "claude-opus-5-5"
  },
+ "places where kids can learn music after school in ohio|300158702": {
+  "relevant": true,
+  "why": "After-school performing arts instruction for students in Cleveland.",
+  "model": "claude-opus-5-5"
+ },
  "places where kids can learn music after school in ohio|310852944": {
   "relevant": true,
   "why": "Jazz Academy offers community-based youth jazz education in Columbus.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|311273779": {
+  "relevant": false,
+  "why": "Mainly presents performances; youth orchestra only mentioned briefly.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|311293175": {
@@ -1844,6 +2819,16 @@
   "why": "Youth musical theatre productions and camps for kids in Ohio.",
   "model": "claude-opus-5-5"
  },
+ "places where kids can learn music after school in ohio|311395074": {
+  "relevant": true,
+  "why": "Ohio chamber music program for young musicians.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|311455959": {
+  "relevant": true,
+  "why": "Ohio children's chorus providing music training to kids.",
+  "model": "claude-opus-5-5"
+ },
  "places where kids can learn music after school in ohio|316000101": {
   "relevant": false,
   "why": "Professional performing arts company, no youth music program described.",
@@ -1854,6 +2839,16 @@
   "why": "Description focuses on early childhood preschool, not after-school music.",
   "model": "claude-opus-5-5"
  },
+ "places where kids can learn music after school in ohio|341820263": {
+  "relevant": true,
+  "why": "Cleveland youth orchestra for students from area schools.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|421749949": {
+  "relevant": true,
+  "why": "Ohio string instruction for students during school year.",
+  "model": "claude-opus-5-5"
+ },
  "places where kids can learn music after school in ohio|460912382": {
   "relevant": false,
   "why": "Performance venue and presenter, not youth music instruction.",
@@ -1862,6 +2857,11 @@
  "places where kids can learn music after school in ohio|464509725": {
   "relevant": false,
   "why": "Mainly in-school dance classes, not after-school music.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|472417443": {
+  "relevant": false,
+  "why": "Carnatic music school but not clearly for kids.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|510138886": {
@@ -1889,6 +2889,11 @@
   "why": "National wetland easements for waterfowl, not river/watershed focused in Tennessee.",
   "model": "claude-opus-5-5"
  },
+ "river and watershed conservation groups in tennessee|392853936": {
+  "relevant": true,
+  "why": "Drakes Creek watershed foundation in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "river and watershed conservation groups in tennessee|593774387": {
   "relevant": false,
   "why": "Urban open space preservation, not watersheds.",
@@ -1897,6 +2902,11 @@
  "river and watershed conservation groups in tennessee|620951294": {
   "relevant": true,
   "why": "Tennessee group working on water quality and habitat restoration.",
+  "model": "claude-opus-5-5"
+ },
+ "river and watershed conservation groups in tennessee|621245975": {
+  "relevant": true,
+  "why": "Wolf River conservation group in Memphis, TN.",
   "model": "claude-opus-5-5"
  },
  "river and watershed conservation groups in tennessee|621256238": {
@@ -1914,14 +2924,49 @@
   "why": "Mountain land conservation, not rivers.",
   "model": "claude-opus-5-5"
  },
+ "river and watershed conservation groups in tennessee|621709756": {
+  "relevant": true,
+  "why": "Cumberland River watershed group in Nashville, TN.",
+  "model": "claude-opus-5-5"
+ },
+ "river and watershed conservation groups in tennessee|621802858": {
+  "relevant": true,
+  "why": "Harpeth River conservancy in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
+ "river and watershed conservation groups in tennessee|621832028": {
+  "relevant": true,
+  "why": "Coal Creek watershed environmental foundation in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "river and watershed conservation groups in tennessee|626041526": {
   "relevant": false,
   "why": "Hiking club and trail maintenance.",
   "model": "claude-opus-5-5"
  },
+ "river and watershed conservation groups in tennessee|721594762": {
+  "relevant": true,
+  "why": "Obed watershed environmental association in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
+ "river and watershed conservation groups in tennessee|822318211": {
+  "relevant": true,
+  "why": "Tennessee River cleanup environmental group in Knoxville.",
+  "model": "claude-opus-5-5"
+ },
  "river and watershed conservation groups in tennessee|992628889": {
   "relevant": true,
   "why": "Protects Duck River and its watershed in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|161639511": {
+  "relevant": true,
+  "why": "Ohio scholarships and college support for underrepresented students.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|205747153": {
+  "relevant": false,
+  "why": "Merit scholarships for one high school, not first-gen.",
   "model": "claude-opus-5-5"
  },
  "scholarship funds for first-generation college students in ohio|300108252": {
@@ -1932,6 +2977,11 @@
  "scholarship funds for first-generation college students in ohio|311115810": {
   "relevant": false,
   "why": "University foundation with need-based aid, not first-gen specific.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|311291872": {
+  "relevant": false,
+  "why": "General Ohio scholarships, no first-generation focus.",
   "model": "claude-opus-5-5"
  },
  "scholarship funds for first-generation college students in ohio|311354985": {
@@ -1957,6 +3007,26 @@
  "scholarship funds for first-generation college students in ohio|341316665": {
   "relevant": false,
   "why": "General university foundation, not first-generation focused.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|341657470": {
+  "relevant": false,
+  "why": "Alumni scholarships for one school, not first-gen.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|341843220": {
+  "relevant": false,
+  "why": "College readiness program, not a scholarship fund.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|450570407": {
+  "relevant": false,
+  "why": "Generic memorial scholarship, no first-gen focus.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|510146485": {
+  "relevant": false,
+  "why": "General community college scholarships, not first-gen specific.",
   "model": "claude-opus-5-5"
  },
  "scholarship funds for first-generation college students in ohio|562500142": {
@@ -1994,9 +3064,24 @@
   "why": "Summer tutoring and Chinese classes, not autism-focused.",
   "model": "claude-opus-5-5"
  },
+ "schools for children with autism in virginia|463211492": {
+  "relevant": false,
+  "why": "Serves underserved children, not autism.",
+  "model": "claude-opus-5-5"
+ },
+ "schools for children with autism in virginia|464557296": {
+  "relevant": false,
+  "why": "General charter school, not autism-specific.",
+  "model": "claude-opus-5-5"
+ },
  "schools for children with autism in virginia|472486135": {
   "relevant": true,
   "why": "Supports a Virginia school for students with autism.",
+  "model": "claude-opus-5-5"
+ },
+ "schools for children with autism in virginia|473712417": {
+  "relevant": false,
+  "why": "General preschool, no autism focus.",
   "model": "claude-opus-5-5"
  },
  "schools for children with autism in virginia|475121115": {
@@ -2019,9 +3104,34 @@
   "why": "School for gifted students, not autism.",
   "model": "claude-opus-5-5"
  },
+ "schools for children with autism in virginia|541782012": {
+  "relevant": false,
+  "why": "General Montessori school, no autism focus.",
+  "model": "claude-opus-5-5"
+ },
  "schools for children with autism in virginia|542055003": {
   "relevant": true,
   "why": "Virginia campuses educating students with autism using ABA.",
+  "model": "claude-opus-5-5"
+ },
+ "schools for children with autism in virginia|831073202": {
+  "relevant": false,
+  "why": "General Montessori preschool, no autism focus.",
+  "model": "claude-opus-5-5"
+ },
+ "schools for children with autism in virginia|884064070": {
+  "relevant": false,
+  "why": "Charter school developer, no autism focus.",
+  "model": "claude-opus-5-5"
+ },
+ "senior centers and meals for elderly in west virginia|200015428": {
+  "relevant": false,
+  "why": "Senior housing only, no center or meals.",
+  "model": "claude-opus-5-5"
+ },
+ "senior centers and meals for elderly in west virginia|311558818": {
+  "relevant": false,
+  "why": "Non-medical assistance, no senior center or meals mentioned.",
   "model": "claude-opus-5-5"
  },
  "senior centers and meals for elderly in west virginia|550485438": {
@@ -2039,6 +3149,11 @@
   "why": "WV commission on aging providing senior meals and activities.",
   "model": "claude-opus-5-5"
  },
+ "senior centers and meals for elderly in west virginia|550613613": {
+  "relevant": true,
+  "why": "WV aging services agency serving home-bound seniors.",
+  "model": "claude-opus-5-5"
+ },
  "senior centers and meals for elderly in west virginia|550701159": {
   "relevant": false,
   "why": "Long-term care/senior living facility, not senior center or meals.",
@@ -2052,6 +3167,11 @@
  "senior centers and meals for elderly in west virginia|550747397": {
   "relevant": false,
   "why": "Family and early childhood programs, not seniors.",
+  "model": "claude-opus-5-5"
+ },
+ "senior centers and meals for elderly in west virginia|550751892": {
+  "relevant": false,
+  "why": "General food pantry, not senior-focused.",
   "model": "claude-opus-5-5"
  },
  "senior centers and meals for elderly in west virginia|550761069": {
@@ -2074,6 +3194,11 @@
   "why": "General poverty and addiction ministry, not senior-focused.",
   "model": "claude-opus-5-5"
  },
+ "senior centers and meals for elderly in west virginia|832433694": {
+  "relevant": false,
+  "why": "General referral hotline, not senior centers or meals.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|161650231": {
   "relevant": true,
   "why": "Small Virginia horse rescue under $100K.",
@@ -2089,9 +3214,24 @@
   "why": "Tiny Virginia puppy rescue.",
   "model": "claude-opus-5-5"
  },
+ "small animal rescues in virginia under $100k|272461781": {
+  "relevant": true,
+  "why": "Small Virginia dog rescue under $100K.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|320513008": {
   "relevant": true,
   "why": "Virginia foster and rescue group under $100K.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|384152364": {
+  "relevant": true,
+  "why": "Virginia cat rescue with revenue under $100K.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|461396172": {
+  "relevant": true,
+  "why": "Small Virginia cat rescue under $100K.",
   "model": "claude-opus-5-5"
  },
  "small animal rescues in virginia under $100k|471430057": {
@@ -2109,9 +3249,19 @@
   "why": "Virginia animal rescue league under $100K.",
   "model": "claude-opus-5-5"
  },
+ "small animal rescues in virginia under $100k|800614971": {
+  "relevant": true,
+  "why": "Small Virginia dog rescue under $100K.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|811006591": {
   "relevant": true,
   "why": "Tiny Virginia dog rescue, though dogs come from Bosnia.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|831574520": {
+  "relevant": true,
+  "why": "Small Virginia animal rescue and adoption group under $100K.",
   "model": "claude-opus-5-5"
  },
  "small animal rescues in virginia under $100k|845011286": {
@@ -2132,6 +3282,11 @@
  "soup kitchens in cincinnati|262563110": {
   "relevant": false,
   "why": "Meal delivery in Salem, not Cincinnati.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|300391714": {
+  "relevant": false,
+  "why": "Soup kitchen but in Troy, not Cincinnati.",
   "model": "claude-opus-5-5"
  },
  "soup kitchens in cincinnati|311124774": {
@@ -2169,6 +3324,26 @@
   "why": "Soup kitchen but in Springfield, not Cincinnati.",
   "model": "claude-opus-5-5"
  },
+ "soup kitchens in cincinnati|462425606": {
+  "relevant": false,
+  "why": "Northeast Ohio food pantry, not a Cincinnati soup kitchen.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|474452384": {
+  "relevant": true,
+  "why": "Cincinnati food program; La Soupe rescues food and serves soup.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|474926010": {
+  "relevant": false,
+  "why": "Veterans food pantry in Lima, not Cincinnati.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|475233212": {
+  "relevant": false,
+  "why": "Dayton meals program, not Cincinnati.",
+  "model": "claude-opus-5-5"
+ },
  "soup kitchens in cincinnati|550795075": {
   "relevant": false,
   "why": "Toledo fundraising foundation, wrong place and activity.",
@@ -2204,6 +3379,16 @@
   "why": "General arts community development, not a theater company.",
   "model": "claude-opus-5-5"
  },
+ "theater companies in tennessee|581882966": {
+  "relevant": true,
+  "why": "Tennessee arts center producing main stage and junior theater shows.",
+  "model": "claude-opus-5-5"
+ },
+ "theater companies in tennessee|621387715": {
+  "relevant": true,
+  "why": "Tennessee arts council running theatrical productions in town theatre.",
+  "model": "claude-opus-5-5"
+ },
  "theater companies in tennessee|621791396": {
   "relevant": false,
   "why": "Dance training ministry, not theater.",
@@ -2229,6 +3414,11 @@
   "why": "VFW post in WV assisting veterans, including VA claims.",
   "model": "claude-opus-5-5"
  },
+ "veterans service organizations in west virginia|550232273": {
+  "relevant": true,
+  "why": "VFW department in West Virginia assisting veterans.",
+  "model": "claude-opus-5-5"
+ },
  "veterans service organizations in west virginia|550348460": {
   "relevant": true,
   "why": "VFW fraternal veterans organization in WV.",
@@ -2252,6 +3442,11 @@
  "veterans service organizations in west virginia|550551805": {
   "relevant": true,
   "why": "American Legion post assisting veterans in WV.",
+  "model": "claude-opus-5-5"
+ },
+ "veterans service organizations in west virginia|550613613": {
+  "relevant": false,
+  "why": "Aging services agency; veterans only incidental, not a veterans organization.",
   "model": "claude-opus-5-5"
  },
  "veterans service organizations in west virginia|550699876": {
@@ -2284,9 +3479,29 @@
   "why": "Volunteer fire department in Cecilia, KY.",
   "model": "claude-opus-5-5"
  },
+ "volunteer fire departments in rural kentucky|311513444": {
+  "relevant": true,
+  "why": "Volunteer fire department in small-town Brooksville, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611036458": {
+  "relevant": true,
+  "why": "Volunteer fire department in rural Payneville, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611050038": {
+  "relevant": true,
+  "why": "Volunteer fire department serving rural Belfry, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "volunteer fire departments in rural kentucky|611126613": {
   "relevant": true,
   "why": "Volunteer fire and ambulance service in rural Delphia, KY.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611144092": {
+  "relevant": true,
+  "why": "Volunteer fire department in small Kentucky community.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|611269513": {
@@ -2322,6 +3537,11 @@
  "volunteer fire departments in rural kentucky|901039423": {
   "relevant": true,
   "why": "Volunteer fire department for small Hiseville, KY community.",
+  "model": "claude-opus-5-5"
+ },
+ "who helps families pay utility bills in tennessee|203975433": {
+  "relevant": false,
+  "why": "Emergency aid only for CoreCivic employees, not utility bills.",
   "model": "claude-opus-5-5"
  },
  "who helps families pay utility bills in tennessee|205479870": {
@@ -2364,14 +3584,34 @@
   "why": "Pays utilities for needy families in Crossville, TN.",
   "model": "claude-opus-5-5"
  },
+ "who helps families pay utility bills in tennessee|621603259": {
+  "relevant": true,
+  "why": "Provides money for utilities to needy in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "who helps families pay utility bills in tennessee|621702753": {
   "relevant": false,
   "why": "Mentoring and financial education, not utility payments.",
   "model": "claude-opus-5-5"
  },
+ "who helps families pay utility bills in tennessee|621802432": {
+  "relevant": false,
+  "why": "Food, clothing, coaching; no utility bill assistance stated.",
+  "model": "claude-opus-5-5"
+ },
+ "who helps families pay utility bills in tennessee|680565688": {
+  "relevant": true,
+  "why": "Offers utility cost assistance to Native Americans in Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "who helps families pay utility bills in tennessee|841889347": {
   "relevant": false,
   "why": "Rent, clothing, supplies; utilities not mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "who helps families pay utility bills in tennessee|872784749": {
+  "relevant": false,
+  "why": "General support for widowed parents; utility help not specified.",
   "model": "claude-opus-5-5"
  },
  "youth mentoring nonprofits in kentucky under $1m|010949080": {
@@ -2382,6 +3622,21 @@
  "youth mentoring nonprofits in kentucky under $1m|020727178": {
   "relevant": false,
   "why": "Youth football league, not mentoring.",
+  "model": "claude-opus-5-5"
+ },
+ "youth mentoring nonprofits in kentucky under $1m|134226789": {
+  "relevant": true,
+  "why": "Girls leadership program building relationships in Louisville, small budget.",
+  "model": "claude-opus-5-5"
+ },
+ "youth mentoring nonprofits in kentucky under $1m|262737625": {
+  "relevant": false,
+  "why": "No description; skills center, mentoring not evident.",
+  "model": "claude-opus-5-5"
+ },
+ "youth mentoring nonprofits in kentucky under $1m|384149753": {
+  "relevant": false,
+  "why": "Mental health therapy and case management, not mentoring.",
   "model": "claude-opus-5-5"
  },
  "youth mentoring nonprofits in kentucky under $1m|431252781": {
@@ -2399,6 +3654,11 @@
   "why": "4-H extension camps, not mentoring.",
   "model": "claude-opus-5-5"
  },
+ "youth mentoring nonprofits in kentucky under $1m|611222299": {
+  "relevant": true,
+  "why": "Adult volunteer role models for at-risk kids in KY, under $1M.",
+  "model": "claude-opus-5-5"
+ },
  "youth mentoring nonprofits in kentucky under $1m|611393477": {
   "relevant": false,
   "why": "Youth drug counseling and activities, not mentoring.",
@@ -2407,6 +3667,11 @@
  "youth mentoring nonprofits in kentucky under $1m|800710478": {
   "relevant": false,
   "why": "4-H camps and education, no mentoring.",
+  "model": "claude-opus-5-5"
+ },
+ "youth mentoring nonprofits in kentucky under $1m|810974571": {
+  "relevant": false,
+  "why": "No description; youth coalition, mentoring unclear.",
   "model": "claude-opus-5-5"
  },
  "youth mentoring nonprofits in kentucky under $1m|842809677": {
@@ -2429,9 +3694,34 @@
   "why": "Defiance, northwest Ohio, not Columbus.",
   "model": "claude-opus-5-5"
  },
+ "youth sports leagues in columbus ohio|208444326": {
+  "relevant": false,
+  "why": "Dayton, not Columbus; vague description.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|208687844": {
+  "relevant": false,
+  "why": "Vienna, OH in northeast Ohio, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|263172087": {
+  "relevant": false,
+  "why": "Fairlawn near Akron, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
  "youth sports leagues in columbus ohio|272607608": {
   "relevant": false,
   "why": "Cleveland area, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|300777986": {
+  "relevant": false,
+  "why": "Warren, OH, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|310954810": {
+  "relevant": true,
+  "why": "Youth sports leagues in Grove City, a Columbus suburb.",
   "model": "claude-opus-5-5"
  },
  "youth sports leagues in columbus ohio|310982161": {
@@ -2459,6 +3749,11 @@
   "why": "Struthers near Youngstown, not Columbus.",
   "model": "claude-opus-5-5"
  },
+ "youth sports leagues in columbus ohio|341713187": {
+  "relevant": false,
+  "why": "Ansonia in western Ohio, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
  "youth sports leagues in columbus ohio|454913144": {
   "relevant": false,
   "why": "Cincinnati, not Columbus.",
@@ -2467,6 +3762,16 @@
  "youth sports leagues in columbus ohio|463356585": {
   "relevant": false,
   "why": "Mt Sterling is rural, outside the Columbus area.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|814716430": {
+  "relevant": false,
+  "why": "Cincinnati hockey programs, not Columbus.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|831941138": {
+  "relevant": false,
+  "why": "Harrison, OH near Cincinnati, not Columbus.",
   "model": "claude-opus-5-5"
  },
  "youth sports leagues in columbus ohio|850584944": {

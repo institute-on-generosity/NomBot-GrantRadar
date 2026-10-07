@@ -1,0 +1,146 @@
+"use client";
+import { Fragment, useRef, useState } from "react";
+import Link from "next/link";
+
+type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
+type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string };
+
+const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3", "Which ones are small and community-run?"];
+
+// Research Buddy: ask about the current results; Claude answers from their IRS filings,
+// citing each organization as [n] (links to its page), and shows a summary of its reasoning.
+export function ResearchBuddy({ question, overrides, all, back }: { question: string; overrides: Record<string, string | undefined>; all: boolean; back: string }) {
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [draft, setDraft] = useState("");
+  const busy = turns.at(-1)?.status === "thinking" || turns.at(-1)?.status === "answering";
+  const input = useRef<HTMLInputElement>(null);
+
+  const update = (patch: (t: Turn) => Partial<Turn>) =>
+    setTurns((ts) => ts.map((t, i) => (i === ts.length - 1 ? { ...t, ...patch(t) } : t)));
+
+  async function askBuddy(ask: string) {
+    const text = ask.trim();
+    if (!text || busy) return;
+    const history = turns.filter((t) => t.status === "done").flatMap((t) => [{ role: "user" as const, content: t.ask }, { role: "assistant" as const, content: t.answer }]);
+    setDraft("");
+    setTurns((ts) => [...ts, { ask: text, thinking: "", answer: "", sources: [], status: "thinking" }]);
+    try {
+      const res = await fetch("/api/buddy", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, ask: text, overrides: Object.fromEntries(Object.entries(overrides).filter(([, v]) => v)), all, history }),
+      });
+      if (!res.ok || !res.body) throw new Error((await res.json().catch(() => null))?.error ?? "Research Buddy is unavailable.");
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += value;
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines.filter(Boolean)) {
+          const e = JSON.parse(line);
+          if (e.type === "sources") update(() => ({ sources: e.sources }));
+          else if (e.type === "thinking") update((t) => ({ thinking: t.thinking + e.text }));
+          else if (e.type === "text") update((t) => ({ answer: t.answer + e.text, status: "answering" }));
+          else if (e.type === "error") update(() => ({ status: "error", error: e.message }));
+        }
+      }
+      update((t) => (t.status === "error" ? {} : { status: "done" }));
+    } catch (err) {
+      update(() => ({ status: "error", error: (err as Error).message }));
+    }
+    input.current?.focus();
+  }
+
+  return (
+    <section className={`buddy${turns.length ? " open" : ""}`} aria-label="Research Buddy">
+      {turns.map((t, i) => (
+        <article key={i} className="buddy-turn">
+          <p className="buddy-ask">{t.ask}</p>
+          {t.thinking && (
+            <details className="buddy-thinking">
+              <summary>{t.status === "thinking" ? <><span className="spinner" />Reading the filings…</> : "How I reasoned"}</summary>
+              <p>{t.thinking}</p>
+            </details>
+          )}
+          {!t.thinking && t.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading the filings…</p>}
+          {t.answer && <Answer text={t.answer} sources={t.sources} back={back} />}
+          {t.status === "error" && <p className="notice">{t.error}</p>}
+          {t.status === "done" && <Cited text={t.answer} sources={t.sources} back={back} />}
+        </article>
+      ))}
+
+      <form className="buddy-form" onSubmit={(e) => { e.preventDefault(); askBuddy(draft); }}>
+        <span className="buddy-mark" aria-hidden>✦</span>
+        <input ref={input} value={draft} onChange={(e) => setDraft(e.target.value)} disabled={busy}
+          placeholder={turns.length ? "Ask a follow-up…" : "Ask Research Buddy about these results…"} aria-label="Ask Research Buddy" />
+        <button type="submit" disabled={busy || !draft.trim()}>{busy ? "Thinking…" : "Ask"}</button>
+      </form>
+      {!turns.length && (
+        <div className="buddy-suggest">
+          {SUGGESTIONS.map((s) => <button key={s} type="button" className="chip link" onClick={() => askBuddy(s)}>{s}</button>)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Minimal, safe rendering of the answer: paragraphs, "- " bullets, **bold**, and [n] citations.
+function Answer({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+  const blocks: { list: boolean; lines: string[] }[] = [];
+  for (const line of text.split("\n")) {
+    const item = /^\s*[-*]\s+/.test(line);
+    if (!line.trim()) { blocks.push({ list: false, lines: [] }); continue; }
+    const last = blocks.at(-1);
+    if (last && last.list === item && (item || last.lines.length)) last.lines.push(line.replace(/^\s*[-*]\s+/, ""));
+    else blocks.push({ list: item, lines: [line.replace(/^\s*[-*]\s+/, "")] });
+  }
+  return (
+    <div className="buddy-answer">
+      {blocks.filter((b) => b.lines.length).map((b, i) => (b.list
+        ? <ul key={i}>{b.lines.map((l, j) => <li key={j}><Inline text={l} sources={sources} back={back} /></li>)}</ul>
+        : <p key={i}>{b.lines.map((l, j) => <Fragment key={j}>{j > 0 && " "}<Inline text={l} sources={sources} back={back} /></Fragment>)}</p>))}
+    </div>
+  );
+}
+
+function Inline({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+  return (
+    <>
+      {text.split(/(\*\*[^*]+\*\*|\[\d+(?:,\s*\d+)*\])/).map((part, i) => {
+        if (/^\*\*[^*]+\*\*$/.test(part)) return <b key={i}><Inline text={part.slice(2, -2)} sources={sources} back={back} /></b>;
+        const cite = part.match(/^\[(\d+(?:,\s*\d+)*)\]$/);
+        if (!cite) return <Fragment key={i}>{part}</Fragment>;
+        return (
+          <span key={i} className="cites">
+            {cite[1].split(/,\s*/).map((n) => {
+              const s = sources.find((x) => x.n === Number(n));
+              return s
+                ? <Link key={n} href={`/org/${s.ein}?back=${back}`} className="cite-n" title={`${s.name} · ${s.place}${s.filing ? ` · ${s.filing}` : ""}`}>{n}</Link>
+                : <span key={n} className="cite-n">{n}</span>;
+            })}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+// The organizations the answer cites, in order, with the filing each claim comes from.
+function Cited({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+  const used = [...new Set([...text.matchAll(/\[(\d+(?:,\s*\d+)*)\]/g)].flatMap((m) => m[1].split(/,\s*/).map(Number)))].sort((a, b) => a - b);
+  const list = used.map((n) => sources.find((s) => s.n === n)).filter((s): s is Source => Boolean(s));
+  if (!list.length) return null;
+  return (
+    <ol className="buddy-sources">
+      {list.map((s) => (
+        <li key={s.n}>
+          <span className="cite-n">{s.n}</span>
+          <Link href={`/org/${s.ein}?back=${back}`}>{s.name}</Link>
+          <span>{s.place}{s.filing ? ` · ${s.filing}` : " · IRS master file only"}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}

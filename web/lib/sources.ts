@@ -1,10 +1,10 @@
 // Where each fact on a result came from, linked to the original public file or filing.
 export type Source = { label: string; detail: string; url: string; internal?: boolean }; // internal: opens NomBot's readable viewer
 
-const SOI_EXTRACT_YY = "24"; // matches generosity-data/etl/load_soi.py default
+import { soiViewerUrl } from "./soi";
 
 export function sources(o: {
-  ein: string; state: string | null; revSrc: string | null; finForm: string | null;
+  ein: string; state: string | null; revSrc: string | null; finForm: string | null; finYear?: number | null;
   objectId: string | null; textYear: number | null; textForm: string | null;
 }): Source[] {
   const out: Source[] = [];
@@ -15,9 +15,8 @@ export function sources(o: {
       url: `https://projects.propublica.org/nonprofits/organizations/${o.ein}/${o.objectId}/full`,
     });
   }
-  if (o.revSrc === "soi") {
-    const zip = `${SOI_EXTRACT_YY}eoextract${o.finForm === "990EZ" ? "990EZ" : "990"}.zip`;
-    out.push({ label: "IRS SOI extract", detail: `Revenue, expenses, assets (${zip})`, url: `https://www.irs.gov/pub/irs-soi/${zip}` });
+  if (o.revSrc === "soi" && o.finForm && o.finYear) {
+    out.push({ label: "IRS SOI extract", detail: `Revenue, expenses, assets (Form ${o.finForm}, ${o.finYear})`, url: soiViewerUrl(o.ein, o.finYear, o.finForm), internal: true });
   }
   if (o.state) {
     out.push({
