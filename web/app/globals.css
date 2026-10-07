@@ -261,13 +261,22 @@ button.fchip-main { cursor: pointer; }
 .sk-bar + .sk-row { margin-top: 40px; }
 @keyframes shimmer { 50% { opacity: .55; } }
 
-/* Loading popup */
+/* Loading popup: progress bar along the top + a step pill below the search bar, centered on the content */
 .loading { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: 0; animation: show .15s ease-out .15s forwards; }
-.loading-bar { position: absolute; top: 0; left: 0; height: 2px; width: 40%; background: var(--g); animation: bar 1.1s ease-in-out infinite; }
-.loading-pill { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); color: var(--ink); font-size: 14px; font-weight: 500; border-radius: 999px; padding: 9px 16px; box-shadow: 0 0 0 1px var(--line), var(--shadow); }
-.spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--fill-2); border-top-color: var(--g); animation: spin .7s linear infinite; }
+.loading-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--g); transform-origin: left; transform: scaleX(0); transition: transform .3s ease-out; box-shadow: 0 0 8px var(--g-line); }
+.loading-pill { position: absolute; top: 76px; left: calc(50% + 130px); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); color: var(--ink); font-size: 14px; font-weight: 500; border-radius: 999px; padding: 10px 16px; box-shadow: 0 0 0 1px var(--line), var(--shadow); white-space: nowrap; }
+body:has(.side.collapsed) .loading-pill { left: calc(50% + 30px); }
+.loading-text { animation: step-in .3s var(--spring) both; }
+.loading-steps { display: flex; gap: 4px; margin-left: 2px; }
+.loading-steps i { width: 6px; height: 6px; border-radius: 999px; background: var(--fill-2); transition: background-color .3s, width .3s var(--spring); }
+.loading-steps i.done { background: var(--g-line); }
+.loading-steps i.now { width: 16px; background: var(--g); }
+.spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--fill-2); border-top-color: var(--g); animation: spin .7s linear infinite; flex: none; }
+/* While a new page loads, fade what's on screen (but not the search bar) so it reads as "being replaced" */
+.content main > * { transition: opacity .25s ease .2s; }
+:root[data-loading] .content main > :not(.search):not(.hero) { opacity: .4; }
+@keyframes step-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes show { to { opacity: 1; } }
-@keyframes bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 760px) {
@@ -281,6 +290,7 @@ button.fchip-main { cursor: pointer; }
   .scrim { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.25); }
   main { padding: 20px 16px 56px; }
   .search { top: 62px; }
+  .loading-pill, body:has(.side.collapsed) .loading-pill { left: 50%; top: 124px; }
   .greet { font-size: 32px; gap: 14px; }
   .greet .logo { width: 32px; height: 32px; font-size: 16px; }
   .hero { min-height: calc(100vh - 140px); }

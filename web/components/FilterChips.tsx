@@ -37,14 +37,14 @@ export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: s
             </button>
           ) : <span className="fchip-main">{c.label}</span>}
           {c.removeHref && (
-            <NavLink href={c.removeHref} className="fchip-x" title={`Remove ${c.label}`} label="Updating results…">
+            <NavLink href={c.removeHref} className="fchip-x" title={`Remove ${c.label}`} label="Updating results…" search>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-label={`Remove ${c.label}`}><path d="M6 6l12 12M18 6 6 18" /></svg>
             </NavLink>
           )}
           {open === c.key && c.options && (
             <span className="fmenu" role="menu" onClick={() => setOpen(null)}>
               {c.options.map((o) => (
-                <NavLink key={o.label} href={o.href} className={`fmenu-item${o.on ? " on" : ""}`} current={o.on} label="Updating results…">
+                <NavLink key={o.label} href={o.href} className={`fmenu-item${o.on ? " on" : ""}`} current={o.on} label="Updating results…" search>
                   <span>{o.label}</span>
                   {o.on && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12 5 5 9-10" /></svg>}
                 </NavLink>
@@ -53,7 +53,7 @@ export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: s
           )}
         </span>
       ))}
-      {resetHref && <NavLink href={resetHref} className="freset" label="Updating results…">Reset filters</NavLink>}
+      {resetHref && <NavLink href={resetHref} className="freset" label="Updating results…" search>Reset filters</NavLink>}
     </div>
   );
 }

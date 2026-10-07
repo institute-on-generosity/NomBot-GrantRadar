@@ -100,7 +100,7 @@ export function SearchBox({ action = "/", name = "question", value = "", placeho
           ))}
         </ul>
       )}
-      {pending && <Loading label="Reading your question…" />}
+      {pending && <Loading label="Reading your question…" search />}
     </form>
   );
 }

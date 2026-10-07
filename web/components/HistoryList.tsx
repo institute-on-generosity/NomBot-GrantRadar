@@ -23,7 +23,7 @@ export function HistoryList() {
       <ul className="history">
         {list.map((e) => (
           <li key={e.key}>
-            <NavLink href={historyTarget(e)} className="h-q" label="Opening your results…">{e.question}</NavLink>
+            <NavLink href={historyTarget(e)} className="h-q" label="Opening your results…" search>{e.question}</NavLink>
             <div className="h-meta">
               {e.total} results · {ago(e.at)}
               {e.viewed && <> · last viewed <b>{titleCase(e.viewed.name)}</b></>}

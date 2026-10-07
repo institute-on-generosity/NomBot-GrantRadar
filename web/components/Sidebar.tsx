@@ -67,7 +67,7 @@ export function Sidebar() {
           <Section title="Recents" all="/history" active={here.path === "/history"}
             empty="Your questions will show up here.">
             {history.slice(0, SHOWN).map((e) => (
-              <NavLink key={e.key} href={historyTarget(e)} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…">{e.question}</NavLink>
+              <NavLink key={e.key} href={historyTarget(e)} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…" search>{e.question}</NavLink>
             ))}
           </Section>
         </nav>

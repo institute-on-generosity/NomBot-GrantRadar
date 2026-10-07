@@ -43,7 +43,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   if (!question) {
     return (
       <Hero>
-        <div className="chips suggest">{EXAMPLES.slice(0, 5).map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
+        <div className="chips suggest">{EXAMPLES.slice(0, 5).map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…" search>{e}</NavLink>)}</div>
       </Hero>
     );
   }
