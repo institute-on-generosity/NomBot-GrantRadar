@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Chips } from "@/components/Chips";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
@@ -25,6 +26,7 @@ export default function Home({ searchParams }: { searchParams: SearchParams }) {
 
 async function Results({ searchParams }: { searchParams: SearchParams }) {
   const question = ((await searchParams).question ?? "").trim().slice(0, 300);
+  if (question) await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
   const filters = question ? await parseQuestion(question) : null;
   const res = filters ? await search({ q: filters.q, semantic: filters.semantic, states: filters.states, maxRevenue: filters.maxRevenue, ntee: filters.ntee, limit: 10 }) : null;
 
