@@ -81,7 +81,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
       {/* One card: AI overview (first tab) + the landscape views. The overview streams in its own boundary. */}
-      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs size={0} views={[{ key: "overview", label: "Overview", node: <AiOverviewSkeleton /> }]} />}>
+      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
         <Landscape question={question} filters={filters} includeInactive={includeInactive}
           overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
           hrefs={{

@@ -541,3 +541,32 @@ button.fchip-main { cursor: pointer; }
 .overview-foot { display: flex; align-items: center; gap: 5px; }
 .overview-foot svg { width: 11px; height: 11px; color: var(--g); }
 @media (max-width: 640px) { .seg button { padding: 5px 8px; font-size: 12px; } }
+
+/* Calmer landscape card: header follows the tab; lighter citations, links and bars */
+.landscape { padding: 12px 16px 14px; }
+.landscape header { margin-bottom: 10px; }
+.landscape h2 { font-size: 14px; animation: step-in .25s var(--spring) both; }
+.landscape h2 span { font-size: 12px; }
+.landscape .overview .buddy-answer { font-size: 14.5px; }
+.landscape .overview .buddy-answer + .buddy-answer { font-size: 13.5px; margin-top: 6px; }
+.landscape .cite-n { font-size: 10px; min-width: 15px; height: 15px; padding: 0 3px; background: none; box-shadow: inset 0 0 0 1px var(--g-line); }
+.explore { gap: 4px 14px; margin-top: 10px; }
+.explore > span { font-size: 12px; margin-right: 0; }
+.explore-link { font-size: 13px; color: var(--g); text-decoration: none; }
+.explore-link:hover { text-decoration: underline; }
+.overview-foot { margin-top: 8px; font-size: 11px; }
+.ov-wait { color: var(--mute); }
+.ls-track { height: 5px; }
+.ls-row { padding: 2px 6px; font-size: 12.5px; }
+.ls-fgrantees { color: var(--faint); }
+/* Tabs stay put whatever the title; the title truncates */
+.landscape header { flex-wrap: nowrap; }
+.landscape h2 { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: block; }
+.landscape h2 > svg { vertical-align: -2px; margin-right: 6px; }
+.landscape .seg { flex: none; }
+@media (max-width: 640px) { .landscape header { flex-wrap: wrap; } }
+/* Funders: name · place · stats on one line, grantees under it */
+.ls-funders li { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "name meta stat" "grantees grantees grantees"; gap: 2px 10px; padding: 8px 0; }
+.ls-fmeta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-fgrantees { margin-top: 1px; }
+.ls-row { grid-template-columns: minmax(0, 11em) 1fr 2.4em; }

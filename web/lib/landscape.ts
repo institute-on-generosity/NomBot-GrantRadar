@@ -49,7 +49,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
                      (array_agg(DISTINCT o.name))[1:3] AS grantees
               FROM grants g JOIN funders f ON f.ein = g.funder_ein JOIN orgs o ON o.ein = g.recipient_ein
               WHERE g.recipient_ein = ANY($1)
-              GROUP BY 1, 2, 3, 4, 5 ORDER BY orgs DESC, amount DESC LIMIT 8`, [eins]),
+              GROUP BY 1, 2, 3, 4, 5 ORDER BY orgs DESC, amount DESC LIMIT 6`, [eins]),
     db.query(`SELECT count(DISTINCT recipient_ein)::int AS n FROM grants WHERE recipient_ein = ANY($1)`, [eins]),
   ]);
 
@@ -62,9 +62,9 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   return {
     size: results.length,
     sizes: BANDS.map(([key, label, lo, hi]) => ({ key, label, count: revs.filter((x) => x >= lo && x < hi).length })),
-    cities: tally(results, (r) => (r.city ? `${r.city.toUpperCase()}|${r.state ?? ""}` : null)).slice(0, 6)
+    cities: tally(results, (r) => (r.city ? `${r.city.toUpperCase()}|${r.state ?? ""}` : null)).filter(([, n]) => n >= 2).slice(0, 6)
       .map(([k, count]) => { const [c, st] = k.split("|"); return { key: c, label: `${title(c)}, ${st}`, count }; }),
-    causes: tally(results, (r) => r.ntee?.code?.[0] ?? null).slice(0, 6).map(([k, count]) => ({ key: k, label: nteeLabel(k) ?? k, count })),
+    causes: tally(results, (r) => (r.ntee?.code?.[0] && r.ntee.code[0] !== "Z" ? r.ntee.code[0] : null)).filter(([, n]) => n >= 2).slice(0, 6).map(([k, count]) => ({ key: k, label: nteeLabel(k) ?? k, count })),
     team: TEAM.map(([key, label]) => ({ key, label, count: teamCounts.find(([k]) => k === key)?.[1] ?? 0 })),
     teamReported: t.length,
     counties: Object.fromEntries(geo.map((r) => [r.county_fips, r.n])),
@@ -75,7 +75,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   };
 }
 
-const cached = memo<Landscape>("landscape:v2", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v4", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

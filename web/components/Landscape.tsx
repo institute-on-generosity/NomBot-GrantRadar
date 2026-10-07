@@ -15,13 +15,13 @@ export async function Landscape({ question, filters, includeInactive, hrefs, map
   map: (counts: Record<string, number>, appalachia: string[], states: string[]) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
-  const first = { key: "overview", label: "Overview", node: overview };
-  if (l.size < 5) return <LandscapeTabs size={l.size} views={[first]} />;
+  const first = { key: "overview", label: "Overview", title: "AI overview", node: overview };
+  if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const states = [...new Set(l.cities.map((c) => c.label.slice(-2)))];
   return (
-    <LandscapeTabs size={l.size} views={[
+    <LandscapeTabs views={[
       first,
-      { key: "breakdown", label: "Breakdown", node: (
+      { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} href={hrefs.size} />
           <Bars title="Places" bars={l.cities} href={hrefs.city} />
@@ -29,12 +29,11 @@ export async function Landscape({ question, filters, includeInactive, hrefs, map
           <Bars title="Team" bars={l.team} note={`${l.teamReported} report staff`} />
         </div>
       ) },
-      { key: "map", label: "Map", node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
-      { key: "themes", label: "Themes", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
-      { key: "funders", label: "Funders", node: (
+      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
+      { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
+      { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (
           <>
-            <p className="ls-note">{l.funded} of these {l.size} organizations got a foundation grant in 2025 990-PF filings (foundations in WV, KY, TN, VA, OH).</p>
             <ul className="ls-funders">
               {l.funders.map((f) => (
                 <li key={f.ein}>
@@ -46,7 +45,7 @@ export async function Landscape({ question, filters, includeInactive, hrefs, map
               ))}
             </ul>
           </>
-        ) : <p className="ls-note">No foundation grants found to these organizations in the loaded 990-PF data.</p>
+        ) : <p className="ls-note">No foundation grants to these organizations in the loaded 990-PF data.</p>
       ) },
     ]} />
   );

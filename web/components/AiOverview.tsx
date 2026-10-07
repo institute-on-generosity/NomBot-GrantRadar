@@ -18,10 +18,10 @@ export function AiOverview({ o, explore }: { o: Overview; explore: { q: string; 
       {explore.length > 0 && (
         <div className="explore">
           <span>Explore</span>
-          {explore.map(({ q, href }) => <NavLink key={q} href={href} className="chip link" label="Reading your question…" search>{q}</NavLink>)}
+          {explore.map(({ q, href }) => <NavLink key={q} href={href} className="explore-link" label="Reading your question…" search>{q}</NavLink>)}
         </div>
       )}
-      <p className="overview-foot"><Spark />AI-generated from the IRS filings of the {o.count} strong matches. Check details before relying on them.</p>
+      <p className="overview-foot">AI-generated from {o.count} strong matches&apos; IRS filings · verify details</p>
     </section>
   );
 }
@@ -29,7 +29,7 @@ export function AiOverview({ o, explore }: { o: Overview; explore: { q: string; 
 export function AiOverviewSkeleton() {
   return (
     <section className="overview loading-ov" aria-label="AI overview loading">
-      <p className="ov-wait"><Spark />Reading the strongest matches…</p>
+      <p className="ov-wait">Reading the strongest matches…</p>
       <div className="ov-lines" aria-hidden><i /><i /><i className="short" /></div>
     </section>
   );

@@ -15,8 +15,8 @@ export type Overview = { summary: string; patterns: string[]; explore: string[];
 const SYSTEM = `You write the short overview shown above nonprofit search results, like a search engine's AI overview.
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
 Help the user zoom out: what does this landscape look like?
-- summary: 1-2 sentences, at most 45 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
-- patterns: 2-3 observations of at most 14 words each, each about a group of organizations, citing two or three examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), program types named in the text.
+- summary: 1-2 sentences, at most 38 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
+- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), program types named in the text.
 - explore: 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle: a nearby cause, another place, or a narrower activity. Don't repeat the question.
 Cite organizations only by their number in square brackets. Plain language, no hype, no advice.`;
 
@@ -70,7 +70,7 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview", 200, 24 * 3600_000);
+const cached = memo<Overview | null>("overview:v2", 200, 24 * 3600_000); // bump when the prompt changes
 export function overview(question: string, results: Ranked[]) {
   const strong = results.filter((r) => r.relevance && isStrong(r));
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
