@@ -70,9 +70,9 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 **Question:** *"Food banks in rural Appalachia that also do workforce training, under $500K budget."*
 
-**Outcome:** a ranked list with filters, in under 2 seconds. The user compares the results and decides.
+**Outcome:** a ranked list in under 2 seconds, with the question turned into filter chips. The user compares the results and decides.
 
-![NomBot search results mockup: plain-language query, "Understood as" filter chips, filter sidebar, two result cards with financials and highlighted mission text, and a "Reason with these results in Research Buddy" button](docs/ux/ux-search.png)
+![NomBot search mockup: a plain-language query, filter chips (food banks, Appalachia, under $500K, workforce training), three result cards with location, a highlighted program line and revenue, and an "Ask Research Buddy about these results" button](docs/ux/ux-search.png)
 
 ### IoG researcher: Research Buddy, reason with your data (Phase 2, from Nov 22)
 
@@ -82,9 +82,9 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 1. *"I'm researching how Appalachian food banks are moving into workforce development. What patterns do you see across these 12?"*
 2. *"If a donor wants to fund $50K to expand job training, which is the strongest fit, and why?"*
 
-**Outcome:** an analysis rather than a list. Here that's a finding (training appears once revenue passes ~$250K), a comparison table, a reasoned recommendation, the data's limits (4 orgs filed no program text), and next steps (draft a memo, compare with Ohio, export to CSV).
+**Outcome:** an analysis rather than a list. Each answer shows its **reasoning steps**, then a finding (training appears once revenue passes ~$250K), the evidence (a cited comparison table), and a reasoned recommendation.
 
-![Research Buddy mockup: a chat with the 12 search results in context. The IoG researcher asks about patterns; the answer shows numbered reasoning steps, finds that job training appears above ~$250K revenue, compares three food banks in a table with cited program-spending ratios, and flags missing data. A second question asks which org best fits a $50K grant; the answer reasons through capacity and efficiency and recommends Mountain Harvest with citations. Follow-up chips offer a funding memo, an Ohio comparison and a CSV export.](docs/ux/ux-research.png)
+![Research Buddy mockup: a chat over 12 search results. Asked about patterns, it shows its reasoning steps (read 12 filings, sorted food-only vs. training, compared size), finds that training appears above ~$250K revenue, and cites a 3-row comparison table. Asked which org best fits a $50K grant, it reasons through grant vs. budget, program spending and existing programs, and recommends Mountain Harvest with a citation.](docs/ux/ux-research.png)
 
 ### Side by side
 
