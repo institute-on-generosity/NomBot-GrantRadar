@@ -645,3 +645,9 @@ main:has(.serp) { max-width: 1400px; }
 @media (min-width: 901px) {
   .shell:has(.serp) .side-panel { position: fixed; top: 0; right: 0; bottom: 0; height: auto; width: clamp(380px, calc((100vw - 260px) * .4), 660px); box-shadow: -18px 0 48px rgba(0,0,0,.12); border-left: 1px solid var(--line); z-index: 40; }
 }
+/* Side panel close: a labelled pill with a "push right" arrow */
+.panel-close { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 6px 12px 6px 10px; cursor: pointer; transition: background-color .15s, color .15s, transform .2s var(--spring); }
+.panel-close:hover { background: var(--fill-2); color: var(--ink); }
+.panel-close:hover svg { transform: translateX(2px); }
+.panel-close svg { transition: transform .25s var(--spring); }
+.panel-close:active { transform: scale(.96); }

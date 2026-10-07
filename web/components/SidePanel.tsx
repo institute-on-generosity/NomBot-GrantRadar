@@ -18,8 +18,10 @@ export function SidePanel({ title, children }: { title: string; children: React.
       <aside className="side-panel" aria-label={title}>
         <header className="panel-head">
           <span>{title}</span>
-          <button type="button" className="iconbtn" onClick={() => router.back()} aria-label="Close panel" title="Close (Esc)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+          {/* Pushes the panel away to the right */}
+          <button type="button" className="panel-close" onClick={() => router.back()} aria-label="Close panel" title="Close (Esc)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 12h12M11 7l5 5-5 5M20 5v14" /></svg>
+            Close
           </button>
         </header>
         <div className="panel-body">{children}</div>
