@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "GrantRadar System Architecture",
+    "output": ".archify/architecture-grantradar-grants-20261006-175141/grantradar.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Nonprofits",
+      "sublabel": "dev directors \u00b7 grant writers",
+      "pos": [
+        40,
+        120
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Profile + Matches",
+      "sublabel": "/grants \u00b7 Next.js",
+      "pos": [
+        270,
+        120
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "match",
+      "type": "backend",
+      "label": "Matching Engine",
+      "sublabel": "similar grantees \u2192 funders",
+      "pos": [
+        520,
+        120
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "rank: count \u00b7 amount \u00b7 recency"
+    },
+    {
+      "id": "explain",
+      "type": "backend",
+      "label": "Match Explainer",
+      "sublabel": "LLM \u00b7 cited reasoning",
+      "pos": [
+        520,
+        260
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Postgres + pgvector",
+      "sublabel": "orgs \u00b7 grants \u00b7 funders \u00b7 filing_text",
+      "pos": [
+        860,
+        110
+      ],
+      "size": [
+        220,
+        80
+      ],
+      "tag": "shared with NomBot \u00b7 Auth"
+    },
+    {
+      "id": "bmf",
+      "type": "external",
+      "label": "IRS EO BMF",
+      "sublabel": "org list \u00b7 monthly",
+      "pos": [
+        520,
+        440
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "pfxml",
+      "type": "external",
+      "label": "IRS 990-PF XML",
+      "sublabel": "Part XV grants paid",
+      "pos": [
+        520,
+        580
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "web",
+      "type": "external",
+      "label": "Foundation Websites",
+      "sublabel": "top ~500 only",
+      "pos": [
+        520,
+        720
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "matcher",
+      "type": "backend",
+      "label": "Recipient Matcher",
+      "sublabel": "name + city/state \u2192 EIN",
+      "pos": [
+        870,
+        440
+      ],
+      "size": [
+        200,
+        60
+      ],
+      "tag": "hardest step"
+    },
+    {
+      "id": "parser",
+      "type": "backend",
+      "label": "Grant Parser",
+      "sublabel": "990-PF Part XV",
+      "pos": [
+        870,
+        580
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "scraper",
+      "type": "backend",
+      "label": "Site Scraper",
+      "sublabel": "quarterly",
+      "pos": [
+        870,
+        720
+      ],
+      "size": [
+        200,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "NomBot app \u00b7 /grants \u00b7 Vercel",
+      "wraps": [
+        "ui",
+        "match",
+        "explain"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Supabase Pro \u00b7 hosted Postgres",
+      "wraps": [
+        "db"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Public data sources",
+      "wraps": [
+        "bmf",
+        "pfxml",
+        "web"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "generosity-data \u00b7 GitHub Actions",
+      "wraps": [
+        "matcher",
+        "parser",
+        "scraper"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "enter-mission",
+      "from": "users",
+      "to": "ui",
+      "label": "mission",
+      "variant": "emphasis"
+    },
+    {
+      "id": "find-funders",
+      "from": "ui",
+      "to": "match",
+      "label": "find funders",
+      "variant": "emphasis"
+    },
+    {
+      "id": "match-query",
+      "from": "match",
+      "to": "db",
+      "label": "vector + SQL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ask-why",
+      "from": "ui",
+      "to": "explain",
+      "label": "why this funder?",
+      "variant": "dashed"
+    },
+    {
+      "id": "explain-read",
+      "from": "explain",
+      "to": "db",
+      "label": "grant history",
+      "variant": "dashed"
+    },
+    {
+      "id": "bmf-load",
+      "from": "bmf",
+      "to": "matcher",
+      "label": "org list"
+    },
+    {
+      "id": "pf-load",
+      "from": "pfxml",
+      "to": "parser",
+      "label": "grants"
+    },
+    {
+      "id": "web-load",
+      "from": "web",
+      "to": "scraper",
+      "label": "contacts"
+    },
+    {
+      "id": "parser-to-matcher",
+      "from": "parser",
+      "to": "matcher",
+      "label": "recipients"
+    },
+    {
+      "id": "matcher-upsert",
+      "from": "matcher",
+      "to": "db",
+      "label": "linked grants"
+    },
+    {
+      "id": "scraper-upsert",
+      "from": "scraper",
+      "to": "db",
+      "label": "deadlines",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Matching",
+      "items": [
+        "Mission \u2192 similar grantees (NomBot embeddings)",
+        "Their funders, ranked by count, amount, recency",
+        "Purpose text alone is weak (often 'general support')"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Data",
+      "items": [
+        "990-PF Part XV: who each foundation paid, how much",
+        "Recipients often lack EINs \u2192 name + city/state match",
+        "Contacts/deadlines only for top ~500 foundations"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cloud",
+      "items": [
+        "Supabase Pro shared with NomBot; Auth for logins + saved matches",
+        "Vercel + GitHub Actions free tiers"
+      ]
+    }
+  ]
+}
