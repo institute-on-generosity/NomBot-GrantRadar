@@ -630,3 +630,8 @@ main:has(.serp) { max-width: 1400px; }
 .cite-tip span:nth-of-type(1) { color: var(--mute); font-size: 12px; }
 @keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
 .overview .cite-n:hover, .overview .cite-n:focus-visible { background: var(--g-tint); color: var(--g-dark); }
+/* Results scroll area: room for row hover backgrounds on both sides and a reserved scrollbar gutter */
+@media (min-width: 901px) {
+  main:has(.serp) .serp-main { padding: 2px 14px 72px 16px; margin: 0 -16px; scrollbar-gutter: stable; }
+  main:has(.serp) .serp-rail { scrollbar-gutter: stable; padding-right: 2px; }
+}
