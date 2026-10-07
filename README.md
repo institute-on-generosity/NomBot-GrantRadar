@@ -120,7 +120,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 | Layer | Proof of concept (local) | Cloud (after migration) |
 |---|---|---|
-| Database | Postgres 16 + pgvector in Docker (`pgvector/pgvector` image) | Supabase Pro (hosted Postgres + pgvector, HNSW index) |
+| Database | Postgres 17 + pgvector 0.8 via Homebrew (no Docker needed) | Supabase Pro (hosted Postgres + pgvector, HNSW index) |
 | Data | 5 Appalachian states (WV, KY, TN, VA, OH) | All ~1.8M US nonprofits |
 | ETL | Python scripts run by hand | Same scripts on GitHub Actions, monthly |
 | App + API | Next.js on `localhost:3000` | Next.js on Vercel |
@@ -136,7 +136,7 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 
 | Dates | Work | Done when |
 |---|---|---|
-| Oct 5 – Oct 18 | **Local proof of concept:** Postgres + pgvector in Docker; load BMF + SOI + 990 text for 5 Appalachian states; embeddings; LLM query parsing; basic search page + read-only API on `localhost` | The demo query (*"food banks in rural Appalachia that do workforce training, under $500K"*) works end to end on a laptop |
+| Oct 5 – Oct 18 | **Local proof of concept:** Postgres + pgvector on the laptop; load BMF + SOI + 990 text for 5 Appalachian states; embeddings; LLM query parsing; basic search page + read-only API on `localhost` | The demo query (*"food banks in rural Appalachia that do workforce training, under $500K"*) works end to end on a laptop |
 | Oct 19 – Oct 25 | **Migrate to cloud:** Supabase Pro; full national load (~1.8M orgs); deploy to Vercel; ETL on GitHub Actions | Same demo works at a public URL; **read-only API live for developers** |
 | Oct 26 – Nov 1 | 50-query eval set; tune query parsing | ≥90% relevant results on the eval set |
 | Nov 2 – Nov 8 | Web UI: search, result cards, filters | IoG team using it |
@@ -157,23 +157,12 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 
 | Item | Proof of concept (Oct 5 – 18) | Cloud (from Oct 19), monthly |
 |---|---|---|
-| Database | $0 (Docker on a laptop) | $25 (Supabase Pro, ≈ 1–2 GB) |
+| Database | $0 (Postgres on a laptop) | $25 (Supabase Pro, ≈ 1–2 GB) |
 | Hosting + ETL | $0 (localhost, run by hand) | $0 (Vercel, GitHub Actions) |
 | Embeddings | <$1 one-time (5 states) | <$5 one-time (full load) |
 | LLM query parsing | ~$1 (testing) | $5–20 |
 | LLM RAG answers (phase 2) | none | $5–15 |
 | **Total** | **~$2** | **~$30–60** |
-
-## Risks
-
-| Risk | Mitigation |
-|---|---|
-| BMF lists dissolved orgs | Load only active orgs; cross-check with ProPublica |
-| Text only for ~300K orgs | Show how complete each org's data is; others are found by filters and keyword search |
-| 990 XML formats vary by year | Parse each schema version; log and skip rows that fail |
-| Free-tier API limits | Cache frequent queries; rate-limit the API |
-| Local setup differs from cloud | Same Postgres version + pgvector locally and in Supabase; schema in versioned SQL migrations; migrate with `pg_dump` / `pg_restore` |
-| RAG states false things about real orgs | Answer only from the results shown; require a citation for every claim; label answers as AI-generated |
 
 ## Progress
 
@@ -187,9 +176,9 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 - [x] Deadline set: Dec 31, 2026
 
 ### Oct 5 – Oct 18: Local proof of concept
-- [ ] Docker: Postgres 16 + pgvector running locally
-- [ ] Database schema as SQL migrations (`orgs`, `financials`, `filing_text`)
-- [ ] Load IRS BMF for WV, KY, TN, VA, OH (active orgs only)
+- [x] Postgres 17 + pgvector running locally (Homebrew)
+- [x] Database schema as SQL migrations (`orgs`, `financials`, `filing_text`)
+- [x] Load IRS BMF for WV, KY, TN, VA, OH (active orgs only): 204,564 orgs
 - [ ] Load IRS SOI financials for those orgs
 - [ ] Extract mission + program text from 990 XML
 - [ ] Embeddings + pgvector index
