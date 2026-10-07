@@ -8,7 +8,7 @@ import type { Overview } from "@/lib/overview";
 export function AiOverview({ o }: { o: Overview }) {
   const cite = (n: number) => {
     const x = o.orgs.find((y) => y.n === n);
-    return x && { title: `${x.name} · ${x.place}` };
+    return x && { title: x.name, lines: [[x.place, x.facts].filter(Boolean).join(" · "), x.about] };
   };
   return (
     <section className="overview" aria-label="AI overview">

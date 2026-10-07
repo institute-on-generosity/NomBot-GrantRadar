@@ -622,3 +622,11 @@ main:has(.serp) { max-width: 1400px; }
 @media (max-width: 900px) { .serp-head { margin: 0 -32px; padding: 10px 32px 8px; } }
 @media (max-width: 760px) { .serp-head { top: 49px; margin: 0 -16px; padding: 8px 16px; } }
 @media (max-width: 900px) { .serp-head .chips > * { flex: none; white-space: nowrap; } }
+
+/* Hover card for citations that aren't links (AI overview) */
+.cite-tip { position: fixed; z-index: 60; transform: translate(-50%, -100%); width: 280px; display: flex; flex-direction: column; gap: 4px; padding: 11px 13px; border-radius: 12px; background: var(--bg); box-shadow: 0 0 0 1px var(--line), var(--shadow); font-size: 12.5px; line-height: 1.45; color: var(--ink-2); pointer-events: none; animation: tip-in .16s var(--spring) both; }
+.cite-tip.below { transform: translate(-50%, 0); }
+.cite-tip b { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.cite-tip span:nth-of-type(1) { color: var(--mute); font-size: 12px; }
+@keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
+.overview .cite-n:hover, .overview .cite-n:focus-visible { background: var(--g-tint); color: var(--g-dark); }

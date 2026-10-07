@@ -10,7 +10,7 @@ import { claude, LLM_MODEL } from "./llm";
 import { memo } from "./memo";
 import { isStrong, type Ranked } from "./rerank";
 
-export type Overview = { summary: string; patterns: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string }[]; count: number };
+export type Overview = { summary: string; patterns: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number };
 
 const SYSTEM = `You write the short overview shown above nonprofit search results, like a search engine's AI overview.
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
@@ -22,6 +22,8 @@ Cite organizations only by their number in square brackets. Plain language, no h
 
 const schema = z.object({ summary: z.string(), patterns: z.array(z.string()), explore: z.array(z.string()) });
 
+// Cut at a word boundary, with an ellipsis when shortened.
+const clip = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`);
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : null; };
 const money = (n: number) => (n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`);
 const top = (xs: (string | null)[], k: number) => {
@@ -36,10 +38,14 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
   const { rows } = await db.query(
     `SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [strong.map((r) => r.ein)]);
   const team = new Map(rows.map((r) => [r.ein as string, { staff: r.employees as number | null, vols: r.volunteers as number | null }]));
+  const orgs = strong.map((r, i) => ({
+    n: i + 1, ein: r.ein, name: titleCase(r.name), place: [r.city && titleCase(r.city), r.state].filter(Boolean).join(", "),
+    facts: [r.ntee?.label, r.revenue ? `${money(r.revenue.amount)} revenue` : null, team.get(r.ein)?.staff != null ? `${team.get(r.ein)!.staff} staff` : null].filter(Boolean).join(" · "),
+    about: clip(readable([r.mission, r.programs].filter(Boolean).join(" ")), 160),
+  }));
   const revs = strong.map((r) => r.revenue?.amount).filter((x): x is number => x != null && x > 0);
   const staffed = strong.filter((r) => team.get(r.ein)?.staff != null);
   const allVol = staffed.filter((r) => team.get(r.ein)!.staff === 0 && (team.get(r.ein)!.vols ?? 0) > 0).length;
-  const orgs = strong.map((r, i) => ({ n: i + 1, ein: r.ein, name: titleCase(r.name), place: [r.city && titleCase(r.city), r.state].filter(Boolean).join(", ") }));
 
   const figures = [
     `Strong matches: ${strong.length}`,
@@ -70,7 +76,7 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v2", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<Overview | null>("overview:v4", 200, 24 * 3600_000); // bump when the prompt changes
 export function overview(question: string, results: Ranked[]) {
   const strong = results.filter((r) => r.relevance && isStrong(r));
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
