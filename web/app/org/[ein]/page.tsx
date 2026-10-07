@@ -4,7 +4,6 @@ import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { money } from "@/components/money";
-import { Header } from "@/components/Header";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { readable, titleCase } from "@/components/text";
@@ -15,7 +14,6 @@ type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: 
 export default function OrgPage(props: Props) {
   return (
     <main>
-      <Header />
       <Suspense fallback={<p className="hint">Loading…</p>}>
         <Org {...props} />
       </Suspense>

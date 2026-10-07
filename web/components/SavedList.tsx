@@ -1,14 +1,13 @@
 "use client";
-import { clearSaved, readSaved, SAVED_KEY } from "@/lib/saved";
+import { clearSaved, SAVED_KEY, type SavedOrg } from "@/lib/saved";
 import { NavLink } from "./NavLink";
 import { money } from "./money";
 import { StarButton } from "./StarButton";
 import { titleCase } from "./text";
-import { useStored } from "./useStored";
+import { useStoredList } from "./useStored";
 
 export function SavedList() {
-  useStored(SAVED_KEY, "nombot-saved");
-  const list = readSaved();
+  const list = useStoredList<SavedOrg>(SAVED_KEY, "nombot-saved");
   if (!list.length) return <p className="empty-note">Nothing saved yet. Tap ☆ on any organization to save it here.</p>;
   return (
     <>

@@ -1,20 +1,19 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { Chips } from "@/components/Chips";
-import { Header } from "@/components/Header";
-import { HistoryList } from "@/components/HistoryList";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
-import { search, type Sort } from "@/lib/search";
+import { search } from "@/lib/search";
 
-type Params = { question?: string; sort?: string; n?: string; all?: string; focus?: string };
+type Params = { question?: string; n?: string; all?: string; focus?: string };
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
+const ASK = "Which nonprofits are you looking for?";
 const EXAMPLES = [
   "food banks in rural Appalachia that do workforce training, under $500K",
   "youth mentoring nonprofits in Kentucky under $1M",
@@ -22,7 +21,6 @@ const EXAMPLES = [
   "arts organizations in West Virginia",
   "housing nonprofits in Tennessee that help veterans",
 ];
-const SORTS: [Sort, string][] = [["match", "Best match"], ["largest", "Largest"], ["smallest", "Smallest"]];
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
@@ -36,8 +34,7 @@ function url(p: Params, change: Partial<Params>) {
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
-      <Header />
-      <Suspense fallback={<SearchBox value="" placeholder={PLACEHOLDER} />}>
+      <Suspense fallback={<Hero />}>
         <Results searchParams={searchParams} />
       </Suspense>
     </main>
@@ -49,21 +46,16 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const question = (p.question ?? "").trim().slice(0, 300);
   if (!question) {
     return (
-      <>
-        <SearchBox value="" placeholder={PLACEHOLDER} />
-        <p className="hint">Ask in plain language. Try one:</p>
-        <HistoryRecent />
-        <div className="chips">{EXAMPLES.map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
-        <Footer />
-      </>
+      <Hero>
+        <div className="chips suggest">{EXAMPLES.map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
+      </Hero>
     );
   }
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
-  const sort: Sort = SORTS.some(([s]) => s === p.sort) ? (p.sort as Sort) : "match";
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
   const filters = await parseQuestion(question);
-  const res = await search({ ...filters, sort, includeInactive, limit: n });
+  const res = await search({ ...filters, includeInactive, limit: n });
   const patterns = filters.requirements.map((r) => r.pattern);
   const exact = res.results.filter((r) => r.exact);
   const closest = res.results.filter((r) => !r.exact);
@@ -79,12 +71,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {focus && <ScrollToResult id={`org-${focus}`} />}
       <Chips items={filters.labels} />
 
-      <div className="bar">
-        <span>{res.total} results</span>
-        <span className="sorts">
-          {SORTS.map(([s, label]) => (s === sort ? <b key={s}>{label}</b> : <NavLink key={s} href={url(p, { sort: s === "match" ? "" : s, n: "" })} label="Sorting…">{label}</NavLink>))}
-        </span>
-      </div>
+      <div className="bar"><span>{res.total} results</span></div>
 
       {res.exact_total !== null && (
         res.exact_total > 0
@@ -97,7 +84,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <div className="more">
         {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
-        <a href={`/export?${new URLSearchParams({ question, sort, ...(includeInactive ? { all: "1" } : {}) })}`}>Download as spreadsheet (CSV)</a>
+        <a href={`/export?${new URLSearchParams({ question, ...(includeInactive ? { all: "1" } : {}) })}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
       <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
@@ -106,10 +93,14 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   );
 }
 
-function HistoryRecent() {
+// Empty home page: greeting and composer centered on screen, like Claude's new chat.
+function Hero({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="recent">
-      <HistoryList limit={5} heading="Recent questions" />
+    <div className="hero">
+      <h1 className="greet"><span className="logo">N</span>{ASK}</h1>
+      <SearchBox value="" placeholder={PLACEHOLDER} big />
+      {children}
+      <Footer />
     </div>
   );
 }

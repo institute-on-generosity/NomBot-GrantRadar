@@ -3,7 +3,6 @@ import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { BackLink } from "@/components/BackLink";
-import { Header } from "@/components/Header";
 import { titleCase } from "@/components/text";
 import { BMF_GUIDE, bmfFileUrl, FIELDS, loadBmf, STATE_NAMES } from "@/lib/bmf";
 import { nteeLabel } from "@/lib/ntee";
@@ -15,7 +14,6 @@ const WINDOW = 10; // rows shown on each side of the highlighted one
 export default function BmfViewer(props: Props) {
   return (
     <main className="wide">
-      <Header />
       <Suspense fallback={<p className="hint">Opening the IRS master file from irs.gov…</p>}>
         <Viewer {...props} />
       </Suspense>

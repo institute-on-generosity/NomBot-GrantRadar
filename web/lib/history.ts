@@ -3,21 +3,21 @@
 export type HistoryEntry = {
   key: string;            // normalized question
   question: string;
-  href: string;           // the exact results view: question + sort + "show more" + filters
+  href: string;           // the exact results view: question + "show more" + filters
   total: number;
   at: number;             // last visited (ms)
   viewed?: { ein: string; name: string; at: number }; // last organization opened from these results
 };
 
-const KEY = "nombot.history.v1";
+export const HISTORY_KEY = "nombot.history.v1";
 const MAX = 50;
 export const historyKey = (q: string) => q.toLowerCase().replace(/\s+/g, " ").trim();
 
 export function readHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(KEY) ?? "[]"); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"); } catch { return []; }
 }
 function write(list: HistoryEntry[]) {
-  try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX))); window.dispatchEvent(new Event("nombot-history")); } catch { /* storage unavailable */ }
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX))); window.dispatchEvent(new Event("nombot-history")); } catch { /* storage unavailable */ }
 }
 
 export function recordSearch(e: Omit<HistoryEntry, "key" | "at" | "viewed">) {
