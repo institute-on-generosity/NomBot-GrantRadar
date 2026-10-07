@@ -1,0 +1,99 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import { NavLink } from "@/components/NavLink";
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import { money } from "@/components/money";
+import { BackLink } from "@/components/BackLink";
+import { RecordViewed } from "@/components/HistoryRecorder";
+import { StarButton } from "@/components/StarButton";
+import { readable, titleCase } from "@/components/text";
+import { getOrg } from "@/lib/org";
+
+type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
+
+// One organization: mission, programs, finances, details and sources.
+// modal: shown in a popover over the current page (no back link, no history update).
+export function OrgView(props: Props) {
+  return (
+    <main>
+      <Suspense fallback={<p className="hint">Loading…</p>}>
+        <Org {...props} />
+      </Suspense>
+    </main>
+  );
+}
+
+function Src({ href, children }: { href?: string; children: React.ReactNode }) {
+  if (!href) return null;
+  return href.startsWith("/") ? <NavLink className="cite" href={href} label="Opening the IRS file…">{children}</NavLink> : <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
+}
+
+async function Org({ params, searchParams, modal }: Props) {
+  const [{ ein }, { back }] = await Promise.all([params, searchParams]);
+  await connection();
+  const o = await getOrg(ein);
+  if (!o) notFound();
+  const backHref = back && back.startsWith("/?") ? back : "/";
+
+  return (
+    <article className="org">
+      {!modal && (back && back.startsWith("/?") ? <BackLink fallback={backHref}>← Back to results</BackLink> : <Link href="/" className="back">← New search</Link>)}
+      {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
+      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /></div>
+      <p className="sub">
+        {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
+        {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
+      </p>
+
+      <section>
+        <h2>Mission</h2>
+        <p>{o.mission ? readable(o.mission) : "This organization hasn't e-filed a mission statement we've loaded yet."}</p>
+      </section>
+
+      {o.programs && (
+        <section>
+          <h2>Programs</h2>
+          <p>{readable(o.programs)}</p>
+        </section>
+      )}
+
+      <section>
+        <h2>Finances</h2>
+        {o.years.length ? (
+          <table>
+            <thead><tr><th>Year</th><th className="n">Revenue</th><th className="n">Expenses</th><th className="n">Assets</th><th>Source</th></tr></thead>
+            <tbody>
+              {o.years.map((y) => (
+                <tr key={`${y.year}-${y.source}`}>
+                  <td>{y.year}</td>
+                  <td className="n">{money(y.revenue)}</td>
+                  <td className="n">{y.expenses != null ? money(y.expenses) : "—"}</td>
+                  <td className="n">{y.assets != null ? money(y.assets) : "—"}</td>
+                  <td><Src href={y.url}>{y.source}</Src></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : <p>No financial figures on file.</p>}
+      </section>
+
+      <section>
+        <h2>Details</h2>
+        <dl>
+          {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
+          {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)})</dd></>}
+          {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}</dd></>}
+          <dt>Address</dt><dd>{[o.careOf, o.street && titleCase(o.street), [o.city && titleCase(o.city), o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</dd>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Sources</h2>
+        <ul className="sources">
+          {o.sources.map((s) => <li key={s.url}>{s.internal ? <NavLink href={s.url} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
+        </ul>
+      </section>
+    </article>
+  );
+}

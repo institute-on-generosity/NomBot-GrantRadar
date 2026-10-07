@@ -72,7 +72,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {focus && <ScrollToResult id={`org-${focus}`} />}
       <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
-      <ResearchBuddy key={url(p, { focus: "" })} question={question} overrides={overrides} all={includeInactive} back={back} />
+      <ResearchBuddy key={url(p, { focus: "" })} question={question} overrides={overrides} all={includeInactive} />
 
       {res.exact_total === 0 && <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>}
       <Suspense fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>

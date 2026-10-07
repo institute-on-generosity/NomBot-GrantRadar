@@ -9,9 +9,9 @@ type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; 
 const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3", "Which ones are small and community-run?"];
 
 // Research Buddy: ask about the current results; Claude answers from their IRS filings,
-// citing each organization as [n] (links to its page), and shows a summary of its reasoning.
+// citing each organization as [n] (opens it in a popover), and shows a summary of its reasoning.
 // A floating button opens it as a chat panel docked on the right, beside the results.
-export function ResearchBuddy({ question, overrides, all, back }: { question: string; overrides: Record<string, string | undefined>; all: boolean; back: string }) {
+export function ResearchBuddy({ question, overrides, all }: { question: string; overrides: Record<string, string | undefined>; all: boolean }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
@@ -102,9 +102,9 @@ export function ResearchBuddy({ question, overrides, all, back }: { question: st
                   </details>
                 )}
                 {!t.thinking && t.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading the filings…</p>}
-                {t.answer && <Answer text={t.answer} sources={t.sources} back={back} />}
+                {t.answer && <Answer text={t.answer} sources={t.sources} />}
                 {t.status === "error" && <p className="notice">{t.error}</p>}
-                {t.status === "done" && <Cited text={t.answer} sources={t.sources} back={back} />}
+                {t.status === "done" && <Cited text={t.answer} sources={t.sources} />}
               </article>
             ))}
             <div ref={end} />
@@ -125,7 +125,7 @@ export function ResearchBuddy({ question, overrides, all, back }: { question: st
 }
 
 // Minimal, safe rendering of the answer: paragraphs, "- " bullets, **bold**, and [n] citations.
-function Answer({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+function Answer({ text, sources }: { text: string; sources: Source[] }) {
   const blocks: { list: boolean; lines: string[] }[] = [];
   for (const line of text.split("\n")) {
     const item = /^\s*[-*]\s+/.test(line);
@@ -137,17 +137,17 @@ function Answer({ text, sources, back }: { text: string; sources: Source[]; back
   return (
     <div className="buddy-answer">
       {blocks.filter((b) => b.lines.length).map((b, i) => (b.list
-        ? <ul key={i}>{b.lines.map((l, j) => <li key={j}><Inline text={l} sources={sources} back={back} /></li>)}</ul>
-        : <p key={i}>{b.lines.map((l, j) => <Fragment key={j}>{j > 0 && " "}<Inline text={l} sources={sources} back={back} /></Fragment>)}</p>))}
+        ? <ul key={i}>{b.lines.map((l, j) => <li key={j}><Inline text={l} sources={sources} /></li>)}</ul>
+        : <p key={i}>{b.lines.map((l, j) => <Fragment key={j}>{j > 0 && " "}<Inline text={l} sources={sources} /></Fragment>)}</p>))}
     </div>
   );
 }
 
-function Inline({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+function Inline({ text, sources }: { text: string; sources: Source[] }) {
   return (
     <>
       {text.split(/(\*\*[^*]+\*\*|\[\d+(?:,\s*\d+)*\])/).map((part, i) => {
-        if (/^\*\*[^*]+\*\*$/.test(part)) return <b key={i}><Inline text={part.slice(2, -2)} sources={sources} back={back} /></b>;
+        if (/^\*\*[^*]+\*\*$/.test(part)) return <b key={i}><Inline text={part.slice(2, -2)} sources={sources} /></b>;
         const cite = part.match(/^\[(\d+(?:,\s*\d+)*)\]$/);
         if (!cite) return <Fragment key={i}>{part}</Fragment>;
         return (
@@ -155,7 +155,7 @@ function Inline({ text, sources, back }: { text: string; sources: Source[]; back
             {cite[1].split(/,\s*/).map((n) => {
               const s = sources.find((x) => x.n === Number(n));
               return s
-                ? <Link key={n} href={`/org/${s.ein}?back=${back}`} className="cite-n" title={`${s.name} · ${s.place}${s.filing ? ` · ${s.filing}` : ""}`}>{n}</Link>
+                ? <Link key={n} href={`/preview/org/${s.ein}`} scroll={false} className="cite-n" title={`${s.name} · ${s.place}${s.filing ? ` · ${s.filing}` : ""}`}>{n}</Link>
                 : <span key={n} className="cite-n">{n}</span>;
             })}
           </span>
@@ -166,7 +166,7 @@ function Inline({ text, sources, back }: { text: string; sources: Source[]; back
 }
 
 // The organizations the answer cites, in order, with the filing each claim comes from.
-function Cited({ text, sources, back }: { text: string; sources: Source[]; back: string }) {
+function Cited({ text, sources }: { text: string; sources: Source[] }) {
   const used = [...new Set([...text.matchAll(/\[(\d+(?:,\s*\d+)*)\]/g)].flatMap((m) => m[1].split(/,\s*/).map(Number)))].sort((a, b) => a - b);
   const list = used.map((n) => sources.find((s) => s.n === n)).filter((s): s is Source => Boolean(s));
   if (!list.length) return null;
@@ -175,7 +175,7 @@ function Cited({ text, sources, back }: { text: string; sources: Source[]; back:
       {list.map((s) => (
         <li key={s.n}>
           <span className="cite-n">{s.n}</span>
-          <Link href={`/org/${s.ein}?back=${back}`}>{s.name}</Link>
+          <Link href={`/preview/org/${s.ein}`} scroll={false}>{s.name}</Link>
           <span>{s.place}{s.filing ? ` · ${s.filing}` : " · IRS master file only"}</span>
         </li>
       ))}
