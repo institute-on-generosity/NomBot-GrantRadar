@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
+import { BackLink } from "@/components/BackLink";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { readable, titleCase } from "@/components/text";
@@ -16,6 +17,7 @@ type Props = { searchParams: Promise<{ ein?: string | string[] }> };
 export default function ComparePage({ searchParams }: Props) {
   return (
     <main className={styles.page}>
+      <BackLink fallback="/">← Back to results</BackLink>
       <h1 className="pagetitle">Compare</h1>
       <Suspense fallback={<p className="hint">Loading…</p>}>
         <Table searchParams={searchParams} />
@@ -37,9 +39,12 @@ function Empty({ text }: { text: string }) {
   );
 }
 
+// Empty cells under an "Add one more" column (compare needs at least two).
+const Slots = ({ n }: { n: number }) => <>{Array.from({ length: n }, (_, i) => <td key={`slot-${i}`} className={styles.slot} />)}</>;
+
 // One numeric row: the largest value is bold so differences pop.
 type Cell = { value: number | null; year?: number | null; show?: (v: number) => string };
-function NumRow({ label, cells }: { label: string; cells: Cell[] }) {
+function NumRow({ label, cells, slots = 0 }: { label: string; cells: Cell[]; slots?: number }) {
   const vals = cells.map((c) => c.value).filter((v): v is number => v != null);
   const max = vals.length > 1 && new Set(vals).size > 1 ? Math.max(...vals) : null;
   return (
@@ -52,6 +57,7 @@ function NumRow({ label, cells }: { label: string; cells: Cell[] }) {
           )}
         </td>
       ))}
+      <Slots n={slots} />
     </tr>
   );
 }
@@ -85,20 +91,21 @@ const latest = (o: Compared, k: "revenue" | "expenses" | "assets") => {
 async function Table({ searchParams }: Props) {
   const { ein } = await searchParams;
   const eins = parseEins(ein);
-  if (!eins.length) return <Empty text="Pick 2–4 organizations from your search results to compare them." />;
+  if (!eins.length) return <Empty text="Pick 2–4 organizations from your search results to compare them" />;
   await connection();
   const orgs = await loadCompare(eins);
-  if (!orgs.length) return <Empty text="We couldn't find those organizations." />;
+  if (!orgs.length) return <Empty text="We couldn't find those organizations" />;
   const shown = orgs.map((o) => digits(o.ein));
+  const slots = Math.max(0, 2 - orgs.length); // keep two columns: a placeholder asks for one more
 
   return (
     <>
       <p className={styles.lede}>
-        {orgs.length < 2 ? "Add another organization from your results to compare." : "Largest figure in each row is in bold. From IRS filings."}
+        {orgs.length < 2 ? "Add one more organization to compare" : "Largest figure in each row in bold · from IRS filings"}
       </p>
       <div className={styles.scroll}>
-        <table className={styles.table} style={{ minWidth: 130 + orgs.length * 200 }}>
-          <colgroup><col className={styles.labels} />{orgs.map((o) => <col key={o.ein} className={styles.org} />)}</colgroup>
+        <table className={styles.table} style={{ minWidth: 130 + (orgs.length + slots) * 200 }}>
+          <colgroup><col className={styles.labels} />{orgs.map((o) => <col key={o.ein} className={styles.org} />)}{Array.from({ length: slots }, (_, i) => <col key={`s${i}`} className={styles.org} />)}</colgroup>
           <thead>
             <tr>
               <th scope="col" className={styles.rowLabel}><span className="sr">Organization</span></th>
@@ -111,21 +118,33 @@ async function Table({ searchParams }: Props) {
                   <span className={styles.ein}>EIN {o.ein}</span>
                 </th>
               ))}
+              {Array.from({ length: slots }, (_, i) => (
+                <th key={`slot-${i}`} scope="col" className={styles.slotHead}>
+                  <div className={styles.slotCard}>
+                    <CompareIcon size={20} />
+                    <b>Add one more</b>
+                    <span>Compare needs at least two · pick one with Compare on a search result</span>
+                    <BackLink fallback="/">Back to results</BackLink>
+                  </div>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row" className={styles.rowLabel}>Place</th>
               {orgs.map((o) => <td key={o.ein}>{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ") || <span className={styles.none}>—</span>}</td>)}
+              <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Cause</th>
               {orgs.map((o) => <td key={o.ein}>{o.ntee?.label ?? <span className={styles.none}>—</span>}</td>)}
+              <Slots n={slots} />
             </tr>
-            <NumRow label="Revenue" cells={orgs.map((o) => ({ ...latest(o, "revenue"), show: money }))} />
-            <NumRow label="Expenses" cells={orgs.map((o) => ({ ...latest(o, "expenses"), show: money }))} />
-            <NumRow label="Assets" cells={orgs.map((o) => ({ ...latest(o, "assets"), show: money }))} />
-            <NumRow label="Staff" cells={orgs.map((o) => ({ value: o.team?.staff ?? null }))} />
+            <NumRow label="Revenue" slots={slots} cells={orgs.map((o) => ({ ...latest(o, "revenue"), show: money }))} />
+            <NumRow label="Expenses" slots={slots} cells={orgs.map((o) => ({ ...latest(o, "expenses"), show: money }))} />
+            <NumRow label="Assets" slots={slots} cells={orgs.map((o) => ({ ...latest(o, "assets"), show: money }))} />
+            <NumRow label="Staff" slots={slots} cells={orgs.map((o) => ({ value: o.team?.staff ?? null }))} />
             <tr>
               <th scope="row" className={styles.rowLabel}>Volunteers</th>
               {(() => {
@@ -142,18 +161,22 @@ async function Table({ searchParams }: Props) {
                   );
                 });
               })()}
+              <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Tax-exempt since</th>
               {orgs.map((o) => <td key={o.ein} className={styles.num}>{o.ruling ?? <span className={styles.none}>—</span>}</td>)}
+              <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Mission</th>
               {orgs.map((o) => <td key={o.ein}><Clamp id={`mission-${digits(o.ein)}`} text={o.mission} /></td>)}
+              <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Programs</th>
               {orgs.map((o) => <td key={o.ein}><Clamp id={`programs-${digits(o.ein)}`} text={o.programs} /></td>)}
+              <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Sources</th>
@@ -165,6 +188,7 @@ async function Table({ searchParams }: Props) {
                   </div>
                 </td>
               ))}
+              <Slots n={slots} />
             </tr>
           </tbody>
         </table>

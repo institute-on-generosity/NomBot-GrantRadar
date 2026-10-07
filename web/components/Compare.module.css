@@ -86,3 +86,14 @@
   .tray, .chip { animation: none; }
   .pick, .go { transition: none; }
 }
+
+/* "Add one more" placeholder column: compare needs at least two */
+.slotHead { vertical-align: top; }
+.slotCard { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 14px 12px; border-radius: 14px; border: 1.5px dashed var(--fill-2); background: var(--fill); color: var(--mute); font-size: 13px; font-weight: 400; line-height: 1.45; animation: slotIn .35s var(--spring) both; }
+.slotCard svg { color: var(--g); margin-bottom: 2px; }
+.slotCard b { font-size: 15px; font-weight: 600; color: var(--ink); }
+.slotCard a { margin-top: 6px; font-weight: 600; color: var(--g); text-decoration: none; }
+.slotCard a:hover { text-decoration: underline; }
+.table td.slot { background: repeating-linear-gradient(135deg, transparent 0 8px, var(--fill) 8px 9px); }
+@keyframes slotIn { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .slotCard { animation: none; } }
