@@ -12,8 +12,8 @@ import { RadarMark } from "@/components/RadarMark";
 
 type Params = { mission?: string; st?: string; open?: string; size?: string; n?: string };
 
-const PLACEHOLDER = "e.g. We run a food pantry and job training program in eastern Kentucky";
-const SIZE_LABEL: Record<Size, string> = { small: "Under $5K", mid: "$5K–$25K", large: "$25K and up" };
+const PLACEHOLDER = "Describe your mission and where you work";
+const SIZE_LABEL: Record<Size, string> = { small: "Under $5K", mid: "$5K–$25K", large: "$25K+" };
 
 function url(p: Params, change: Partial<Params>) {
   const merged = { ...p, ...change };
@@ -46,18 +46,18 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
 
   const chips: Chip[] = [
     {
-      key: "st", kind: state ? "set" : "unset", label: state ? `Gives in ${state}` : "Gives anywhere",
+      key: "st", kind: state ? "set" : "unset", label: state ? `Gives in ${state}` : "Anywhere",
       options: [{ label: "Anywhere", href: url(p, { st: "any", n: "" }), on: !state }, ...LOADED_STATES.map(([s, name]) => ({ label: `Gives in ${name}`, href: url(p, { st: s, n: "" }), on: s === state }))],
       removeHref: state ? url(p, { st: "any", n: "" }) : undefined,
     },
     {
-      key: "open", kind: p.open === "1" ? "set" : "unset", label: p.open === "1" ? "Open to applications" : "Any application policy",
-      options: [{ label: "Any application policy", href: url(p, { open: "", n: "" }), on: p.open !== "1" }, { label: "Open to applications", href: url(p, { open: "1", n: "" }), on: p.open === "1" }],
+      key: "open", kind: p.open === "1" ? "set" : "unset", label: p.open === "1" ? "Open to applications" : "Any policy",
+      options: [{ label: "Any policy", href: url(p, { open: "", n: "" }), on: p.open !== "1" }, { label: "Open to applications", href: url(p, { open: "1", n: "" }), on: p.open === "1" }],
       removeHref: p.open === "1" ? url(p, { open: "", n: "" }) : undefined,
     },
     {
-      key: "size", kind: size ? "set" : "unset", label: size ? `Typical grant ${SIZE_LABEL[size].toLowerCase()}` : "Any grant size",
-      options: [{ label: "Any grant size", href: url(p, { size: "", n: "" }), on: !size }, ...(Object.keys(SIZES) as Size[]).map((k) => ({ label: SIZE_LABEL[k], href: url(p, { size: k, n: "" }), on: k === size }))],
+      key: "size", kind: size ? "set" : "unset", label: size ? SIZE_LABEL[size] : "Any size",
+      options: [{ label: "Any size", href: url(p, { size: "", n: "" }), on: !size }, ...(Object.keys(SIZES) as Size[]).map((k) => ({ label: SIZE_LABEL[k], href: url(p, { size: k, n: "" }), on: k === size }))],
       removeHref: size ? url(p, { size: "", n: "" }) : undefined,
     },
   ];
@@ -69,12 +69,12 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
       <SearchBox key={mission} action="/grants" name="mission" value={mission} placeholder={PLACEHOLDER} examples={MISSIONS} recents={false} submitLabel="Match" loading={{ label: "Reading your mission…", steps: MATCH_STEPS }} />
       <FilterChips chips={chips} />
       {funders.length === 0 ? (
-        <p className="notice">No foundation in the loaded data funded organizations like this{state ? ` in ${state}` : ""}. Try removing a filter, or describe your work in different words.</p>
+        <p className="notice">No matching funders{state ? ` in ${state}` : ""}. Remove a filter or reword your mission.</p>
       ) : (
         <div className="funders">
           <div className="bar">
-            <span>{total.toLocaleString("en-US")} {total === 1 ? "foundation has" : "foundations have"} funded nonprofits like yours</span>
-            <span title="Grantees whose filed mission is closest to yours">based on the {peers} grantees most like you</span>
+            <span>{total.toLocaleString("en-US")} {total === 1 ? "funder" : "funders"}</span>
+            <span title={`Ranked by grants to the ${peers} nonprofits most like yours`}>Best fit first</span>
           </div>
           {funders.map((f, i) => (
             <ViewTransition key={f.ein} enter="rise" default="none">
@@ -86,7 +86,7 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
       <div className="more">
         {total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
       </div>
-      <p className="note">Test version · foundations in WV, KY, TN, VA, OH · from their 2025 IRS Form 990-PF grants lists · {money(funders.reduce((s, f) => s + (f.evidence.reduce((a, e) => a + (e.amount ?? 0), 0)), 0))} of grants to nonprofits like yours shown</p>
+      <p className="note">IRS Form 990-PF, 2025 · WV, KY, TN, VA, OH</p>
     </>
   );
 }
@@ -101,7 +101,7 @@ function Hero() {
           <NavLink key={m} href={url({}, { mission: m })} className="chip link" label="Reading your mission…" steps={MATCH_STEPS} search>{m}</NavLink>
         ))}
       </div>
-      <p className="note">Foundations rank by the nonprofits like yours they already funded · from public IRS Form 990-PF filings · WV, KY, TN, VA, OH</p>
+      <p className="note">Ranked by who they already fund · IRS Form 990-PF · WV, KY, TN, VA, OH</p>
     </div>
   );
 }

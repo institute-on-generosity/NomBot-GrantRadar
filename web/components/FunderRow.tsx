@@ -1,5 +1,6 @@
 import { ViewTransition } from "react";
 import Link from "next/link";
+import { Bank, Check, Chevron, Lock, People, Pin, Spark } from "./icons";
 import { titleCase } from "./text";
 import { money } from "@/lib/filters";
 import type { FunderMatch } from "@/lib/grants";
@@ -19,14 +20,13 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
             <div className="funder-head">
               <h2>{titleCase(f.name)}</h2>
               <p className="meta">
-                {[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")}
-                {f.assets != null && <> · {money(f.assets)} in assets</>}
-                {state && f.inState > 0 && <> · {f.inState} {f.inState === 1 ? "grant" : "grants"} in {state}</>}
+                <span><Pin />{[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")}</span>
+                {f.assets != null && <span title="Assets"><Bank />{money(f.assets)}</span>}
               </p>
             </div>
           </ViewTransition>
           <p className="funder-like">
-            Funded <b>{f.peers} {f.peers === 1 ? "nonprofit" : "nonprofits"} like yours</b>{toLike > 0 && <>, {money(toLike)} in all</>}
+            <People /><b>{f.peers} similar {f.peers === 1 ? "grantee" : "grantees"}</b>{toLike > 0 && <span className="amt">{money(toLike)}</span>}
           </p>
           <ul className="grantees">
             {like.map((e) => (
@@ -39,9 +39,9 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
           </ul>
         </div>
         <div className="funder-side">
-          <span className="typical"><b>{f.typical != null ? money(f.typical) : "—"}</b><small>typical grant</small></span>
-          <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? "Invitation only" : "Open to applications"}</span>
-          <span className="why-cta">Why this funder?</span>
+          <span className="typical"><b>{f.typical != null ? money(f.typical) : "—"}</b><small>typical</small></span>
+          <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? <><Lock size={12} />Invite only</> : <><Check size={12} />Open</>}</span>
+          <span className="why-cta"><Spark size={13} />Why<Chevron size={13} /></span>
         </div>
       </Link>
     </article>

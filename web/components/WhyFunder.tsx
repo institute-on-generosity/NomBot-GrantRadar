@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Answer } from "./CitedAnswer";
+import { Spark } from "./icons";
 import { titleCase } from "./text";
 
 type Source = { n: number; recipient: string; ein: string | null; place: string; amount: number | null; purpose: string | null; like: boolean };
@@ -52,17 +53,16 @@ export function WhyFunder({ ein, mission, state }: { ein: string; mission: strin
 
   return (
     <section className={`why${s.status === "done" ? " done" : ""}`} aria-live="polite">
-      <h2><span className="why-mark" aria-hidden>✦</span> Why this funder?</h2>
+      <h2><span className="why-mark"><Spark size={16} /></span>Why this funder</h2>
       {s.thinking && (
         <details className="buddy-thinking">
           <summary>How I reasoned</summary>
           <p>{s.thinking}</p>
         </details>
       )}
-      {s.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading its grants…</p>}
+      {s.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading grants…</p>}
       {s.answer && <Answer text={s.answer} cite={cite} />}
       {s.status === "error" && <p className="notice">{s.error}</p>}
-      {s.status === "done" && <p className="why-foot">From the foundation&apos;s own 990-PF grants list. Hover a number to see the grant.</p>}
     </section>
   );
 }

@@ -470,8 +470,8 @@ button.fchip-main { cursor: pointer; }
 .policy { font-size: 12px; font-weight: 500; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 3px 10px; }
 .policy.closed { color: var(--mute); background: var(--fill-2); }
 .why-cta { font-size: 13.5px; font-weight: 600; color: var(--g); display: inline-flex; align-items: center; gap: 4px; }
-.why-cta::after { content: "›"; font-size: 17px; line-height: 1; transition: transform .3s var(--spring); }
-.funder-link:hover .why-cta::after { transform: translateX(3px); }
+.why-cta .ico:last-child { transition: transform .3s var(--spring); }
+.funder-link:hover .why-cta .ico:last-child { transform: translateX(3px); }
 @media (max-width: 640px) {
   .funder-link { grid-template-columns: 1fr; gap: 12px; }
   .funder-side { flex-direction: row; align-items: center; min-width: 0; text-align: left; }
@@ -562,3 +562,24 @@ button.fchip-main { cursor: pointer; }
   .shell:has(.modal-backdrop.sheet) .content { transform: none; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+
+/* Icons beside short labels (GrantRadar) */
+.ico { flex: none; vertical-align: -2px; }
+.funder-head .meta { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.funder-head .meta > span, .funder-head .meta > a { display: inline-flex; align-items: center; gap: 5px; }
+.funder-head .meta .ico { color: var(--faint); }
+.funder-like { display: flex; align-items: center; gap: 6px; }
+.funder-like .ico { color: var(--g); }
+.funder-like .amt { margin-left: 4px; font-size: 13.5px; }
+.policy { display: inline-flex; align-items: center; gap: 4px; }
+.why-cta { gap: 5px; }
+.fv-facts dt { display: flex; align-items: center; gap: 5px; }
+.fv-facts dt .ico { color: var(--faint); }
+.funder-view h2 .ico { color: var(--mute); align-self: center; }
+.fv-apply h2 .ico { color: inherit; }
+.fv-apply dt { display: flex; align-items: center; gap: 6px; }
+.fv-apply dt .ico { color: var(--g); }
+.fv-apply.closed dt .ico { color: var(--faint); }
+.fv-site { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.fv-site .ico { color: var(--g); }
+.why h2 .why-mark { display: inline-flex; }

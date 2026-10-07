@@ -11,9 +11,9 @@ Rules:
 - Use only the facts given. Cite every claim about a specific grant with its number in square brackets, e.g. "gave $10,000 to a Pikeville food pantry [2]". Cite each grant number separately, e.g. [1, 2]; never a range like [1-11], and never cite more than 4 grants for one claim. Never state counts; list the grants instead.
 - Facts from the foundation's profile (assets, where its grants go, how to apply) need no citation; don't cite grants for them.
 - Use the filing's own words for purposes and recipients; don't add descriptors it doesn't state. Give amounts exactly as provided.
-- Start with a one-sentence verdict on fit (strong, possible, or weak) and the main reason.
-- Then at most 4 short bullets: the closest past grants, typical size, where it gives, and how to apply. If the foundation only gives to preselected organizations, say so plainly: unsolicited applications aren't accepted.
-- Under about 140 words. Plain language, no headings. Bold the foundation's name once, written in normal capitalization (e.g. "LG&E and KU Foundation"), not all caps.`;
+- Start with "Strong fit", "Possible fit" or "Weak fit", then the main reason, in one sentence of at most 20 words.
+- Then at most 3 bullets of at most 15 words each: closest past grants, typical size, how to apply. If it only gives to preselected organizations, say "Invite only: no unsolicited applications."
+- Under 80 words in all. No preamble, no closing summary. Plain language, no headings. Bold the foundation's name once, written in normal capitalization (e.g. "LG&E and KU Foundation"), not all caps.`;
 
 export type WhySource = { n: number; recipient: string; ein: string | null; place: string; amount: number | null; purpose: string | null; like: boolean };
 
