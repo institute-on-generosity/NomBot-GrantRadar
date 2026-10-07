@@ -1,5 +1,5 @@
 // Where each fact on a result came from, linked to the original public file or filing.
-export type Source = { label: string; detail: string; url: string };
+export type Source = { label: string; detail: string; url: string; internal?: boolean }; // internal: opens NomBot's readable viewer
 
 const SOI_EXTRACT_YY = "24"; // matches generosity-data/etl/load_soi.py default
 
@@ -23,7 +23,8 @@ export function sources(o: {
     out.push({
       label: "IRS master file",
       detail: `Name, address, cause code${o.revSrc === "bmf" ? ", revenue" : ""} (Exempt Organizations Business Master File, ${o.state})`,
-      url: `https://www.irs.gov/pub/irs-soi/eo_${o.state.toLowerCase()}.csv`,
+      url: `/source/bmf/${o.state.toLowerCase()}?ein=${o.ein}`,
+      internal: true,
     });
   }
   return out;

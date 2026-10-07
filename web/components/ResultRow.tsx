@@ -23,7 +23,7 @@ export function ResultRow({ r, href, patterns }: { r: Result; href: string; patt
           <div className="src">
             Source:{" "}
             {r.sources.map((s, i) => (
-              <span key={s.url}>{i > 0 && " · "}<a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a></span>
+              <span key={s.url}>{i > 0 && " · "}{s.internal ? <Link href={s.url} title={s.detail}>{s.label}</Link> : <a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a>}</span>
             ))}
           </div>
         )}

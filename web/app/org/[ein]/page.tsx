@@ -20,7 +20,8 @@ export default function OrgPage(props: Props) {
 }
 
 function Src({ href, children }: { href?: string; children: React.ReactNode }) {
-  return href ? <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a> : null;
+  if (!href) return null;
+  return href.startsWith("/") ? <Link className="cite" href={href}>{children}</Link> : <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
 }
 
 async function Org({ params, searchParams }: Props) {
@@ -84,7 +85,7 @@ async function Org({ params, searchParams }: Props) {
       <section>
         <h2>Sources</h2>
         <ul className="sources">
-          {o.sources.map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a><span>{s.detail}</span></li>)}
+          {o.sources.map((s) => <li key={s.url}>{s.internal ? <Link href={s.url}>{s.label}</Link> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
         </ul>
       </section>
     </article>

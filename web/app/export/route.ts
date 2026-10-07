@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const header = ["name", "ein", "city", "state", "cause", "revenue", "revenue_year", "exact_match", "mission", "nombot_page", "sources"];
   const lines = res.results.map((r) => [
     r.name, r.ein, r.city, r.state, r.ntee?.label, r.revenue?.amount, r.revenue?.year,
-    r.exact == null ? "" : r.exact ? "yes" : "no", r.mission, `${origin}/org/${r.ein}`, r.sources.map((s) => s.url).join(" "),
+    r.exact == null ? "" : r.exact ? "yes" : "no", r.mission, `${origin}/org/${r.ein}`, r.sources.map((s) => (s.url.startsWith("/") ? origin + s.url : s.url)).join(" "),
   ].map(cell).join(","));
 
   const name = question.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
