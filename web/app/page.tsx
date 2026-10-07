@@ -8,7 +8,8 @@ import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
-import { Landscape, LandscapeSkeleton } from "@/components/Landscape";
+import { Landscape } from "@/components/Landscape";
+import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
@@ -80,20 +81,12 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
 
+      {/* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */}
       <div className="serp">
-      <div className="serp-ov">
-        <Suspense key={`overview:${url(p, { n: "" })}`} fallback={<AiOverviewSkeleton />}>
-          <OverviewPanel question={question} ranking={rankingAll} />
-        </Suspense>
-      </div>
-      <aside className="serp-rail" aria-label="Landscape">
-        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeSkeleton />}>
+      <aside className="serp-rail" aria-label="Analysis">
+        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive}
-            hrefs={{
-              size: (b) => (b.key ? url(p, { max: b.key, n: "" }) : null),
-              city: (b) => url(p, { city: b.key, n: "" }),
-              cause: (b) => url(p, { cause: b.key, n: "" }),
-            }}
+            overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
             map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
         </Suspense>
       </aside>
@@ -118,7 +111,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
 async function OverviewPanel({ question, ranking }: { question: string; ranking: ReturnType<typeof rank> }) {
   const o = await overview(question, (await ranking).results);
-  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : null;
+  return o ? <AiOverview o={o} /> : <p className="ls-note">No overview for these results.</p>;
 }
 
 type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };
