@@ -4,11 +4,12 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { BackLink } from "./BackLink";
 import { FunderStar } from "./GrantStore";
-import { Bank, Calendar, Check, Coins, Doc, Globe, Info, ListIcon, Lock, MapIcon, Phone, Pin, Receipt } from "./icons";
+import { Bank, Calendar, Check, Coins, Doc, Globe, Info, ListIcon, Lock, MapIcon, Phone, Pie, Pin, Receipt } from "./icons";
 import { titleCase } from "./text";
 import { WhyFunder } from "./WhyFunder";
 import { money } from "@/lib/filters";
 import { filingUrl, getFunder } from "@/lib/grants";
+import { classified, share, TYPE_LABEL, type GrantMix } from "@/lib/grantTypes";
 
 const GRANTS_SHOWN = 40;
 
@@ -71,6 +72,8 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
 
         {mission && <WhyFunder ein={f.ein} mission={mission} state={state} />}
 
+        {f.mix && classified(f.mix) > 0 && <GrantTypes mix={f.mix} />}
+
         {f.byState.length > 0 && (
           <section className="fv-where">
             <h2><MapIcon size={16} />Where it gives</h2>
@@ -98,7 +101,7 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
                     {g.ein ? <Link href={`/preview/org/${g.ein}`} scroll={false}>{titleCase(g.recipient)}</Link> : titleCase(g.recipient)}
                     <small>{[g.city && titleCase(g.city), g.state].filter(Boolean).join(", ")}</small>
                   </td>
-                  <td className="purpose">{g.purpose ? g.purpose.toLowerCase() : "—"}</td>
+                  <td className="purpose">{g.purpose ? g.purpose.toLowerCase() : "—"}{g.type !== "unknown" && <small className={`gt ${g.type}`}>{TYPE_LABEL[g.type]}</small>}</td>
                   <td className="n amt">{g.amount != null ? money(g.amount) : "—"}</td>
                 </tr>
               ))}
@@ -107,5 +110,23 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
         </section>
       </div>
     </article>
+  );
+}
+
+// Restricted vs unrestricted: share of the grant dollars whose purpose says which (lib/grantTypes).
+function GrantTypes({ mix }: { mix: GrantMix }) {
+  const types = (["general", "program", "policy"] as const).map((t) => ({ t, pct: Math.round(100 * share(mix, t)) })).filter((x) => x.pct > 0);
+  const total = classified(mix) + mix.dollars.unknown;
+  const unclear = total ? Math.round((100 * mix.dollars.unknown) / total) : 0;
+  return (
+    <section className="fv-types">
+      <h2><Pie size={16} />Grant types{unclear > 0 && <span>{unclear}% unclear</span>}</h2>
+      <div className="gt-bar" role="img" aria-label={types.map((x) => `${TYPE_LABEL[x.t]} ${x.pct}%`).join(", ")}>
+        {types.map((x) => <i key={x.t} className={x.t} style={{ width: `${x.pct}%` }} />)}
+      </div>
+      <ul>
+        {types.map((x) => <li key={x.t} className={x.t}><b>{x.pct}%</b>{TYPE_LABEL[x.t]}</li>)}
+      </ul>
+    </section>
   );
 }

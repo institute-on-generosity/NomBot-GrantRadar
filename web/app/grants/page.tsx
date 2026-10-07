@@ -11,10 +11,11 @@ import { MATCH_STEPS, MISSIONS } from "@/lib/grantExamples";
 import { parseQuestion } from "@/lib/parse";
 import { RadarMark } from "@/components/RadarMark";
 
-type Params = { mission?: string; st?: string; open?: string; size?: string; n?: string };
+type Params = { mission?: string; st?: string; open?: string; size?: string; type?: string; n?: string };
 
 const PLACEHOLDER = "Describe your mission and where you work";
 const SIZE_LABEL: Record<Size, string> = { small: "Under $5K", mid: "$5K–$25K", large: "$25K+" };
+const TYPES = { general: "Mostly unrestricted", program: "Mostly project grants" } as const;
 
 function url(p: Params, change: Partial<Params>) {
   const merged = { ...p, ...change };
@@ -42,7 +43,8 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
   const guessed = parsed?.states.find((s) => s in STATE_NAMES) ?? "";
   const state = p.st === "any" ? "" : (p.st ?? guessed).toUpperCase();
   const size = (p.size && p.size in SIZES ? p.size : undefined) as Size | undefined;
-  const filters: MatchFilters = { state: state || undefined, open: p.open === "1", size };
+  const type = (p.type && p.type in TYPES ? p.type : undefined) as keyof typeof TYPES | undefined;
+  const filters: MatchFilters = { state: state || undefined, open: p.open === "1", size, type };
   const [{ funders, total, peers }, states] = await Promise.all([matchFunders(mission, filters, n), givingStates()]);
   const loaded = new Set(LOADED_STATES.map(([c]) => c));
   const count = (c: string) => states.find((x) => x.state === c)?.grants ?? 0;
@@ -68,6 +70,11 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
       key: "size", kind: size ? "set" : "unset", label: size ? SIZE_LABEL[size] : "Any size",
       options: [{ label: "Any size", href: url(p, { size: "", n: "" }), on: !size }, ...(Object.keys(SIZES) as Size[]).map((k) => ({ label: SIZE_LABEL[k], href: url(p, { size: k, n: "" }), on: k === size }))],
       removeHref: size ? url(p, { size: "", n: "" }) : undefined,
+    },
+    {
+      key: "type", kind: type ? "set" : "unset", label: type ? TYPES[type] : "Any grant type",
+      options: [{ label: "Any grant type", href: url(p, { type: "", n: "" }), on: !type }, ...(Object.keys(TYPES) as (keyof typeof TYPES)[]).map((k) => ({ label: TYPES[k], href: url(p, { type: k, n: "" }), on: k === type }))],
+      removeHref: type ? url(p, { type: "", n: "" }) : undefined,
     },
   ];
   const back = encodeURIComponent(url(p, {}));

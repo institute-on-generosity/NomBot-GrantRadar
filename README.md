@@ -12,6 +12,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 |---|---|---|---|
 | **Match** | Mission → similar nonprofits → who funded them → ranked funders | Dec 6 | ✅ **Built Oct 7** (local) |
 | **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 | ✅ **Built Oct 7** (local) |
+| **Grant types** | Unrestricted vs. project vs. policy giving, read from grant purposes | — | ✅ **Built Oct 7** (local, from feedback) |
 
 **A funder ranks high only if it already funded orgs like yours.**
 
@@ -19,7 +20,12 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant: the 150 closest are candidates.
 2. Claude scores each candidate's **work** 0–100 against your mission, ignoring location (embeddings over-weight place words: "rural West Virginia" pulled health clinics into an animal-rescue match). Only **≥70** counts as a group "like yours".
 3. Each foundation scores the sum of ((score − 50) / 50)² over the groups like yours it paid: a few near-identical grantees beat many loose ones. Rows show ● same kind of work (≥85) and ○ closely related (70–84).
-4. Filters: **gives in** a state (any of the 53 states these foundations give to; similar grantees come from the 5 loaded states), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size.
+4. Filters: **gives in** a state (any of the 53 states these foundations give to; similar grantees come from the 5 loaded states), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size, **grant type** (mostly unrestricted / mostly project grants).
+
+### Grant types
+- Each grant's purpose is sorted by **keyword rules** (`web/lib/grantTypes.ts`, no Claude): **unrestricted** ("general operating", "charitable purposes", "unrestricted"), **project** (a program, scholarship, building, event), **policy** (public policy, advocacy, civic engagement; victim/child advocates count as services), or **unclear** ("donation", "support", a bare cause like "education").
+- **Coverage: 72%** of grants (71% of dollars) get a type. Spot check of 36 random labeled grants: 34 right, 2 debatable ("general program operation", "annual grant program 2024" → project). Policy is rare (0.2%); 17 of 20 sampled looked right.
+- A row shows **"Mostly unrestricted"** or **"Mostly project grants"** only when ≥5 grants have a type, they cover ≥50% of its grant dollars, and one type has ≥60% of them: **2,277 of 6,047** foundations with grants. The funder sheet shows the split and tags each grant; "Why this funder?" gets it too.
 
 ## Users
 
@@ -89,6 +95,7 @@ GrantRadar is NomBot plus a grants table.
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
 | **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
 | **Starred funders + recent missions** in the sidebar (this browser only), before logins | Same habit as NomBot: come back to a funder or a past match in one click |
+| **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
@@ -107,7 +114,7 @@ GrantRadar is NomBot plus a grants table.
 | Feedback | Plan |
 |---|---|
 | **Typical grant** is very helpful | Keep it prominent |
-| Show **restricted vs. unrestricted** giving, and whether a funder backs programs or policy | Read it from grant purpose text ("general operating" = unrestricted); tag each funder |
+| Show **restricted vs. unrestricted** giving, and whether a funder backs programs or policy | ✅ **Done Oct 7:** grant purposes sorted into unrestricted / project / policy; row tag, sheet breakdown, filter |
 | Add **Research Buddy** to GrantRadar | Reuse NomBot's Buddy over a funder's grants |
 | GrantRadar and NomBot serve **different audiences** | One app with a toggle while testing; standalone later |
 | **Real-time budget** and fundraising gap | Not in public data; would need self-reporting + verification |
@@ -137,6 +144,7 @@ GrantRadar is NomBot plus a grants table.
 - [x] Funder ranking
 - [x] `/grants` match page
 - [x] "Why this funder?" (streams, cites each grant)
+- [x] Grant types: unrestricted vs. project vs. policy (feedback, Oct 7)
 - [x] **Demo works locally**
 
 **Dec 7–13: Cloud**

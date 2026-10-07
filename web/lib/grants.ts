@@ -5,6 +5,7 @@
 import { db } from "./db";
 import { embedQuery, toSql } from "./embedder";
 import { peerFit } from "./grantPeers";
+import { classifyPurpose, grantMixes, type GrantMix, type GrantType } from "./grantTypes";
 import { memo } from "./memo";
 
 const PEERS = 150;    // candidate grantees (closest by embedding) that Claude then checks
@@ -14,12 +15,13 @@ const SIM_ONLY = 0.65; // without Claude: stricter embedding cutoff
 export const SIZES = { small: [0, 5_000], mid: [5_000, 25_000], large: [25_000, Infinity] } as const;
 export type Size = keyof typeof SIZES;
 
-export type MatchFilters = { state?: string; open?: boolean; size?: Size };
+export type MatchFilters = { state?: string; open?: boolean; size?: Size; type?: "general" | "program" };
 export type Evidence = { grantId: number; recipient: string; ein: string; city: string | null; state: string | null; amount: number | null; purpose: string | null; year: number | null; fit: number }; // fit: 0-100, how alike its work is
 export type FunderMatch = {
   ein: string; name: string; city: string | null; state: string | null;
   assets: number | null; grantsPaid: number | null; grantCount: number; inviteOnly: boolean;
   score: number; peers: number; typical: number | null; inState: number; evidence: Evidence[];
+  mix: GrantMix | null; // restricted vs unrestricted giving (lib/grantTypes)
 };
 
 type Row = { funder_ein: string; grant_id: number; recipient_ein: string; recipient_name: string; recipient_city: string | null; recipient_state: string | null; amount: string | null; purpose: string | null; tax_year: number | null; sim: number };
@@ -55,13 +57,13 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
   for (const r of rows) byFunder.set(r.funder_ein, [...(byFunder.get(r.funder_ein) ?? []), r]);
   if (!byFunder.size) return { funders: [], total: 0, peers: 0 };
 
-  const { rows: info } = await db.query(
+  const [{ rows: info }, mixes] = await Promise.all([db.query(
     `SELECT f.ein, f.name, f.city, f.state, f.assets, f.grants_paid, f.grant_count, f.invite_only,
             (SELECT count(*) FROM grants g WHERE g.funder_ein = f.ein AND g.recipient_state = $2)::int AS in_state,
             (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
      FROM funders f WHERE f.ein = ANY($1)`,
     [[...byFunder.keys()], f.state ?? ""],
-  );
+  ), grantMixes()]);
 
   const scored: FunderMatch[] = info.map((x) => {
     const gs = byFunder.get(x.ein)!;
@@ -78,6 +80,7 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
       assets: x.assets == null ? null : Number(x.assets), grantsPaid: x.grants_paid == null ? null : Number(x.grants_paid),
       grantCount: x.grant_count, inviteOnly: x.invite_only, score, peers: evidence.length,
       typical: x.median == null ? null : Math.round(Number(x.median)), inState: x.in_state, evidence,
+      mix: mixes.get(x.ein) ?? null,
     };
   });
 
@@ -86,6 +89,7 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
     .filter((m) => !f.open || !m.inviteOnly)
     .filter((m) => !f.state || m.inState > 0)
     .filter((m) => !f.size || (m.typical != null && m.typical >= lo && m.typical < hi))
+    .filter((m) => !f.type || m.mix?.lean === f.type)
     .sort((a, b) => b.score - a.score || (b.grantsPaid ?? 0) - (a.grantsPaid ?? 0));
   return { funders: kept.slice(0, limit), total: kept.length, peers: new Set(rows.map((r) => r.recipient_ein)).size };
 }
@@ -94,20 +98,22 @@ export type FunderDetail = {
   ein: string; name: string; city: string | null; state: string | null; taxYear: number | null; objectId: string;
   assets: number | null; grantsPaid: number | null; grantCount: number; typical: number | null; inviteOnly: boolean; website: string | null;
   apply: { contact: string | null; form: string | null; deadlines: string | null; restrictions: string | null };
-  grants: { id: number; recipient: string; ein: string | null; city: string | null; state: string | null; amount: number | null; purpose: string | null }[];
+  grants: { id: number; recipient: string; ein: string | null; city: string | null; state: string | null; amount: number | null; purpose: string | null; type: GrantType }[];
+  mix: GrantMix | null;
   byState: { state: string; count: number; amount: number }[];
 };
 
 export async function getFunder(einParam: string): Promise<FunderDetail | null> {
   const ein = einParam.replace(/\D/g, "");
   if (ein.length !== 9) return null;
-  const [{ rows: [f] }, { rows: gs }, { rows: st }] = await Promise.all([
+  const [{ rows: [f] }, { rows: gs }, { rows: st }, mixes] = await Promise.all([
     db.query(`SELECT f.*, (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
               FROM funders f WHERE f.ein = $1`, [ein]),
     db.query(`SELECT id, recipient_name, recipient_ein, recipient_city, recipient_state, amount, purpose FROM grants
               WHERE funder_ein = $1 ORDER BY amount DESC NULLS LAST, id LIMIT 400`, [ein]),
     db.query(`SELECT recipient_state AS state, count(*)::int AS count, coalesce(sum(amount), 0)::bigint AS amount FROM grants
               WHERE funder_ein = $1 AND recipient_state IS NOT NULL GROUP BY 1 ORDER BY 3 DESC LIMIT 8`, [ein]),
+    grantMixes(),
   ]);
   if (!f) return null;
   const n = (v: unknown) => (v == null ? null : Number(v));
@@ -117,7 +123,8 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
     ein: f.ein, name: f.name, city: f.city, state: f.state, taxYear: f.tax_year, objectId: f.object_id,
     assets: n(f.assets), grantsPaid: n(f.grants_paid), grantCount: f.grant_count, typical: f.median == null ? null : Math.round(Number(f.median)), inviteOnly: f.invite_only, website: s(f.website),
     apply: { contact: s(f.apply_contact), form: s(f.apply_form), deadlines: s(f.apply_deadlines), restrictions: s(f.apply_restrictions) },
-    grants: gs.map((g) => ({ id: g.id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state, amount: n(g.amount), purpose: g.purpose })),
+    grants: gs.map((g) => ({ id: g.id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state, amount: n(g.amount), purpose: g.purpose, type: classifyPurpose(g.purpose) })),
+    mix: mixes.get(ein) ?? null,
     byState: st.map((r) => ({ state: r.state, count: r.count, amount: Number(r.amount) })),
   };
 }

@@ -21,3 +21,4 @@ export const Info = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><pat
 export const Globe = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5Z" /></Svg>;
 export const MapIcon = (p: P) => <Svg {...p}><path d="m3.5 6.5 5.5-2.5 6 2.5 5.5-2.5v13.5l-5.5 2.5-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></Svg>;
 export const Receipt = (p: P) => <Svg {...p}><path d="M6 3.5h12v17l-2.5-1.5-2.5 1.5-2.5-1.5-2.5 1.5L6 20.5Z" /><path d="M9 8.5h6M9 12h6M9 15.5h3.5" /></Svg>;
+export const Pie = (p: P) => <Svg {...p}><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12Z" /><path d="M15 3.9A8.5 8.5 0 0 1 20.1 9H15Z" /></Svg>;
