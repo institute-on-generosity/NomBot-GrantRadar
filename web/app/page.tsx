@@ -63,7 +63,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const focus = p.focus ?? "";
   const shown = describeFilters(filters);
   const must = filters.requirements.map((r) => r.label).join(" + ");
-  const rowProps = { question, patterns, back, focus, must, shown };
+  const rowProps = { question, patterns, back, focus, must, shown, noMention: res.exact_total === 0 };
 
   return (
     <>
@@ -74,8 +74,9 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
-      {res.exact_total === 0 && <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>}
-      <Suspense fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
+      {/* Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
+          instead of React keeping the old list on screen until the new scores arrive. */}
+      <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
         <RankedList ranking={ranking} total={res.total} {...rowProps} />
       </Suspense>
 
@@ -89,7 +90,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   );
 }
 
-type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown> };
+type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };
 
 async function RankedList({ ranking, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; total: number }) {
   const { results, scored } = await ranking;
@@ -98,7 +99,7 @@ async function RankedList({ ranking, total, ...p }: RowProps & { ranking: Return
 
 // pending: search order, while relevance scores are still being computed.
 // Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
-function ResultList({ rows, total, pending = false, scored = false, question, patterns, back, focus, must, shown }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean }) {
+function ResultList({ rows, total, pending = false, scored = false, question, patterns, back, focus, must, shown, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean }) {
   const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
   const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
   const row = (r: Result | Ranked, i: number) => (
@@ -111,7 +112,15 @@ function ResultList({ rows, total, pending = false, scored = false, question, pa
         <span>{scored ? `${strong.length} strong ${strong.length === 1 ? "match" : "matches"} · ${total.toLocaleString("en-US")} related` : `${total.toLocaleString("en-US")} results`}</span>
         {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first</span>}
       </div>
-      {strong.length === 0 && weak.length > 0 && <p className="notice">No strong matches for this question. These are the closest organizations, and each falls short somewhere: hover a score to see why.</p>}
+      {/* One notice: what's missing (the must-mention phrase, strong matches, or both) */}
+      {(noMention || (strong.length === 0 && weak.length > 0)) && (
+        <p className="notice">
+          {noMention && <>No organizations clearly mention <b>{must}</b> in their filings. </>}
+          {strong.length === 0 && weak.length > 0
+            ? <>{noMention ? "None is a strong match either. " : "No strong matches for this question. "}These are the closest organizations: hover a score to see what each is missing.</>
+            : "Showing the closest results."}
+        </p>
+      )}
       {strong.map(row)}
       {strong.length > 0 && weak.length > 0 && (
         <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
