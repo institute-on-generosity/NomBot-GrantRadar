@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-dates-20261006-172306/nombot.html",
+    "output": ".archify/architecture-nombot-v2-20261007-122450/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -20,13 +20,13 @@
         150,
         60
       ],
-      "tag": "on demand"
+      "tag": "planned"
     },
     {
       "id": "users",
       "type": "external",
       "label": "Users",
-      "sublabel": "donors \u00b7 researchers",
+      "sublabel": "donors · researchers",
       "pos": [
         40,
         200
@@ -81,8 +81,8 @@
     {
       "id": "llm",
       "type": "backend",
-      "label": "LLM Query Parser",
-      "sublabel": "any provider",
+      "label": "Claude Query Parser",
+      "sublabel": "Claude API",
       "pos": [
         500,
         300
@@ -91,13 +91,13 @@
         170,
         60
       ],
-      "tag": "question \u2192 filters"
+      "tag": "question → filters"
     },
     {
       "id": "db",
       "type": "database",
       "label": "Postgres + pgvector",
-      "sublabel": "orgs \u00b7 financials \u00b7 filing_text",
+      "sublabel": "orgs · financials · 990 text · regions",
       "pos": [
         870,
         290
@@ -106,13 +106,13 @@
         200,
         80
       ],
-      "tag": "managed \u00b7 HNSW index"
+      "tag": "managed · HNSW index"
     },
     {
       "id": "etl",
       "type": "backend",
       "label": "Python ETL",
-      "sublabel": "GitHub Actions \u00b7 monthly",
+      "sublabel": "GitHub Actions · monthly",
       "pos": [
         880,
         600
@@ -140,23 +140,23 @@
     {
       "id": "rag",
       "type": "backend",
-      "label": "RAG Answerer",
-      "sublabel": "cited summary of results",
+      "label": "Research Buddy",
+      "sublabel": "cites every claim [n]",
       "pos": [
         500,
-        200
+        100
       ],
       "size": [
         170,
         60
       ],
-      "tag": "phase 2 \u00b7 Nov 22"
+      "tag": "top 15 · Claude"
     },
     {
       "id": "bmf",
       "type": "external",
       "label": "IRS EO BMF",
-      "sublabel": "1.8M orgs \u00b7 monthly",
+      "sublabel": "1.8M orgs · monthly",
       "pos": [
         540,
         560
@@ -170,7 +170,7 @@
       "id": "soi",
       "type": "external",
       "label": "IRS SOI Extract",
-      "sublabel": "financials \u00b7 annual",
+      "sublabel": "financials · annual",
       "pos": [
         540,
         640
@@ -207,22 +207,52 @@
         170,
         60
       ]
+    },
+    {
+      "id": "rerank",
+      "type": "backend",
+      "label": "Relevance Scorer",
+      "sublabel": "Claude · top 40",
+      "tag": "0–100 + reason",
+      "pos": [
+        500,
+        200
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "census",
+      "type": "external",
+      "label": "Census + ARC",
+      "sublabel": "ZIP → county → Appalachia",
+      "pos": [
+        540,
+        880
+      ],
+      "size": [
+        170,
+        60
+      ]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "NomBot \u00b7 Vercel",
+      "label": "NomBot · Vercel",
       "wraps": [
         "ui",
         "api",
         "llm",
-        "rag"
+        "rag",
+        "rerank"
       ]
     },
     {
       "kind": "region",
-      "label": "generosity-data \u00b7 GitHub Actions",
+      "label": "generosity-data · GitHub Actions",
       "wraps": [
         "etl",
         "emb"
@@ -235,12 +265,13 @@
         "bmf",
         "soi",
         "xml",
-        "ntee"
+        "ntee",
+        "census"
       ]
     },
     {
       "kind": "region",
-      "label": "Supabase Pro \u00b7 hosted Postgres",
+      "label": "Supabase Pro · hosted Postgres",
       "wraps": [
         "db"
       ]
@@ -283,7 +314,7 @@
       "id": "detail-lookup",
       "from": "ui",
       "to": "propublica",
-      "label": "detail page",
+      "label": "detail page (planned)",
       "variant": "dashed",
       "fromSide": "top",
       "toSide": "bottom"
@@ -313,15 +344,13 @@
       "id": "ask-results",
       "from": "ui",
       "to": "rag",
-      "label": "ask about results",
-      "variant": "dashed"
+      "label": "ask about results"
     },
     {
       "id": "rag-fetch",
       "from": "rag",
       "to": "db",
-      "label": "result text",
-      "variant": "dashed"
+      "label": "990 text"
     },
     {
       "id": "bmf-load",
@@ -346,6 +375,25 @@
       "from": "ntee",
       "to": "etl",
       "label": "categories"
+    },
+    {
+      "id": "candidates",
+      "from": "db",
+      "to": "rerank",
+      "label": "top 40 candidates"
+    },
+    {
+      "id": "ranked",
+      "from": "rerank",
+      "to": "ui",
+      "label": "ranked + why",
+      "variant": "emphasis"
+    },
+    {
+      "id": "census-load",
+      "from": "census",
+      "to": "etl",
+      "label": "regions"
     }
   ],
   "cards": [
@@ -353,28 +401,30 @@
       "dot": "cyan",
       "title": "Query path",
       "items": [
-        "LLM turns a question into filters (state, NTEE, budget) + search text",
-        "One Postgres query: SQL filters + pgvector similarity",
-        "Same engine serves the UI and the JSON API",
-        "Phase 2: RAG answers questions about the shown results, citing 990 filings"
+        "Claude turns a question into filters (state, city, Appalachia, cause, budget, must-mention) + search text",
+        "One Postgres query: SQL filters + pgvector similarity + keywords",
+        "Claude scores the top 40 (0–100, with a reason); strong matches first",
+        "Research Buddy answers follow-ups from the top 15 results' 990 text, citing every claim"
       ]
     },
     {
       "dot": "emerald",
       "title": "Data",
       "items": [
-        "BMF: ~1.8M orgs, active only",
-        "SOI: financials for ~300K e-filers",
-        "990 XML: mission + program text, the only embedding source"
+        "BMF: ~1.8M orgs, active only (POC: 5 states, 204K)",
+        "SOI: financials (POC: 54,590 rows)",
+        "990 XML: mission + program text, the only embedding source (POC: 50,971 filings)",
+        "Census + ARC: ZIP → county → Appalachia (34,236 ZIPs)"
       ]
     },
     {
       "dot": "amber",
-      "title": "Cost",
+      "title": "Quality + cost",
       "items": [
-        "Supabase Pro $25/mo (~1\u20132 GB)",
-        "LLM parsing $5\u201320/mo",
-        "Vercel + GitHub Actions free"
+        "Search eval: 91% relevant (50 questions)",
+        "Buddy eval: 1 unsupported claim of 401",
+        "Supabase Pro $25/mo; Vercel + GitHub Actions free",
+        "Claude: parsing, scoring and Buddy (cost not yet measured)"
       ]
     }
   ]

@@ -43,7 +43,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg" />
-  <img src="docs/architecture-light.svg" alt="NomBot architecture: four public IRS/NCCS sources flow through the generosity-data ETL and embedding job into Supabase Postgres + pgvector; users and developers query it through the search UI and JSON API via an LLM query parser; a phase-2 RAG Answerer sits beside the search UI" />
+  <img src="docs/architecture-light.svg" alt="NomBot architecture: four public IRS/NCCS sources plus Census + ARC region data flow through the generosity-data ETL and embedding job into Supabase Postgres + pgvector; users and developers query it through the search UI and JSON API via an LLM query parser; Claude parses each question and scores the top 40 results; Research Buddy answers follow-ups with citations; Census + ARC data adds the Appalachia region lookup" />
 </picture>
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
@@ -51,8 +51,6 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
 - **Regions:** ZIP → county lookup (`zip_regions`) powers the Appalachia filter (ARC's 420 counties).
-
-> The diagram predates relevance scoring and the region lookup; the RAG Answerer box is Research Buddy, now built.
 
 ## Data
 
