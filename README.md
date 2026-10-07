@@ -99,6 +99,8 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive version](docs/architecture.html) (download and open in a browser) · made with [Archify](https://github.com/tt-a1i/archify)
 
+> This is the **cloud target**. The proof of concept runs the same components on a laptop first (see **Stack**).
+
 **Phase 1, search:** question → LLM turns it into filters (state, NTEE, budget) plus search text → one Postgres query combines the filters with vector similarity → ranked results.
 
 **Phase 2, RAG:** the user asks about the results → the RAG Answerer pulls those orgs' 990 text → the LLM writes an answer that cites each filing. It runs only over results already shown and **makes no claim without a source**. The JSON API stays search-only.
@@ -114,7 +116,18 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | ProPublica API | Extra detail per org | Free, no key; rate-limited, so looked up on demand, not loaded in bulk | [ProPublica Nonprofit Explorer API](https://projects.propublica.org/nonprofits/api) |
 
 ## Stack
-Next.js + Vercel · Supabase Pro (hosted Postgres + pgvector, HNSW index; shared with GrantRadar, whose logins and saved matches use Supabase Auth) · Python ETL on GitHub Actions · `text-embedding-3-small` @ 512 dimensions · [Vercel AI SDK](https://ai-sdk.dev) for LLM calls (any provider, switched with one env var). No LangChain: the core is one SQL query plus one LLM call.
+**Local first, then cloud.** The proof of concept runs entirely on a laptop. The cloud move swaps the hosting, not the code: the same Postgres + pgvector schema moves over with `pg_dump` / `pg_restore`.
+
+| Layer | Proof of concept (local) | Cloud (after migration) |
+|---|---|---|
+| Database | Postgres 16 + pgvector in Docker (`pgvector/pgvector` image) | Supabase Pro (hosted Postgres + pgvector, HNSW index) |
+| Data | 5 Appalachian states (WV, KY, TN, VA, OH) | All ~1.8M US nonprofits |
+| ETL | Python scripts run by hand | Same scripts on GitHub Actions, monthly |
+| App + API | Next.js on `localhost:3000` | Next.js on Vercel |
+| LLM | [Vercel AI SDK](https://ai-sdk.dev), any provider (one env var) | Same |
+| Embeddings | `text-embedding-3-small` @ 512 dimensions | Same |
+
+No LangChain: the core is one SQL query plus one LLM call. In the cloud, the Supabase database is shared with GrantRadar, whose logins and saved matches use Supabase Auth.
 
 The data pipeline lives in [`generosity-data`](https://github.com/institute-on-generosity/generosity-data). [GrantRadar](https://github.com/institute-on-generosity/GrantRadar) uses the same database.
 
@@ -123,10 +136,10 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 
 | Dates | Work | Done when |
 |---|---|---|
-| Oct 5 – Oct 18 | Schema; load BMF + SOI; extract 990 text; keyword search | 1.8M orgs searchable by keyword |
-| Oct 19 – Oct 25 | Embeddings for orgs with text (~300–600K); **basic read-only JSON API** | Developers can query the data |
-| Oct 26 – Nov 1 | LLM query parsing; 50-query eval set | ≥90% relevant results on the eval set |
-| Nov 2 – Nov 8 | Web UI: search, result cards, filters | Public URL; IoG team using it |
+| Oct 5 – Oct 18 | **Local proof of concept:** Postgres + pgvector in Docker; load BMF + SOI + 990 text for 5 Appalachian states; embeddings; LLM query parsing; basic search page + read-only API on `localhost` | The demo query (*"food banks in rural Appalachia that do workforce training, under $500K"*) works end to end on a laptop |
+| Oct 19 – Oct 25 | **Migrate to cloud:** Supabase Pro; full national load (~1.8M orgs); deploy to Vercel; ETL on GitHub Actions | Same demo works at a public URL; **read-only API live for developers** |
+| Oct 26 – Nov 1 | 50-query eval set; tune query parsing | ≥90% relevant results on the eval set |
+| Nov 2 – Nov 8 | Web UI: search, result cards, filters | IoG team using it |
 | Nov 9 – Nov 15 | Full JSON API (docs, keys); monthly refresh; start testing with IoG + 5 external users | **Phase 1 launch:** search + API public |
 | Nov 16 – Nov 22 | **Phase 2, RAG:** "Ask about these results" with citations | **NomBot build complete** |
 | Nov 23 – Dec 20 | GrantRadar build (lighter Thanksgiving week); NomBot testing continues alongside | GrantRadar build complete |
@@ -142,14 +155,14 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 
 ## Budget (infrastructure)
 
-| Item | Monthly |
-|---|---|
-| Supabase Pro (data + vectors ≈ 1–2 GB) | $25 |
-| LLM query parsing | $5–20 |
-| LLM RAG answers (phase 2) | $5–15 |
-| Vercel, GitHub Actions | $0 |
-| Embeddings | <$5 one-time |
-| **Total** | **~$30–60** |
+| Item | Proof of concept (Oct 5 – 18) | Cloud (from Oct 19), monthly |
+|---|---|---|
+| Database | $0 (Docker on a laptop) | $25 (Supabase Pro, ≈ 1–2 GB) |
+| Hosting + ETL | $0 (localhost, run by hand) | $0 (Vercel, GitHub Actions) |
+| Embeddings | <$1 one-time (5 states) | <$5 one-time (full load) |
+| LLM query parsing | ~$1 (testing) | $5–20 |
+| LLM RAG answers (phase 2) | none | $5–15 |
+| **Total** | **~$2** | **~$30–60** |
 
 ## Risks
 
@@ -159,6 +172,7 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 | Text only for ~300K orgs | Show how complete each org's data is; others are found by filters and keyword search |
 | 990 XML formats vary by year | Parse each schema version; log and skip rows that fail |
 | Free-tier API limits | Cache frequent queries; rate-limit the API |
+| Local setup differs from cloud | Same Postgres version + pgvector locally and in Supabase; schema in versioned SQL migrations; migrate with `pg_dump` / `pg_restore` |
 | RAG states false things about real orgs | Answer only from the results shown; require a citation for every claim; label answers as AI-generated |
 
 ## Progress
@@ -171,28 +185,32 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 - [x] User experience mockups
 - [x] Repos created: `NomBot`, `GrantRadar`, `generosity-data`
 - [x] Deadline set: Dec 31, 2026
-- [ ] Supabase Pro project created
 
-### Oct 5 – Oct 18: Data + keyword search
-- [ ] Database schema (`orgs`, `financials`, `filing_text`)
-- [ ] Load IRS BMF (active orgs only)
-- [ ] Load IRS SOI financials
+### Oct 5 – Oct 18: Local proof of concept
+- [ ] Docker: Postgres 16 + pgvector running locally
+- [ ] Database schema as SQL migrations (`orgs`, `financials`, `filing_text`)
+- [ ] Load IRS BMF for WV, KY, TN, VA, OH (active orgs only)
+- [ ] Load IRS SOI financials for those orgs
 - [ ] Extract mission + program text from 990 XML
-- [ ] Keyword search over name, city, mission
-
-### Oct 19 – Oct 25: Semantic search + read-only API
-- [ ] Embeddings for orgs with text (~300–600K)
-- [ ] pgvector HNSW index
-- [ ] Basic read-only JSON API (search endpoint, rate-limited)
-
-### Oct 26 – Nov 1: Plain-language queries
+- [ ] Embeddings + pgvector index
 - [ ] LLM query parser (question → filters + search text)
+- [ ] Basic search page + read-only JSON API on `localhost`
+- [ ] **Demo query works end to end on a laptop**
+
+### Oct 19 – Oct 25: Migrate to cloud
+- [ ] Supabase Pro project created
+- [ ] Schema + data migrated (`pg_dump` / `pg_restore`)
+- [ ] Full national load (~1.8M orgs) + embeddings
+- [ ] Deploy to Vercel (public URL)
+- [ ] ETL scripts on GitHub Actions
+- [ ] **Read-only JSON API live for developers**
+
+### Oct 26 – Nov 1: Query quality
 - [ ] 50-query eval set
 - [ ] ≥90% relevant results on the eval set
 
 ### Nov 2 – Nov 8: Web UI
 - [ ] Search page, result cards, filters
-- [ ] Public URL on Vercel
 - [ ] IoG team using it
 
 ### Nov 9 – Nov 15: Phase 1 launch
