@@ -72,7 +72,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 **Outcome:** a ranked list in under 2 seconds, with the question turned into filter chips. The user compares the results and decides.
 
-![NomBot search mockup: a plain-language query, filter chips (food banks, Appalachia, under $500K, workforce training), three result cards with location, a highlighted program line and revenue, and an "Ask Research Buddy about these results" button](docs/ux/ux-search.png)
+![NomBot search mockup: a plain-language query, filter chips (food banks, Appalachia, under $500K, workforce training), three result cards with location, a highlighted program line and revenue, and an "Ask Research Buddy about these results" button](docs/ux/search-v2.png)
 
 ### IoG researcher: Research Buddy, reason with your data (Phase 2, from Nov 22)
 
@@ -84,7 +84,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 **Outcome:** an analysis rather than a list. Each answer shows its **reasoning steps**, then a finding (training appears once revenue passes ~$250K), the evidence (a cited comparison table), and a reasoned recommendation.
 
-![Research Buddy mockup: a chat over 12 search results. Asked about patterns, it shows its reasoning steps (read 12 filings, sorted food-only vs. training, compared size), finds that training appears above ~$250K revenue, and cites a 3-row comparison table. Asked which org best fits a $50K grant, it reasons through grant vs. budget, program spending and existing programs, and recommends Mountain Harvest with a citation.](docs/ux/ux-research.png)
+![Research Buddy mockup: a chat over 12 search results. Asked about patterns, it shows its reasoning steps (read 12 filings, sorted food-only vs. training, compared size), finds that training appears above ~$250K revenue, and cites a 3-row comparison table. Asked which org best fits a $50K grant, it reasons through grant vs. budget, program spending and existing programs, and recommends Mountain Harvest with a citation.](docs/ux/research-buddy-v2.png)
 
 ### Side by side
 
