@@ -23,8 +23,8 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Search** | **Suggestions** under the search box · **exact-mention** badges · include tiny/inactive orgs · **CSV export** |
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover |
-| **Landscape** | One card above results, tabs: **Overview** (AI summary, cited patterns, 3 related searches), **Breakdown** (size, places, causes, team; bars filter), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants) |
-| **Compare** | Pick 2–4 results → side-by-side finances, staff, volunteers, mission |
+| **Landscape** | Google-style results page: **AI overview** card above the results; on the right, cards for **Breakdown** (size, places, causes, team; bars filter), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants) |
+| **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
 | **Quality** | 👍/👎 **votes** on results · **search eval** (50 questions, 91%) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |

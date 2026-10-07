@@ -24,7 +24,6 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
           <StarButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state, cause: r.ntee?.label ?? null, revenue: r.revenue?.amount ?? null, year: r.revenue?.year ?? null }} />
           <NavLink href={href} className="name">{titleCase(r.name)}</NavLink>
           {focused && <span className="lastviewed">last viewed</span>}
-          <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />
         </div>
         <div className="sub">
           {[r.city ? titleCase(r.city) : null, r.state].filter(Boolean).join(", ")}
@@ -57,6 +56,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
         )}
         {r.revenue && <div className="rev"><b>{money(r.revenue.amount)}</b><span>revenue{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>}
         {feedback && <Vote question={feedback.question} ein={r.ein} rank={feedback.rank} filters={feedback.filters} />}
+        <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />
       </div>
     </div>
   );

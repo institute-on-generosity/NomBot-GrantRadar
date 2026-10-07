@@ -13,6 +13,7 @@ export function AiOverview({ o, explore }: { o: Overview; explore: { q: string; 
   };
   return (
     <section className="overview" aria-label="AI overview">
+      <h2><Spark />AI overview</h2>
       <Answer text={o.summary} cite={cite} />
       {o.patterns.length > 0 && <Answer text={o.patterns.map((p) => `- ${p}`).join("\n")} cite={cite} />}
       {explore.length > 0 && (
@@ -29,6 +30,7 @@ export function AiOverview({ o, explore }: { o: Overview; explore: { q: string; 
 export function AiOverviewSkeleton() {
   return (
     <section className="overview loading-ov" aria-label="AI overview loading">
+      <h2><Spark />AI overview</h2>
       <p className="ov-wait">Reading the strongest matches…</p>
       <div className="ov-lines" aria-hidden><i /><i /><i className="short" /></div>
     </section>

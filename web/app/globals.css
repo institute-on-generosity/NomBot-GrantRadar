@@ -547,9 +547,9 @@ button.fchip-main { cursor: pointer; }
 .landscape header { margin-bottom: 10px; }
 .landscape h2 { font-size: 14px; animation: step-in .25s var(--spring) both; }
 .landscape h2 span { font-size: 12px; }
-.landscape .overview .buddy-answer { font-size: 14.5px; }
-.landscape .overview .buddy-answer + .buddy-answer { font-size: 13.5px; margin-top: 6px; }
-.landscape .cite-n { font-size: 10px; min-width: 15px; height: 15px; padding: 0 3px; background: none; box-shadow: inset 0 0 0 1px var(--g-line); }
+.overview .buddy-answer { font-size: 14.5px; }
+.overview .buddy-answer + .buddy-answer { font-size: 13.5px; margin-top: 6px; }
+.overview .cite-n { font-size: 10px; min-width: 15px; height: 15px; padding: 0 3px; background: none; box-shadow: inset 0 0 0 1px var(--g-line); }
 .explore { gap: 4px 14px; margin-top: 10px; }
 .explore > span { font-size: 12px; margin-right: 0; }
 .explore-link { font-size: 13px; color: var(--g); text-decoration: none; }
@@ -570,3 +570,35 @@ button.fchip-main { cursor: pointer; }
 .ls-fmeta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ls-fgrantees { margin-top: 1px; }
 .ls-row { grid-template-columns: minmax(0, 11em) 1fr 2.4em; }
+
+/* Results page: overview + results on the left, landscape cards on the right (wide screens) */
+main:has(.serp) { max-width: 1240px; }
+main:has(.serp) > .search, main:has(.serp) > .chips { max-width: calc(100% - 368px); }
+.serp { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto 1fr; grid-template-areas: "ov rail" "main rail"; column-gap: 28px; align-items: start; margin-top: 16px; }
+.serp-ov { grid-area: ov; }
+.serp-main { grid-area: main; min-width: 0; }
+.serp-rail { grid-area: rail; }
+.serp-ov .overview { margin: 0 0 4px; }
+.serp-ov .overview h2 { margin-bottom: 6px; }
+.ls-rail { display: grid; gap: 14px; }
+.ls-card { padding: 13px 14px 14px; border-radius: 16px; background: var(--bg); box-shadow: 0 0 0 1px var(--line); animation: settle .5s var(--spring) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.ls-card h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 9px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.ls-card h3 span { font-size: 11.5px; font-weight: 400; color: var(--faint); }
+.ls-card .ls-grid { grid-template-columns: 1fr; gap: 12px; }
+.ls-card .ls-row { grid-template-columns: minmax(0, 8.5em) 1fr 2.2em; }
+.ls-card .ls-funders { margin-top: 0; }
+.ls-card .ls-funders li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name stat" "meta meta" "grantees grantees"; gap: 1px 8px; padding: 7px 0; }
+.ls-card .ls-funders li:first-child { border-top: 0; padding-top: 0; }
+.ls-card .ls-fname { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-card .ls-fstat { font-size: 12px; }
+.ls-card .ls-fgrantees { font-size: 11.5px; }
+.ls-card .ls-themes summary { font-size: 13px; }
+.ls-card .ls-themes details { padding: 7px 10px; }
+@media (max-width: 1100px) {
+  main:has(.serp) { max-width: 860px; }
+  main:has(.serp) > .search, main:has(.serp) > .chips { max-width: none; }
+  .serp { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "ov" "rail" "main"; }
+  .ls-rail { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin: 12px 0 4px; }
+}
+.ls-rail { align-items: start; }
+.ls-themes { align-content: start; }

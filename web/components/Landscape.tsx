@@ -1,27 +1,49 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { LandscapeTabs } from "./LandscapeTabs";
+
 import { NavLink } from "./NavLink";
 import { money } from "@/lib/filters";
 import { landscape, type Bar } from "@/lib/landscape";
 import type { Filters } from "@/lib/parse";
 import { themes } from "@/lib/themes";
 
+type View = { key: string; title: string; sub?: string; node: React.ReactNode };
+
+// The right-hand rail: one compact card per view, like a search engine's side panel.
+function LandscapeCards({ views }: { views: View[] }) {
+  return (
+    <div className="ls-rail">
+      {views.map((v, i) => (
+        <section key={v.key} className={`ls-card ls-${v.key}`} style={{ "--i": i } as React.CSSProperties} aria-label={v.title}>
+          <h3>{v.title}{v.sub && <span>{v.sub}</span>}</h3>
+          {v.node}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function LandscapeSkeleton() {
+  return (
+    <div className="ls-rail">
+      {["Breakdown", "Where they are"].map((t) => <section key={t} className="ls-card"><h3>{t}</h3><div className="ov-lines" aria-hidden><i /><i /><i className="short" /></div></section>)}
+    </div>
+  );
+}
+
 type Hrefs = { size: (b: Bar) => string | null; city: (b: Bar) => string; cause: (b: Bar) => string };
 
 // Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it.
-export async function Landscape({ question, filters, includeInactive, hrefs, map, overview }: {
-  question: string; filters: Filters; includeInactive: boolean; hrefs: Hrefs; overview: React.ReactNode;
+export async function Landscape({ question, filters, includeInactive, hrefs, map }: {
+  question: string; filters: Filters; includeInactive: boolean; hrefs: Hrefs;
   map: (counts: Record<string, number>, appalachia: string[], states: string[]) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
-  const first = { key: "overview", label: "Overview", title: "AI overview", node: overview };
-  if (l.size < 5) return <LandscapeTabs views={[first]} />;
+  if (l.size < 5) return null;
   const states = [...new Set(l.cities.map((c) => c.label.slice(-2)))];
   return (
-    <LandscapeTabs views={[
-      first,
-      { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
+    <LandscapeCards views={[
+      { key: "breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} href={hrefs.size} />
           <Bars title="Places" bars={l.cities} href={hrefs.city} />
@@ -29,9 +51,9 @@ export async function Landscape({ question, filters, includeInactive, hrefs, map
           <Bars title="Team" bars={l.team} note={`${l.teamReported} report staff`} />
         </div>
       ) },
-      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
-      { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
-      { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
+      { key: "map", title: "Where they are", sub: `${l.size} closest, by county`, node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
+      { key: "themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
+      { key: "funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (
           <>
             <ul className="ls-funders">

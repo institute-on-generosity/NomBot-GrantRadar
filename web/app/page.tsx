@@ -8,9 +8,8 @@ import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
-import { Landscape } from "@/components/Landscape";
+import { Landscape, LandscapeSkeleton } from "@/components/Landscape";
 import { LandscapeMap } from "@/components/LandscapeMap";
-import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
@@ -80,18 +79,25 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
-      {/* One card: AI overview (first tab) + the landscape views. The overview streams in its own boundary. */}
-      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
-        <Landscape question={question} filters={filters} includeInactive={includeInactive}
-          overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
-          hrefs={{
-            size: (b) => (b.key ? url(p, { max: b.key, n: "" }) : null),
-            city: (b) => url(p, { city: b.key, n: "" }),
-            cause: (b) => url(p, { cause: b.key, n: "" }),
-          }}
-          map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
-      </Suspense>
 
+      <div className="serp">
+      <div className="serp-ov">
+        <Suspense key={`overview:${url(p, { n: "" })}`} fallback={<AiOverviewSkeleton />}>
+          <OverviewPanel question={question} ranking={rankingAll} />
+        </Suspense>
+      </div>
+      <aside className="serp-rail" aria-label="Landscape">
+        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeSkeleton />}>
+          <Landscape question={question} filters={filters} includeInactive={includeInactive}
+            hrefs={{
+              size: (b) => (b.key ? url(p, { max: b.key, n: "" }) : null),
+              city: (b) => url(p, { city: b.key, n: "" }),
+              cause: (b) => url(p, { cause: b.key, n: "" }),
+            }}
+            map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
+        </Suspense>
+      </aside>
+      <div className="serp-main">
       {/* Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
           instead of React keeping the old list on screen until the new scores arrive. */}
       <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
@@ -103,6 +109,8 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
         <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
+      </div>
+      </div>
       <Footer />
     </>
   );
@@ -110,7 +118,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
 async function OverviewPanel({ question, ranking }: { question: string; ranking: ReturnType<typeof rank> }) {
   const o = await overview(question, (await ranking).results);
-  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : <p className="ls-note">No overview for these results.</p>;
+  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : null;
 }
 
 type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };
