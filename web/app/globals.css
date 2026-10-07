@@ -1,0 +1,22 @@
+:root { --g: #15803d; --g-dark: #166534; --g-tint: #f0fdf4; --g-line: #bbf7d0; --ink: #0f172a; --mute: #64748b; --line: #e5e7eb; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-geist-sans), -apple-system, sans-serif; color: var(--ink); background: #fff; }
+main { max-width: 920px; margin: 0 auto; padding: 40px 24px 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; margin-bottom: 18px; color: inherit; text-decoration: none; }
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--g); color: #fff; display: grid; place-items: center; font-size: 14px; }
+.search { display: flex; align-items: center; gap: 12px; height: 52px; border: 1.5px solid var(--g); border-radius: 12px; padding: 0 8px 0 18px; }
+.search input { flex: 1; border: 0; outline: 0; font: inherit; font-size: 15.5px; }
+.search button { background: var(--g); color: #fff; border: 0; border-radius: 9px; padding: 10px 20px; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+.chip { font-size: 13px; color: var(--g-dark); background: var(--g-tint); border: 1px solid var(--g-line); border-radius: 999px; padding: 5px 12px; }
+.count { font-size: 13px; color: var(--mute); margin: 26px 0 10px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 18px 0; border-top: 1px solid var(--line); }
+.row:last-of-type { border-bottom: 1px solid var(--line); }
+.name { font-weight: 650; font-size: 16px; }
+.sub { font-size: 13px; color: var(--mute); margin-top: 3px; }
+.line { font-size: 14px; color: #334155; margin-top: 8px; }
+.rev { text-align: right; flex: none; }
+.rev b { font-size: 17px; display: block; }
+.rev span { font-size: 11.5px; color: var(--mute); }
+.ask { display: inline-flex; margin-top: 24px; border: 1.5px solid var(--g); color: var(--g); border-radius: 10px; padding: 11px 18px; font-weight: 600; font-size: 14.5px; opacity: .55; }
+.note { font-size: 12px; color: var(--mute); margin-top: 28px; }
