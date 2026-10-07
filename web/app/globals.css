@@ -514,13 +514,13 @@ button.fchip-main { cursor: pointer; }
 .ls-note, .ls-wait { font-size: 13px; color: var(--mute); }
 .ls-wait { display: flex; align-items: center; gap: 8px; }
 .ls-funders { list-style: none; display: grid; gap: 2px; margin-top: 8px; }
-.ls-funders li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 14px; padding: 8px 0; border-top: 1px solid var(--line); }
-.ls-fname { font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.ls-funders li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name stat" "meta stat" "grantees grantees"; align-items: baseline; gap: 1px 16px; padding: 9px 0; border-top: 1px solid var(--line); }
+.ls-fname { grid-area: name; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
 .ls-fname:hover { color: var(--g); }
-.ls-fstat { font-size: 13px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+.ls-fstat { grid-area: stat; align-self: start; padding-top: 1px; font-size: 13px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ls-fstat b { color: var(--ink); font-weight: 600; }
-.ls-fmeta { font-size: 12.5px; color: var(--faint); }
-.ls-fgrantees { grid-column: 1 / -1; font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-fmeta { grid-area: meta; font-size: 12.5px; color: var(--faint); }
+.ls-fgrantees { grid-area: grantees; margin-top: 3px; font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ls-themes { display: grid; gap: 6px; }
 .ls-themes details { border-radius: 12px; background: var(--fill); padding: 9px 12px; }
 .ls-themes summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; font-size: 14px; }

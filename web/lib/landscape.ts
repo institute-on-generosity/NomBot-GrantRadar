@@ -75,7 +75,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   };
 }
 
-const cached = memo<Landscape>("landscape", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v2", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }
