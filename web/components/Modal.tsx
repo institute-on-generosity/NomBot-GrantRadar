@@ -7,7 +7,8 @@ const X = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stro
 
 // Centered popover over everything, background grayed out. Closing goes back in history
 // (×, Esc, or a click on the background), so the page underneath is untouched.
-// source: a second child shown beside the first (split view) with its own × to close just it.
+// source: a second child shown beside the first (split view). One × in the top-right corner:
+// the first click closes the source pane, the next closes the popover.
 export function Modal({ label, source, children }: { label: string; source?: { title: string; closeHref: string } | null; children: React.ReactNode }) {
   const router = useRouter();
   const [main, side] = Children.toArray(children);
@@ -26,7 +27,7 @@ export function Modal({ label, source, children }: { label: string; source?: { t
   return (
     <div className="modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) router.back(); }}>
       <div className={`modal${source ? " split" : ""}`} role="dialog" aria-modal="true" aria-label={label}>
-        <button type="button" className="iconbtn modal-close" onClick={() => router.back()} aria-label="Close" title="Close (Esc)"><X /></button>
+        {!source && <button type="button" className="iconbtn modal-close" onClick={() => router.back()} aria-label="Close" title="Close (Esc)"><X /></button>}
         <div className="modal-body">{main}</div>
         {source && side && (
           <section className="modal-source" aria-label={source.title}>

@@ -80,6 +80,20 @@ main.wide { max-width: 1100px; }
 .buddy-fab:active { transform: scale(.96); }
 .buddy-panel { position: sticky; top: 0; height: 100vh; width: clamp(360px, 32vw, 520px); flex: none; display: flex; flex-direction: column; background: var(--bg); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(0,0,0,.05); animation: panel-in .4s var(--spring) both; z-index: 25; }
 .buddy-mark { color: var(--g); font-weight: 400; }
+.buddy-panel .panel-head { gap: 4px; }
+.iconbtn.on { background: var(--g-tint); color: var(--g-dark); }
+.iconbtn:disabled { opacity: .35; cursor: default; background: none; }
+.buddy-empty-note { font-size: 14px; color: var(--mute); }
+.buddy-history { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.buddy-history li { display: flex; align-items: flex-start; gap: 4px; border-radius: 12px; transition: background-color .15s; }
+.buddy-history li:hover { background: var(--fill); }
+.buddy-history li.on { background: var(--g-tint); }
+.buddy-history li > button:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; font: inherit; text-align: left; color: var(--ink); background: none; border: 0; cursor: pointer; }
+.buddy-history b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buddy-history span { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buddy-history small { font-size: 12px; color: var(--faint); }
+.buddy-history .iconbtn { margin: 8px 6px 0 0; opacity: 0; }
+.buddy-history li:hover .iconbtn, .buddy-history .iconbtn:focus-visible { opacity: 1; }
 .buddy-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px 20px; }
 .buddy-empty p { font-size: 14px; line-height: 1.55; color: var(--mute); }
 .buddy-empty b { color: var(--ink); font-weight: 600; }
@@ -311,7 +325,6 @@ button.fchip-main { cursor: pointer; }
 .modal-close { position: absolute; top: 14px; right: 14px; z-index: 1; background: var(--fill); }
 /* Split view: a source opens beside the organization, inside the same popover */
 .modal.split { width: min(1320px, 100%); }
-.modal.split .modal-close { right: auto; left: 14px; }
 .modal-source { flex: 0 0 48%; display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--line); background: var(--bg); animation: pane-in .35s var(--spring) both; }
 .modal-source .panel-head { padding-right: 10px; }
 .modal-source .iconbtn { text-decoration: none; }

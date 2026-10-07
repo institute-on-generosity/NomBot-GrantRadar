@@ -2,6 +2,10 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BUDDY_KEY, type Conversation, findConversation, removeConversation, saveConversation } from "@/lib/buddyHistory";
+import { ago } from "./HistoryList";
+import { useStoredList } from "./useStored";
 
 type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
 type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string };
@@ -11,10 +15,17 @@ const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3"
 // Research Buddy: ask about the current results; Claude answers from their IRS filings,
 // citing each organization as [n] (opens it in a popover), and shows a summary of its reasoning.
 // A floating button opens it as a chat panel docked on the right, beside the results.
-export function ResearchBuddy({ question, overrides, all }: { question: string; overrides: Record<string, string | undefined>; all: boolean }) {
-  const [turns, setTurns] = useState<Turn[]>([]);
+// Conversations are saved per search (convKey) in this browser; History lists them all.
+export function ResearchBuddy({ question, overrides, all, convKey, startOpen = false }: {
+  question: string; overrides: Record<string, string | undefined>; all: boolean; convKey: string; startOpen?: boolean;
+}) {
+  // Restored from storage on the client; the panel (the only place turns render) starts closed or client-opened.
+  const [turns, setTurns] = useState<Turn[]>(() => (typeof window === "undefined" ? [] : findConversation(convKey)?.turns.map((t) => ({ ...t, status: "done" as const })) ?? []));
   const [draft, setDraft] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
+  const [view, setView] = useState<"chat" | "history">("chat");
+  const saved = useStoredList<Conversation>(BUDDY_KEY, "nombot-buddy");
+  const router = useRouter();
   const end = useRef<HTMLDivElement>(null);
   const busy = turns.at(-1)?.status === "thinking" || turns.at(-1)?.status === "answering";
   const input = useRef<HTMLInputElement>(null);
@@ -27,6 +38,19 @@ export function ResearchBuddy({ question, overrides, all }: { question: string; 
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns]); // follow the answer as it streams
+  // Save once every turn has finished (not mid-stream).
+  useEffect(() => {
+    const done = turns.filter((t) => t.status === "done");
+    if (done.length && done.length === turns.length) {
+      saveConversation({ key: convKey, question, href: convKey, turns: done.map(({ ask, thinking, answer, sources }) => ({ ask, thinking, answer, sources })) });
+    }
+  }, [turns, convKey, question]);
+
+  const newChat = () => { setTurns([]); removeConversation(convKey); setView("chat"); input.current?.focus(); };
+  const openConversation = (c: Conversation) => {
+    if (c.key === convKey) { setView("chat"); return; }
+    router.push(`${c.href}${c.href.includes("?") ? "&" : "?"}buddy=1`);
+  };
 
   const update = (patch: (t: Turn) => Partial<Turn>) =>
     setTurns((ts) => ts.map((t, i) => (i === ts.length - 1 ? { ...t, ...patch(t) } : t)));
@@ -77,12 +101,37 @@ export function ResearchBuddy({ question, overrides, all }: { question: string; 
       {open && shell && createPortal(
         <aside className="buddy-panel" aria-label="Research Buddy">
           <header className="panel-head">
-            <span><b className="buddy-mark" aria-hidden>✦</b> Research Buddy</span>
+            <span><b className="buddy-mark" aria-hidden>✦</b> {view === "history" ? "History" : "Research Buddy"}</span>
+            <button type="button" className={`iconbtn${view === "history" ? " on" : ""}`} onClick={() => setView(view === "history" ? "chat" : "history")} aria-pressed={view === "history"} aria-label="Conversation history" title="History">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l3 2" /></svg>
+            </button>
+            <button type="button" className="iconbtn" onClick={newChat} disabled={busy || !turns.length} aria-label="New chat" title="New chat">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+            </button>
             <button type="button" className="iconbtn" onClick={() => setOpen(false)} aria-label="Close Research Buddy" title="Close (Esc)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
           </header>
 
+          {view === "history" ? (
+            <div className="buddy-body">
+              {!saved.length && <p className="buddy-empty-note">No conversations yet. Ask Research Buddy about any search and it will show up here.</p>}
+              <ul className="buddy-history">
+                {saved.map((c) => (
+                  <li key={c.key} className={c.key === convKey ? "on" : undefined}>
+                    <button type="button" onClick={() => openConversation(c)}>
+                      <b>{c.question}</b>
+                      <span>{c.turns[0]?.ask}</span>
+                      <small>{c.turns.length} {c.turns.length === 1 ? "question" : "questions"} · {ago(c.at)}{c.key === convKey ? " · this search" : ""}</small>
+                    </button>
+                    <button type="button" className="iconbtn" onClick={() => removeConversation(c.key)} aria-label={`Delete conversation about ${c.question}`} title="Delete">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (<>
           <div className="buddy-body">
             {!turns.length && (
               <div className="buddy-empty">
@@ -117,6 +166,7 @@ export function ResearchBuddy({ question, overrides, all }: { question: string; 
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" /></svg>
             </button>
           </form>
+          </>)}
         </aside>,
         shell,
       )}

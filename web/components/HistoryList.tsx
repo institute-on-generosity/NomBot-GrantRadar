@@ -4,7 +4,7 @@ import { NavLink } from "./NavLink";
 import { titleCase } from "./text";
 import { useStoredList } from "./useStored";
 
-function ago(t: number) {
+export function ago(t: number) {
   const m = Math.round((Date.now() - t) / 60000);
   if (m < 1) return "just now";
   if (m < 60) return `${m} min ago`;

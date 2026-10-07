@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Modal } from "@/components/Modal";
 import { OrgView } from "@/components/OrgView";
+import { RouteGate } from "@/components/RouteGate";
 import { BmfViewer } from "@/components/viewers/BmfViewer";
 import { SoiViewer } from "@/components/viewers/SoiViewer";
 
@@ -8,9 +9,11 @@ import { SoiViewer } from "@/components/viewers/SoiViewer";
 // conversation stays where it was. ?src=<viewer url> opens that source beside it.
 export default function OrgModal(props: PageProps<"/preview/org/[ein]">) {
   return (
-    <Suspense fallback={<Modal label="Organization"><p className="hint modal-loading">Loading…</p></Modal>}>
-      <OrgModalContent {...props} />
-    </Suspense>
+    <RouteGate prefix="/preview/org/">
+      <Suspense fallback={<Modal label="Organization"><p className="hint modal-loading">Loading…</p></Modal>}>
+        <OrgModalContent {...props} />
+      </Suspense>
+    </RouteGate>
   );
 }
 

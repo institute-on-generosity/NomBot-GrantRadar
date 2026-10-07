@@ -15,7 +15,7 @@ import type { Filters } from "@/lib/parse";
 import { rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
 
-type Params = { question?: string; n?: string; all?: string; focus?: string } & Overrides;
+type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string } & Overrides;
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
@@ -23,7 +23,7 @@ const ASK = "Which nonprofits are you looking for?";
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
-  const merged = { ...p, focus: "", ...change };
+  const merged = { ...p, focus: "", buddy: "", ...change };
   const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]);
   return `/?${qs}`;
 }
@@ -72,7 +72,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {focus && <ScrollToResult id={`org-${focus}`} />}
       <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
-      <ResearchBuddy key={url(p, { focus: "" })} question={question} overrides={overrides} all={includeInactive} />
+      <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
       {res.exact_total === 0 && <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>}
       <Suspense fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
