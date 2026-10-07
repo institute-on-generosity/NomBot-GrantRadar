@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { HISTORY_KEY, historyKey, type HistoryEntry } from "@/lib/history";
 import { SAVED_KEY, type SavedOrg } from "@/lib/saved";
+import { GR_HISTORY_EVENT, GR_HISTORY_KEY, GR_SAVED_EVENT, GR_SAVED_KEY, missionKey, type RecentMission, type SavedFunder } from "@/lib/grantStore";
+import { MATCH_STEPS } from "@/lib/grantExamples";
 import { historyTarget } from "./HistoryList";
 import { NavLink } from "./NavLink";
 import { RadarMark } from "./RadarMark";
@@ -37,6 +39,8 @@ export function Sidebar() {
   const [open, setOpen] = useState(false);
   const saved = useStoredList<SavedOrg>(SAVED_KEY, "nombot-saved");
   const history = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
+  const funders = useStoredList<SavedFunder>(GR_SAVED_KEY, GR_SAVED_EVENT);
+  const missions = useStoredList<RecentMission>(GR_HISTORY_KEY, GR_HISTORY_EVENT);
   const [here, setHere] = useState<Here>({ path: "", question: "" });
   const item = (on: boolean) => `side-item${on ? " on" : ""}`;
   const grants = here.path.startsWith("/grants");
@@ -67,6 +71,23 @@ export function Sidebar() {
           ? <NavLink href="/grants" className={`side-new${here.path === "/grants" && !here.question ? " on" : ""}`} title="New match" current={here.path === "/grants" && !here.question}><PlusIcon /><span className="side-label">New match</span></NavLink>
           : <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">New search</span></NavLink>}
 
+{grants ? (
+        <nav className="side-scroll">
+          <Section title="Starred" all="/grants/saved" active={here.path === "/grants/saved"} empty="Tap ☆ on any funder to keep it here.">
+            {funders.slice(0, SHOWN).map((f) => (
+              <NavLink key={f.ein} href={`/grants/funder/${f.ein}`} className={item(here.path === `/grants/funder/${f.ein}`)} current={here.path === `/grants/funder/${f.ein}`} title={titleCase(f.name)}>
+                <span className="side-star">★</span>{titleCase(f.name)}
+              </NavLink>
+            ))}
+          </Section>
+          <Section title="Recents" all="/grants/history" active={here.path === "/grants/history"} empty="Your missions will show up here.">
+            {missions.slice(0, SHOWN).map((m) => {
+              const on = here.path === "/grants" && missionKey(here.question) === m.key;
+              return <NavLink key={m.key} href={m.href} className={item(on)} current={on} title={m.mission} label="Reading your mission…" steps={MATCH_STEPS} search>{m.mission}</NavLink>;
+            })}
+          </Section>
+        </nav>
+        ) : (
         <nav className="side-scroll">
           <Section title="Starred" all="/saved" active={here.path === "/saved"}
             empty="Tap ☆ on any organization to keep it here.">
@@ -83,6 +104,7 @@ export function Sidebar() {
             ))}
           </Section>
         </nav>
+        )}
       </aside>
     </>
   );

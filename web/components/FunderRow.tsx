@@ -1,5 +1,6 @@
 import { ViewTransition } from "react";
 import Link from "next/link";
+import { FunderStar } from "./GrantStore";
 import { Bank, Check, Chevron, Lock, People, Pin, Spark } from "./icons";
 import { titleCase } from "./text";
 import { money } from "@/lib/filters";
@@ -14,6 +15,7 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
   const toLike = f.evidence.reduce((s, e) => s + (e.amount ?? 0), 0);
   return (
     <article className="funder" style={{ "--i": index } as React.CSSProperties}>
+      <FunderStar funder={{ ein: f.ein, name: f.name, city: f.city, state: f.state, typical: f.typical, inviteOnly: f.inviteOnly }} />
       <Link href={href} scroll={false} className="funder-link" aria-label={`${titleCase(f.name)}: why this funder?`}>
         <div className="funder-main">
           <ViewTransition name={`funder-${f.ein}`} share="morph" default="none">

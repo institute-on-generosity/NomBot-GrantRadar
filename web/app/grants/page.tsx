@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { FilterChips, type Chip } from "@/components/FilterChips";
 import { FunderRow } from "@/components/FunderRow";
 import { NavLink } from "@/components/NavLink";
+import { RecordMission } from "@/components/GrantStore";
 import { SearchBox } from "@/components/SearchBox";
 import { LOADED_STATES, money } from "@/lib/filters";
 import { matchFunders, SIZES, type MatchFilters, type Size } from "@/lib/grants";
@@ -67,6 +68,7 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
   return (
     <>
       <SearchBox key={mission} action="/grants" name="mission" value={mission} placeholder={PLACEHOLDER} examples={MISSIONS} recents={false} submitLabel="Match" loading={{ label: "Reading your mission…", steps: MATCH_STEPS }} />
+      <RecordMission mission={mission} href={url(p, {})} total={total} />
       <FilterChips chips={chips} />
       {funders.length === 0 ? (
         <p className="notice">No matching funders{state ? ` in ${state}` : ""}. Remove a filter or reword your mission.</p>

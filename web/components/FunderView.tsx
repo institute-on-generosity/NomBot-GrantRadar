@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
 import { BackLink } from "./BackLink";
+import { FunderStar } from "./GrantStore";
 import { Bank, Calendar, Check, Coins, Doc, Globe, Info, ListIcon, Lock, MapIcon, Phone, Pin, Receipt } from "./icons";
 import { titleCase } from "./text";
 import { WhyFunder } from "./WhyFunder";
@@ -28,7 +29,10 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
 
   const head = (
     <header className="funder-head big">
-      <h1>{titleCase(f.name)}</h1>
+      <div className="title-line">
+        <h1>{titleCase(f.name)}</h1>
+        <FunderStar funder={{ ein: f.ein, name: f.name, city: f.city, state: f.state, typical: f.typical, inviteOnly: f.inviteOnly }} withLabel />
+      </div>
       <p className="meta">
         <span><Pin />{[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")}</span>
         <span>EIN {f.ein.slice(0, 2)}-{f.ein.slice(2)}</span>{" "}

@@ -84,7 +84,7 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
 
 export type FunderDetail = {
   ein: string; name: string; city: string | null; state: string | null; taxYear: number | null; objectId: string;
-  assets: number | null; grantsPaid: number | null; grantCount: number; inviteOnly: boolean; website: string | null;
+  assets: number | null; grantsPaid: number | null; grantCount: number; typical: number | null; inviteOnly: boolean; website: string | null;
   apply: { contact: string | null; form: string | null; deadlines: string | null; restrictions: string | null };
   grants: { id: number; recipient: string; ein: string | null; city: string | null; state: string | null; amount: number | null; purpose: string | null }[];
   byState: { state: string; count: number; amount: number }[];
@@ -94,7 +94,8 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
   const ein = einParam.replace(/\D/g, "");
   if (ein.length !== 9) return null;
   const [{ rows: [f] }, { rows: gs }, { rows: st }] = await Promise.all([
-    db.query("SELECT * FROM funders WHERE ein = $1", [ein]),
+    db.query(`SELECT f.*, (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
+              FROM funders f WHERE f.ein = $1`, [ein]),
     db.query(`SELECT id, recipient_name, recipient_ein, recipient_city, recipient_state, amount, purpose FROM grants
               WHERE funder_ein = $1 ORDER BY amount DESC NULLS LAST, id LIMIT 400`, [ein]),
     db.query(`SELECT recipient_state AS state, count(*)::int AS count, coalesce(sum(amount), 0)::bigint AS amount FROM grants
@@ -106,7 +107,7 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
   const s = (v: string | null) => (v && v.trim() && !/^(n\/?a|none|not applicable|see statement.*|-+)$/i.test(v.trim()) ? v.trim() : null);
   return {
     ein: f.ein, name: f.name, city: f.city, state: f.state, taxYear: f.tax_year, objectId: f.object_id,
-    assets: n(f.assets), grantsPaid: n(f.grants_paid), grantCount: f.grant_count, inviteOnly: f.invite_only, website: s(f.website),
+    assets: n(f.assets), grantsPaid: n(f.grants_paid), grantCount: f.grant_count, typical: f.median == null ? null : Math.round(Number(f.median)), inviteOnly: f.invite_only, website: s(f.website),
     apply: { contact: s(f.apply_contact), form: s(f.apply_form), deadlines: s(f.apply_deadlines), restrictions: s(f.apply_restrictions) },
     grants: gs.map((g) => ({ id: g.id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state, amount: n(g.amount), purpose: g.purpose })),
     byState: st.map((r) => ({ state: r.state, count: r.count, amount: Number(r.amount) })),

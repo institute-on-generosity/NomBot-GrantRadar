@@ -87,6 +87,7 @@ GrantRadar is NomBot plus a grants table.
 | **Matcher favors precision**: 51% linked, below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
 | **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
+| **Starred funders + recent missions** in the sidebar (this browser only), before logins | Same habit as NomBot: come back to a funder or a past match in one click |
 
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
@@ -122,7 +123,7 @@ GrantRadar is NomBot plus a grants table.
 **Dec 7–13: Cloud**
 - [ ] National 990-PF load
 - [ ] `/grants` live on NomBot deploy
-- [ ] Logins + saved matches
+- [ ] Logins + saved matches (in-browser **Starred funders** and **Recent missions** already work; logins will sync them)
 
 **Dec 14–20: Test + launch**
 - [ ] 10 nonprofits testing, 👍/👎

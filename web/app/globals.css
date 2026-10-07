@@ -583,3 +583,12 @@ button.fchip-main { cursor: pointer; }
 .fv-site { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
 .fv-site .ico { color: var(--g); }
 .why h2 .why-mark { display: inline-flex; }
+
+/* GrantRadar stars: outside the row link, so starring never opens the sheet */
+.funder > .star { position: absolute; top: 21px; left: 0; z-index: 1; }
+.funder .funder-main { padding-left: 26px; }
+.funder-head.big .title-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-right: 40px; }
+.funder-head.big .title-line h1 { padding-right: 0; }
+.icon-sub { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.icon-sub span { display: inline-flex; align-items: center; gap: 5px; }
+.icon-sub .ico { color: var(--faint); }
