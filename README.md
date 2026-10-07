@@ -48,8 +48,11 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
 
-- **Search:** question → LLM → filters + search text → one SQL + vector query → ranked results.
-- **Research Buddy:** question → the shown results' 990 text → LLM reasons → answer with steps + citations. No source, no claim.
+- **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
+- **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
+- **Regions:** ZIP → county lookup (`zip_regions`) powers the Appalachia filter (ARC's 420 counties).
+
+> The diagram predates relevance scoring and the region lookup; the RAG Answerer box is Research Buddy, now built.
 
 ## Data
 
@@ -69,7 +72,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | Data | 5 states (WV, KY, TN, VA, OH) | All US |
 | ETL | Python, run by hand | GitHub Actions, monthly |
 | App | Next.js, `localhost` | Vercel |
-| LLM | Claude API (`@anthropic-ai/sdk`); model via `LLM_MODEL` | Same |
+| LLM | Claude API (`@anthropic-ai/sdk`): parse, relevance scoring, Research Buddy; model via `LLM_MODEL` | Same |
 | Embeddings | nomic-embed-text (local, free) | Decide at cloud move: nomic or Voyage AI |
 
 No LangChain: switching Claude models is one env var. Pipeline: [`generosity-data`](https://github.com/institute-on-generosity/generosity-data).
@@ -87,11 +90,20 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | Nov 23–Dec 20 | GrantRadar |
 | Dec 21–31 | Buffer + handoff |
 
+## Changes from the plan
+| Change | Why |
+|---|---|
+| **Relevance scoring** (Claude scores the top 40, 0–100, with a reason) | Vector + keyword search alone was 35–50% relevant; scoring lifted it to 91% |
+| **Research Buddy built early** (Oct 6–7, planned Nov 16–22) | Fastest way to test the "reason over filings" idea |
+| **Appalachia region filter** (ZIP → county → ARC list) | State filters can't express "rural Appalachia" |
+| **Source viewers** for the IRS master file and SOI financials | Every number links to the exact row it came from |
+| **Search takes ~6–14s, not <2s** | Scoring costs time; results show in ~0.5s and re-sort when scores arrive |
+
 ## Success metrics
-- ≥90% relevant results, <2s
+- ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~6–14s)
 - IoG uses it for real research by Dec 15
 - ≥3 positive external users
-- Every Research Buddy claim cited
+- Every Research Buddy claim cited (**1 unsupported of 401** in the 30-question eval)
 - Refresh runs hands-off; <$250/mo
 
 ## Budget
