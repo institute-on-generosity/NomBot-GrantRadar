@@ -6,7 +6,7 @@ import { NavLink } from "@/components/NavLink";
 import { RecordMission } from "@/components/GrantStore";
 import { SearchBox } from "@/components/SearchBox";
 import { LOADED_STATES, money } from "@/lib/filters";
-import { matchFunders, SIZES, type MatchFilters, type Size } from "@/lib/grants";
+import { givingStates, matchFunders, SIZES, STATE_NAMES, type MatchFilters, type Size } from "@/lib/grants";
 import { MATCH_STEPS, MISSIONS } from "@/lib/grantExamples";
 import { parseQuestion } from "@/lib/parse";
 import { RadarMark } from "@/components/RadarMark";
@@ -39,16 +39,24 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 50);
   // The applicant's state, from the mission unless a chip changed it ("any" clears it).
   const parsed = await parseQuestion(mission).catch(() => null);
-  const guessed = parsed?.states.find((s) => LOADED_STATES.some(([c]) => c === s)) ?? "";
+  const guessed = parsed?.states.find((s) => s in STATE_NAMES) ?? "";
   const state = p.st === "any" ? "" : (p.st ?? guessed).toUpperCase();
   const size = (p.size && p.size in SIZES ? p.size : undefined) as Size | undefined;
   const filters: MatchFilters = { state: state || undefined, open: p.open === "1", size };
-  const { funders, total, peers } = await matchFunders(mission, filters, n);
+  const [{ funders, total, peers }, states] = await Promise.all([matchFunders(mission, filters, n), givingStates()]);
+  const loaded = new Set(LOADED_STATES.map(([c]) => c));
+  const count = (c: string) => states.find((x) => x.state === c)?.grants ?? 0;
+  const stateOption = (c: string, group: string) => ({ label: `Gives in ${STATE_NAMES[c]}`, href: url(p, { st: c, n: "" }), on: c === state, group, note: count(c).toLocaleString("en-US") });
 
   const chips: Chip[] = [
     {
       key: "st", kind: state ? "set" : "unset", label: state ? `Gives in ${state}` : "Anywhere",
-      options: [{ label: "Anywhere", href: url(p, { st: "any", n: "" }), on: !state }, ...LOADED_STATES.map(([s, name]) => ({ label: `Gives in ${name}`, href: url(p, { st: s, n: "" }), on: s === state }))],
+      // Loaded states first (similar grantees can be found there), then every other state these foundations give to.
+      options: [
+        { label: "Anywhere", href: url(p, { st: "any", n: "" }), on: !state },
+        ...LOADED_STATES.map(([c]) => stateOption(c, "Full data")),
+        ...states.filter((x) => !loaded.has(x.state)).map((x) => stateOption(x.state, "Other states")),
+      ],
       removeHref: state ? url(p, { st: "any", n: "" }) : undefined,
     },
     {

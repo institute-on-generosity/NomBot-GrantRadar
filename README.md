@@ -19,7 +19,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant.
 2. The 150 closest grantees (similarity ≥ 0.55) are "like you".
 3. Each foundation scores the sum of ((similarity − 0.55) / 0.45)² over the grantees like you it paid: a few close matches beat many loose ones.
-4. Filters: **gives in** a state, **open to applications** (drops foundations that only give to preselected charities), **typical grant** size.
+4. Filters: **gives in** a state (any of the 53 states these foundations give to; similar grantees come from the 5 loaded states), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size.
 
 ## Users
 

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "./NavLink";
 
-export type ChipOption = { label: string; href: string; on: boolean };
+export type ChipOption = { label: string; href: string; on: boolean; group?: string; note?: string }; // group: heading shown above its first option; note: small right-hand detail
 export type Chip = {
   key: string;
   label: string;
@@ -43,12 +43,14 @@ export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: s
           )}
           {open === c.key && c.options && (
             <span className="fmenu" role="menu" onClick={() => setOpen(null)}>
-              {c.options.map((o) => (
+              {c.options.map((o, i) => [
+                o.group && o.group !== c.options![i - 1]?.group && <span key={`g-${o.group}`} className="fmenu-group" role="presentation">{o.group}</span>,
                 <NavLink key={o.label} href={o.href} className={`fmenu-item${o.on ? " on" : ""}`} current={o.on} label="Updating results…" search>
                   <span>{o.label}</span>
+                  {o.note && !o.on && <small className="fmenu-note">{o.note}</small>}
                   {o.on && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12 5 5 9-10" /></svg>}
-                </NavLink>
-              ))}
+                </NavLink>,
+              ])}
             </span>
           )}
         </span>

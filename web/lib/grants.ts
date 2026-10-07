@@ -116,3 +116,20 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
 
 // The funder's 990-PF, readable on ProPublica (same link style as NomBot's Form 990 sources).
 export const filingUrl = (ein: string, objectId: string) => `https://projects.propublica.org/nonprofits/organizations/${ein}/${objectId}/full`;
+
+export const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", DC: "District of Columbia",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana",
+  ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska",
+  NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio",
+  OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas",
+  UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", PR: "Puerto Rico",
+};
+
+// Every US state the loaded foundations gave to, with how many grants went there (for the "Gives in" chip).
+const cachedStates = memo<{ state: string; grants: number }[]>("grants:states", 1, 3600_000);
+export function givingStates() {
+  return cachedStates("all", async () => (await db.query(
+    `SELECT recipient_state AS state, count(*)::int AS grants FROM grants
+     WHERE recipient_state = ANY($1) GROUP BY 1 ORDER BY 2 DESC`, [Object.keys(STATE_NAMES)])).rows);
+}
