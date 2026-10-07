@@ -1,226 +1,184 @@
-# NomBot
+# GrantRadar
 
-**Plain-language search over every registered US nonprofit, built only on public IRS data.**
+> 🌿 **Branch `GrantRadar`.** Combined app: [`main`](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/main) · NomBot plan: [`NomBot`](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot)
+
+
+**Describe your nonprofit's mission and get the foundations most likely to fund you, built only on public IRS data.**
+
+> **Where it lives:** GrantRadar ships as the **`/grants` section of the [NomBot](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot) app**: one codebase, one deploy. This branch (`GrantRadar`) holds the GrantRadar plan and, later, the `/grants` code. It merges into `main`, the combined app.
 An [Institute on Generosity](https://instituteongenerosity.org) AI Fellowship project · **Deadline: Dec 31, 2026**
 
-> **Also in this repo: [GrantRadar](docs/grantradar/README.md)**, funder matching at `/grants`. Branches: `NomBot` and `GrantRadar`, both merging into `main` (the combined app).
-
 ## Problem
-IRS data on ~1.8M nonprofits is public, but it is buried in raw files. Paid tools (Candid, Charity Navigator) don't support plain-language search.
-A donor asking *"food banks in rural Appalachia that also do workforce training, under $500K budget"* has no good tool to use.
+Every private foundation reports every grant it pays on Form 990-PF (Part XV). That covers roughly 100K+ foundations and millions of grants, all public, and almost entirely unused by the small nonprofits that need it most.
+Grant-discovery tools (Instrumentl, Candid) cost **$150–400/mo**, which most small nonprofits can't afford.
 
 ## Solution
-Built in two phases: **search first, then RAG.**
+A free funder-matching tool. A nonprofit describes what it does, and GrantRadar finds the foundations that **have already funded work like theirs**.
 
-1. **Phase 1, Search (by Nov 15).** Type a question and get a ranked list of nonprofits, each with EIN, location, financials and cause code. The same search is available as a **JSON API**.
-2. **Phase 2, Research Buddy (RAG, by Nov 22).** **Chat with your data.** Ask full research questions about the results and the LLM **reasons over the filings**: it classifies, compares, spots patterns and weighs trade-offs, shows how it reasoned, and cites a 990 filing for every claim.
+1. **Match (by Dec 6, local).** Mission → nonprofits with similar missions → the foundations that funded them → ranked by how often, how much and how recently they gave.
+2. **Explain (by Dec 6, local).** Reuses NomBot's Research Buddy reasoner. "Why this funder?" The LLM reasons over that foundation's grant history, shows its steps, and cites a 990-PF for every claim.
 
-**Search finds organizations. Research Buddy reasons about them.**
+**GrantRadar works backwards from proof:** a funder ranks high only because it has actually paid grants to organizations like yours.
 
-Free and open source. Runs for about $30–60/mo.
+Free and open source. Shares its data pipeline and database with [NomBot](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot), so it adds only ~$5–15/mo.
 
 ## Target users
 
 | Who | What they want | Served by |
 |---|---|---|
-| **Developers** | Raw, structured nonprofit data to build their own tools | **Phase 1, Search:** filtered + semantic search returning records (EIN, location, financials, NTEE) via the JSON API, read-only from **Oct 25** |
-| **IoG research team** (primary), plus donors, program officers, journalists | A **research buddy**: landscape scans, patterns, comparisons, funding-memo drafts, "which is the strongest fit, and why?" | **Phase 2, Research Buddy (RAG):** multi-turn chat that reasons over the search results, shows its reasoning, and cites a 990 filing for every claim |
+| **Development directors** at nonprofits under $2M | A short list of realistic funders, without a paid subscription | Mission → ranked funders, with typical grant size |
+| **IoG partner organizations** | Funding leads from a tool IoG endorses | The same matches, plus saved lists and a weekly digest of new matches |
+| **Fiscal sponsors** | Funders for several small projects at once | One saved profile per sponsored project |
+| **First-time grant writers** | To understand *why* a funder fits before writing | "Why this funder?" explanations with cited grant history |
 
 ## User experience
 > All names, EINs and figures below are **mock data** for illustration.
 
-### Developer: raw data via the JSON API (Phase 1, read-only from Oct 25)
+### Nonprofit: find funders (by Dec 6)
 
-**Question:** *"Give me food banks in West Virginia and Kentucky with revenue under $500K that do workforce training."*
+**Input:** *"We run a food pantry in Hazard, KY and train adults for kitchen jobs."*
 
-```http
-GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000&limit=2
-```
+**Outcome:** the mission becomes filter chips, then a ranked list of foundations, each with the evidence ("funded 4 food banks like yours") and a typical grant size.
 
-**Outcome:** structured records, ranked by relevance, ready to load into their own tool.
+![GrantRadar match mockup: a mission box, chips (food + job training, eastern Kentucky, budget ~$280K), and three ranked foundations, each showing location, how many similar orgs it funded, and its typical grant, with a "Why this funder?" link](docs/grantradar/ux/match-v1.png)
 
-```json
-{
-  "query": { "q": "food bank workforce training", "state": ["WV", "KY"], "max_revenue": 500000 },
-  "total": 12,
-  "results": [
-    {
-      "ein": "00-0000001",
-      "name": "Mountain Harvest Food Bank",
-      "city": "Elkins", "state": "WV",
-      "ntee": { "code": "K31", "label": "Food Banks, Food Pantries" },
-      "financials": { "tax_year": 2024, "revenue": 410000, "expenses": 392000, "assets": 215000 },
-      "mission": "Distributes food across Randolph County and runs a job-readiness program for warehouse work.",
-      "score": 0.91,
-      "data_completeness": "full"
-    },
-    {
-      "ein": "00-0000002",
-      "name": "Hollow Creek Community Pantry",
-      "city": "Hazard", "state": "KY",
-      "ntee": { "code": "K31", "label": "Food Banks, Food Pantries" },
-      "financials": { "tax_year": 2024, "revenue": 280000, "expenses": 275000, "assets": 90000 },
-      "mission": "Weekly food distribution and a culinary skills training cohort for adults re-entering the workforce.",
-      "score": 0.87,
-      "data_completeness": "full"
-    }
-  ]
-}
-```
+### Nonprofit: why this funder? (by Dec 6)
 
-### End user: plain-language search (Phase 1, web UI from Nov 8)
+**Question:** *"Why is Laurel Ridge a good fit for us?"*
 
-**Question:** *"Food banks in rural Appalachia that also do workforce training, under $500K budget."*
+**Outcome:** the reasoning steps, a one-line verdict, and the evidence: the similar grantees this foundation actually paid, with amounts and years, each cited to a 990-PF.
 
-**Outcome:** a ranked list in under 2 seconds, with the question turned into filter chips. The user compares the results and decides.
-
-![NomBot search mockup: a plain-language query, filter chips (food banks, Appalachia, under $500K, workforce training), three result cards with location, a highlighted program line and revenue, and an "Ask Research Buddy about these results" button](docs/ux/search-v2.png)
-
-### IoG researcher: Research Buddy, reason with your data (Phase 2, from Nov 22)
-
-**Search hands you a list. Research Buddy works through it with you.** The researcher keeps asking full questions, and the LLM reasons across the filings: classifying orgs, comparing them, finding patterns, weighing trade-offs. Every answer shows **how it reasoned** and **cites a 990 filing** for each claim.
-
-**Questions** (a conversation about the 12 search results):
-1. *"I'm researching how Appalachian food banks are moving into workforce development. What patterns do you see across these 12?"*
-2. *"If a donor wants to fund $50K to expand job training, which is the strongest fit, and why?"*
-
-**Outcome:** an analysis rather than a list. Each answer shows its **reasoning steps**, then a finding (training appears once revenue passes ~$250K), the evidence (a cited comparison table), and a reasoned recommendation.
-
-![Research Buddy mockup: a chat over 12 search results. Asked about patterns, it shows its reasoning steps (read 12 filings, sorted food-only vs. training, compared size), finds that training appears above ~$250K revenue, and cites a 3-row comparison table. Asked which org best fits a $50K grant, it reasons through grant vs. budget, program spending and existing programs, and recommends Mountain Harvest with a citation.](docs/ux/research-buddy-v3.png)
-
-### Side by side
-
-| | Developer: API | End user: Search | IoG researcher: Research Buddy |
-|---|---|---|---|
-| **Asks** | An API query with filters | One plain-language question | A conversation of full research questions |
-| **Gets** | JSON records | A ranked list | **Reasoning:** patterns, comparisons, recommendations, with sources |
-| **Does the thinking** | Their own code | The user, reading results | **The LLM, alongside the user**, showing its steps |
-| **Speed** | <1s | <2s | 4–10s per answer, streamed in |
-| **Available** | Oct 25 | Nov 8 | Nov 22 |
+![GrantRadar explain mockup: asked why Laurel Ridge Foundation fits, it shows reasoning steps (found 4 grantees like you, read their grants, compared size), concludes it funds food + job training across Appalachia, notes a typical $15K grant is about 5% of the budget, and lists four similar grantees with cited amounts](docs/grantradar/ux/explain-v1.png)
 
 ## Architecture
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg" />
-  <img src="docs/architecture-light.svg" alt="NomBot architecture: four public sources (IRS BMF, IRS SOI extract, IRS 990 e-file XML, NCCS NTEE codes) flow through the generosity-data ETL and embedding job into Postgres + pgvector hosted on Supabase; users and developers query it through the Search UI and JSON API via an LLM query parser, with a phase-2 RAG Answerer beside the Search UI" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/grantradar/architecture-dark-v2.svg" />
+  <img src="docs/grantradar/architecture-light-v2.svg" alt="GrantRadar architecture: three public sources (IRS EO BMF, IRS 990-PF XML Part XV, foundation websites) feed the generosity-data Grant Parser, Recipient Matcher and Site Scraper, which write to Postgres + pgvector hosted on Supabase and shared with NomBot. Nonprofits use the /grants section of the NomBot app on Vercel; the Matching Engine runs vector + SQL queries, and the Match Explainer reads grant history." />
 </picture>
 
-[Interactive version](docs/architecture.html) (download and open in a browser) · made with [Archify](https://github.com/tt-a1i/archify)
+[Interactive version](docs/grantradar/architecture.html) (download and open in a browser) · made with [Archify](https://github.com/tt-a1i/archify)
 
 > This is the **cloud target**. The proof of concept runs the same components on a laptop first (see **Stack**).
 
-**Phase 1, search:** question → LLM turns it into filters (state, NTEE, budget) plus search text → one Postgres query combines the filters with vector similarity → ranked results.
+**Matching:** mission → embedding → most similar grantees (NomBot's existing `filing_text` embeddings, no new embedding job) → their funders → ranked by number of similar grantees funded, grant amounts, and recency. Grant purpose text alone is weak (often just "general support"), so matching runs through the **grantees**, not the purpose line.
 
-**Phase 2, Research Buddy (RAG):** the researcher asks a question about the results → the RAG Answerer pulls those orgs' 990 text and financials → the LLM reasons over them (classify, compare, weigh) and answers with its steps and a citation per claim. It runs only over results already shown and **makes no claim without a source**. The JSON API stays search-only.
+**The hardest step: linking grants to recipients.** Part XV lists recipients by **name and address, usually without an EIN**. The Recipient Matcher links each grant to an org in `orgs` by normalized name + city/state, and keeps a confidence score. Low-confidence links are excluded from rankings.
+
+## Reused from NomBot
+**GrantRadar is NomBot plus a grants table.** Most of the system already exists by Nov 22. GrantRadar only builds what is genuinely new: the grant parser, recipient matching, funder ranking and logins.
+
+| Component | Already built for NomBot | GrantRadar reuses it for | New work |
+|---|---|---|---|
+| **Database** | Postgres 17 + pgvector (local), Supabase Pro (cloud), migration runner | Same database and same Supabase project | `grants` + `funders` tables (one migration) |
+| **Org list** | BMF loader → `orgs` (1.8M orgs) | Identifying recipients and funders | None |
+| **990 XML pipeline** | Index filtering, batch download, streaming XML parser (`filing_text`) | The same downloads: 990-PF filings are in the same zips | **Part XV extractor** (a new parser step) |
+| **Financials** | SOI loader → `financials` | Foundation assets + total giving (990-PF extract) | Load the 990-PF zip with the same loader |
+| **Mission embeddings** | `filing_text` + HNSW index | "Find nonprofits like yours" is the same vector search | None |
+| **Mission → filters** | LLM query parser (question → filters + search text) | Turning a mission into chips (cause, region, budget) | Prompt tweak |
+| **Reasoning chat** | Research Buddy (reasoning steps + citations, Vercel AI SDK) | "Why this funder?": same reasoner, fed one funder's grants | New context + prompt |
+| **App + API** | Next.js app, DB client, search UI components, `/api/v1` pattern | **Same app:** a `/grants` section with `/api/v1/grants/…` routes, sharing components and libraries | Match + explain pages |
+| **Cloud + ops** | Vercel deploy, GitHub Actions ETL, monthly refresh | **Same deploy:** ships with NomBot on the same Vercel project and URL | Add 990-PF to the refresh |
+| **Design** | Green minimal UI (`docs/ux/src/base.css`) | Same styles | None |
+
+**Truly new in GrantRadar:** the Part XV grant parser, the recipient matcher (name + city/state, with confidence), the funder ranking query, Supabase Auth with saved matches, and the weekly digest.
 
 ## Data
 
 | Source | Provides | Notes | Download |
 |---|---|---|---|
-| IRS EO BMF | Name, EIN, address, NTEE, status | ~1.8M orgs; only active orgs are loaded. CSV per state/region, updated monthly | [irs.gov: EO BMF extract](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
-| IRS SOI 990 extract | Revenue, expenses, assets | ~300K e-filers; numbers only, no text. Annual zip per form (990, 990-EZ, 990-PF) + field dictionary | [irs.gov: SOI annual extract](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
-| IRS 990 e-file XML | Mission (Part I), programs (Part III) | The only source of text for embeddings. Monthly zip batches + index CSV per year | [irs.gov: Form 990 series downloads](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
-| NCCS NTEE codes | Cause-area categories | Used for filtering | [NCCS: IRS activity codes](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
-| ProPublica API | Extra detail per org | Free, no key; rate-limited, so looked up on demand, not loaded in bulk | [ProPublica Nonprofit Explorer API](https://projects.propublica.org/nonprofits/api) |
+| IRS 990-PF e-file XML | Every grant paid: recipient name + address, amount, purpose (**Part XV**, *not* Schedule B) | Monthly zip batches + `index_YYYY.csv` (filter to 990-PF). The old AWS S3 990 dataset is discontinued | [irs.gov: Form 990 series downloads](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS EO BMF | Name, EIN, address, NTEE for matching recipients and funders | Already loaded by `generosity-data` for NomBot | [irs.gov: EO BMF extract](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
+| IRS SOI 990-PF extract | Foundation assets and total giving | Annual zip (`eoextract990pf`) | [irs.gov: SOI annual extract](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
+| NomBot `filing_text` | Mission + program embeddings for grantees | Shared table, no new download | [NomBot](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot) |
+| Foundation websites | Contacts, deadlines, open RFPs | **Top ~500 foundations only**; scraped quarterly. Smaller funders show "check their site" | Public web pages |
+| ProPublica API | Backup 990-PF detail per foundation | Free, no key, rate-limited; on demand only | [ProPublica Nonprofit Explorer API](https://projects.propublica.org/nonprofits/api) |
+
+Form reference: [IRS: About Form 990-PF](https://www.irs.gov/forms-pubs/about-form-990-pf).
 
 ## Stack
-**Local first, then cloud.** The proof of concept runs entirely on a laptop. The cloud move swaps the hosting, not the code: the same Postgres + pgvector schema moves over with `pg_dump` / `pg_restore`.
+**Local first, then cloud**, the same pattern as NomBot. The grants tables live in the shared [`generosity-data`](https://github.com/institute-on-generosity/generosity-data) schema, so the cloud move is a `pg_dump` / `pg_restore` into the Supabase project NomBot already uses.
 
 | Layer | Proof of concept (local) | Cloud (after migration) |
 |---|---|---|
-| Database | Postgres 17 + pgvector 0.8 via Homebrew (no Docker needed) | Supabase Pro (hosted Postgres + pgvector, HNSW index) |
-| Data | 5 Appalachian states (WV, KY, TN, VA, OH) | All ~1.8M US nonprofits |
-| ETL | Python scripts run by hand | Same scripts on GitHub Actions, monthly |
-| App + API | Next.js on `localhost:3000` | Next.js on Vercel |
+| Database | Postgres 17 + pgvector via Homebrew (same DB as NomBot) | Supabase Pro, shared with NomBot |
+| Data | 990-PF grants paid to orgs in 5 Appalachian states (WV, KY, TN, VA, OH) | All US 990-PF grants, 3 most recent years |
+| ETL | Python scripts run by hand (parser, matcher) | Same scripts on GitHub Actions; scraper quarterly |
+| App | NomBot app, `/grants` section on `localhost:3000/grants` | Same NomBot deploy on Vercel, at `/grants` |
+| Accounts | None (single local user) | Supabase Auth: logins, saved matches, digest subscribers *(new)* |
 | LLM | [Vercel AI SDK](https://ai-sdk.dev), any provider (one env var) | Same |
-| Embeddings | `text-embedding-3-small` @ 512 dimensions | Same |
+| Email digest | Not in POC | [Resend](https://resend.com) free tier |
 
-No LangChain: the core is one SQL query plus one LLM call. In the cloud, the Supabase database is shared with GrantRadar, whose logins and saved matches use Supabase Auth.
-
-The data pipeline lives in [`generosity-data`](https://github.com/institute-on-generosity/generosity-data). [GrantRadar](https://github.com/institute-on-generosity/GrantRadar) uses the same database.
+No LangChain: matching is one SQL + vector query; the explainer is NomBot's Research Buddy reasoner over a single foundation's grants. **Everything except the grants tables, matcher, ranking and Auth comes from NomBot** (see **Reused from NomBot**).
 
 ## Roadmap
-**Deadline: Dec 31, 2026.** NomBot and GrantRadar are built back to back on the shared `generosity-data` pipeline, so each project gets one focused stretch.
+**Deadline: Dec 31, 2026.** GrantRadar is built **Nov 23 – Dec 20**, right after NomBot. Because the database, pipeline, embeddings, app and cloud are reused, the time goes to the **new** parts only, and the explainer moves a week earlier.
 
-| Dates | Work | Done when |
+| Dates | New work only | Done when |
 |---|---|---|
-| Oct 5 – Oct 18 | **Local proof of concept:** Postgres + pgvector on the laptop; load BMF + SOI + 990 text for 5 Appalachian states; embeddings; LLM query parsing; basic search page + read-only API on `localhost` | The demo query (*"food banks in rural Appalachia that do workforce training, under $500K"*) works end to end on a laptop |
-| Oct 19 – Oct 25 | **Migrate to cloud:** Supabase Pro; full national load (~1.8M orgs); deploy to Vercel; ETL on GitHub Actions | Same demo works at a public URL; **read-only API live for developers** |
-| Oct 26 – Nov 1 | 50-query eval set; tune query parsing | ≥90% relevant results on the eval set |
-| Nov 2 – Nov 8 | Web UI: search, result cards, filters | IoG team using it |
-| Nov 9 – Nov 15 | Full JSON API (docs, keys); monthly refresh; start testing with IoG + 5 external users | **Phase 1 launch:** search + API public |
-| Nov 16 – Nov 22 | **Phase 2, Research Buddy (RAG):** multi-turn chat that reasons over results, shows its steps, cites filings | **NomBot build complete** |
-| Nov 23 – Dec 20 | GrantRadar build (lighter Thanksgiving week); NomBot testing continues alongside | GrantRadar build complete |
+| Nov 23 – Nov 29 *(Thanksgiving, light)* | `grants` + `funders` migration; **Part XV extractor** added to NomBot's 990 XML pipeline; 990-PF financials through the existing SOI loader | Grants from 5-state funders loaded locally |
+| Nov 30 – Dec 6 | **Recipient matcher** (EIN, then name + city/state); **funder ranking query** over existing embeddings; `/grants` match page + **"Why this funder?"** inside the NomBot app, reusing Research Buddy | **Local proof of concept:** demo mission → sensible funders, with explanations |
+| Dec 7 – Dec 13 | National 990-PF load (3 years) into the **existing** Supabase project; `/grants` ships with the **existing** NomBot deploy; 990-PF added to the **existing** GitHub Actions refresh; **Supabase Auth + saved matches** | Public URL; logins work |
+| Dec 14 – Dec 20 | Test with 10 IoG-network nonprofits; 👍/👎 on every match; weekly digest; scraper for top ~500 foundations *(stretch)* | **GrantRadar build complete** |
 | Dec 21 – Dec 31 | Buffer; fixes from testing; documentation; IoG handoff | **Everything done** |
 
 ## Success metrics
-- ≥90% of test queries return relevant results in under 2 seconds
-- IoG research uses NomBot for one real task before Dec 15
-- ≥3 external users give positive feedback
-- Monthly refresh runs with no manual steps
-- Phase 2: 100% of RAG claims cite a filing; zero unsupported claims on a 30-question eval set
-- Infrastructure stays under $250/mo
+Adjusted from the original 6-month spec to the 4-week build:
+- ≥10 IoG-network nonprofits test GrantRadar by Dec 20 *(spec: 50+ over 6 months)*
+- ≥70% of top-20 matches rated 👍 relevant by testers
+- ≥70% of Part XV grant rows linked to a recipient EIN with high confidence
+- Match results in under 3 seconds
+- 100% of "Why this funder?" claims cite a 990-PF
+- IoG endorses GrantRadar as a resource for its partner network
+- Adds under $50/mo to the shared infrastructure
 
 ## Budget (infrastructure)
 
-| Item | Proof of concept (Oct 5 – 18) | Cloud (from Oct 19), monthly |
+| Item | Proof of concept (Nov 23 – Dec 6) | Cloud (from Dec 7), monthly |
 |---|---|---|
-| Database | $0 (Postgres on a laptop) | $25 (Supabase Pro, ≈ 1–2 GB) |
+| Database | $0 (shared local Postgres) | $0 extra (shares NomBot's $25 Supabase Pro) |
 | Hosting + ETL | $0 (localhost, run by hand) | $0 (Vercel, GitHub Actions) |
-| Embeddings | <$1 one-time (5 states) | <$5 one-time (full load) |
-| LLM query parsing | ~$1 (testing) | $5–20 |
-| LLM RAG answers (phase 2) | none | $5–15 |
-| **Total** | **~$2** | **~$30–60** |
+| 990-PF download | $0 (irs.gov) | $0 (irs.gov) |
+| LLM explanations | ~$1 (testing) | $5–10 |
+| Email digest | none | $0 (Resend free tier) |
+| **Total** | **~$1** | **~$5–15 extra** |
 
 ## Progress
-
-> 📋 Click-to-tick tracker: [Issue #1: NomBot progress](https://github.com/institute-on-generosity/NomBot/issues/1)
 
 ### Planning
 - [x] Project plan and README
 - [x] System architecture diagram
 - [x] User experience mockups
-- [x] Repos created: `NomBot`, `GrantRadar`, `generosity-data`
+- [x] Lives in the NomBot-GrantRadar repo: `GrantRadar` branch, code at `/grants`
 - [x] Deadline set: Dec 31, 2026
 
-### Oct 5 – Oct 18: Local proof of concept
-- [x] Postgres 17 + pgvector running locally (Homebrew)
-- [x] Database schema as SQL migrations (`orgs`, `financials`, `filing_text`)
-- [x] Load IRS BMF for WV, KY, TN, VA, OH (active orgs only): 204,564 orgs
-- [ ] Load IRS SOI financials for those orgs
-- [ ] Extract mission + program text from 990 XML
-- [ ] Embeddings + pgvector index
-- [ ] LLM query parser (question → filters + search text)
-- [ ] Basic search page + read-only JSON API on `localhost`
-- [ ] **Demo query works end to end on a laptop**
+### Nov 23 – Nov 29: Grants data (on NomBot's pipeline)
+- [ ] `grants` + `funders` migration in `generosity-data`
+- [ ] Part XV extractor added to the existing 990 XML pipeline
+- [ ] 990-PF financials via the existing SOI loader
+- [ ] Grants from 5-state funders loaded locally
 
-### Oct 19 – Oct 25: Migrate to cloud
-- [ ] Supabase Pro project created
-- [ ] Schema + data migrated (`pg_dump` / `pg_restore`)
-- [ ] Full national load (~1.8M orgs) + embeddings
-- [ ] Deploy to Vercel (public URL)
-- [ ] ETL scripts on GitHub Actions
-- [ ] **Read-only JSON API live for developers**
+### Nov 30 – Dec 6: Local proof of concept
+- [ ] Recipient matcher: EIN first, then name + city/state, with confidence
+- [ ] Measure link rate (target ≥70%)
+- [ ] Funder ranking query over existing `filing_text` embeddings
+- [ ] `/grants` match page in the NomBot app, reusing its components
+- [ ] "Why this funder?" from NomBot's Research Buddy reasoner
+- [ ] **Demo mission returns sensible funders, with explanations, on a laptop**
 
-### Oct 26 – Nov 1: Query quality
-- [ ] 50-query eval set
-- [ ] ≥90% relevant results on the eval set
+### Dec 7 – Dec 13: Cloud (existing infrastructure)
+- [ ] National 990-PF load (3 years) into the existing Supabase project
+- [ ] `/grants` live on the NomBot deploy (public URL)
+- [ ] 990-PF added to the existing GitHub Actions refresh
+- [ ] Supabase Auth: logins + saved matches
 
-### Nov 2 – Nov 8: Web UI
-- [ ] Search page, result cards, filters
-- [ ] IoG team using it
-
-### Nov 9 – Nov 15: Phase 1 launch
-- [ ] Full JSON API (docs, API keys)
-- [ ] Automated monthly refresh (GitHub Actions)
-- [ ] Testing with IoG staff + 5 external users
-- [ ] **Phase 1 launch:** search + API public
-
-### Nov 16 – Nov 22: Phase 2 Research Buddy (RAG)
-- [ ] Research Buddy: multi-turn chat over search results
-- [ ] "How I reasoned" steps + a 990 citation for every claim
-- [ ] 30-question RAG eval: every claim cited, zero unsupported claims
+### Dec 14 – Dec 20: Test + launch
+- [ ] 10 IoG-network nonprofits testing
+- [ ] 👍/👎 on every match
+- [ ] Weekly digest of new matches
+- [ ] Scraper for top ~500 foundation contacts + deadlines *(stretch)*
+- [ ] **GrantRadar build complete**
 
 ### Dec 21 – Dec 31: Wrap-up
-- [ ] Fixes from user testing
+- [ ] Fixes from testing
 - [ ] Documentation and IoG handoff
