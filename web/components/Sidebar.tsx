@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { HISTORY_KEY, historyKey, type HistoryEntry } from "@/lib/history";
-import { SAVED_KEY, type SavedOrg } from "@/lib/saved";
+import { FOLDERS_KEY, SAVED_KEY, type SavedOrg } from "@/lib/saved";
 import { historyTarget } from "./HistoryList";
 import { NavLink } from "./NavLink";
 import { titleCase } from "./text";
@@ -11,6 +11,7 @@ import { useStoredList } from "./useStored";
 
 // Line icons in the spirit of SF Symbols.
 const PanelIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden><rect x="3" y="4.5" width="18" height="15" rx="3.5" /><path d="M9 4.5v15" /></svg>;
+const FolderIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" /></svg>;
 const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>;
 
 const SHOWN = 8; // items per section before "See all"
@@ -36,6 +37,7 @@ export function Sidebar() {
   const [open, setOpen] = useState(false);
   const saved = useStoredList<SavedOrg>(SAVED_KEY, "nombot-saved");
   const history = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
+  const folders = useStoredList<string>(FOLDERS_KEY, "nombot-saved");
   const [here, setHere] = useState<Here>({ path: "", question: "" });
   const item = (on: boolean) => `side-item${on ? " on" : ""}`;
 
@@ -58,11 +60,17 @@ export function Sidebar() {
         <nav className="side-scroll">
           <Section title="Starred" all="/saved" active={here.path === "/saved"}
             empty="Tap ☆ on any organization to keep it here.">
-            {saved.slice(0, SHOWN).map((o) => (
+            {[
+              ...folders.map((f) => (
+                <NavLink key={`f-${f}`} href={`/saved?${new URLSearchParams({ folder: f })}`} className="side-item side-folder" title={f}>
+                  <FolderIcon />{f}<small>{saved.filter((o) => o.folder === f).length}</small>
+                </NavLink>
+              )),
+              ...saved.filter((o) => !o.folder).slice(0, SHOWN).map((o) => (
               <NavLink key={o.ein} href={`/org/${o.ein}`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={titleCase(o.name)}>
                 <span className="side-star">★</span>{titleCase(o.name)}
               </NavLink>
-            ))}
+            ))]}
           </Section>
           <Section title="Recents" all="/history" active={here.path === "/history"}
             empty="Your questions will show up here.">

@@ -25,7 +25,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover |
 | **Overview** | **AI overview** above results: landscape summary, cited patterns, 3 related searches |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
-| **Personal** | **History** and **saved (★)** organizations in a Claude-style sidebar |
+| **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
 | **Quality** | 👍/👎 **votes** on results · **search eval** (50 questions, 91%) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
 | **Design** | Apple-style UI, **dark mode**, centered loading card with steps |
 
@@ -132,7 +132,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 |---|---|
 | NomBot zooms **in** on details but not **out** to patterns across the landscape | ✅ **AI overview** above results: summary, cited patterns, "Explore" searches |
 | Show **staff and volunteer counts** (990 Part I lines 5–6) | ✅ On org detail, with an **All-volunteer** badge (33,331 orgs report staff; 7,057 have none) |
-| **Starred folders** by category (e.g. youth mentoring vs. arts education) | Later, once people star many orgs |
+| **Starred folders** by category (e.g. youth mentoring vs. arts education) | ✅ Folder picker on starred orgs; folder tabs on Starred; folders in the sidebar |
 | **Recommendations** based on past questions | ✅ First step: 3 "Explore" searches in the AI overview (based on the current question) |
 | **Real-time budget** and fundraising gap | Not in public data; would need nonprofits to self-report + verification |
 | Looks like Google, sidebar like Claude: familiar for people who aren't AI-savvy | Keep; matters for individual donors |

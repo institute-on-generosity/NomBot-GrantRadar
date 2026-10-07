@@ -7,6 +7,7 @@ import { money } from "@/components/money";
 import { BackLink } from "@/components/BackLink";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
+import { FolderPicker } from "@/components/FolderPicker";
 import { readable, titleCase } from "@/components/text";
 import { getOrg } from "@/lib/org";
 
@@ -45,7 +46,7 @@ async function Org({ params, searchParams, modal }: Props) {
     <article className="org">
       {!modal && (back && back.startsWith("/?") ? <BackLink fallback={backHref}>← Back to results</BackLink> : <Link href="/" className="back">← New search</Link>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
-      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /></div>
+      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /></div>
       <p className="sub">
         {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}

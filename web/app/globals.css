@@ -460,3 +460,32 @@ button.fchip-main { cursor: pointer; }
 .ov-lines i.short { width: 60%; }
 @keyframes ov-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .ov-lines i { animation: none; } }
+
+/* Starred folders */
+.folder-pick { position: relative; display: inline-flex; }
+.folder-btn { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 12.5px; font-weight: 500; color: var(--mute); background: none; border: 0; border-radius: 999px; padding: 3px 9px 3px 7px; cursor: pointer; transition: background-color .15s, color .15s; }
+.folder-btn:hover { background: var(--fill); color: var(--ink); }
+.folder-btn.set { color: var(--g-dark); background: var(--g-tint); }
+.row-main .folder-pick { margin: 6px 0 0 -7px; }
+.title-line .folder-pick { margin-left: 4px; }
+.title-line .folder-btn { font-size: 14px; padding: 6px 14px 6px 11px; background: var(--fill); color: var(--ink-2); }
+.title-line .folder-btn.set { background: var(--g-tint); color: var(--g-dark); }
+.folder-pick .fmenu { min-width: 220px; }
+.folder-pick .fmenu-item { font: inherit; font-size: 13.5px; border: 0; background: none; cursor: pointer; text-align: left; width: 100%; }
+.fmenu-item.muted { color: var(--mute); }
+.fmenu-new { display: flex; gap: 6px; padding: 6px 4px 2px; margin-top: 4px; border-top: 1px solid var(--line); }
+.fmenu-new input { flex: 1; min-width: 0; font: inherit; font-size: 13.5px; border: 0; border-radius: 8px; padding: 6px 9px; background: var(--fill); color: var(--ink); outline: 0; }
+.fmenu-new input:focus { box-shadow: 0 0 0 2px var(--g-line); }
+.fmenu-new button, .folder-tools button { font: inherit; font-size: 13px; font-weight: 600; border: 0; border-radius: 8px; padding: 6px 10px; background: var(--g-fill); color: #fff; cursor: pointer; }
+.fmenu-new button:disabled { opacity: .45; cursor: default; }
+.folder-tabs { margin-top: 18px; flex-wrap: wrap; }
+.folder-tabs .tab small { margin-left: 6px; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.folder-tabs .tab.on small { color: inherit; opacity: .7; }
+.folder-tools { display: flex; gap: 8px; margin: 12px 0 2px; }
+.folder-tools form { display: flex; gap: 6px; }
+.folder-tools input { font: inherit; font-size: 14px; border: 0; border-radius: 8px; padding: 6px 10px; background: var(--fill); color: var(--ink); outline: 0; }
+.folder-tools button { background: var(--fill); color: var(--ink-2); font-weight: 500; }
+.folder-tools button[type=submit] { background: var(--g-fill); color: #fff; }
+.side-folder { display: flex; align-items: center; gap: 7px; }
+.side-folder svg { color: var(--g); flex: none; }
+.side-folder small { margin-left: auto; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }

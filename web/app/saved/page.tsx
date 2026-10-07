@@ -3,8 +3,8 @@ import { SavedList } from "@/components/SavedList";
 export default function SavedPage() {
   return (
     <main>
-      <h1 className="pagetitle">Saved organizations</h1>
-      <p className="hint">Organizations you starred. Saved only in this browser.</p>
+      <h1 className="pagetitle">Starred</h1>
+      <p className="hint">Sort them into folders. Saved in this browser only.</p>
       <SavedList />
     </main>
   );
