@@ -4,15 +4,18 @@
 // Tables (generosity-data migration 007): funders, grants (recipient_ein = matched org).
 import { db } from "./db";
 import { embedQuery, toSql } from "./embedder";
+import { peerFit } from "./grantPeers";
 import { memo } from "./memo";
 
-const PEERS = 150;    // most similar grantee organizations considered
-const FLOOR = 0.55;   // cosine similarity below this isn't "like you"
+const PEERS = 150;    // candidate grantees (closest by embedding) that Claude then checks
+const FLOOR = 0.55;   // cosine similarity below this isn't a candidate
+const FIT = 70;       // Claude's work-alike score (0-100) a grantee needs to count as "like yours"
+const SIM_ONLY = 0.65; // without Claude: stricter embedding cutoff
 export const SIZES = { small: [0, 5_000], mid: [5_000, 25_000], large: [25_000, Infinity] } as const;
 export type Size = keyof typeof SIZES;
 
 export type MatchFilters = { state?: string; open?: boolean; size?: Size };
-export type Evidence = { grantId: number; recipient: string; ein: string; city: string | null; state: string | null; amount: number | null; purpose: string | null; year: number | null; similarity: number };
+export type Evidence = { grantId: number; recipient: string; ein: string; city: string | null; state: string | null; amount: number | null; purpose: string | null; year: number | null; fit: number }; // fit: 0-100, how alike its work is
 export type FunderMatch = {
   ein: string; name: string; city: string | null; state: string | null;
   assets: number | null; grantsPaid: number | null; grantCount: number; inviteOnly: boolean;
@@ -42,7 +45,12 @@ async function peerGrants(mission: string): Promise<Row[]> {
 const cachedPeers = memo<Row[]>("grants:peers", 200, 24 * 3600_000);
 
 export async function matchFunders(mission: string, f: MatchFilters = {}, limit = 20): Promise<{ funders: FunderMatch[]; total: number; peers: number }> {
-  const rows = await cachedPeers(mission.toLowerCase().replace(/\s+/g, " ").trim(), () => peerGrants(mission));
+  const candidates = await cachedPeers(mission.toLowerCase().replace(/\s+/g, " ").trim(), () => peerGrants(mission));
+  // Keep only grantees whose work is really alike: Claude's score, or a stricter embedding cutoff without it.
+  const sims = new Map(candidates.map((r) => [r.recipient_ein, r.sim]));
+  const scores = await peerFit(mission, [...sims].map(([ein, sim]) => ({ ein, sim })));
+  const fitOf = (ein: string) => scores.size ? scores.get(ein) ?? 0 : Math.round(100 * Math.min(1, 0.5 + (sims.get(ein)! - FLOOR) / (1 - FLOOR) * 0.5));
+  const rows = candidates.filter((r) => (scores.size ? fitOf(r.recipient_ein) >= FIT : r.sim >= SIM_ONLY));
   const byFunder = new Map<string, Row[]>();
   for (const r of rows) byFunder.set(r.funder_ein, [...(byFunder.get(r.funder_ein) ?? []), r]);
   if (!byFunder.size) return { funders: [], total: 0, peers: 0 };
@@ -59,12 +67,12 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
     const gs = byFunder.get(x.ein)!;
     const best = new Map<string, Row>(); // strongest grant per grantee
     for (const g of gs) if (!best.has(g.recipient_ein) || Number(g.amount ?? 0) > Number(best.get(g.recipient_ein)!.amount ?? 0)) best.set(g.recipient_ein, g);
-    const evidence = [...best.values()].sort((a, b) => b.sim - a.sim).map((g): Evidence => ({
+    const evidence = [...best.values()].map((g): Evidence => ({
       grantId: g.grant_id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state,
-      amount: g.amount == null ? null : Number(g.amount), purpose: g.purpose, year: g.tax_year, similarity: g.sim,
-    }));
-    // Closer grantees count much more than loose ones: ((sim - floor) / (1 - floor))^2, summed.
-    const score = evidence.reduce((s, e) => s + ((e.similarity - FLOOR) / (1 - FLOOR)) ** 2, 0);
+      amount: g.amount == null ? null : Number(g.amount), purpose: g.purpose, year: g.tax_year, fit: fitOf(g.recipient_ein),
+    })).sort((a, b) => b.fit - a.fit || (b.amount ?? 0) - (a.amount ?? 0));
+    // Closer grantees count much more than loose ones: ((fit - 50) / 50)^2, summed (70 -> 0.16, 85 -> 0.49, 100 -> 1).
+    const score = evidence.reduce((s, e) => s + ((e.fit - 50) / 50) ** 2, 0);
     return {
       ein: x.ein, name: x.name, city: x.city, state: x.state,
       assets: x.assets == null ? null : Number(x.assets), grantsPaid: x.grants_paid == null ? null : Number(x.grants_paid),

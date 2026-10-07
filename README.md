@@ -16,9 +16,9 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 **A funder ranks high only if it already funded orgs like yours.**
 
 ### How matching works
-1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant.
-2. The 150 closest grantees (similarity ≥ 0.55) are "like you".
-3. Each foundation scores the sum of ((similarity − 0.55) / 0.45)² over the grantees like you it paid: a few close matches beat many loose ones.
+1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant: the 150 closest are candidates.
+2. Claude scores each candidate's **work** 0–100 against your mission, ignoring location (embeddings over-weight place words: "rural West Virginia" pulled health clinics into an animal-rescue match). Only **≥70** counts as a group "like yours".
+3. Each foundation scores the sum of ((score − 50) / 50)² over the groups like yours it paid: a few near-identical grantees beat many loose ones. Rows show ● same kind of work (≥85) and ○ closely related (70–84).
 4. Filters: **gives in** a state (any of the 53 states these foundations give to; similar grantees come from the 5 loaded states), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size.
 
 ## Users
@@ -87,6 +87,7 @@ GrantRadar is NomBot plus a grants table.
 | **Matcher favors precision**: 51% linked, below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
 | **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
+| **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
 | **Starred funders + recent missions** in the sidebar (this browser only), before logins | Same habit as NomBot: come back to a funder or a past match in one click |
 
 ## Success metrics

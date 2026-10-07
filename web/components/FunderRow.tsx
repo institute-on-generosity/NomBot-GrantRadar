@@ -27,12 +27,12 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
               </p>
             </div>
           </ViewTransition>
-          <p className="funder-like">
-            <People /><b>{f.peers} similar {f.peers === 1 ? "grantee" : "grantees"}</b>{toLike > 0 && <span className="amt">{money(toLike)}</span>}
+          <p className="funder-like" title="Nonprofits this foundation already paid whose work matches your mission, checked against their IRS filings">
+            <People /><b>Funded {f.peers} {f.peers === 1 ? "group" : "groups"} like yours</b>{toLike > 0 && <span className="amt">{money(toLike)}</span>}
           </p>
           <ul className="grantees">
             {like.map((e) => (
-              <li key={e.grantId}>
+              <li key={e.grantId} className={e.fit >= 85 ? "fit-same" : "fit-close"} title={`${e.fit >= 85 ? "Same kind of work" : "Closely related work"} · match ${e.fit}/100`}>
                 <span className="grantee-name">{titleCase(e.recipient)}</span>
                 <span className="grantee-place">{[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}</span>
                 <span className="amt">{e.amount != null ? money(e.amount) : "—"}</span>
