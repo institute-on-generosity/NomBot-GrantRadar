@@ -5,11 +5,27 @@ import { Chips } from "@/components/Chips";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
-import { search } from "@/lib/search";
+import { search, type Sort } from "@/lib/search";
 
-type SearchParams = Promise<{ question?: string }>;
+type Params = { question?: string; sort?: string; n?: string; all?: string };
+type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
+const EXAMPLES = [
+  "food banks in rural Appalachia that do workforce training, under $500K",
+  "youth mentoring nonprofits in Kentucky under $1M",
+  "animal shelters in Ohio",
+  "arts organizations in West Virginia",
+  "housing nonprofits in Tennessee that help veterans",
+];
+const SORTS: [Sort, string][] = [["match", "Best match"], ["largest", "Largest"], ["smallest", "Smallest"]];
+
+// Build a "/?..." URL from the current params plus changes.
+function url(p: Params, change: Partial<Params>) {
+  const merged = { ...p, ...change };
+  const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]);
+  return `/?${qs}`;
+}
 
 // The shell (brand + empty search box) prerenders; everything that reads the
 // query string streams in inside <Suspense>, as Cache Components requires.
@@ -25,25 +41,63 @@ export default function Home({ searchParams }: { searchParams: SearchParams }) {
 }
 
 async function Results({ searchParams }: { searchParams: SearchParams }) {
-  const question = ((await searchParams).question ?? "").trim().slice(0, 300);
-  if (question) await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
-  const filters = question ? await parseQuestion(question) : null;
-  const res = filters ? await search({ q: filters.q, semantic: filters.semantic, states: filters.states, maxRevenue: filters.maxRevenue, ntee: filters.ntee, limit: 10 }) : null;
+  const p = await searchParams;
+  const question = (p.question ?? "").trim().slice(0, 300);
+  if (!question) {
+    return (
+      <>
+        <SearchBox value="" placeholder={PLACEHOLDER} />
+        <p className="hint">Ask in plain language. Try one:</p>
+        <div className="chips">{EXAMPLES.map((e) => <Link key={e} href={url({}, { question: e })} className="chip link">{e}</Link>)}</div>
+        <Footer />
+      </>
+    );
+  }
+  await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
+  const sort: Sort = SORTS.some(([s]) => s === p.sort) ? (p.sort as Sort) : "match";
+  const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
+  const includeInactive = p.all === "1";
+  const filters = await parseQuestion(question);
+  const res = await search({ ...filters, sort, includeInactive, limit: n });
+  const patterns = filters.requirements.map((r) => r.pattern);
+  const exact = res.results.filter((r) => r.exact);
+  const closest = res.results.filter((r) => !r.exact);
+  const back = encodeURIComponent(url(p, {}));
+  const row = (r: (typeof res.results)[number]) => <ResultRow key={r.ein} r={r} patterns={patterns} href={`/org/${r.ein}?back=${back}`} />;
+  const must = filters.requirements.map((r) => r.label).join(" + ");
 
   return (
     <>
       <SearchBox value={question} placeholder={PLACEHOLDER} />
-      {filters && <Chips items={filters.labels} />}
-      {res && (
-        <>
-          <div className="count">{res.total} results</div>
-          {res.results.map((r) => (
-            <ResultRow key={r.ein} name={r.name} place={`${r.city ? r.city.toLowerCase().replace(/\b[a-z]/g, (c: string) => c.toUpperCase()) + ", " : ""}${r.state}`} line={r.mission} amount={r.financials?.revenue} />
-          ))}
-          <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
-          <p className="note">Parser: {filters?.parser === "llm" ? "Claude" : "rules (no ANTHROPIC_API_KEY set)"} · Semantic: {res.semantic ? res.model : "off"} · Data: IRS BMF, SOI, 990 e-file (POC: WV, KY, TN, VA, OH)</p>
-        </>
+      <Chips items={filters.labels} />
+
+      <div className="bar">
+        <span>{res.total} results</span>
+        <span className="sorts">
+          {SORTS.map(([s, label]) => (s === sort ? <b key={s}>{label}</b> : <Link key={s} href={url(p, { sort: s === "match" ? "" : s, n: "" })}>{label}</Link>))}
+        </span>
+      </div>
+
+      {res.exact_total !== null && (
+        res.exact_total > 0
+          ? <h2 className="group">{res.exact_total} exact {res.exact_total === 1 ? "match" : "matches"} <span>mention {must}</span></h2>
+          : <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>
       )}
+      {exact.map(row)}
+      {res.exact_total !== null && res.exact_total > 0 && closest.length > 0 && <h2 className="group">Closest results</h2>}
+      {closest.map(row)}
+
+      <div className="more">
+        {res.total > n && <Link href={url(p, { n: String(n + 10) })}>Show more</Link>}
+        <a href={`/export?${new URLSearchParams({ question, sort, ...(includeInactive ? { all: "1" } : {}) })}`}>Download as spreadsheet (CSV)</a>
+        <Link href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</Link>
+      </div>
+      <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
+      <Footer />
     </>
   );
+}
+
+function Footer() {
+  return <p className="note">Test version · covers WV, KY, TN, VA, OH · All figures come from public IRS filings; each result links to its sources.</p>;
 }

@@ -3,22 +3,41 @@
 // otherwise, or if the call fails, a small rule-based parser (POC fallback).
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { claude, LLM_MODEL } from "./llm";
+import type { Requirement } from "./search";
 import { z } from "zod";
 
-export type Filters = { q: string; semantic: string; states: string[]; maxRevenue?: number; ntee?: string; parser: "llm" | "rules"; labels: string[] };
+export type Filters = {
+  q: string; semantic: string; states: string[]; maxRevenue?: number; ntee?: string;
+  requirements: Requirement[]; parser: "llm" | "rules"; labels: string[];
+};
 
 const STATES: Record<string, string> = { "west virginia": "WV", kentucky: "KY", tennessee: "TN", virginia: "VA", ohio: "OH" };
 const REGIONS: Record<string, string[]> = { appalachia: ["WV", "KY", "TN", "VA", "OH"], appalachian: ["WV", "KY", "TN", "VA", "OH"] };
 const NTEE: [RegExp, string, string][] = [[/\bfood (banks?|pantr(y|ies))\b|\bpantr(y|ies)\b|\bsoup kitchens?\b/i, "K3", "Food banks"]];
+const REQS: [RegExp, string, string[]][] = [
+  [/\b(workforce|job (training|skills|readiness)|employment training|vocational)\b/i, "workforce training",
+    ["workforce", "job training", "job skills", "job readiness", "employment training", "vocational", "career training"]],
+];
+
+const SYSTEM = `You turn a plain-language US nonprofit search into database filters.
+- topic: what the organizations do, as search words, without places or budget.
+- states: two-letter codes; expand named regions (e.g. Appalachia).
+- placeLabel: the place as the user said it ("Appalachia", "Kentucky"), or null.
+- ntee: an NTEE prefix ONLY when the main cause clearly maps: food banks/pantries K3, animals D, arts A, education B, environment C, health E, mental health F, employment J, housing L, youth development O, human services P. Otherwise null.
+- requirements: specific activities the organization MUST do beyond its main cause (e.g. "that do workforce training"). Each gets 4-8 lowercase words or short phrases likely to appear in IRS mission text. Empty if none.`;
 
 const schema = z.object({
-  topic: z.string().describe("What the organizations do, as search words, without places or budget"),
-  states: z.array(z.string()).describe("Two-letter US state codes; expand regions like Appalachia"),
+  topic: z.string(),
+  states: z.array(z.string()),
+  placeLabel: z.string().nullable(),
   maxRevenue: z.number().nullable().describe("Upper revenue/budget limit in dollars, or null"),
-  ntee: z.string().nullable().describe("NTEE code prefix if the cause is clear (e.g. K3 for food banks), or null"),
+  ntee: z.string().nullable(),
+  requirements: z.array(z.object({ label: z.string(), synonyms: z.array(z.string()) })),
 });
 
 function money(n: number) { return n >= 1e6 ? `$${n / 1e6}M` : `$${Math.round(n / 1e3)}K`; }
+const esc = (s: string) => s.toLowerCase().trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern: [label, ...terms].filter(Boolean).map(esc).join("|") });
 
 export async function parseQuestion(question: string): Promise<Filters> {
   const client = claude();
@@ -30,13 +49,20 @@ export async function parseQuestion(question: string): Promise<Filters> {
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
         output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-        system: "You turn a plain-language US nonprofit search into database filters.",
+        system: SYSTEM,
         messages: [{ role: "user", content: question }],
       });
-      const object = res.stop_reason === "refusal" ? null : res.parsed_output;
-      if (object) {
-        const labels = [object.topic, ...(object.states.length ? [object.states.join(" · ")] : []), ...(object.maxRevenue ? [`Under ${money(object.maxRevenue)}`] : [])];
-        return { q: object.topic, semantic: object.topic, states: object.states.map((s) => s.toUpperCase()), maxRevenue: object.maxRevenue ?? undefined, ntee: object.ntee ?? undefined, parser: "llm", labels };
+      const o = res.stop_reason === "refusal" ? null : res.parsed_output;
+      if (o) {
+        const states = o.states.map((s) => s.toUpperCase()).filter((s) => /^[A-Z]{2}$/.test(s));
+        const requirements = o.requirements.filter((r) => r.label.trim()).map((r) => toReq(r.label, r.synonyms));
+        const labels = [
+          o.topic,
+          ...(o.placeLabel || states.length ? [o.placeLabel || states.join(" · ")] : []),
+          ...(o.maxRevenue ? [`Under ${money(o.maxRevenue)}`] : []),
+          ...requirements.map((r) => `Must: ${r.label}`),
+        ];
+        return { q: o.topic, semantic: o.topic, states, maxRevenue: o.maxRevenue ?? undefined, ntee: o.ntee ?? undefined, requirements, parser: "llm", labels };
       }
     } catch (err) {
       console.error("Claude parse failed; using rule-based parser", err);
@@ -56,9 +82,11 @@ export async function parseQuestion(question: string): Promise<Filters> {
     maxRevenue = parseFloat(m[1].replace(/,/g, "")) * ({ k: 1e3, thousand: 1e3, m: 1e6, million: 1e6 }[m[2] as "k"] ?? 1);
     labels.push(`Under ${money(maxRevenue)}`); rest = rest.replace(m[0], " "); topic = topic.replace(m[0], " ");
   }
+  const requirements: Requirement[] = [];
+  for (const [re, label, terms] of REQS) if (re.test(rest)) { requirements.push(toReq(label, terms)); labels.push(`Must: ${label}`); }
   const stop = new Set("a an and also are budget do does for in of on or rural that the their them they to with who which".split(" "));
   const words = (t: string) => t.replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((w) => w && !stop.has(w)).join(" ");
   const q = words(rest);
-  if (q) labels.push(q.replace(/\b\w/, (c) => c.toUpperCase()));
-  return { q, semantic: words(topic), states: [...states], maxRevenue, ntee, parser: "rules", labels };
+  if (q && !requirements.length) labels.push(q.replace(/\b\w/, (c) => c.toUpperCase()));
+  return { q, semantic: words(topic), states: [...states], maxRevenue, ntee, requirements, parser: "rules", labels };
 }

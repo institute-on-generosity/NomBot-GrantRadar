@@ -113,6 +113,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [x] Claude query parser (verified on 3 questions; ~2–5s)
 - [x] Search page + read-only API on `localhost`
 - [x] **Demo works end to end** (68 results, ~0.15s)
+- [x] Early UX: exact vs. closest matches, detail pages, linked sources, sort, CSV export, inactive orgs hidden
 
 **Oct 19–25: Cloud**
 - [ ] Supabase + data migrated
