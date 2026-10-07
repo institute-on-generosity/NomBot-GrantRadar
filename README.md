@@ -11,7 +11,9 @@ A donor asking *"food banks in rural Appalachia that also do workforce training,
 Built in two phases: **search first, then RAG.**
 
 1. **Phase 1, Search (by Nov 15).** Type a question and get a ranked list of nonprofits, each with EIN, location, financials and cause code. The same search is available as a **JSON API**.
-2. **Phase 2, RAG (by Nov 22).** An **"Ask about these results"** button gives a written answer about the results on screen, for example *"Which of these also run job training?"*. Every claim cites a 990 filing.
+2. **Phase 2, Research Buddy (RAG, by Nov 22).** **Chat with your data.** Ask full research questions about the results and the LLM **reasons over the filings**: it classifies, compares, spots patterns and weighs trade-offs, shows how it reasoned, and cites a 990 filing for every claim.
+
+**Search finds organizations. Research Buddy reasons about them.**
 
 Free and open source. Runs for about $30–60/mo.
 
@@ -20,7 +22,7 @@ Free and open source. Runs for about $30–60/mo.
 | Who | What they want | Served by |
 |---|---|---|
 | **Developers** | Raw, structured nonprofit data to build their own tools | **Phase 1, Search:** filtered + semantic search returning records (EIN, location, financials, NTEE) via the JSON API, read-only from **Oct 25** |
-| **LLM users** (donors, IoG researchers, program officers, journalists) | High-reasoning answers: comparisons, summaries, "which of these…?" | **Phase 2, RAG:** written answers over search results, with every claim cited to a 990 filing |
+| **IoG research team** (primary), plus donors, program officers, journalists | A **research buddy**: landscape scans, patterns, comparisons, funding-memo drafts, "which is the strongest fit, and why?" | **Phase 2, Research Buddy (RAG):** multi-turn chat that reasons over the search results, shows its reasoning, and cites a 990 filing for every claim |
 
 ## User experience
 > All names, EINs and figures below are **mock data** for illustration.
@@ -70,24 +72,28 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 **Outcome:** a ranked list with filters, in under 2 seconds. The user compares the results and decides.
 
-![NomBot search results mockup: plain-language query, "Understood as" filter chips, filter sidebar, two result cards with financials and highlighted mission text, and an "Ask about these results" button](docs/ux/ux-search.png)
+![NomBot search results mockup: plain-language query, "Understood as" filter chips, filter sidebar, two result cards with financials and highlighted mission text, and a "Reason with these results in Research Buddy" button](docs/ux/ux-search.png)
 
-### End user: reasoning over results with RAG (Phase 2, from Nov 22)
+### IoG researcher: Research Buddy, reason with your data (Phase 2, from Nov 22)
 
-**Question** (asked about the 12 results above): *"Which of these combine food distribution with real job training, and which is the most efficient?"*
+**Search hands you a list. Research Buddy works through it with you.** The researcher keeps asking full questions, and the LLM reasons across the filings: classifying orgs, comparing them, finding patterns, weighing trade-offs. Every answer shows **how it reasoned** and **cites a 990 filing** for each claim.
 
-**Outcome:** a short written answer that compares and reasons across the results. Every claim links to its 990 filing.
+**Questions** (a conversation about the 12 search results):
+1. *"I'm researching how Appalachian food banks are moving into workforce development. What patterns do you see across these 12?"*
+2. *"If a donor wants to fund $50K to expand job training, which is the strongest fit, and why?"*
 
-![NomBot RAG answer mockup: a question about the results, a written answer comparing three food banks with numbered citations to 990 filings, an AI-generated disclaimer, and a follow-up box](docs/ux/ux-rag.png)
+**Outcome:** an analysis rather than a list. Here that's a finding (training appears once revenue passes ~$250K), a comparison table, a reasoned recommendation, the data's limits (4 orgs filed no program text), and next steps (draft a memo, compare with Ohio, export to CSV).
+
+![Research Buddy mockup: a chat with the 12 search results in context. The IoG researcher asks about patterns; the answer shows numbered reasoning steps, finds that job training appears above ~$250K revenue, compares three food banks in a table with cited program-spending ratios, and flags missing data. A second question asks which org best fits a $50K grant; the answer reasons through capacity and efficiency and recommends Mountain Harvest with citations. Follow-up chips offer a funding memo, an Ohio comparison and a CSV export.](docs/ux/ux-research.png)
 
 ### Side by side
 
-| | Developer | End user: search | End user: RAG |
+| | Developer: API | End user: Search | IoG researcher: Research Buddy |
 |---|---|---|---|
-| **Asks** | An API query with filters | A plain-language question | A follow-up about the results |
-| **Gets** | JSON records | A ranked list with filters | A written, cited answer |
-| **Speed** | <1s | <2s | 4–10s, streamed in |
-| **Who decides** | Their own code | The user | The user, helped by the AI |
+| **Asks** | An API query with filters | One plain-language question | A conversation of full research questions |
+| **Gets** | JSON records | A ranked list | **Reasoning:** patterns, comparisons, recommendations, with sources |
+| **Does the thinking** | Their own code | The user, reading results | **The LLM, alongside the user**, showing its steps |
+| **Speed** | <1s | <2s | 4–10s per answer, streamed in |
 | **Available** | Oct 25 | Nov 8 | Nov 22 |
 
 ## Architecture
@@ -103,7 +109,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 **Phase 1, search:** question → LLM turns it into filters (state, NTEE, budget) plus search text → one Postgres query combines the filters with vector similarity → ranked results.
 
-**Phase 2, RAG:** the user asks about the results → the RAG Answerer pulls those orgs' 990 text → the LLM writes an answer that cites each filing. It runs only over results already shown and **makes no claim without a source**. The JSON API stays search-only.
+**Phase 2, Research Buddy (RAG):** the researcher asks a question about the results → the RAG Answerer pulls those orgs' 990 text and financials → the LLM reasons over them (classify, compare, weigh) and answers with its steps and a citation per claim. It runs only over results already shown and **makes no claim without a source**. The JSON API stays search-only.
 
 ## Data
 
@@ -141,7 +147,7 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 | Oct 26 – Nov 1 | 50-query eval set; tune query parsing | ≥90% relevant results on the eval set |
 | Nov 2 – Nov 8 | Web UI: search, result cards, filters | IoG team using it |
 | Nov 9 – Nov 15 | Full JSON API (docs, keys); monthly refresh; start testing with IoG + 5 external users | **Phase 1 launch:** search + API public |
-| Nov 16 – Nov 22 | **Phase 2, RAG:** "Ask about these results" with citations | **NomBot build complete** |
+| Nov 16 – Nov 22 | **Phase 2, Research Buddy (RAG):** multi-turn chat that reasons over results, shows its steps, cites filings | **NomBot build complete** |
 | Nov 23 – Dec 20 | GrantRadar build (lighter Thanksgiving week); NomBot testing continues alongside | GrantRadar build complete |
 | Dec 21 – Dec 31 | Buffer; fixes from testing; documentation; IoG handoff | **Everything done** |
 
@@ -208,8 +214,9 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 - [ ] Testing with IoG staff + 5 external users
 - [ ] **Phase 1 launch:** search + API public
 
-### Nov 16 – Nov 22: Phase 2 RAG
-- [ ] "Ask about these results" with citations
+### Nov 16 – Nov 22: Phase 2 Research Buddy (RAG)
+- [ ] Research Buddy: multi-turn chat over search results
+- [ ] "How I reasoned" steps + a 990 citation for every claim
 - [ ] 30-question RAG eval: every claim cited, zero unsupported claims
 
 ### Dec 21 – Dec 31: Wrap-up
