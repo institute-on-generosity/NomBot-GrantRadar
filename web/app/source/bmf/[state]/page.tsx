@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
+import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { BackLink } from "@/components/BackLink";
+import { Header } from "@/components/Header";
 import { titleCase } from "@/components/text";
 import { BMF_GUIDE, bmfFileUrl, FIELDS, loadBmf, STATE_NAMES } from "@/lib/bmf";
 import { nteeLabel } from "@/lib/ntee";
@@ -14,7 +15,7 @@ const WINDOW = 10; // rows shown on each side of the highlighted one
 export default function BmfViewer(props: Props) {
   return (
     <main className="wide">
-      <Link href="/" className="brand"><span className="logo">N</span>NomBot</Link>
+      <Header />
       <Suspense fallback={<p className="hint">Opening the IRS master file from irs.gov…</p>}>
         <Viewer {...props} />
       </Suspense>
@@ -89,7 +90,7 @@ async function Viewer({ params, searchParams }: Props) {
               return (
                 <tr key={idx} className={idx === hit ? "hit" : undefined}>
                   <td className="n">{(idx + 1).toLocaleString("en-US")}</td>
-                  <td>{idx === hit ? <b>{titleCase(r[col("NAME")])}</b> : <Link href={`/source/bmf/${state.toLowerCase()}?ein=${e}`}>{titleCase(r[col("NAME")])}</Link>}</td>
+                  <td>{idx === hit ? <b>{titleCase(r[col("NAME")])}</b> : <NavLink href={`/source/bmf/${state.toLowerCase()}?ein=${e}`}>{titleCase(r[col("NAME")])}</NavLink>}</td>
                   <td>{titleCase(r[col("CITY")] ?? "")}</td>
                   <td>{ntee ? nteeLabel(ntee) ?? ntee : "—"}</td>
                   <td className="n">{money(r[col("REVENUE_AMT")])}</td>
@@ -100,9 +101,9 @@ async function Viewer({ params, searchParams }: Props) {
           </tbody>
         </table>
         <p className="pager">
-          {from > 0 && <Link href={here(Math.max(0, center - 2 * WINDOW - 1))}>← Earlier rows</Link>}
-          {hit >= 0 && center !== hit && <Link href={here(hit)}>Back to this organization</Link>}
-          {to < file.rows.length && <Link href={here(Math.min(file.rows.length - 1, center + 2 * WINDOW + 1))}>Later rows →</Link>}
+          {from > 0 && <NavLink href={here(Math.max(0, center - 2 * WINDOW - 1))}>← Earlier rows</NavLink>}
+          {hit >= 0 && center !== hit && <NavLink href={here(hit)}>Back to this organization</NavLink>}
+          {to < file.rows.length && <NavLink href={here(Math.min(file.rows.length - 1, center + 2 * WINDOW + 1))}>Later rows →</NavLink>}
         </p>
       </section>
     </article>

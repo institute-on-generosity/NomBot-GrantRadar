@@ -1,13 +1,17 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { connection } from "next/server";
 import { Chips } from "@/components/Chips";
+import { Header } from "@/components/Header";
+import { HistoryList } from "@/components/HistoryList";
+import { RecordSearch } from "@/components/HistoryRecorder";
+import { ScrollToResult } from "@/components/ScrollToResult";
+import { NavLink } from "@/components/NavLink";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { search, type Sort } from "@/lib/search";
 
-type Params = { question?: string; sort?: string; n?: string; all?: string };
+type Params = { question?: string; sort?: string; n?: string; all?: string; focus?: string };
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
@@ -22,7 +26,7 @@ const SORTS: [Sort, string][] = [["match", "Best match"], ["largest", "Largest"]
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
-  const merged = { ...p, ...change };
+  const merged = { ...p, focus: "", ...change };
   const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]);
   return `/?${qs}`;
 }
@@ -32,7 +36,7 @@ function url(p: Params, change: Partial<Params>) {
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
-      <Link href="/" className="brand"><span className="logo">N</span>NomBot</Link>
+      <Header />
       <Suspense fallback={<SearchBox value="" placeholder={PLACEHOLDER} />}>
         <Results searchParams={searchParams} />
       </Suspense>
@@ -48,7 +52,8 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <>
         <SearchBox value="" placeholder={PLACEHOLDER} />
         <p className="hint">Ask in plain language. Try one:</p>
-        <div className="chips">{EXAMPLES.map((e) => <Link key={e} href={url({}, { question: e })} className="chip link">{e}</Link>)}</div>
+        <HistoryRecent />
+        <div className="chips">{EXAMPLES.map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
         <Footer />
       </>
     );
@@ -63,18 +68,21 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const exact = res.results.filter((r) => r.exact);
   const closest = res.results.filter((r) => !r.exact);
   const back = encodeURIComponent(url(p, {}));
-  const row = (r: (typeof res.results)[number]) => <ResultRow key={r.ein} r={r} patterns={patterns} href={`/org/${r.ein}?back=${back}`} />;
+  const focus = p.focus ?? "";
+  const row = (r: (typeof res.results)[number], i: number) => <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus} />;
   const must = filters.requirements.map((r) => r.label).join(" + ");
 
   return (
     <>
       <SearchBox value={question} placeholder={PLACEHOLDER} />
+      <RecordSearch question={question} href={url(p, {})} total={res.total} />
+      {focus && <ScrollToResult id={`org-${focus}`} />}
       <Chips items={filters.labels} />
 
       <div className="bar">
         <span>{res.total} results</span>
         <span className="sorts">
-          {SORTS.map(([s, label]) => (s === sort ? <b key={s}>{label}</b> : <Link key={s} href={url(p, { sort: s === "match" ? "" : s, n: "" })}>{label}</Link>))}
+          {SORTS.map(([s, label]) => (s === sort ? <b key={s}>{label}</b> : <NavLink key={s} href={url(p, { sort: s === "match" ? "" : s, n: "" })} label="Sorting…">{label}</NavLink>))}
         </span>
       </div>
 
@@ -88,13 +96,21 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {closest.map(row)}
 
       <div className="more">
-        {res.total > n && <Link href={url(p, { n: String(n + 10) })}>Show more</Link>}
+        {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
         <a href={`/export?${new URLSearchParams({ question, sort, ...(includeInactive ? { all: "1" } : {}) })}`}>Download as spreadsheet (CSV)</a>
-        <Link href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</Link>
+        <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
       <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
       <Footer />
     </>
+  );
+}
+
+function HistoryRecent() {
+  return (
+    <div className="recent">
+      <HistoryList limit={5} heading="Recent questions" />
+    </div>
   );
 }
 

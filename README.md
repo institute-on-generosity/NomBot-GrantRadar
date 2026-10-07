@@ -114,6 +114,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [x] Search page + read-only API on `localhost`
 - [x] **Demo works end to end** (68 results, ~0.15s)
 - [x] Early UX: exact vs. closest matches, detail pages, linked sources, sort, CSV export, inactive orgs hidden
+- [x] Early UX: IRS master file viewer, history, saved (★), loading popup, caching (sort ~0.1s), animations
 
 **Oct 19–25: Cloud**
 - [ ] Supabase + data migrated

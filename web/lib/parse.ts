@@ -3,6 +3,7 @@
 // otherwise, or if the call fails, a small rule-based parser (POC fallback).
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { claude, LLM_MODEL } from "./llm";
+import { memo } from "./memo";
 import type { Requirement } from "./search";
 import { z } from "zod";
 
@@ -39,7 +40,14 @@ function money(n: number) { return n >= 1e6 ? `$${n / 1e6}M` : `$${Math.round(n 
 const esc = (s: string) => s.toLowerCase().trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern: [label, ...terms].filter(Boolean).map(esc).join("|") });
 
-export async function parseQuestion(question: string): Promise<Filters> {
+// Same question -> same filters: sorting, "Show more", going back and CSV export reuse
+// Claude's reading instead of asking again (faster, and the CSV matches the screen).
+const cached = memo<Filters>("parse", 1000, 24 * 3600_000);
+export function parseQuestion(question: string): Promise<Filters> {
+  return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
+}
+
+async function parseFresh(question: string): Promise<Filters> {
   const client = claude();
   if (client) {
     try {

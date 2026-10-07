@@ -1,8 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { money } from "@/components/ResultRow";
+import { money } from "@/components/money";
+import { Header } from "@/components/Header";
+import { RecordViewed } from "@/components/HistoryRecorder";
+import { StarButton } from "@/components/StarButton";
 import { readable, titleCase } from "@/components/text";
 import { getOrg } from "@/lib/org";
 
@@ -11,7 +15,7 @@ type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: 
 export default function OrgPage(props: Props) {
   return (
     <main>
-      <Link href="/" className="brand"><span className="logo">N</span>NomBot</Link>
+      <Header />
       <Suspense fallback={<p className="hint">Loading…</p>}>
         <Org {...props} />
       </Suspense>
@@ -21,7 +25,7 @@ export default function OrgPage(props: Props) {
 
 function Src({ href, children }: { href?: string; children: React.ReactNode }) {
   if (!href) return null;
-  return href.startsWith("/") ? <Link className="cite" href={href}>{children}</Link> : <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
+  return href.startsWith("/") ? <NavLink className="cite" href={href} label="Opening the IRS file…">{children}</NavLink> : <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
 }
 
 async function Org({ params, searchParams }: Props) {
@@ -34,7 +38,8 @@ async function Org({ params, searchParams }: Props) {
   return (
     <article className="org">
       <Link href={backHref} className="back">← Back to results</Link>
-      <h1>{titleCase(o.name)}</h1>
+      {back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
+      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /></div>
       <p className="sub">
         {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
@@ -85,7 +90,7 @@ async function Org({ params, searchParams }: Props) {
       <section>
         <h2>Sources</h2>
         <ul className="sources">
-          {o.sources.map((s) => <li key={s.url}>{s.internal ? <Link href={s.url}>{s.label}</Link> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
+          {o.sources.map((s) => <li key={s.url}>{s.internal ? <NavLink href={s.url} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
         </ul>
       </section>
     </article>
