@@ -110,7 +110,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [x] SOI financials: 54,590 rows
 - [x] 990 text: 12,354 filings
 - [x] Embeddings + index (local nomic, free)
-- [ ] Claude query parser (built; needs `ANTHROPIC_API_KEY` to verify)
+- [x] Claude query parser (verified on 3 questions; ~2–5s)
 - [x] Search page + read-only API on `localhost`
 - [x] **Demo works end to end** (68 results, ~0.15s)
 
