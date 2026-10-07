@@ -35,7 +35,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **IoG research team** (+ donors, program officers) | A research buddy: patterns, comparisons, recommendations |
 
 ## Experience
-*Mock data.*
+*Real screenshots of the local app, Oct 7, 2026 (5-state data).*
 
 **Developer**
 ```http
@@ -43,13 +43,13 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 ```
 → JSON records: `ein`, `name`, `city`, `state`, `ntee`, `financials`, `mission`, `score`.
 
-**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → filter chips + ranked list.
+**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → editable filter chips (Appalachia, under $500K, must mention workforce training) → strong matches ranked by relevance score, each with revenue, the matching filing text and its IRS source.
 
-![NomBot search mockup: query, filter chips, three result rows, and an "Ask Research Buddy" button](docs/ux/search-v2.png)
+![NomBot search: the Appalachia food-bank question, filter chips, "7 strong matches", and results scored 82, 80, 72 with revenue and Form 990 sources](docs/ux/search-real.png)
 
-**Research Buddy:** full questions → reasoning steps → finding → cited evidence.
+**Research Buddy:** a follow-up about the results → "How I reasoned" (expandable) → a direct answer → bullets citing each filing [n] → the sources list.
 
-![Research Buddy mockup: two questions; each answer shows reasoning-step chips, a one-line finding and cited evidence](docs/ux/research-buddy-v3.png)
+![Research Buddy panel beside the results: "Which is the strongest fit, and why?" answered with Morgan-Scott Project as the strongest fit, cited bullets for four organizations, and a numbered sources list](docs/ux/research-buddy-real.png)
 
 ## Architecture
 
