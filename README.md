@@ -15,6 +15,18 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 
 **Search finds organizations. Research Buddy reasons about them.**
 
+### Built beyond the plan
+| Area | Feature |
+|---|---|
+| **Ranking** | **Relevance score** 0–100 per result, with Claude's one-line reason on hover · strong matches first, weaker ones folded under "Show N weaker matches" |
+| **Filters** | **Editable chips** read from the question: state, city, **Appalachia region**, budget, cause, "must mention" · results update in ~0.4s |
+| **Search** | **Suggestions** under the search box · **exact-mention** badges · include tiny/inactive orgs · **CSV export** |
+| **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover |
+| **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
+| **Personal** | **History** and **saved (★)** organizations in a Claude-style sidebar |
+| **Quality** | 👍/👎 **votes** on results · **search eval** (50 questions, 91%) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
+| **Design** | Apple-style UI, **dark mode**, centered loading card with steps |
+
 ## Users
 
 | Who | Gets |
