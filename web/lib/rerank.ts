@@ -11,6 +11,8 @@ import type { Filters } from "./parse";
 import { search, type Result } from "./search";
 
 export const POOL = 40;  // candidates Claude scores per question
+export const STRONG = 50; // scores below this are near-misses: shown only on request (rubric: 40-69 = missing a key part)
+export const isStrong = (r: { relevance?: Relevance | null }) => !r.relevance || r.relevance.score >= STRONG;
 const BATCH = 10;        // scored in parallel batches: time is dominated by writing the reasons
 
 export type Relevance = { score: number; why: string };

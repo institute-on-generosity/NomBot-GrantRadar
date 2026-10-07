@@ -1,9 +1,9 @@
 // User edits to the filters NomBot read from a question. They ride in the URL
-// (?st=&city=&max=&cause=&drop=) so results, "Show more", history and CSV export all agree.
+// (?st=&city=&region=&max=&cause=&drop=) so results, "Show more", history and CSV export all agree.
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 
-export type Overrides = { st?: string; city?: string; max?: string; cause?: string; drop?: string };
+export type Overrides = { st?: string; city?: string; region?: string; max?: string; cause?: string; drop?: string };
 
 // Only these states are loaded for now.
 export const LOADED_STATES: [string, string][] = [["WV", "West Virginia"], ["KY", "Kentucky"], ["TN", "Tennessee"], ["VA", "Virginia"], ["OH", "Ohio"]];
@@ -18,6 +18,8 @@ const stateName = (code: string) => LOADED_STATES.find(([c]) => c === code)?.[1]
 export function applyOverrides(f: Filters, o: Overrides): Filters {
   const out: Filters = { ...f };
   if (o.st || o.city === "any") { out.cities = []; out.placeLabel = undefined; } // a new state or "anywhere in" drops the city
+  if (o.st || o.region === "none") out.appalachia = undefined; // picking a state means the whole state
+  if (o.region === "appalachia") { out.appalachia = true; out.states = []; out.cities = []; out.placeLabel = "Appalachia"; }
   if (o.st === "all") { out.states = []; out.placeLabel = undefined; }
   else if (o.st) {
     const codes = o.st.toUpperCase().split(",").filter((c) => LOADED_STATES.some(([s]) => s === c));
@@ -34,10 +36,10 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
   return out;
 }
 
-export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.max || o.cause || o.drop);
+export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.region || o.max || o.cause || o.drop);
 
 // Short summary of the filters in effect, stored with feedback and shown in the eval report.
 export const describeFilters = (f: Filters) => ({
-  topic: f.topic, states: f.states, cities: f.cities, maxRevenue: f.maxRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
+  topic: f.topic, states: f.states, cities: f.cities, appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
   requirements: f.requirements.map((r) => r.label), parser: f.parser,
 });

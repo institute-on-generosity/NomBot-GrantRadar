@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const p = request.nextUrl.searchParams;
   const question = (p.get("question") ?? "").trim().slice(0, 300);
   if (!question) return new Response("Missing question", { status: 400 });
-  const overrides = { st: p.get("st") ?? undefined, city: p.get("city") ?? undefined, max: p.get("max") ?? undefined, cause: p.get("cause") ?? undefined, drop: p.get("drop") ?? undefined };
+  const overrides = { st: p.get("st") ?? undefined, city: p.get("city") ?? undefined, region: p.get("region") ?? undefined, max: p.get("max") ?? undefined, cause: p.get("cause") ?? undefined, drop: p.get("drop") ?? undefined };
   const filters = applyOverrides(await parseQuestion(question), overrides);
   const res = await rankedSearch(question, filters, { includeInactive: p.get("all") === "1", limit: 500 });
   const origin = request.nextUrl.origin;

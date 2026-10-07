@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { useStoredList } from "./useStored";
 type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
 type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string };
 
+const noop = () => () => {};
 const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3", "Which ones are small and community-run?"];
 
 // Research Buddy: ask about the current results; Claude answers from their IRS filings,
@@ -90,7 +91,10 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
     input.current?.focus();
   }
 
-  const shell = typeof document === "undefined" ? null : document.querySelector(".shell");
+  // The panel is portaled into .shell; render it only after hydration (the server has no DOM),
+  // so opening with ?buddy=1 doesn't cause a hydration mismatch.
+  const hydrated = useSyncExternalStore(noop, () => true, () => false);
+  const shell = hydrated ? document.querySelector(".shell") : null;
   return (
     <>
       {!open && (

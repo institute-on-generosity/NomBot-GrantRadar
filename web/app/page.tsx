@@ -12,7 +12,7 @@ import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
 import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
-import { rank, searchCandidates, type Ranked } from "@/lib/rerank";
+import { isStrong, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string } & Overrides;
@@ -53,7 +53,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, city: p.city, max: p.max, cause: p.cause, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, cause: p.cause, drop: p.drop };
   const filters = applyOverrides(await parseQuestion(question), overrides);
   // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
   const res = await searchCandidates(filters, { includeInactive, limit: n });
@@ -70,7 +70,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
-      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
+      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
@@ -97,17 +97,29 @@ async function RankedList({ ranking, total, ...p }: RowProps & { ranking: Return
 }
 
 // pending: search order, while relevance scores are still being computed.
+// Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
 function ResultList({ rows, total, pending = false, scored = false, question, patterns, back, focus, must, shown }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean }) {
+  const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
+  const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
+  const row = (r: Result | Ranked, i: number) => (
+    <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
+      relevance={"relevance" in r ? r.relevance : null} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
+  );
   return (
     <div className={`results${pending ? " ranking" : ""}`}>
       <div className="bar">
-        <span>{total} results</span>
+        <span>{scored ? `${strong.length} strong ${strong.length === 1 ? "match" : "matches"} · ${total.toLocaleString("en-US")} related` : `${total.toLocaleString("en-US")} results`}</span>
         {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first</span>}
       </div>
-      {rows.map((r, i) => (
-        <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-          relevance={"relevance" in r ? r.relevance : null} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
-      ))}
+      {strong.length === 0 && weak.length > 0 && <p className="notice">No strong matches for this question. These are the closest organizations, and each falls short somewhere: hover a score to see why.</p>}
+      {strong.map(row)}
+      {strong.length > 0 && weak.length > 0 && (
+        <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
+          <summary>Show {weak.length} weaker {weak.length === 1 ? "match" : "matches"} <span>relevance under 50</span></summary>
+          {weak.map((r, i) => row(r, strong.length + i))}
+        </details>
+      )}
+      {strong.length === 0 && weak.map(row)}
     </div>
   );
 }
@@ -119,15 +131,16 @@ function filterChips(f: Filters, p: Params): Chip[] {
   return [
     ...(f.topic ? [{ key: "topic", kind: "topic", label: f.topic } as Chip] : []),
     {
-      key: "place", kind: f.states.length ? "set" : "unset",
+      key: "place", kind: f.states.length || f.appalachia ? "set" : "unset",
       label: f.cities.length
         ? `${f.cities.map(titleCase).join(", ")}${f.states.length === 1 ? `, ${f.states[0]}` : ""}`
         : f.placeLabel ?? (f.states.length > 3 ? `${f.states.length} states` : f.states.join(", ") || "Any state"),
-      removeHref: f.cities.length ? go({ city: "any" }) : f.states.length ? go({ st: "all" }) : undefined,
+      removeHref: f.cities.length ? go({ city: "any" }) : f.appalachia ? go({ region: "none", st: "all" }) : f.states.length ? go({ st: "all" }) : undefined,
       options: [
         ...(f.cities.length && f.states.length === 1 ? [{ label: `Anywhere in ${LOADED_STATES.find(([c]) => c === f.states[0])?.[1] ?? f.states[0]}`, href: go({ city: "any" }), on: false }] : []),
-        { label: "Any state", href: go({ st: "all" }), on: !f.states.length },
-        ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: !f.cities.length && f.states.length === 1 && f.states[0] === code }))],
+        { label: "Any state", href: go({ st: "all", region: "none" }), on: !f.states.length && !f.appalachia },
+        { label: "Appalachia", href: go({ region: "appalachia", st: "", city: "" }), on: Boolean(f.appalachia) },
+        ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: !f.cities.length && !f.appalachia && f.states.length === 1 && f.states[0] === code }))],
     },
     {
       key: "budget", kind: f.maxRevenue ? "set" : "unset",

@@ -1,5 +1,5 @@
-// Search eval (.mts: an ES module, for top-level await): run fixed questions through the real parser + search, judge the top results,
-// and report how many are relevant (goal: ≥90%).
+// Search eval (.mts: an ES module, for top-level await): run fixed questions through the real parser + search, judge the
+// strong matches people see (relevance ≥ 50 in the top 10), and report how many are relevant (goal: ≥90%).
 //
 //   npm run eval                 all 50 questions, top 10 each
 //   npm run eval -- --only=5     first 5 questions
@@ -20,7 +20,7 @@ try { process.loadEnvFile(join(import.meta.dirname, "..", ".env.local")); } catc
 const { db } = await import("../lib/db");
 const { claude, LLM_MODEL } = await import("../lib/llm");
 const { parseQuestion } = await import("../lib/parse");
-const { rankedSearch } = await import("../lib/rerank");
+const { isStrong, rankedSearch } = await import("../lib/rerank");
 const { describeFilters } = await import("../lib/filters");
 const { historyKey } = await import("../lib/history");
 const { readable } = await import("../components/text");
@@ -87,14 +87,16 @@ async function judge(question: string, results: Result[]): Promise<Map<string, L
 }
 
 type Row = {
-  q: string; tags: string[]; parser: string; filters: ReturnType<typeof describeFilters>; ms: number; total: number;
+  q: string; tags: string[]; parser: string; filters: ReturnType<typeof describeFilters>; ms: number; total: number; folded: number;
   shown: { rank: number; ein: string; name: string; place: string; score: number | null; label: Label | null }[];
 };
 
 async function runOne({ q, tags }: { q: string; tags: string[] }, people: Map<string, number>): Promise<Row> {
   const t0 = performance.now();
   const filters = await parseQuestion(q);
-  const res = await rankedSearch(q, filters, { limit: K });
+  const all = await rankedSearch(q, filters, { limit: K });
+  // Score what people see: strong matches. Near-misses sit behind "Show weaker matches".
+  const res = { ...all, results: all.results.filter(isStrong) };
   const ms = Math.round(performance.now() - t0);
 
   const labels = new Map<string, Label>();
@@ -114,7 +116,7 @@ async function runOne({ q, tags }: { q: string; tags: string[] }, people: Map<st
     } catch (err) { console.error(`  judge failed for "${q}":`, (err as Error).message); }
   }
   return {
-    q, tags, parser: filters.parser, filters: describeFilters(filters), ms, total: res.total,
+    q, tags, parser: filters.parser, filters: describeFilters(filters), ms, total: res.total, folded: all.results.length - res.results.length,
     shown: res.results.map((r, i) => ({ rank: i + 1, ein: r.ein, name: r.name, place: [r.city, r.state].filter(Boolean).join(", "), score: r.relevance?.score ?? null, label: labels.get(r.ein) ?? null })),
   };
 }
@@ -152,6 +154,8 @@ const all = rows.flatMap((r) => r.shown);
 const judged = all.filter((s) => s.label);
 const micro = judged.filter((s) => s.label!.relevant).length / (judged.length || 1);
 const empty = rows.filter((r) => r.total === 0);
+const noStrong = rows.filter((r) => r.total > 0 && r.shown.length === 0);
+const avgShown = rows.reduce((a, r) => a + r.shown.length, 0) / (rows.length || 1);
 const times = rows.map((r) => r.ms).sort((a, b) => a - b);
 const median = times[Math.floor(times.length / 2)] ?? 0;
 const parsers = [...new Set(rows.map((r) => r.parser))].join(", ");
@@ -175,11 +179,13 @@ const lines = [
   `| Relevant, all results pooled | ${pct(micro)} |`,
   `| Questions ≥ goal | ${scored.filter((r) => precision(r)! >= GOAL).length} / ${scored.length} |`,
   `| Questions with no results | ${empty.length} |`,
+  `| Questions with no strong match (only weaker matches shown) | ${noStrong.length}${noStrong.length ? `: ${noStrong.map((r) => r.q).join("; ")}` : ""} |`,
+  `| Strong matches shown per question (of top ${K}) | ${avgShown.toFixed(1)} |`,
   `| Results labeled | ${judged.length} / ${all.length} (people ${judged.filter((s) => s.label!.by === "people").length}, Claude ${judged.filter((s) => s.label!.by === "claude").length}) |`,
   `| Median time (parse + search) | ${median}ms |`,
   `| Parser | ${parsers} |`,
   `| Avg relevance score: relevant / not relevant | ${avgScore(true) ?? "—"} / ${avgScore(false) ?? "—"} |`,
-  `| Judge | ${JUDGE ? LLM_MODEL : "off"}, top ${K} |`,
+  `| Judge | ${JUDGE ? LLM_MODEL : "off"}, strong matches in the top ${K} |`,
   "",
   "## Per question (worst first)",
   "",
@@ -188,7 +194,7 @@ const lines = [
   ...[...rows].sort((a, b) => (precision(a) ?? 2) - (precision(b) ?? 2)).map((r) => {
     const p = precision(r);
     const f = r.filters;
-    const readAs = [f.topic, f.cities?.length ? f.cities.join(",") : null, f.states.length ? f.states.join(",") : null, f.maxRevenue ? `≤$${f.maxRevenue.toLocaleString("en-US")}` : null, f.ntee ? `cause ${f.ntee}` : null, f.nteeHint ? `likely ${f.nteeHint}` : null, ...f.requirements.map((x) => `must: ${x}`)].filter(Boolean).join(" · ");
+    const readAs = [f.topic, f.cities?.length ? f.cities.join(",") : null, f.appalachia ? "Appalachia (ARC counties)" : null, f.states.length ? f.states.join(",") : null, f.maxRevenue ? `≤$${f.maxRevenue.toLocaleString("en-US")}` : null, f.ntee ? `cause ${f.ntee}` : null, f.nteeHint ? `likely ${f.nteeHint}` : null, ...f.requirements.map((x) => `must: ${x}`)].filter(Boolean).join(" · ");
     return `| ${p == null ? "—" : pct(p)} | ${r.q} | ${readAs.replace(/\|/g, "/")} | ${r.total} | ${r.ms}ms |`;
   }),
   "",

@@ -259,6 +259,11 @@
   "why": "High school tech coaching, not adult literacy.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|203253693": {
+  "relevant": true,
+  "why": "Virginia PTO runs after-school enrichment including STEAM/lego clubs.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|203367792": {
   "relevant": true,
   "why": "Virginia PTO after-school programs include science and engineering.",
@@ -382,6 +387,11 @@
  "after-school stem programs in virginia|932999747": {
   "relevant": true,
   "why": "Virginia robotics engineering program for middle/high school students.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters in ohio|237152799": {
+  "relevant": true,
+  "why": "Ohio organization providing shelter, care, and adoption for animals.",
   "model": "claude-opus-5-5"
  },
  "animal shelters in ohio|237293589": {
@@ -554,6 +564,11 @@
   "why": "Humane center with low-cost vet hospital for income-qualified families.",
   "model": "claude-opus-5-5"
  },
+ "animal shelters that offer low-cost spay and neuter|540515759": {
+  "relevant": true,
+  "why": "Shelter offering low-cost veterinary services, likely including spay/neuter.",
+  "model": "claude-opus-5-5"
+ },
  "animal shelters that offer low-cost spay and neuter|540595009": {
   "relevant": true,
   "why": "Public animal shelter offering low-cost spay/neuter.",
@@ -577,6 +592,11 @@
  "animal shelters that offer low-cost spay and neuter|542021941": {
   "relevant": true,
   "why": "Shelter plus low-cost community pet clinic.",
+  "model": "claude-opus-5-5"
+ },
+ "animal shelters that offer low-cost spay and neuter|546061532": {
+  "relevant": true,
+  "why": "Shelter with public clinic and neuter scooter spay/neuter services.",
   "model": "claude-opus-5-5"
  },
  "animal shelters that offer low-cost spay and neuter|550451132": {
@@ -692,6 +712,11 @@
  "appalachian music and folk heritage preservation|541375171": {
   "relevant": true,
   "why": "Preserves Appalachian culture and folk music through festivals.",
+  "model": "claude-opus-5-5"
+ },
+ "appalachian music and folk heritage preservation|550611292": {
+  "relevant": true,
+  "why": "Preserves and presents traditional Appalachian music and dance in West Virginia.",
   "model": "claude-opus-5-5"
  },
  "appalachian music and folk heritage preservation|550768996": {
@@ -1027,6 +1052,11 @@
  "churches that run food pantries in tennessee|851655981": {
   "relevant": true,
   "why": "Tennessee food and clothing ministry distributing food weekly.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|873140486": {
+  "relevant": true,
+  "why": "Tennessee church providing food outreach and hot meals to homeless.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|882222394": {
@@ -1504,6 +1534,11 @@
   "why": "Western Kentucky aviation group; no eastern Kentucky flood focus.",
   "model": "claude-opus-5-5"
  },
+ "domestic violence shelters in kentucky|204496496": {
+  "relevant": true,
+  "why": "Operates shelter for abused women and children in Richmond, KY.",
+  "model": "claude-opus-5-5"
+ },
  "domestic violence shelters in kentucky|261498186": {
   "relevant": false,
   "why": "Homeless rehousing ministry, not domestic violence shelter.",
@@ -1614,6 +1649,11 @@
   "why": "Columbus OH food education, not Appalachia.",
   "model": "claude-opus-5-5"
  },
+ "farmers markets and local food systems in appalachia|161773056": {
+  "relevant": true,
+  "why": "Runs farmers markets and local food boxes in Grayson County, Appalachian Virginia.",
+  "model": "claude-opus-5-5"
+ },
  "farmers markets and local food systems in appalachia|264706023": {
   "relevant": true,
   "why": "Runs Floyd farmers market, local food system in Blue Ridge Appalachia.",
@@ -1714,6 +1754,11 @@
   "why": "Cleveland, northeast Ohio is not Appalachia.",
   "model": "claude-opus-5-5"
  },
+ "farmers markets and local food systems in appalachia|841844449": {
+  "relevant": true,
+  "why": "Farmers market in Meigs County, Appalachian Ohio, with SNAP/WIC access.",
+  "model": "claude-opus-5-5"
+ },
  "farmers markets and local food systems in appalachia|853090164": {
   "relevant": false,
   "why": "Lexington Bluegrass farm incubator, not Appalachia or farmers markets.",
@@ -1759,6 +1804,11 @@
   "why": "Knoxville is urban, not rural Appalachia.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|463568289": {
+  "relevant": true,
+  "why": "Appalachian Tennessee emergency food and job training, just under $500K.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|471116289": {
   "relevant": false,
   "why": "Food pantry only, no workforce training.",
@@ -1777,6 +1827,16 @@
  "food banks in rural appalachia that do workforce training, under $500k|550770708": {
   "relevant": false,
   "why": "Food and clothing ministry; no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|620922296": {
+  "relevant": true,
+  "why": "Rural east Tennessee food distribution plus job training, under $500K.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|743224321": {
+  "relevant": false,
+  "why": "North Lima, Ohio is outside rural Appalachia; it is a farm, not a food bank.",
   "model": "claude-opus-5-5"
  },
  "food banks in rural appalachia that do workforce training, under $500k|800446036": {
@@ -1807,6 +1867,11 @@
  "food banks in rural appalachia that do workforce training, under $500k|861329739": {
   "relevant": false,
   "why": "Food programs but no workforce training described.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|873125323": {
+  "relevant": true,
+  "why": "Middlesboro KY provides food and employment help, under $500K.",
   "model": "claude-opus-5-5"
  },
  "food banks in rural appalachia that do workforce training, under $500k|873290254": {
@@ -2364,6 +2429,11 @@
   "why": "Free clinic providing comprehensive care in Roanoke, VA.",
   "model": "claude-opus-5-5"
  },
+ "free health clinics in virginia|263302837": {
+  "relevant": true,
+  "why": "Free clinic providing health care to uninsured in Suffolk, Virginia.",
+  "model": "claude-opus-5-5"
+ },
  "free health clinics in virginia|412214314": {
   "relevant": true,
   "why": "Free medical and dental clinics in Hanover County, VA.",
@@ -2624,6 +2694,11 @@
   "why": "General girls' prep school, not coding-focused.",
   "model": "claude-opus-5-5"
  },
+ "groups that teach coding to girls in ohio|314379475": {
+  "relevant": false,
+  "why": "Broad girl scouting; STEM is one of many areas, no coding focus.",
+  "model": "claude-opus-5-5"
+ },
  "groups that teach coding to girls in ohio|340714426": {
   "relevant": false,
   "why": "General girls' school, no specific coding program stated.",
@@ -2654,6 +2729,11 @@
   "why": "Blended-learning charter school, no girls' coding program.",
   "model": "claude-opus-5-5"
  },
+ "groups that teach coding to girls in ohio|463118462": {
+  "relevant": false,
+  "why": "General children's museum; girls STEM program not specifically coding.",
+  "model": "claude-opus-5-5"
+ },
  "groups that teach coding to girls in ohio|463714466": {
   "relevant": false,
   "why": "General youth robotics, not girl-focused coding.",
@@ -2682,6 +2762,11 @@
  "groups that teach coding to girls in ohio|812922887": {
   "relevant": false,
   "why": "Arts and leadership for girls, not coding.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|825139436": {
+  "relevant": true,
+  "why": "Ohio program teaching girls computer science and computing creation.",
   "model": "claude-opus-5-5"
  },
  "groups that teach coding to girls in ohio|850836881": {
@@ -2759,6 +2844,11 @@
   "why": "Richmond Metro Habitat affiliate in Virginia.",
   "model": "claude-opus-5-5"
  },
+ "habitat for humanity affiliates in virginia|541476409": {
+  "relevant": true,
+  "why": "Habitat affiliate in Norfolk, Virginia building affordable homes.",
+  "model": "claude-opus-5-5"
+ },
  "habitat for humanity affiliates in virginia|541479059": {
   "relevant": false,
   "why": "Affordable housing developer, not a Habitat affiliate.",
@@ -2797,6 +2887,11 @@
  "habitat for humanity affiliates in virginia|541640558": {
   "relevant": true,
   "why": "Fluvanna County Habitat affiliate in Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "habitat for humanity affiliates in virginia|541723239": {
+  "relevant": true,
+  "why": "Habitat affiliate serving Franklin County, Virginia.",
   "model": "claude-opus-5-5"
  },
  "habitat for humanity affiliates in virginia|541737851": {
@@ -2852,6 +2947,11 @@
  "help for people getting out of prison|341517684": {
   "relevant": true,
   "why": "Includes reentry services for formerly incarcerated males.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|341947227": {
+  "relevant": true,
+  "why": "Employment preparation for people re-entering society from jails and prisons.",
   "model": "claude-opus-5-5"
  },
  "help for people getting out of prison|352201880": {
@@ -2922,6 +3022,11 @@
  "help for people getting out of prison|822989132": {
   "relevant": true,
   "why": "Reentry support, recovery housing for women after incarceration.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|850624450": {
+  "relevant": true,
+  "why": "Supports justice-impacted people with reentry barriers and services.",
   "model": "claude-opus-5-5"
  },
  "help for people getting out of prison|853844890": {
@@ -3267,6 +3372,11 @@
  "housing nonprofits in tennessee that help veterans|581673641": {
   "relevant": true,
   "why": "Transitional housing for homeless veterans with VA, Nashville.",
+  "model": "claude-opus-5-5"
+ },
+ "housing nonprofits in tennessee that help veterans|581674298": {
+  "relevant": true,
+  "why": "Provides housing for veterans in Johnson City, Tennessee.",
   "model": "claude-opus-5-5"
  },
  "housing nonprofits in tennessee that help veterans|581761468": {
@@ -3979,6 +4089,11 @@
   "why": "Holocaust museum located in Richmond, VA.",
   "model": "claude-opus-5-5"
  },
+ "museums in richmond, virginia|546039788": {
+  "relevant": true,
+  "why": "Richmond estate with historic house museum and carriage collection.",
+  "model": "claude-opus-5-5"
+ },
  "museums in richmond, virginia|546055922": {
   "relevant": false,
   "why": "Museum in Newport News, not Richmond.",
@@ -4057,6 +4172,11 @@
  "nonprofits fighting hunger|541591635": {
   "relevant": true,
   "why": "Provides free groceries to address food insecurity.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|621049447": {
+  "relevant": true,
+  "why": "Food bank distributing millions of meals to food insecure families.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|621340755": {
@@ -4164,6 +4284,11 @@
   "why": "Northeast TN harm reduction funded by opioid settlement.",
   "model": "claude-opus-5-5"
  },
+ "opioid overdose prevention in appalachia|542145922": {
+  "relevant": true,
+  "why": "Southwest Virginia opioid prevention and substance use reduction in Appalachia.",
+  "model": "claude-opus-5-5"
+ },
  "opioid overdose prevention in appalachia|581704454": {
   "relevant": true,
   "why": "Knoxville harm reduction and recovery for substance misuse.",
@@ -4207,6 +4332,11 @@
  "opioid overdose prevention in appalachia|853305905": {
   "relevant": true,
   "why": "Substance abuse prevention coalition in southern West Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "opioid overdose prevention in appalachia|862294038": {
+  "relevant": true,
+  "why": "Ross County, Ohio overdose prevention and harm reduction in Appalachian Ohio.",
   "model": "claude-opus-5-5"
  },
  "opioid overdose prevention in appalachia|871539855": {
@@ -4329,6 +4459,11 @@
   "why": "Supports refugees in Bowling Green with English, jobs, driver's ed.",
   "model": "claude-opus-5-5"
  },
+ "organizations that help refugees resettle in kentucky|842433939": {
+  "relevant": true,
+  "why": "Kentucky group providing wraparound support to immigrant families, likely including refugees.",
+  "model": "claude-opus-5-5"
+ },
  "organizations that help refugees resettle in kentucky|851827556": {
   "relevant": false,
   "why": "Serves marginalized communities, no refugee focus.",
@@ -4429,6 +4564,11 @@
   "why": "Cleveland youth orchestra for students from area schools.",
   "model": "claude-opus-5-5"
  },
+ "places where kids can learn music after school in ohio|341888282": {
+  "relevant": true,
+  "why": "Cleveland music education programs for school children in Ohio.",
+  "model": "claude-opus-5-5"
+ },
  "places where kids can learn music after school in ohio|421749949": {
   "relevant": true,
   "why": "Ohio string instruction for students during school year.",
@@ -4462,6 +4602,11 @@
  "places where kids can learn music after school in ohio|510138886": {
   "relevant": false,
   "why": "Funds school music programs; not itself a learning venue.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|832422398": {
+  "relevant": true,
+  "why": "Ohio after-school arts program for kids, includes music offerings.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|880765414": {
@@ -4594,6 +4739,11 @@
   "why": "Ohio scholarships and support explicitly for first-generation students.",
   "model": "claude-opus-5-5"
  },
+ "scholarship funds for first-generation college students in ohio|311054816": {
+  "relevant": true,
+  "why": "Cincinnati program providing college scholarships to low-income, likely first-gen students.",
+  "model": "claude-opus-5-5"
+ },
  "scholarship funds for first-generation college students in ohio|311115810": {
   "relevant": false,
   "why": "University foundation with need-based aid, not first-gen specific.",
@@ -4602,6 +4752,11 @@
  "scholarship funds for first-generation college students in ohio|311291872": {
   "relevant": false,
   "why": "General Ohio scholarships, no first-generation focus.",
+  "model": "claude-opus-5-5"
+ },
+ "scholarship funds for first-generation college students in ohio|311333812": {
+  "relevant": true,
+  "why": "Ohio nonprofit providing college scholarships and access support to local students.",
   "model": "claude-opus-5-5"
  },
  "scholarship funds for first-generation college students in ohio|311354985": {
@@ -4702,6 +4857,11 @@
  "schools for children with autism in virginia|262908005": {
   "relevant": false,
   "why": "General private school, no autism focus.",
+  "model": "claude-opus-5-5"
+ },
+ "schools for children with autism in virginia|263175722": {
+  "relevant": true,
+  "why": "Virginia private therapeutic day school for children with learning disabilities.",
   "model": "claude-opus-5-5"
  },
  "schools for children with autism in virginia|274927477": {
@@ -4844,6 +5004,11 @@
   "why": "WV aging committee serving on-site and delivered meals.",
   "model": "claude-opus-5-5"
  },
+ "senior centers and meals for elderly in west virginia|550538902": {
+  "relevant": true,
+  "why": "Grant County WV senior services with congregate and home-delivered meals.",
+  "model": "claude-opus-5-5"
+ },
  "senior centers and meals for elderly in west virginia|550539976": {
   "relevant": true,
   "why": "WV senior center with nutrition and meal delivery.",
@@ -4852,6 +5017,11 @@
  "senior centers and meals for elderly in west virginia|550546156": {
   "relevant": true,
   "why": "WV senior center serving congregate and home-delivered meals.",
+  "model": "claude-opus-5-5"
+ },
+ "senior centers and meals for elderly in west virginia|550548649": {
+  "relevant": true,
+  "why": "WV aging commission serving congregate and home-delivered senior meals.",
   "model": "claude-opus-5-5"
  },
  "senior centers and meals for elderly in west virginia|550553281": {
@@ -4924,6 +5094,11 @@
   "why": "Virginia Border Collie rescue under $100K revenue.",
   "model": "claude-opus-5-5"
  },
+ "small animal rescues in virginia under $100k|030580245": {
+  "relevant": true,
+  "why": "Virginia animal rescue with revenue under $100K.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|161650231": {
   "relevant": true,
   "why": "Small Virginia horse rescue under $100K.",
@@ -4984,6 +5159,11 @@
   "why": "Virginia wildlife rescue under $100K.",
   "model": "claude-opus-5-5"
  },
+ "small animal rescues in virginia under $100k|541866482": {
+  "relevant": true,
+  "why": "Small Virginia boxer dog rescue, well under $100K.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|541976265": {
   "relevant": true,
   "why": "Virginia animal rescue league under $100K.",
@@ -5007,6 +5187,11 @@
  "small animal rescues in virginia under $100k|831574520": {
   "relevant": true,
   "why": "Small Virginia animal rescue and adoption group under $100K.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|832589365": {
+  "relevant": true,
+  "why": "Virginia-based animal rescue under $100K revenue.",
   "model": "claude-opus-5-5"
  },
  "small animal rescues in virginia under $100k|845011286": {
@@ -5037,6 +5222,16 @@
  "soup kitchens in cincinnati|310537097": {
   "relevant": false,
   "why": "Senior meal delivery program, not a soup kitchen.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|310538515": {
+  "relevant": true,
+  "why": "Cincinnati mission serving over 100,000 hot meals yearly.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|310790327": {
+  "relevant": false,
+  "why": "Primarily a church; feeding program is only a minor mention.",
   "model": "claude-opus-5-5"
  },
  "soup kitchens in cincinnati|310879210": {
@@ -5134,6 +5329,11 @@
   "why": "Toledo fundraising foundation, wrong place and activity.",
   "model": "claude-opus-5-5"
  },
+ "soup kitchens in cincinnati|721603185": {
+  "relevant": true,
+  "why": "Cincinnati food program feeding needy individuals and families.",
+  "model": "claude-opus-5-5"
+ },
  "soup kitchens in cincinnati|900705683": {
   "relevant": true,
   "why": "Dining room serving free meals to homeless in Cincinnati.",
@@ -5204,6 +5404,11 @@
   "why": "Tennessee arts council running theatrical productions in town theatre.",
   "model": "claude-opus-5-5"
  },
+ "theater companies in tennessee|621407250": {
+  "relevant": true,
+  "why": "Knoxville, Tennessee theater company producing public theatrical performances.",
+  "model": "claude-opus-5-5"
+ },
  "theater companies in tennessee|621734411": {
   "relevant": true,
   "why": "Nashville ensemble theater with professional productions.",
@@ -5249,6 +5454,16 @@
   "why": "VFW post in WV assisting veterans, including VA claims.",
   "model": "claude-opus-5-5"
  },
+ "veterans service organizations in west virginia|237175152": {
+  "relevant": true,
+  "why": "VFW department veterans organization in West Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "veterans service organizations in west virginia|273296594": {
+  "relevant": true,
+  "why": "Provides services and benefits assistance to veterans in Wheeling, WV.",
+  "model": "claude-opus-5-5"
+ },
  "veterans service organizations in west virginia|550232273": {
   "relevant": true,
   "why": "VFW department in West Virginia assisting veterans.",
@@ -5264,14 +5479,29 @@
   "why": "American Legion post providing veterans services in WV.",
   "model": "claude-opus-5-5"
  },
+ "veterans service organizations in west virginia|550331327": {
+  "relevant": true,
+  "why": "American Legion post serving veterans in Weirton, WV.",
+  "model": "claude-opus-5-5"
+ },
  "veterans service organizations in west virginia|550332288": {
   "relevant": true,
   "why": "Self-described veterans service organization in WV.",
   "model": "claude-opus-5-5"
  },
+ "veterans service organizations in west virginia|550334789": {
+  "relevant": true,
+  "why": "VFW post supporting veterans in Grafton, WV.",
+  "model": "claude-opus-5-5"
+ },
  "veterans service organizations in west virginia|550348460": {
   "relevant": true,
   "why": "VFW fraternal veterans organization in WV.",
+  "model": "claude-opus-5-5"
+ },
+ "veterans service organizations in west virginia|550387390": {
+  "relevant": true,
+  "why": "American Legion veterans organization in Petersburg, WV.",
   "model": "claude-opus-5-5"
  },
  "veterans service organizations in west virginia|550477223": {
@@ -5414,6 +5644,11 @@
   "why": "Volunteer fire department in Kentucky.",
   "model": "claude-opus-5-5"
  },
+ "volunteer fire departments in rural kentucky|611272088": {
+  "relevant": true,
+  "why": "Volunteer fire department serving rural community in Clarkson, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "volunteer fire departments in rural kentucky|611296454": {
   "relevant": true,
   "why": "Volunteer fire department in rural Tompkinsville, KY.",
@@ -5532,6 +5767,11 @@
  "who helps families pay utility bills in tennessee|621196050": {
   "relevant": true,
   "why": "Helps needy families pay utility bills in Union City, TN.",
+  "model": "claude-opus-5-5"
+ },
+ "who helps families pay utility bills in tennessee|621217515": {
+  "relevant": true,
+  "why": "Provides utility assistance to families in Wilson County, Tennessee.",
   "model": "claude-opus-5-5"
  },
  "who helps families pay utility bills in tennessee|621376567": {
@@ -5797,6 +6037,11 @@
  "youth sports leagues in columbus ohio|463356585": {
   "relevant": false,
   "why": "Mt Sterling is rural, outside the Columbus area.",
+  "model": "claude-opus-5-5"
+ },
+ "youth sports leagues in columbus ohio|800928318": {
+  "relevant": true,
+  "why": "Youth football league based in Columbus, Ohio.",
   "model": "claude-opus-5-5"
  },
  "youth sports leagues in columbus ohio|814359966": {

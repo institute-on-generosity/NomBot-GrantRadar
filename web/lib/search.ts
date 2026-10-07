@@ -8,7 +8,7 @@ import { sources, type Source } from "./sources";
 export type Requirement = { label: string; pattern: string }; // pattern: Postgres/JS regex alternation
 export type Sort = "match" | "largest" | "smallest";
 export type SearchInput = {
-  q: string; semantic?: string; states?: string[]; cities?: string[]; maxRevenue?: number; ntee?: string; nteeHint?: string;
+  q: string; semantic?: string; states?: string[]; cities?: string[]; appalachia?: boolean; maxRevenue?: number; ntee?: string; nteeHint?: string;
   requirements?: Requirement[]; includeInactive?: boolean; sort?: Sort; limit?: number; offset?: number;
 };
 
@@ -21,7 +21,7 @@ export type Result = {
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
 };
 
-export async function search({ q, semantic, states = [], cities = [], maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
@@ -45,7 +45,8 @@ export async function search({ q, semantic, states = [], cities = [], maxRevenue
        FROM orgs o LEFT JOIN t USING (ein) LEFT JOIN f USING (ein)
        WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
-         AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))),  -- headquarters city
+         AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))  -- headquarters city
+         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))),  -- ARC region
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
@@ -69,7 +70,7 @@ export async function search({ q, semantic, states = [], cities = [], maxRevenue
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia],
   );
   return {
     total: Number(rows[0]?.total ?? 0),
