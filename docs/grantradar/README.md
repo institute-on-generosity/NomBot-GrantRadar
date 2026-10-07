@@ -2,7 +2,7 @@
 
 **Describe your nonprofit's mission and get the foundations most likely to fund you, built only on public IRS data.**
 
-> **Where it lives:** GrantRadar ships as the **`/grants` section of the [NomBot](../../README.md) app**: one codebase, one deploy. This folder (`docs/grantradar/`) holds the GrantRadar plan, diagram and mockups. GrantRadar work happens on the `grantradar` branch and merges into `main`.
+> **Where it lives:** GrantRadar ships as the **`/grants` section of the [NomBot](../../README.md) app**: one codebase, one deploy. This folder (`docs/grantradar/`) holds the GrantRadar plan, diagram and mockups. GrantRadar work happens on the `GrantRadar` branch and merges into `main`.
 An [Institute on Generosity](https://instituteongenerosity.org) AI Fellowship project · **Deadline: Dec 31, 2026**
 
 ## Problem
@@ -146,7 +146,7 @@ Adjusted from the original 6-month spec to the 4-week build:
 - [x] Project plan and README
 - [x] System architecture diagram
 - [x] User experience mockups
-- [x] Lives in the NomBot repo: plan in `docs/grantradar/`, code at `/grants`, work on the `grantradar` branch
+- [x] Lives in the NomBot repo: plan in `docs/grantradar/`, code at `/grants`, work on the `GrantRadar` branch
 - [x] Deadline set: Dec 31, 2026
 
 ### Nov 23 – Nov 29: Grants data (on NomBot's pipeline)

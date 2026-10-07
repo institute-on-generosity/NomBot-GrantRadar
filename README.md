@@ -3,7 +3,7 @@
 **Plain-language search over every registered US nonprofit, built only on public IRS data.**
 An [Institute on Generosity](https://instituteongenerosity.org) AI Fellowship project · **Deadline: Dec 31, 2026**
 
-> **Also in this repo: [GrantRadar](docs/grantradar/README.md)**, funder matching at `/grants`. Branches: `nombot` and `grantradar`, both merging into `main`.
+> **Also in this repo: [GrantRadar](docs/grantradar/README.md)**, funder matching at `/grants`. Branches: `NomBot` and `GrantRadar`, both merging into `main` (the combined app).
 
 ## Problem
 IRS data on ~1.8M nonprofits is public, but it is buried in raw files. Paid tools (Candid, Charity Navigator) don't support plain-language search.
