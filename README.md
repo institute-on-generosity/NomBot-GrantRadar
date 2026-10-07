@@ -185,12 +185,12 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 - [x] Postgres 17 + pgvector running locally (Homebrew)
 - [x] Database schema as SQL migrations (`orgs`, `financials`, `filing_text`)
 - [x] Load IRS BMF for WV, KY, TN, VA, OH (active orgs only): 204,564 orgs
-- [ ] Load IRS SOI financials for those orgs
-- [ ] Extract mission + program text from 990 XML
-- [ ] Embeddings + pgvector index
-- [ ] LLM query parser (question → filters + search text)
-- [ ] Basic search page + read-only JSON API on `localhost`
-- [ ] **Demo query works end to end on a laptop**
+- [x] Load IRS SOI financials for those orgs: 54,590 rows (2024 extract)
+- [x] Extract mission + program text from 990 XML: 12,354 filings (2025 batches 05A + 11B)
+- [x] Embeddings + pgvector index (local fallback model until an OpenAI key is set)
+- [ ] LLM query parser (question → filters + search text): built; needs an API key to verify. Rule-based fallback works
+- [x] Basic search page + read-only JSON API on `localhost`
+- [x] **Demo query works end to end on a laptop** (68 results, ~0.15s warm; local fallback models)
 
 ### Oct 19 – Oct 25: Migrate to cloud
 - [ ] Supabase Pro project created

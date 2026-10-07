@@ -36,7 +36,7 @@ export async function search({ q, semantic, states = [], maxRevenue, ntee, limit
        WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($5::bigint IS NULL OR coalesce(f.revenue, o.revenue_amt) <= $5)
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%'))
-     SELECT *, coalesce(sim, 0) + least(kw, 0.5) AS score, count(*) OVER () AS total
+     SELECT *, coalesce(sim, 0) + least(kw * 5, 0.5) AS score, count(*) OVER () AS total
      FROM scored WHERE $1 = '' OR kw > 0 OR sim IS NOT NULL
      ORDER BY score DESC, revenue DESC NULLS LAST LIMIT $7`,
     [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit],
