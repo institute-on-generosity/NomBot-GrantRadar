@@ -100,6 +100,24 @@ GrantRadar is NomBot plus a grants table.
 ## Budget
 **Local:** ~$1. **Cloud:** ~$5–15/mo extra (shares NomBot's Supabase).
 
+## Feedback
+### Oct 7, 2026: IoG demo (NomBot + GrantRadar)
+**Main message: be choosy.** Every reviewer will want more fields; adding everything "frankensteins" the product. Pick the audience first and only add what serves it.
+
+| Feedback | Plan |
+|---|---|
+| **Typical grant** is very helpful | Keep it prominent |
+| Show **restricted vs. unrestricted** giving, and whether a funder backs programs or policy | Read it from grant purpose text ("general operating" = unrestricted); tag each funder |
+| Add **Research Buddy** to GrantRadar | Reuse NomBot's Buddy over a funder's grants |
+| GrantRadar and NomBot serve **different audiences** | One app with a toggle while testing; standalone later |
+| **Real-time budget** and fundraising gap | Not in public data; would need self-reporting + verification |
+
+**Next steps**
+- **Competitor scan:** Grant Guardian, a new grant-matching startup, Renaissance Philanthropy; state GrantRadar's unique value.
+- **User testing:** nonprofit development staff and foundation staff; PostHog for usability analytics.
+- **Infrastructure:** Vercel Pro, Supabase Pro or Neon, PostHog.
+- **Data privacy:** agree a policy before handling financial data.
+
 ## Progress
 > ✅ **Oct 7, 2026: local proof of concept built**, ~8 weeks ahead of plan: grants loaded for 5 states, matcher, ranking, `/grants` pages and "Why this funder?". Recipient linking is at 51% (goal 70%).
 
