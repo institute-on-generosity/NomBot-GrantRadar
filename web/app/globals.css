@@ -532,3 +532,12 @@ button.fchip-main { cursor: pointer; }
 .ls-themes li a:hover { color: var(--g); }
 .ls-themes li span { color: var(--faint); white-space: nowrap; }
 @media (max-width: 700px) { .ls-grid { grid-template-columns: 1fr; } }
+
+/* AI overview lives inside the landscape card as its first tab */
+.landscape .overview { margin: 0; padding: 2px 2px 0; border-radius: 0; background: none; box-shadow: none; animation: none; }
+.landscape h2 { display: flex; align-items: center; gap: 6px; }
+.landscape h2 > svg { color: var(--g); }
+.ov-wait { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--g-dark); margin-bottom: 8px; }
+.overview-foot { display: flex; align-items: center; gap: 5px; }
+.overview-foot svg { width: 11px; height: 11px; color: var(--g); }
+@media (max-width: 640px) { .seg button { padding: 5px 8px; font-size: 12px; } }

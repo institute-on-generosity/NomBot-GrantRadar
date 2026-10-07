@@ -10,6 +10,7 @@ import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
 import { Landscape } from "@/components/Landscape";
 import { LandscapeMap } from "@/components/LandscapeMap";
+import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
@@ -79,11 +80,10 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
-      <Suspense key={`overview:${url(p, { n: "" })}`} fallback={<AiOverviewSkeleton />}>
-        <OverviewPanel question={question} ranking={rankingAll} />
-      </Suspense>
-      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={null}>
+      {/* One card: AI overview (first tab) + the landscape views. The overview streams in its own boundary. */}
+      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs size={0} views={[{ key: "overview", label: "Overview", node: <AiOverviewSkeleton /> }]} />}>
         <Landscape question={question} filters={filters} includeInactive={includeInactive}
+          overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
           hrefs={{
             size: (b) => (b.key ? url(p, { max: b.key, n: "" }) : null),
             city: (b) => url(p, { city: b.key, n: "" }),
@@ -110,7 +110,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
 async function OverviewPanel({ question, ranking }: { question: string; ranking: ReturnType<typeof rank> }) {
   const o = await overview(question, (await ranking).results);
-  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : null;
+  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : <p className="ls-note">No overview for these results.</p>;
 }
 
 type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };

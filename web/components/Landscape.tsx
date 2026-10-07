@@ -10,15 +10,17 @@ import { themes } from "@/lib/themes";
 type Hrefs = { size: (b: Bar) => string | null; city: (b: Bar) => string; cause: (b: Bar) => string };
 
 // Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it.
-export async function Landscape({ question, filters, includeInactive, hrefs, map }: {
-  question: string; filters: Filters; includeInactive: boolean; hrefs: Hrefs;
+export async function Landscape({ question, filters, includeInactive, hrefs, map, overview }: {
+  question: string; filters: Filters; includeInactive: boolean; hrefs: Hrefs; overview: React.ReactNode;
   map: (counts: Record<string, number>, appalachia: string[], states: string[]) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
-  if (l.size < 5) return null;
+  const first = { key: "overview", label: "Overview", node: overview };
+  if (l.size < 5) return <LandscapeTabs size={l.size} views={[first]} />;
   const states = [...new Set(l.cities.map((c) => c.label.slice(-2)))];
   return (
     <LandscapeTabs size={l.size} views={[
+      first,
       { key: "breakdown", label: "Breakdown", node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} href={hrefs.size} />
