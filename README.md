@@ -8,10 +8,10 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 
 ## Solution
 
-| Phase | What | Ships |
-|---|---|---|
-| **1. Search** | Question → ranked nonprofits (EIN, location, financials, cause). Also a JSON API. | Nov 15 |
-| **2. Research Buddy (RAG)** | Chat with the results. The LLM reasons over the filings, shows its steps, cites every claim. | Nov 22 |
+| Phase | What | Planned | Status |
+|---|---|---|---|
+| **1. Search** | Question → ranked nonprofits (EIN, location, financials, cause). Also a JSON API. | Nov 15 | ✅ **Built Oct 7** (local) |
+| **2. Research Buddy (RAG)** | Chat with the results. The LLM reasons over the filings, shows its steps, cites every claim. | Nov 22 | ✅ **Built Oct 7** (local) |
 
 **Search finds organizations. Research Buddy reasons about them.**
 
@@ -108,6 +108,8 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 **Local:** ~$2. **Cloud:** ~$30–60/mo (Supabase $25, LLM $10–35).
 
 ## Progress
+> ✅ **Oct 7, 2026: Search and Research Buddy both built** on the local proof of concept, 5–6 weeks ahead of plan. Still to do: cloud, national data, user testing and launch.
+
 📋 Tracker: [Issue #1](https://github.com/institute-on-generosity/NomBot-GrantRadar/issues/1)
 
 **Planning**
