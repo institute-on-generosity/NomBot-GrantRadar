@@ -1,7 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 
-// "← Back" to wherever the user came from (results list or detail page).
+// "← Back" to wherever the user came from (results list or detail page). Uses browser
+// history so the previous page is restored from the router cache instantly, scroll included.
 export function BackLink({ fallback, children }: { fallback: string; children: React.ReactNode }) {
   const router = useRouter();
   return (

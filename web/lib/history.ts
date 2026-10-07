@@ -20,11 +20,14 @@ function write(list: HistoryEntry[]) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX))); window.dispatchEvent(new Event("nombot-history")); } catch { /* storage unavailable */ }
 }
 
+// New questions go on top; revisiting one updates it in place so the list order stays put.
 export function recordSearch(e: Omit<HistoryEntry, "key" | "at" | "viewed">) {
   const key = historyKey(e.question);
   const list = readHistory();
-  const old = list.find((x) => x.key === key);
-  write([{ ...e, key, at: Date.now(), viewed: old?.viewed }, ...list.filter((x) => x.key !== key)]);
+  const i = list.findIndex((x) => x.key === key);
+  if (i < 0) return write([{ ...e, key, at: Date.now() }, ...list]);
+  list[i] = { ...list[i], ...e, at: Date.now() };
+  write(list);
 }
 
 export function recordViewed(resultsHref: string, ein: string, name: string) {
@@ -32,7 +35,7 @@ export function recordViewed(resultsHref: string, ein: string, name: string) {
   const i = list.findIndex((x) => x.href === resultsHref);
   if (i < 0) return;
   list[i] = { ...list[i], at: Date.now(), viewed: { ein, name, at: Date.now() } };
-  write([list[i], ...list.filter((_, j) => j !== i)]);
+  write(list);
 }
 
 export function removeEntry(key: string) { write(readHistory().filter((x) => x.key !== key)); }

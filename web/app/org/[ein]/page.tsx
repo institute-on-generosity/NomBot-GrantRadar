@@ -4,6 +4,7 @@ import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { money } from "@/components/money";
+import { BackLink } from "@/components/BackLink";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { readable, titleCase } from "@/components/text";
@@ -35,7 +36,7 @@ async function Org({ params, searchParams }: Props) {
 
   return (
     <article className="org">
-      <Link href={backHref} className="back">← Back to results</Link>
+      {back && back.startsWith("/?") ? <BackLink fallback={backHref}>← Back to results</BackLink> : <Link href="/" className="back">← New search</Link>}
       {back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
       <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /></div>
       <p className="sub">
@@ -44,13 +45,13 @@ async function Org({ params, searchParams }: Props) {
       </p>
 
       <section>
-        <h2>Mission <Src href={o.filing?.url}>Form {o.filing?.form} ({o.filing?.year})</Src></h2>
+        <h2>Mission</h2>
         <p>{o.mission ? readable(o.mission) : "This organization hasn't e-filed a mission statement we've loaded yet."}</p>
       </section>
 
       {o.programs && (
         <section>
-          <h2>Programs <Src href={o.filing?.url}>Form {o.filing?.form} ({o.filing?.year})</Src></h2>
+          <h2>Programs</h2>
           <p>{readable(o.programs)}</p>
         </section>
       )}
@@ -76,7 +77,7 @@ async function Org({ params, searchParams }: Props) {
       </section>
 
       <section>
-        <h2>Details <Src href={o.bmfUrl}>IRS master file</Src></h2>
+        <h2>Details</h2>
         <dl>
           {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)})</dd></>}

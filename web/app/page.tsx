@@ -7,6 +7,7 @@ import { NavLink } from "@/components/NavLink";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
+import { EXAMPLES } from "@/lib/examples";
 import { search } from "@/lib/search";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string };
@@ -14,13 +15,6 @@ type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
 const ASK = "Which nonprofits are you looking for?";
-const EXAMPLES = [
-  "food banks in rural Appalachia that do workforce training, under $500K",
-  "youth mentoring nonprofits in Kentucky under $1M",
-  "animal shelters in Ohio",
-  "arts organizations in West Virginia",
-  "housing nonprofits in Tennessee that help veterans",
-];
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
@@ -34,7 +28,7 @@ function url(p: Params, change: Partial<Params>) {
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
-      <Suspense fallback={<Hero />}>
+      <Suspense fallback={<ResultsSkeleton />}>
         <Results searchParams={searchParams} />
       </Suspense>
     </main>
@@ -47,7 +41,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   if (!question) {
     return (
       <Hero>
-        <div className="chips suggest">{EXAMPLES.map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
+        <div className="chips suggest">{EXAMPLES.slice(0, 5).map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…">{e}</NavLink>)}</div>
       </Hero>
     );
   }
@@ -66,7 +60,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <>
-      <SearchBox value={question} placeholder={PLACEHOLDER} />
+      <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
       <Chips items={filters.labels} />
@@ -90,6 +84,17 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
       <Footer />
     </>
+  );
+}
+
+// Shown only while a question loads. Hidden for the first 300ms (CSS) so quick loads
+// and the empty home page never flash it.
+function ResultsSkeleton() {
+  return (
+    <div className="skeleton" aria-hidden>
+      <div className="sk sk-bar" />
+      {[0, 1, 2, 3].map((i) => <div key={i} className="sk-row"><div className="sk sk-title" /><div className="sk sk-line" /><div className="sk sk-line short" /></div>)}
+    </div>
   );
 }
 
