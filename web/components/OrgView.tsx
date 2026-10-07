@@ -40,11 +40,15 @@ async function Org({ params, searchParams, modal }: Props) {
   await connection();
   const o = await getOrg(ein);
   if (!o) notFound();
-  const backHref = back && back.startsWith("/?") ? back : "/";
+  const fromResults = Boolean(back?.startsWith("/?"));
+  const fromStarred = Boolean(back && /^\/saved(\?|$)/.test(back));
+  const backHref = fromResults || fromStarred ? back! : "/";
 
   return (
     <article className="org">
-      {!modal && (back && back.startsWith("/?") ? <BackLink fallback={backHref}>← Back to results</BackLink> : <Link href="/" className="back">← New search</Link>)}
+      {!modal && (fromResults ? <BackLink fallback={backHref}>← Back to results</BackLink>
+        : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
+        : <Link href="/" className="back">← New search</Link>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
       <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /></div>
       <p className="sub">

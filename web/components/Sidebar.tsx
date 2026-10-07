@@ -67,7 +67,7 @@ export function Sidebar() {
                 </NavLink>
               )),
               ...saved.filter((o) => !o.folder).slice(0, SHOWN).map((o) => (
-              <NavLink key={o.ein} href={`/org/${o.ein}`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={titleCase(o.name)}>
+              <NavLink key={o.ein} href={`/org/${o.ein}?back=%2Fsaved`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={titleCase(o.name)}>
                 <span className="side-star">★</span>{titleCase(o.name)}
               </NavLink>
             ))]}

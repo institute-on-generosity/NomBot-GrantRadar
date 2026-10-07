@@ -640,3 +640,8 @@ main:has(.serp) { max-width: 1400px; }
   main:has(.serp) .serp-main { padding-right: 26px; margin-right: -26px; }
   main:has(.serp) .serp-rail { padding-right: 14px; margin-right: -14px; }
 }
+/* On the results page the source panel floats over the right side (covering the analysis panel)
+   instead of docking and squeezing the results */
+@media (min-width: 901px) {
+  .shell:has(.serp) .side-panel { position: fixed; top: 0; right: 0; bottom: 0; height: auto; width: clamp(380px, calc((100vw - 260px) * .4), 660px); box-shadow: -18px 0 48px rgba(0,0,0,.12); border-left: 1px solid var(--line); z-index: 40; }
+}

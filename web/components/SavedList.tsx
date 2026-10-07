@@ -26,6 +26,7 @@ function List() {
   if (!list.length && !folders.length) return <p className="empty-note">Nothing starred yet. Tap ☆ on any organization to keep it here.</p>;
   const unfiled = list.filter((o) => !o.folder).length;
   const shown = current === null ? list : list.filter((o) => (o.folder ?? "") === current);
+  const back = encodeURIComponent(current === null ? "/saved" : `/saved?${new URLSearchParams({ folder: current })}`); // org pages return to this tab
   const tab = (label: string, href: string, on: boolean, n: number) => (
     <Link key={label} href={href} className={`tab${on ? " on" : ""}`} aria-current={on ? "page" : undefined} scroll={false}>{label}<small>{n}</small></Link>
   );
@@ -59,7 +60,7 @@ function List() {
       {shown.map((o) => (
         <div className="row" key={o.ein}>
           <div className="row-main">
-            <div className="name-line"><StarButton org={o} /><NavLink href={`/org/${o.ein}`} className="name">{titleCase(o.name)}</NavLink></div>
+            <div className="name-line"><StarButton org={o} /><NavLink href={`/org/${o.ein}?back=${back}`} className="name">{titleCase(o.name)}</NavLink></div>
             <div className="sub">{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}{o.cause && <> · {o.cause}</>}</div>
             <FolderPicker ein={o.ein} />
           </div>
