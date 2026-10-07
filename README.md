@@ -119,6 +119,26 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 ## Budget
 **Local:** ~$2. **Cloud:** ~$30–60/mo (Supabase $25, LLM $10–35).
 
+## Feedback
+### Oct 7, 2026: IoG demo (NomBot + GrantRadar)
+**Main message: be choosy.** Every reviewer will want more fields; adding everything "frankensteins" the product. Pick the audience first (foundation program officers vs. individual donors) and only add what serves it.
+
+| Feedback | Plan |
+|---|---|
+| NomBot zooms **in** on details but not **out** to patterns across the landscape | AI overview panel above results (Gemini-style): patterns + "you might also look at" |
+| Show **staff and volunteer counts** (990 Part I lines 5–6) | Add to org detail; in full 990 filings, not 990-EZ |
+| **Starred folders** by category (e.g. youth mentoring vs. arts education) | Later, once people star many orgs |
+| **Recommendations** based on past questions | Fold into the AI overview panel |
+| **Real-time budget** and fundraising gap | Not in public data; would need nonprofits to self-report + verification |
+| Looks like Google, sidebar like Claude: familiar for people who aren't AI-savvy | Keep; matters for individual donors |
+| NomBot and GrantRadar serve **different audiences** | One app with a toggle while testing; standalone later |
+
+**Next steps**
+- **Competitor scan:** Grant Guardian, Candid-style tools, a new grant-matching startup, Renaissance Philanthropy; state NomBot's unique value.
+- **User testing:** two demo audiences (foundation staff, individual donors); a feedback session with former program officers; PostHog for usability analytics.
+- **Infrastructure:** Vercel Pro (shareable link), Supabase Pro or Neon (pgvector), PostHog.
+- **Data privacy:** agree a policy before any project handles financial data.
+
 ## Progress
 > ✅ **Oct 7, 2026: Search and Research Buddy both built** on the local proof of concept, 5–6 weeks ahead of plan. Still to do: cloud, national data, user testing and launch.
 
