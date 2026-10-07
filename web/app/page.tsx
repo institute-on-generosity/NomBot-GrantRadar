@@ -73,10 +73,13 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <>
-      <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
+      {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
+      <div className="serp-head">
+        <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
+        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
+      </div>
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
-      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
@@ -102,9 +105,9 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
         <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
-      </div>
-      </div>
       <Footer />
+      </div>
+      </div>
     </>
   );
 }

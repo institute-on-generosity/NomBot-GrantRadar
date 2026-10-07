@@ -602,3 +602,23 @@ main:has(.serp) { max-width: 1400px; }
 .serp-rail .landscape header { flex-direction: column-reverse; align-items: stretch; gap: 10px; flex-wrap: nowrap; }
 .serp-rail .landscape .seg { width: 100%; }
 .serp-rail .landscape h2 { padding: 0 2px; }
+
+/* Results page as an app: header fixed, results and panel scroll independently (wide screens) */
+.serp-head { position: relative; z-index: 25; }
+.serp-head .search { position: relative; top: 0; }
+@media (min-width: 901px) {
+  main:has(.serp) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; padding-bottom: 0; overflow: hidden; }
+  main:has(.serp) .serp-head { flex: none; padding-bottom: 4px; }
+  main:has(.serp) .serp { flex: 1; min-height: 0; align-items: stretch; margin-top: 14px; }
+  main:has(.serp) .serp-main { overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 72px 2px; margin-left: -2px; scrollbar-width: thin; }
+  main:has(.serp) .serp-rail { position: static; max-height: none; min-height: 0; overflow-y: auto; padding-bottom: 72px; }
+  main:has(.serp) .serp-main .note { margin-top: 24px; }
+}
+/* Phones: the whole page scrolls, with search + filters stuck to the top */
+@media (max-width: 900px) {
+  .serp-head { position: sticky; top: 0; margin: 0 -16px; padding: 10px 16px 8px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+  .serp-head .chips { margin-top: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+}
+@media (max-width: 900px) { .serp-head { margin: 0 -32px; padding: 10px 32px 8px; } }
+@media (max-width: 760px) { .serp-head { top: 49px; margin: 0 -16px; padding: 8px 16px; } }
+@media (max-width: 900px) { .serp-head .chips > * { flex: none; white-space: nowrap; } }
