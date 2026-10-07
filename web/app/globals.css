@@ -599,3 +599,21 @@ button.fchip-main { cursor: pointer; }
 /* Closeness of each grantee's work to the mission: solid = same kind of work, ring = closely related */
 .grantees li.fit-close .grantee-name::before { background: none; box-shadow: inset 0 0 0 1.5px var(--g); }
 .funder-like { cursor: help; }
+
+/* Funder row hierarchy: 1) name + typical grant  2) "funded N groups like yours"  3) the grantee list, inset */
+.funder-link { padding: 20px 14px 18px; }
+.funder-head h2 { font-size: 19px; }
+.funder-head .meta { font-size: 13px; color: var(--faint); margin-top: 4px; }
+.evidence { margin-top: 14px; padding: 10px 14px 11px; border-radius: 14px; background: var(--fill); transition: background-color .2s; }
+.funder-link:hover .evidence { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.funder-like { margin: 0 0 6px; font-size: 12.5px; font-weight: 500; color: var(--mute); gap: 6px; }
+.funder-like .like-total { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--mute); }
+.grantees { gap: 5px; }
+.grantees li { font-size: 14px; }
+.grantee-name { color: var(--ink); }
+.grantee-amt { font-variant-numeric: tabular-nums; color: var(--ink-2); font-weight: 500; min-width: 44px; text-align: right; }
+.funder-side { justify-content: space-between; padding-top: 1px; }
+.side-top { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.typical b { font-size: 24px; }
+.typical small { font-size: 11.5px; }
+@media (max-width: 640px) { .side-top { flex-direction: row; align-items: center; gap: 10px; } .evidence { padding: 9px 11px; } }

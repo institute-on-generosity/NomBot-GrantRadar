@@ -27,22 +27,26 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
               </p>
             </div>
           </ViewTransition>
+          <div className="evidence">
           <p className="funder-like" title="Nonprofits this foundation already paid whose work matches your mission, checked against their IRS filings">
-            <People /><b>Funded {f.peers} {f.peers === 1 ? "group" : "groups"} like yours</b>{toLike > 0 && <span className="amt">{money(toLike)}</span>}
+            <People />Funded {f.peers} {f.peers === 1 ? "group" : "groups"} like yours{toLike > 0 && <span className="like-total">{money(toLike)}</span>}
           </p>
           <ul className="grantees">
             {like.map((e) => (
               <li key={e.grantId} className={e.fit >= 85 ? "fit-same" : "fit-close"} title={`${e.fit >= 85 ? "Same kind of work" : "Closely related work"} · match ${e.fit}/100`}>
                 <span className="grantee-name">{titleCase(e.recipient)}</span>
                 <span className="grantee-place">{[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}</span>
-                <span className="amt">{e.amount != null ? money(e.amount) : "—"}</span>
+                <span className="grantee-amt">{e.amount != null ? money(e.amount) : "—"}</span>
               </li>
             ))}
           </ul>
+          </div>
         </div>
         <div className="funder-side">
-          <span className="typical"><b>{f.typical != null ? money(f.typical) : "—"}</b><small>typical</small></span>
-          <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? <><Lock size={12} />Invite only</> : <><Check size={12} />Open</>}</span>
+          <div className="side-top">
+            <span className="typical"><b>{f.typical != null ? money(f.typical) : "—"}</b><small>typical grant</small></span>
+            <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? <><Lock size={12} />Invite only</> : <><Check size={12} />Open</>}</span>
+          </div>
           <span className="why-cta"><Spark size={13} />Why<Chevron size={13} /></span>
         </div>
       </Link>
