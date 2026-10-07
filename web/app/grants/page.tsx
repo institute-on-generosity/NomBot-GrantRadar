@@ -2,6 +2,7 @@ import { Suspense, ViewTransition } from "react";
 import { connection } from "next/server";
 import { FilterChips, type Chip } from "@/components/FilterChips";
 import { FunderRow } from "@/components/FunderRow";
+import { GrantBuddy } from "@/components/GrantBuddy";
 import { NavLink } from "@/components/NavLink";
 import { RecordMission } from "@/components/GrantStore";
 import { SearchBox } from "@/components/SearchBox";
@@ -11,14 +12,14 @@ import { MATCH_STEPS, MISSIONS } from "@/lib/grantExamples";
 import { parseQuestion } from "@/lib/parse";
 import { RadarMark } from "@/components/RadarMark";
 
-type Params = { mission?: string; st?: string; open?: string; size?: string; type?: string; n?: string };
+type Params = { mission?: string; st?: string; open?: string; size?: string; type?: string; n?: string; buddy?: string };
 
 const PLACEHOLDER = "Describe your mission and where you work";
 const SIZE_LABEL: Record<Size, string> = { small: "Under $5K", mid: "$5K–$25K", large: "$25K+" };
 const TYPES = { general: "Mostly unrestricted", program: "Mostly project grants" } as const;
 
 function url(p: Params, change: Partial<Params>) {
-  const merged = { ...p, ...change };
+  const merged = { ...p, buddy: "", ...change };
   return `/grants?${new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][])}`;
 }
 
@@ -104,6 +105,10 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
         {total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
       </div>
       <p className="note">IRS Form 990-PF, 2025 · WV, KY, TN, VA, OH</p>
+      {funders.length > 0 && (
+        <GrantBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} mission={mission} state={state}
+          filters={{ st: state || undefined, open: p.open === "1" ? "1" : undefined, size, type }} />
+      )}
     </>
   );
 }

@@ -13,6 +13,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 | **Match** | Mission → similar nonprofits → who funded them → ranked funders | Dec 6 | ✅ **Built Oct 7** (local) |
 | **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 | ✅ **Built Oct 7** (local) |
 | **Grant types** | Unrestricted vs. project vs. policy giving, read from grant purposes | — | ✅ **Built Oct 7** (local, from feedback) |
+| **Research Buddy** | Follow-up questions about the matched funders; cites each funder, opens its sheet | — | ✅ **Built Oct 7** (local, from feedback) |
 
 **A funder ranks high only if it already funded orgs like yours.**
 
@@ -63,7 +64,7 @@ GrantRadar is NomBot plus a grants table.
 | 990 XML pipeline | Part XV extractor |
 | SOI loader | 990-PF file |
 | Mission embeddings | Funder ranking query |
-| Research Buddy reasoner | "Why this funder?" prompt |
+| Research Buddy reasoner + panel | "Why this funder?" prompt; Buddy over the top 12 matched funders (`/api/grants/buddy`) |
 | App, UI, API, Vercel, GitHub Actions | `/grants` pages, Supabase Auth, digest |
 
 ## Data
@@ -95,6 +96,7 @@ GrantRadar is NomBot plus a grants table.
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
 | **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
 | **Starred funders + recent missions** in the sidebar (this browser only), before logins | Same habit as NomBot: come back to a funder or a past match in one click |
+| **Research Buddy on `/grants`** (NomBot's panel, made configurable) | Oct 7 feedback ("for this one, especially"). Same rules and look; own conversation history |
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 
 ## Success metrics
@@ -115,7 +117,7 @@ GrantRadar is NomBot plus a grants table.
 |---|---|
 | **Typical grant** is very helpful | Keep it prominent |
 | Show **restricted vs. unrestricted** giving, and whether a funder backs programs or policy | ✅ **Done Oct 7:** grant purposes sorted into unrestricted / project / policy; row tag, sheet breakdown, filter |
-| Add **Research Buddy** to GrantRadar | Reuse NomBot's Buddy over a funder's grants |
+| Add **Research Buddy** to GrantRadar | ✅ **Done Oct 7:** NomBot's Buddy over the top matched funders: facts, how to apply, grant types, groups like yours |
 | GrantRadar and NomBot serve **different audiences** | One app with a toggle while testing; standalone later |
 | **Real-time budget** and fundraising gap | Not in public data; would need self-reporting + verification |
 
@@ -145,6 +147,7 @@ GrantRadar is NomBot plus a grants table.
 - [x] `/grants` match page
 - [x] "Why this funder?" (streams, cites each grant)
 - [x] Grant types: unrestricted vs. project vs. policy (feedback, Oct 7)
+- [x] Research Buddy on `/grants` (feedback, Oct 7)
 - [x] **Demo works locally**
 
 **Dec 7–13: Cloud**

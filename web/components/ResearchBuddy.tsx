@@ -8,7 +8,7 @@ import { Answer } from "./CitedAnswer";
 import { ago } from "./HistoryList";
 import { useStoredList } from "./useStored";
 
-type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
+export type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
 type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string };
 
 const noop = () => () => {};
@@ -18,15 +18,17 @@ const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3"
 // citing each organization as [n] (opens it in a popover), and shows a summary of its reasoning.
 // A floating button opens it as a chat panel docked on the right, beside the results.
 // Conversations are saved per search (convKey) in this browser; History lists them all.
-export function ResearchBuddy({ question, overrides, all, convKey, startOpen = false }: {
+// GrantRadar reuses it with its own endpoint, suggestions, intro, citation links and storage key.
+export function ResearchBuddy({ question, overrides, all, convKey, startOpen = false, endpoint = "/api/buddy", suggestions = SUGGESTIONS, intro, sourceHref = (s) => `/preview/org/${s.ein}`, store = BUDDY_KEY }: {
   question: string; overrides: Record<string, string | undefined>; all: boolean; convKey: string; startOpen?: boolean;
+  endpoint?: string; suggestions?: string[]; intro?: React.ReactNode; sourceHref?: (s: Source) => string; store?: string;
 }) {
   // Restored from storage on the client; the panel (the only place turns render) starts closed or client-opened.
-  const [turns, setTurns] = useState<Turn[]>(() => (typeof window === "undefined" ? [] : findConversation(convKey)?.turns.map((t) => ({ ...t, status: "done" as const })) ?? []));
+  const [turns, setTurns] = useState<Turn[]>(() => (typeof window === "undefined" ? [] : findConversation(convKey, store)?.turns.map((t) => ({ ...t, status: "done" as const })) ?? []));
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(startOpen);
   const [view, setView] = useState<"chat" | "history">("chat");
-  const saved = useStoredList<Conversation>(BUDDY_KEY, "nombot-buddy");
+  const saved = useStoredList<Conversation>(store, "nombot-buddy");
   const router = useRouter();
   const end = useRef<HTMLDivElement>(null);
   const busy = turns.at(-1)?.status === "thinking" || turns.at(-1)?.status === "answering";
@@ -44,11 +46,11 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
   useEffect(() => {
     const done = turns.filter((t) => t.status === "done");
     if (done.length && done.length === turns.length) {
-      saveConversation({ key: convKey, question, href: convKey, turns: done.map(({ ask, thinking, answer, sources }) => ({ ask, thinking, answer, sources })) });
+      saveConversation({ key: convKey, question, href: convKey, turns: done.map(({ ask, thinking, answer, sources }) => ({ ask, thinking, answer, sources })) }, store);
     }
-  }, [turns, convKey, question]);
+  }, [turns, convKey, question, store]);
 
-  const newChat = () => { setTurns([]); removeConversation(convKey); setView("chat"); input.current?.focus(); };
+  const newChat = () => { setTurns([]); removeConversation(convKey, store); setView("chat"); input.current?.focus(); };
   const openConversation = (c: Conversation) => {
     if (c.key === convKey) { setView("chat"); return; }
     router.push(`${c.href}${c.href.includes("?") ? "&" : "?"}buddy=1`);
@@ -64,7 +66,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
     setDraft("");
     setTurns((ts) => [...ts, { ask: text, thinking: "", answer: "", sources: [], status: "thinking" }]);
     try {
-      const res = await fetch("/api/buddy", {
+      const res = await fetch(endpoint, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, ask: text, overrides: Object.fromEntries(Object.entries(overrides).filter(([, v]) => v)), all, history }),
       });
@@ -129,7 +131,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
                       <span>{c.turns[0]?.ask}</span>
                       <small>{c.turns.length} {c.turns.length === 1 ? "question" : "questions"} · {ago(c.at)}{c.key === convKey ? " · this search" : ""}</small>
                     </button>
-                    <button type="button" className="iconbtn" onClick={() => removeConversation(c.key)} aria-label={`Delete conversation about ${c.question}`} title="Delete">
+                    <button type="button" className="iconbtn" onClick={() => removeConversation(c.key, store)} aria-label={`Delete conversation about ${c.question}`} title="Delete">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
                     </button>
                   </li>
@@ -140,9 +142,9 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
           <div className="buddy-body">
             {!turns.length && (
               <div className="buddy-empty">
-                <p>Ask about the top results for <b>{question}</b>. Answers come only from their IRS filings, with each claim cited.</p>
+                <p>{intro ?? <>Ask about the top results for <b>{question}</b>. Answers come only from their IRS filings, with each claim cited.</>}</p>
                 <div className="buddy-suggest">
-                  {SUGGESTIONS.map((s) => <button key={s} type="button" className="chip link" onClick={() => askBuddy(s)}>{s}</button>)}
+                  {suggestions.map((s) => <button key={s} type="button" className="chip link" onClick={() => askBuddy(s)}>{s}</button>)}
                 </div>
               </div>
             )}
@@ -156,9 +158,9 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
                   </details>
                 )}
                 {!t.thinking && t.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading the filings…</p>}
-                {t.answer && <Answer text={t.answer} cite={(n) => { const x = t.sources.find((y) => y.n === n); return x && { title: `${x.name} · ${x.place}${x.filing ? ` · ${x.filing}` : ""}`, href: `/preview/org/${x.ein}` }; }} />}
+                {t.answer && <Answer text={t.answer} cite={(n) => { const x = t.sources.find((y) => y.n === n); return x && { title: `${x.name} · ${x.place}${x.filing ? ` · ${x.filing}` : ""}`, href: sourceHref(x) }; }} />}
                 {t.status === "error" && <p className="notice">{t.error}</p>}
-                {t.status === "done" && <Cited text={t.answer} sources={t.sources} />}
+                {t.status === "done" && <Cited text={t.answer} sources={t.sources} href={sourceHref} />}
               </article>
             ))}
             <div ref={end} />
@@ -180,7 +182,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
 }
 
 // The organizations the answer cites, in order, with the filing each claim comes from.
-function Cited({ text, sources }: { text: string; sources: Source[] }) {
+function Cited({ text, sources, href }: { text: string; sources: Source[]; href: (s: Source) => string }) {
   const used = [...new Set([...text.matchAll(/\[(\d+(?:,\s*\d+)*)\]/g)].flatMap((m) => m[1].split(/,\s*/).map(Number)))].sort((a, b) => a - b);
   const list = used.map((n) => sources.find((s) => s.n === n)).filter((s): s is Source => Boolean(s));
   if (!list.length) return null;
@@ -189,7 +191,7 @@ function Cited({ text, sources }: { text: string; sources: Source[] }) {
       {list.map((s) => (
         <li key={s.n}>
           <span className="cite-n">{s.n}</span>
-          <Link href={`/preview/org/${s.ein}`} scroll={false}>{s.name}</Link>
+          <Link href={href(s)} scroll={false}>{s.name}</Link>
           <span>{s.place}{s.filing ? ` · ${s.filing}` : " · IRS master file only"}</span>
         </li>
       ))}

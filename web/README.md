@@ -20,6 +20,7 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 | `app/api/buddy/route.ts` | `POST` Research Buddy: streams sources, reasoning and the cited answer (NDJSON) |
 | `app/source/`, `components/viewers/` | IRS master file (BMF) and SOI financial viewers; open in a side panel or beside an org popover |
 | `components/` | Shared UI: `SearchBox`, `FilterChips`, `ResultRow`, `Vote`, `Sidebar`, `ResearchBuddy`, `Modal`, `SidePanel` |
+| GrantRadar (`/grants`) | `lib/grants` (match + funder sheet), `grantPeers` (Claude checks "like yours"), `grantTypes` (unrestricted / project / policy), `grantWhy`, `grantBuddy` + `app/api/grants/{why,buddy}`; `components/Funder*`, `GrantBuddy` (configures `ResearchBuddy`) |
 | `eval/` | `npm run eval` (search, 50 questions, goal ≥90% relevant) and `npm run eval:buddy` (Research Buddy, 30 questions, goal 0 unsupported claims) |
 
 ## Search eval
