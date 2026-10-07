@@ -108,13 +108,18 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [x] Postgres + pgvector, schema
 - [x] BMF: 204,564 orgs
 - [x] SOI financials: 54,590 rows
-- [x] 990 text: 12,354 filings
+- [x] 990 text: 50,971 filings, all embedded
 - [x] Embeddings + index (local nomic, free)
+- [x] ZIP → county + Appalachia (ARC) lookup: 34,236 ZIPs
 - [x] Claude query parser (verified on 3 questions; ~2–5s)
 - [x] Search page + read-only API on `localhost`
 - [x] **Demo works end to end** (68 results, ~0.15s)
 - [x] Early UX: exact vs. closest matches, detail pages, linked sources, sort, CSV export, inactive orgs hidden
 - [x] Early UX: IRS master file viewer, history, saved (★), loading popup, caching (sort ~0.1s), animations
+- [x] Apple-style UI: Claude-style sidebar, search suggestions, dark mode
+- [x] Relevance score 0–100 with an AI reason on hover; weak matches folded
+- [x] Editable filter chips (place, city, Appalachia, size, cause); results update in ~0.4s
+- [x] IRS financial (SOI) viewer; sources open beside the org in a popover
 
 **Oct 19–25: Cloud**
 - [ ] Supabase + data migrated
@@ -123,7 +128,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [ ] **API live**
 
 **Oct 26–Nov 1: Quality**
-- [ ] 50-query eval, ≥90% relevant
+- [x] 50-query eval, ≥90% relevant: **91%** (was 35%) · median ~14s, goal <2s
 
 **Nov 2–8: Web UI**
 - [ ] Search page, filters; IoG using it
@@ -134,9 +139,9 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [ ] **Launch**
 
 **Nov 16–22: Research Buddy**
-- [ ] Multi-turn chat over results
-- [ ] Reasoning steps + citation per claim
-- [ ] 30-question eval, zero unsupported claims
+- [x] Multi-turn chat over results, with history
+- [x] Reasoning steps + citation per claim; citations open the org
+- [ ] 30-question eval, zero unsupported claims: **1 of 401** (was 12 of 406)
 
 **Dec 21–31: Wrap-up**
 - [ ] Fixes, docs, handoff
