@@ -1,0 +1,120 @@
+.wrap {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 12px 10px;
+}
+
+.map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 440px;
+  overflow: hidden;
+}
+
+.county {
+  stroke: var(--line);
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  transition: fill 300ms ease;
+  outline: none;
+}
+
+.clickable .county { cursor: pointer; }
+
+/* Counties outside focusStates: visible for context, receded. */
+.dim { opacity: 0.35; }
+
+.states {
+  fill: none;
+  stroke: var(--mute);
+  stroke-opacity: 0.55;
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.lift {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.appalachia { pointer-events: none; }
+
+.hatchLine {
+  stroke: var(--ink);
+  stroke-opacity: 0.16;
+  stroke-width: 1;
+}
+
+.appOutline path {
+  fill: none;
+  stroke: var(--ink-2, var(--ink));
+  stroke-opacity: 0.55;
+  stroke-width: 3;
+  stroke-dasharray: 3 2.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.appSwatch { stroke: var(--ink); stroke-opacity: 0.4; stroke-width: 1; }
+
+.tip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--mute);
+  white-space: nowrap;
+}
+
+.tip strong { color: var(--ink); font-weight: 600; font-size: 13px; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.ramp { display: inline-flex; gap: 2px; }
+
+.sw {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 0.5px var(--line);
+}
+
+svg.sw { overflow: hidden; }
+
+.county:focus-visible { stroke: var(--g); stroke-width: 2.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .county { transition: none; }
+}

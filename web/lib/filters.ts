@@ -25,6 +25,10 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
     const codes = o.st.toUpperCase().split(",").filter((c) => LOADED_STATES.some(([s]) => s === c));
     if (codes.length) { out.states = codes; out.placeLabel = codes.map(stateName).join(", "); }
   }
+  if (o.city && o.city !== "any") { // a city picked from the landscape bars
+    out.cities = [o.city.toUpperCase()];
+    out.placeLabel = o.city.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
+  }
   if (o.max === "none") out.maxRevenue = undefined;
   else if (o.max && /^\d+$/.test(o.max)) out.maxRevenue = Number(o.max);
   if (o.cause === "any") { out.ntee = undefined; out.nteeHint = undefined; }

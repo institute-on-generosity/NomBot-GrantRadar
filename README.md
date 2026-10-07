@@ -24,6 +24,8 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover |
 | **Overview** | **AI overview** above results: landscape summary, cited patterns, 3 related searches |
+| **Landscape** | The 200 closest orgs as tabs: **Breakdown** (size, places, causes, team; bars filter), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants) |
+| **Compare** | Pick 2–4 results → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
 | **Quality** | 👍/👎 **votes** on results · **search eval** (50 questions, 91%) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
@@ -62,10 +64,11 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
 
-> Diagram out of date: the **AI overview** step (Claude summarizing the strong matches) isn't drawn yet.
+> Diagram out of date: the **AI overview**, **Landscape** (incl. funders from GrantRadar's `grants` table) and **Compare** aren't drawn yet.
 
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
+- **Landscape:** the 200 closest orgs (same filters and ranking) → counts by size, city, cause, team; counties via `zip_regions`; funders via `grants`; themes by Claude.
 - **AI overview:** the scored strong matches (up to 40) + computed figures (sizes, places, causes, team sizes) → Claude → summary, patterns [n], related searches.
 - **Regions:** ZIP → county lookup (`zip_regions`) powers the Appalachia filter (ARC's 420 counties).
 
@@ -130,7 +133,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 
 | Feedback | Plan |
 |---|---|
-| NomBot zooms **in** on details but not **out** to patterns across the landscape | ✅ **AI overview** above results: summary, cited patterns, "Explore" searches |
+| NomBot zooms **in** on details but not **out** to patterns across the landscape | ✅ **AI overview** + **Landscape** panel (breakdown bars, county map, themes, funders) + **Compare** |
 | Show **staff and volunteer counts** (990 Part I lines 5–6) | ✅ On org detail, with an **All-volunteer** badge (33,331 orgs report staff; 7,057 have none) |
 | **Starred folders** by category (e.g. youth mentoring vs. arts education) | ✅ Folder picker on starred orgs; folder tabs on Starred; folders in the sidebar |
 | **Recommendations** based on past questions | ✅ First step: 3 "Explore" searches in the AI overview (based on the current question) |

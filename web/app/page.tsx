@@ -8,6 +8,8 @@ import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
+import { Landscape } from "@/components/Landscape";
+import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
@@ -79,6 +81,15 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <Suspense key={`overview:${url(p, { n: "" })}`} fallback={<AiOverviewSkeleton />}>
         <OverviewPanel question={question} ranking={rankingAll} />
+      </Suspense>
+      <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={null}>
+        <Landscape question={question} filters={filters} includeInactive={includeInactive}
+          hrefs={{
+            size: (b) => (b.key ? url(p, { max: b.key, n: "" }) : null),
+            city: (b) => url(p, { city: b.key, n: "" }),
+            cause: (b) => url(p, { cause: b.key, n: "" }),
+          }}
+          map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
       </Suspense>
 
       {/* Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once

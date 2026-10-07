@@ -6,5 +6,7 @@ export function readable(line: string) {
 }
 
 export function titleCase(s: string) {
-  return s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
+  return s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase())
+    .replace(/'S\b/g, "'s")                                        // God'S -> God's
+    .replace(/\b[A-Za-z]{1,3}&[A-Za-z]{1,3}\b/g, (m) => m.toUpperCase()); // Lg&E -> LG&E
 }

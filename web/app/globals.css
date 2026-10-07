@@ -489,3 +489,46 @@ button.fchip-main { cursor: pointer; }
 .side-folder { display: flex; align-items: center; gap: 7px; }
 .side-folder svg { color: var(--g); flex: none; }
 .side-folder small { margin-left: auto; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+/* Landscape panel (zoom out): segmented tabs over Breakdown / Map / Themes / Funders */
+.landscape { margin: 10px 0 4px; padding: 14px 16px 16px; border-radius: 18px; box-shadow: 0 0 0 1px var(--line); background: var(--bg); animation: settle .5s var(--spring) .05s both; }
+.landscape header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.landscape h2 { font-size: 15px; font-weight: 600; letter-spacing: -.015em; }
+.landscape h2 span { font-size: 12.5px; font-weight: 400; color: var(--faint); margin-left: 6px; }
+.seg { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); padding: 3px; border-radius: 10px; background: var(--fill); }
+.seg button { position: relative; z-index: 1; font: inherit; font-size: 12.5px; font-weight: 500; color: var(--ink-2); background: none; border: 0; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: color .2s; }
+.seg button.on { color: var(--ink); }
+.seg-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n)); border-radius: 8px; background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); transform: translateX(calc(100% * var(--i))); transition: transform .4s var(--spring); }
+.ls-view { animation: drop .25s var(--spring) both; }
+.ls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 26px; }
+.ls-bars h3 { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.ls-bars h3 small { font-weight: 400; color: var(--faint); }
+.ls-bars ul { list-style: none; display: grid; gap: 1px; }
+.ls-row { display: grid; grid-template-columns: minmax(0, 9.5em) 1fr 2.4em; gap: 10px; align-items: center; padding: 3px 6px; margin: 0 -6px; border-radius: 7px; font-size: 13px; color: var(--ink-2); text-decoration: none; }
+.ls-row.link:hover { background: var(--fill); color: var(--ink); }
+.ls-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-track { height: 7px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.ls-track i { display: block; height: 100%; border-radius: 4px; background: var(--g); opacity: .7; transform-origin: left; animation: grow .7s var(--spring) both; }
+.ls-row.link:hover .ls-track i { opacity: 1; }
+.ls-n { text-align: right; font-variant-numeric: tabular-nums; color: var(--mute); }
+.ls-note, .ls-wait { font-size: 13px; color: var(--mute); }
+.ls-wait { display: flex; align-items: center; gap: 8px; }
+.ls-funders { list-style: none; display: grid; gap: 2px; margin-top: 8px; }
+.ls-funders li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 14px; padding: 8px 0; border-top: 1px solid var(--line); }
+.ls-fname { font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.ls-fname:hover { color: var(--g); }
+.ls-fstat { font-size: 13px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+.ls-fstat b { color: var(--ink); font-weight: 600; }
+.ls-fmeta { font-size: 12.5px; color: var(--faint); }
+.ls-fgrantees { grid-column: 1 / -1; font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-themes { display: grid; gap: 6px; }
+.ls-themes details { border-radius: 12px; background: var(--fill); padding: 9px 12px; }
+.ls-themes summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; font-size: 14px; }
+.ls-themes summary::-webkit-details-marker { display: none; }
+.ls-themes summary span { font-size: 12px; color: var(--mute); background: var(--bg); border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.ls-themes ul { list-style: none; margin-top: 6px; display: grid; gap: 3px; }
+.ls-themes li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.ls-themes li a { color: var(--ink); text-decoration: none; }
+.ls-themes li a:hover { color: var(--g); }
+.ls-themes li span { color: var(--faint); white-space: nowrap; }
+@media (max-width: 700px) { .ls-grid { grid-template-columns: 1fr; } }

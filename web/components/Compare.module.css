@@ -1,0 +1,88 @@
+/* Compare: row toggle, floating tray, side-by-side page. Uses the app tokens from globals.css. */
+
+/* ── Row toggle (beside the ☆) ── */
+.pick { display: inline-flex; align-items: center; gap: 4px; flex: none; margin-left: auto; padding: 2px 8px 2px 6px; border: 0; border-radius: 999px; font: inherit; font-size: 12px; font-weight: 600; line-height: 18px; color: var(--mute); background: var(--fill); cursor: pointer; transition: color .15s, background-color .15s, transform .2s var(--spring); }
+.pick:hover:not(:disabled) { color: var(--g-dark); background: var(--g-tint); }
+.pick:active:not(:disabled) { transform: scale(.94); }
+.pick.on { color: var(--g-dark); background: var(--g-tint); box-shadow: inset 0 0 0 1px var(--g-line); }
+.pick:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── Tray ── */
+.tray { position: fixed; z-index: 29; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; max-width: min(640px, calc(100vw - 520px)); padding: 6px 6px 6px 8px; border-radius: 999px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); box-shadow: 0 0 0 1px var(--line), var(--shadow); animation: trayIn .5s var(--spring) both; }
+@keyframes trayIn { from { opacity: 0; transform: translate(-50%, 24px) scale(.97); } to { opacity: 1; transform: translateX(-50%); } }
+.chips { display: flex; gap: 6px; min-width: 0; overflow-x: auto; list-style: none; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent); padding-right: 12px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 2px; flex: none; max-width: 132px; padding: 4px 4px 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--ink); background: var(--fill); animation: chipIn .3s var(--spring) both; }
+.chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip button { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 999px; color: var(--mute); background: none; cursor: pointer; }
+.chip button:hover { color: var(--ink); background: var(--fill-2); }
+@keyframes chipIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+.clear { flex: none; padding: 6px 8px; border: 0; border-radius: 999px; font: inherit; font-size: 13px; color: var(--mute); background: none; cursor: pointer; }
+.clear:hover { color: var(--ink); background: var(--fill); }
+.go { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #fff; background: var(--g-fill); text-decoration: none; white-space: nowrap; transition: background-color .15s, transform .2s var(--spring); }
+.go:hover { background: var(--g-fill-hover); }
+.go:active { transform: scale(.96); }
+.go.off { color: var(--faint); background: var(--fill-2); cursor: not-allowed; }
+
+/* Under 1024px the Research Buddy button would collide: sit above it, full width. */
+@media (max-width: 1023px) {
+  .tray { left: 16px; right: 16px; bottom: 84px; max-width: none; transform: none; animation-name: trayInPhone; }
+  .chips { flex: 1; }
+  @keyframes trayInPhone { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+}
+
+/* ── Compare page ── */
+.page { max-width: 1180px; }
+.lede { font-size: 14px; color: var(--mute); margin: 6px 0 20px; }
+.scroll { overflow-x: auto; margin: 0 -8px; padding: 0 8px 8px; }
+.table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; }
+.table th, .table td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.table col.labels { width: 130px; }
+.table col.org { width: 240px; }
+.rowLabel { position: sticky; left: 0; z-index: 2; font-size: 12px; line-height: 21px; font-weight: 600; color: var(--mute); background: var(--bg); }
+.table thead th { position: relative; padding-top: 4px; border-bottom-color: var(--fill-2); }
+.table thead .rowLabel { z-index: 3; }
+.head { display: flex; align-items: flex-start; gap: 6px; }
+.head a { flex: 1; min-width: 0; font-size: 16px; font-weight: 600; line-height: 1.3; letter-spacing: -.02em; color: var(--ink); text-decoration: none; }
+.head a:hover { color: var(--g); }
+.colX { flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: -1px; border: 0; border-radius: 999px; color: var(--faint); background: var(--fill); cursor: pointer; transition: color .15s, background-color .15s; }
+.colX:hover { color: var(--ink); background: var(--fill-2); }
+.ein { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; color: var(--faint); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.table td { line-height: 21px; }
+.num small { margin-left: 6px; font-size: 12px; color: var(--faint); }
+.max { font-weight: 700; color: var(--ink); }
+.none { color: var(--faint); }
+.badge { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 9px; }
+.table tbody tr:hover td, .table tbody tr:hover .rowLabel { background: var(--fill); }
+.table tbody tr:hover .rowLabel { background: var(--fill); }
+
+/* Mission / Programs: ~4 lines, "more" opens the rest (CSS only). */
+.clampBox { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.clampBox input { position: absolute; opacity: 0; pointer-events: none; }
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; line-height: 1.5; color: var(--ink-2); }
+.more { font-size: 13px; font-weight: 600; color: var(--g); cursor: pointer; }
+.more::after { content: "more"; }
+.clampBox input:checked ~ .clamp { -webkit-line-clamp: unset; line-clamp: none; }
+.clampBox input:checked ~ .more::after { content: "less"; }
+.clampBox input:focus-visible ~ .more { outline: 3px solid var(--g-line); outline-offset: 2px; border-radius: 6px; }
+
+.srcs { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.srcs a { text-decoration: none; }
+.srcs a:hover { text-decoration: underline; }
+
+.empty { margin-top: 48px; text-align: center; color: var(--mute); }
+.empty svg { color: var(--faint); margin-bottom: 10px; }
+.empty p { margin-bottom: 14px; }
+.empty a { font-weight: 600; text-decoration: none; }
+
+@media (max-width: 640px) {
+  .table col.labels { width: 96px; }
+  .table col.org { width: 200px; }
+  .table th, .table td { padding: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tray, .chip { animation: none; }
+  .pick, .go { transition: none; }
+}

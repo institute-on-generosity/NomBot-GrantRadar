@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "eval": "tsx eval/run.mts",
-    "eval:buddy": "tsx eval/buddy.mts"
+    "eval:buddy": "tsx eval/buddy.mts",
+    "build:counties": "node scripts/build-counties.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -24,9 +25,12 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "d3-geo": "^3.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "topojson-client": "^3.1.0",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "us-atlas": "^3.0.1"
   }
 }

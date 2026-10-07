@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/Sidebar";
+import { CompareTray } from "@/components/CompareTray";
 import "./globals.css";
 
 // UI type is the system font (SF on Apple devices); mono only for raw IRS records.
@@ -26,6 +27,7 @@ export default function RootLayout({ children, panel }: LayoutProps<"/">) {
           <Sidebar />
           <div className="content">{children}</div>
           {panel}
+          <CompareTray />
         </div>
       </body>
     </html>
