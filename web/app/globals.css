@@ -437,3 +437,26 @@ button.fchip-main { cursor: pointer; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .loading, .skeleton { opacity: 1; }
 }
+
+/* Org team size (staff, volunteers) under the title */
+.team { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; font-size: 14px; color: var(--mute); }
+.team svg { color: var(--g); flex: none; }
+.team b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.team .badge { font-size: 12px; font-weight: 600; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 9px; }
+
+/* AI overview (zoom-out view above the results), Gemini-style: a soft tinted card */
+.overview { margin: 16px 0 6px; padding: 16px 18px 14px; border-radius: 18px; background: linear-gradient(180deg, var(--g-tint), transparent 70%), var(--fill); box-shadow: inset 0 0 0 1px var(--line); animation: settle .5s var(--spring) both; }
+.overview h2 { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--g-dark); margin-bottom: 8px; }
+.overview .buddy-answer { font-size: 15px; line-height: 1.5; color: var(--ink); }
+.overview .buddy-answer + .buddy-answer { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+.overview .buddy-answer ul { padding-left: 18px; display: grid; gap: 3px; }
+.explore { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.explore > span { font-size: 12.5px; font-weight: 600; color: var(--mute); margin-right: 2px; }
+.explore .chip { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.explore .chip:hover { background: var(--g-tint); color: var(--g-dark); }
+.overview-foot { font-size: 11.5px; color: var(--faint); margin-top: 10px; }
+.ov-lines { display: grid; gap: 9px; padding: 4px 0 6px; }
+.ov-lines i { display: block; height: 11px; border-radius: 6px; background: linear-gradient(90deg, var(--fill-2), var(--g-tint), var(--fill-2)); background-size: 200% 100%; animation: ov-shimmer 1.4s linear infinite; }
+.ov-lines i.short { width: 60%; }
+@keyframes ov-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .ov-lines i { animation: none; } }

@@ -6,13 +6,15 @@ import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
 import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
+import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
+import { overview } from "@/lib/overview";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
 import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
-import { isStrong, rank, searchCandidates, type Ranked } from "@/lib/rerank";
+import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string } & Overrides;
@@ -58,6 +60,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
   const res = await searchCandidates(filters, { includeInactive, limit: n });
   const ranking = rank(question, res, n);
+  const rankingAll = n >= POOL ? ranking : rank(question, res, POOL); // the overview reads every scored candidate (same cached scores)
   const patterns = filters.requirements.map((r) => r.pattern);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
@@ -74,10 +77,14 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
 
+      <Suspense key={`overview:${url(p, { n: "" })}`} fallback={<AiOverviewSkeleton />}>
+        <OverviewPanel question={question} ranking={rankingAll} />
+      </Suspense>
+
       {/* Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
           instead of React keeping the old list on screen until the new scores arrive. */}
       <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
-        <RankedList ranking={ranking} total={res.total} {...rowProps} />
+        <RankedList ranking={ranking} rankingAll={rankingAll} total={res.total} {...rowProps} />
       </Suspense>
 
       <div className="more">
@@ -90,16 +97,22 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   );
 }
 
+async function OverviewPanel({ question, ranking }: { question: string; ranking: ReturnType<typeof rank> }) {
+  const o = await overview(question, (await ranking).results);
+  return o ? <AiOverview o={o} explore={o.explore.map((q) => ({ q, href: url({}, { question: q }) }))} /> : null;
+}
+
 type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };
 
-async function RankedList({ ranking, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; total: number }) {
-  const { results, scored } = await ranking;
-  return <ResultList rows={results} total={total} scored={scored} {...p} />;
+async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; rankingAll: ReturnType<typeof rank>; total: number }) {
+  const [{ results, scored }, all] = await Promise.all([ranking, rankingAll]);
+  // Strong matches across every scored candidate, not just the rows shown, so it agrees with the AI overview.
+  return <ResultList rows={results} total={total} scored={scored} strongTotal={all.results.filter((r) => r.relevance && isStrong(r)).length} {...p} />;
 }
 
 // pending: search order, while relevance scores are still being computed.
 // Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
-function ResultList({ rows, total, pending = false, scored = false, question, patterns, back, focus, must, shown, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean }) {
+function ResultList({ rows, total, pending = false, scored = false, strongTotal, question, patterns, back, focus, must, shown, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
   const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
   const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
   const row = (r: Result | Ranked, i: number) => (
@@ -109,7 +122,7 @@ function ResultList({ rows, total, pending = false, scored = false, question, pa
   return (
     <div className={`results${pending ? " ranking" : ""}`}>
       <div className="bar">
-        <span>{scored ? `${strong.length} strong ${strong.length === 1 ? "match" : "matches"} · ${total.toLocaleString("en-US")} related` : `${total.toLocaleString("en-US")} results`}</span>
+        <span>{scored ? `${strongTotal ?? strong.length} strong ${(strongTotal ?? strong.length) === 1 ? "match" : "matches"} · ${total.toLocaleString("en-US")} related` : `${total.toLocaleString("en-US")} results`}</span>
         {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first</span>}
       </div>
       {/* One notice: what's missing (the must-mention phrase, strong matches, or both) */}

@@ -50,6 +50,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
       </p>
+      {o.team && <Team {...o.team} />}
 
       <section>
         <h2>Mission</h2>
@@ -100,5 +101,19 @@ async function Org({ params, searchParams, modal }: Props) {
         </ul>
       </section>
     </article>
+  );
+}
+
+// Staff and volunteers (Form 990 Part I lines 5-6): how the work gets done, e.g. entirely by volunteers.
+function Team({ staff, volunteers, year }: { staff: number | null; volunteers: number | null; year: number }) {
+  const n = (v: number) => v.toLocaleString("en-US");
+  const allVolunteer = staff === 0 && (volunteers ?? 0) > 0;
+  return (
+    <p className="team" title={`Form 990 (${year}), Part I lines 5–6`}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.5" cy="9.5" r="2.4" /><path d="M15.5 14.2A4.6 4.6 0 0 1 20.5 19" /></svg>
+      {staff != null && <span><b>{n(staff)}</b> staff</span>}
+      {volunteers != null && <span><b>{n(volunteers)}</b> volunteers</span>}
+      {allVolunteer && <span className="badge">All-volunteer</span>}
+    </p>
   );
 }

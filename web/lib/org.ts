@@ -10,7 +10,7 @@ export async function getOrg(einParam: string) {
   const { rows: [o] } = await db.query("SELECT * FROM orgs WHERE ein = $1", [ein]);
   if (!o) return null;
   const { rows: [t] } = await db.query(
-    "SELECT object_id, tax_year, form, mission, programs FROM filing_text WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
+    "SELECT object_id, tax_year, form, mission, programs, employees, volunteers FROM filing_text WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
   const { rows: fin } = await db.query(
     "SELECT tax_year, form, revenue, expenses, assets FROM financials WHERE ein = $1 ORDER BY tax_year DESC", [ein]);
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
@@ -45,6 +45,8 @@ export async function getOrg(einParam: string) {
     mission: t?.mission as string | null ?? null,
     programs: t?.programs as string | null ?? null,
     filing: t ? { year: t.tax_year as number, form: t.form as string, url: src[0]?.url } : null,
+    // Team size from Form 990 Part I lines 5-6 (not reported on 990-EZ).
+    team: t && (t.employees != null || t.volunteers != null) ? { staff: t.employees as number | null, volunteers: t.volunteers as number | null, year: t.tax_year as number } : null,
     years,
     bmfUrl,
     sources: allSources,

@@ -1,9 +1,10 @@
 "use client";
-import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BUDDY_KEY, type Conversation, findConversation, removeConversation, saveConversation } from "@/lib/buddyHistory";
+import { Answer } from "./CitedAnswer";
 import { ago } from "./HistoryList";
 import { useStoredList } from "./useStored";
 
@@ -155,7 +156,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
                   </details>
                 )}
                 {!t.thinking && t.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading the filings…</p>}
-                {t.answer && <Answer text={t.answer} sources={t.sources} />}
+                {t.answer && <Answer text={t.answer} cite={(n) => { const x = t.sources.find((y) => y.n === n); return x && { title: `${x.name} · ${x.place}${x.filing ? ` · ${x.filing}` : ""}`, href: `/preview/org/${x.ein}` }; }} />}
                 {t.status === "error" && <p className="notice">{t.error}</p>}
                 {t.status === "done" && <Cited text={t.answer} sources={t.sources} />}
               </article>
@@ -174,47 +175,6 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
         </aside>,
         shell,
       )}
-    </>
-  );
-}
-
-// Minimal, safe rendering of the answer: paragraphs, "- " bullets, **bold**, and [n] citations.
-function Answer({ text, sources }: { text: string; sources: Source[] }) {
-  const blocks: { list: boolean; lines: string[] }[] = [];
-  for (const line of text.split("\n")) {
-    const item = /^\s*[-*]\s+/.test(line);
-    if (!line.trim()) { blocks.push({ list: false, lines: [] }); continue; }
-    const last = blocks.at(-1);
-    if (last && last.list === item && (item || last.lines.length)) last.lines.push(line.replace(/^\s*[-*]\s+/, ""));
-    else blocks.push({ list: item, lines: [line.replace(/^\s*[-*]\s+/, "")] });
-  }
-  return (
-    <div className="buddy-answer">
-      {blocks.filter((b) => b.lines.length).map((b, i) => (b.list
-        ? <ul key={i}>{b.lines.map((l, j) => <li key={j}><Inline text={l} sources={sources} /></li>)}</ul>
-        : <p key={i}>{b.lines.map((l, j) => <Fragment key={j}>{j > 0 && " "}<Inline text={l} sources={sources} /></Fragment>)}</p>))}
-    </div>
-  );
-}
-
-function Inline({ text, sources }: { text: string; sources: Source[] }) {
-  return (
-    <>
-      {text.split(/(\*\*[^*]+\*\*|\[\d+(?:,\s*\d+)*\])/).map((part, i) => {
-        if (/^\*\*[^*]+\*\*$/.test(part)) return <b key={i}><Inline text={part.slice(2, -2)} sources={sources} /></b>;
-        const cite = part.match(/^\[(\d+(?:,\s*\d+)*)\]$/);
-        if (!cite) return <Fragment key={i}>{part}</Fragment>;
-        return (
-          <span key={i} className="cites">
-            {cite[1].split(/,\s*/).map((n) => {
-              const s = sources.find((x) => x.n === Number(n));
-              return s
-                ? <Link key={n} href={`/preview/org/${s.ein}`} scroll={false} className="cite-n" title={`${s.name} · ${s.place}${s.filing ? ` · ${s.filing}` : ""}`}>{n}</Link>
-                : <span key={n} className="cite-n">{n}</span>;
-            })}
-          </span>
-        );
-      })}
     </>
   );
 }
