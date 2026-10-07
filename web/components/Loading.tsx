@@ -9,7 +9,7 @@ const STEP_AT = [0, 2000, 4500, 9000]; // ms; a new question takes ~3–10s (par
 // Loading card centered in the viewport over a frosted veil, plus a progress bar along the top. Portaled to <body>: a frosted (backdrop-filter) ancestor such as
 // the search bar would otherwise trap position: fixed and pin the popup on top of the input.
 // Appears after a short delay (CSS) so instant navigations don't flash it.
-export function Loading({ label = "Loading…", search = false }: { label?: string; search?: boolean }) {
+export function Loading({ label = "Loading…", search = false, steps: custom }: { label?: string; search?: boolean; steps?: string[] }) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     const start = performance.now();
@@ -17,7 +17,7 @@ export function Loading({ label = "Loading…", search = false }: { label?: stri
     return () => clearInterval(id);
   }, []);
 
-  const steps = search ? [label, ...SEARCH_STEPS] : [label];
+  const steps = search ? [label, ...(custom ?? SEARCH_STEPS)] : [label];
   const step = search ? Math.max(0, STEP_AT.filter((t) => elapsed >= t).length - 1) : 0;
   const progress = 0.92 * (1 - Math.exp(-elapsed / (search ? 4000 : 1200))); // eases toward the end, never claims done
 

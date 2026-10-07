@@ -437,3 +437,128 @@ button.fchip-main { cursor: pointer; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .loading, .skeleton { opacity: 1; }
 }
+
+/* ===== GrantRadar (/grants): NomBot's tokens plus gold for grant dollars ===== */
+:root { --gold: #8a5d0b; --gold-tint: rgba(176,122,18,.1); }
+@media (prefers-color-scheme: dark) { :root { --gold: #e3b54f; --gold-tint: rgba(227,181,79,.13); } }
+.logo.radar svg { width: 24px; height: 24px; }
+.brand .logo.radar svg { width: 16px; height: 16px; }
+.amt { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: -.01em; }
+
+/* Ranked foundations: list rows, not cards. The whole row opens the funder sheet. */
+.funders { margin-top: 18px; }
+.funders .bar { font-size: 13px; color: var(--mute); padding: 4px 0 8px; }
+.funder { position: relative; animation: settle .5s var(--spring) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.funder + .funder::before { content: ""; position: absolute; top: 0; left: 14px; right: 14px; height: 1px; background: var(--line); }
+.funder:hover::before, .funder:hover + .funder::before { opacity: 0; }
+.funder-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; padding: 18px 14px; margin: 0 -14px; border-radius: 18px; color: inherit; text-decoration: none; transition: background-color .2s, transform .35s var(--spring); }
+.funder-link:hover { background: var(--fill); }
+.funder-link:active { transform: scale(.992); }
+.funder-head h2, .funder-head h1 { font-size: 19px; font-weight: 600; letter-spacing: -.022em; line-height: 1.25; }
+.funder-head .meta { font-size: 13.5px; color: var(--mute); margin-top: 3px; }
+.funder-like { font-size: 14px; color: var(--ink-2); margin: 10px 0 6px; }
+.funder-like b { color: var(--ink); font-weight: 600; }
+.grantees { list-style: none; display: grid; gap: 4px; }
+.grantees li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: baseline; font-size: 13.5px; }
+.grantee-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.grantee-name::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--g); margin: 0 9px 2px 1px; }
+.grantee-place { color: var(--faint); font-size: 12.5px; white-space: nowrap; }
+.funder-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px; min-width: 150px; text-align: right; }
+.typical { display: flex; flex-direction: column; }
+.typical b { font-size: 22px; font-weight: 600; letter-spacing: -.03em; color: var(--gold); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.typical small { font-size: 12px; color: var(--faint); }
+.policy { font-size: 12px; font-weight: 500; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 3px 10px; }
+.policy.closed { color: var(--mute); background: var(--fill-2); }
+.why-cta { font-size: 13.5px; font-weight: 600; color: var(--g); display: inline-flex; align-items: center; gap: 4px; }
+.why-cta::after { content: "›"; font-size: 17px; line-height: 1; transition: transform .3s var(--spring); }
+.funder-link:hover .why-cta::after { transform: translateX(3px); }
+@media (max-width: 640px) {
+  .funder-link { grid-template-columns: 1fr; gap: 12px; }
+  .funder-side { flex-direction: row; align-items: center; min-width: 0; text-align: left; }
+  .grantee-place { display: none; }
+}
+
+/* Funder sheet: rises from the bottom like an iOS sheet; the page behind dims and recedes */
+.modal-backdrop.sheet { place-items: end center; padding: 5vh 16px 0; }
+.modal.sheet { width: min(940px, 100%); height: 95vh; max-height: none; border-radius: 26px 26px 0 0; animation: sheet-in .55s var(--spring) both; }
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+.content { transition: transform .5s var(--spring), filter .5s; }
+.shell:has(.modal-backdrop.sheet) .content { transform: scale(.985); filter: saturate(.9); }
+.modal.sheet::before { content: ""; position: absolute; top: 8px; left: 50%; width: 38px; height: 5px; margin-left: -19px; border-radius: 3px; background: var(--fill-2); z-index: 2; }
+
+/* Funder page / sheet body */
+.funder-view { display: flex; flex-direction: column; }
+.funder-view.sheet { padding: 34px 36px 48px; }
+.funder-view:not(.sheet) { padding-top: 8px; }
+.funder-head.big h1 { font-size: 30px; letter-spacing: -.03em; padding-right: 40px; }
+.funder-head.big .meta { font-size: 14px; margin-top: 6px; }
+.fv-body > * { animation: settle .55s var(--spring) both; }
+.fv-body > :nth-child(2) { animation-delay: .05s; } .fv-body > :nth-child(3) { animation-delay: .1s; } .fv-body > :nth-child(4) { animation-delay: .15s; } .fv-body > :nth-child(n+5) { animation-delay: .2s; }
+.fv-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 22px 0 8px; background: var(--line); border-radius: 16px; overflow: hidden; }
+.fv-facts div { background: var(--fill); padding: 14px 16px; }
+.fv-facts dt { font-size: 12px; color: var(--mute); }
+.fv-facts dd { font-size: 20px; font-weight: 600; letter-spacing: -.025em; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.funder-view section { margin-top: 26px; }
+.funder-view h2 { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px; }
+.funder-view h2 span { font-size: 13px; font-weight: 400; color: var(--faint); }
+.fv-apply { border-radius: 16px; padding: 16px 18px; background: var(--g-tint); box-shadow: inset 0 0 0 1px var(--g-line); }
+.fv-apply h2 { color: var(--g-dark); }
+.fv-apply.closed { background: var(--fill); box-shadow: inset 0 0 0 1px var(--line); }
+.fv-apply.closed h2 { color: var(--ink); }
+.fv-apply p, .fv-apply dd { font-size: 14px; color: var(--ink-2); }
+.fv-apply dl { display: grid; gap: 8px; }
+.fv-apply dl div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; }
+.fv-apply dt { font-size: 13px; color: var(--mute); }
+.fv-apply p + p { margin-top: 8px; }
+.why { border-radius: 18px; padding: 18px 20px; box-shadow: 0 0 0 1px var(--line), var(--shadow); position: relative; overflow: hidden; }
+.why::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 30%, var(--g-tint) 50%, transparent 70%); background-size: 250% 100%; animation: sweep 1.6s linear infinite; }
+.why.done::after { animation: none; opacity: 0; transition: opacity .6s; }
+@keyframes sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.why h2 .why-mark { color: var(--g); }
+.why-foot { font-size: 12px; color: var(--faint); margin-top: 10px; }
+.fv-where ul { list-style: none; display: grid; gap: 7px; }
+.fv-where li { display: grid; grid-template-columns: 32px 1fr 90px 70px; gap: 12px; align-items: center; font-size: 13.5px; }
+.fv-where .st { font-weight: 600; color: var(--ink-2); }
+.fv-where .track { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.fv-where .track i { display: block; height: 100%; border-radius: 4px; background: var(--gold); opacity: .75; transform-origin: left; animation: grow .8s var(--spring) .25s both; }
+@keyframes grow { from { transform: scaleX(0); } to { transform: none; } }
+.fv-where .amt { text-align: right; }
+.fv-where small { color: var(--faint); font-size: 12px; }
+.fv-grants table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.fv-grants th { text-align: left; font-size: 12px; font-weight: 500; color: var(--mute); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.fv-grants td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.fv-grants td small { display: block; color: var(--faint); font-size: 12px; }
+.fv-grants td a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.fv-grants td a:hover { color: var(--g); }
+.fv-grants .purpose { color: var(--ink-2); }
+.fv-grants .purpose::first-letter { text-transform: uppercase; }
+.fv-grants .n { text-align: right; white-space: nowrap; }
+@media (max-width: 640px) {
+  .funder-view.sheet { padding: 30px 18px 40px; }
+  .fv-facts { grid-template-columns: repeat(2, 1fr); }
+  .fv-where li { grid-template-columns: 28px 1fr 80px; } .fv-where small { display: none; }
+  .fv-grants .purpose { display: none; }
+}
+
+/* View transitions: the funder row's name block morphs into the sheet header; new rows rise in */
+::view-transition-group(.morph) { animation-duration: .45s; animation-timing-function: cubic-bezier(.32,.72,0,1); }
+::view-transition-image-pair(.morph) { animation-name: via-blur; }
+@keyframes via-blur { 35% { filter: blur(2px); } }
+::view-transition-new(.rise) { animation: settle .45s var(--spring) both; }
+
+/* App switcher in the sidebar: NomBot (nonprofits) / GrantRadar (funders) */
+.side-apps { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; margin: 0 4px 10px; border-radius: 10px; background: var(--line); position: relative; }
+.side-apps a { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 4px; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); text-decoration: none; position: relative; z-index: 1; transition: color .2s; }
+.side-apps a.on { color: var(--ink); }
+.side-apps .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 4px); border-radius: 8px; background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); transition: transform .45s var(--spring); }
+.side-apps .thumb.right { transform: translateX(calc(100% + 2px)); }
+.side.collapsed .side-apps { display: none; }
+.logo.mini { width: 15px; height: 15px; border-radius: 4px; font-size: 9px; }
+.side-apps svg { color: var(--g); }
+
+@media (prefers-reduced-motion: reduce) {
+  .funder, .fv-body > *, .modal.sheet, .fv-where .track i { animation: none; }
+  .why::after { display: none; }
+  .shell:has(.modal-backdrop.sheet) .content { transform: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

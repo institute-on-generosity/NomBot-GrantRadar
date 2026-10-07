@@ -8,12 +8,18 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 
 ## Solution
 
-| Feature | What | Ships |
-|---|---|---|
-| **Match** | Mission → similar nonprofits → who funded them → ranked funders | Dec 6 |
-| **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 |
+| Feature | What | Planned | Status |
+|---|---|---|---|
+| **Match** | Mission → similar nonprofits → who funded them → ranked funders | Dec 6 | ✅ **Built Oct 7** (local) |
+| **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 | ✅ **Built Oct 7** (local) |
 
 **A funder ranks high only if it already funded orgs like yours.**
+
+### How matching works
+1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant.
+2. The 150 closest grantees (similarity ≥ 0.55) are "like you".
+3. Each foundation scores the sum of ((similarity − 0.55) / 0.45)² over the grantees like you it paid: a few close matches beat many loose ones.
+4. Filters: **gives in** a state, **open to applications** (drops foundations that only give to preselected charities), **typical grant** size.
 
 ## Users
 
@@ -73,34 +79,45 @@ GrantRadar is NomBot plus a grants table.
 | Dec 14–20 | 10 nonprofits test; 👍/👎; digest; scraper *(stretch)* → **done** |
 | Dec 21–31 | Buffer + handoff |
 
+## Changes from the plan
+| Change | Why |
+|---|---|
+| **Built Oct 7** (planned Nov 23–Dec 6) | NomBot finished early; GrantRadar reuses its app, data and Research Buddy |
+| **How to apply + "Invitation only"** from Part XV 2a–d | 5,582 of 8,030 foundations only give to preselected charities; applicants need to know before writing |
+| **Matcher favors precision**: 51% linked, below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
+| **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
+| **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
+
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
 - ≥70% of matches rated relevant
-- ≥70% of grants linked to a recipient
-- Results <3s; every explanation cited
+- ≥70% of grants linked to a recipient (**51%** so far, in-state recipients)
+- Results <3s (**~0.5s** cached, ~2–5s new mission); every explanation cited
 - Adds <$50/mo
 
 ## Budget
 **Local:** ~$1. **Cloud:** ~$5–15/mo extra (shares NomBot's Supabase).
 
 ## Progress
+> ✅ **Oct 7, 2026: local proof of concept built**, ~8 weeks ahead of plan: grants loaded for 5 states, matcher, ranking, `/grants` pages and "Why this funder?". Recipient linking is at 51% (goal 70%).
+
 
 **Planning**
 - [x] Plan, diagram, mockups
 - [x] Lives in `NomBot-GrantRadar`, branch `GrantRadar`
 
 **Nov 23–29: Grants data**
-- [ ] `grants` + `funders` migration
-- [ ] Part XV extractor
-- [ ] 990-PF financials
-- [ ] 5-state grants loaded
+- [x] `grants` + `funders` migration (generosity-data `007`)
+- [x] Part XV extractor (`etl/load_grants.py`): grants paid + how to apply + invitation-only flag
+- [x] 990-PF financials: assets and grants paid, read from the 990-PF itself
+- [x] 5-state grants loaded: **8,030 foundations, 102,725 grants**
 
 **Nov 30–Dec 6: Local proof of concept**
-- [ ] Recipient matcher (≥70% linked)
-- [ ] Funder ranking
-- [ ] `/grants` match page
-- [ ] "Why this funder?"
-- [ ] **Demo works locally**
+- [ ] Recipient matcher (≥70% linked): **51%** of grants to recipients in the 5 states (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere)
+- [x] Funder ranking
+- [x] `/grants` match page
+- [x] "Why this funder?" (streams, cites each grant)
+- [x] **Demo works locally**
 
 **Dec 7–13: Cloud**
 - [ ] National 990-PF load

@@ -13,7 +13,10 @@ type Suggestion = { text: string; kind: "recent" | "example" };
 
 // `big`: the centered, Claude-style composer on the empty home page (pills sit below it).
 // Compact bar: focusing it opens recent questions and example questions, filtered as you type.
-export function SearchBox({ action = "/", name = "question", value = "", placeholder = "Search in plain language", big = false }: { action?: string; name?: string; value?: string; placeholder?: string; big?: boolean }) {
+// examples/recents/loading: GrantRadar passes its own mission examples and loading steps and skips NomBot's recent questions.
+export function SearchBox({ action = "/", name = "question", value = "", placeholder = "Search in plain language", big = false, examples = EXAMPLES, recents = true, loading = { label: "Reading your question…" }, submitLabel = "Search" }: {
+  action?: string; name?: string; value?: string; placeholder?: string; big?: boolean; examples?: string[]; recents?: boolean; loading?: { label: string; steps?: string[] }; submitLabel?: string;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [q, setQ] = useState(value);
@@ -32,10 +35,10 @@ export function SearchBox({ action = "/", name = "question", value = "", placeho
   const needle = q.trim().toLowerCase();
   const current = value.trim().toLowerCase();
   const match = (s: string) => s.toLowerCase() !== current && (!needle || s.toLowerCase().includes(needle));
-  const recent: Suggestion[] = history.map((h) => h.question).filter(match).slice(0, MAX_RECENT).map((text) => ({ text, kind: "recent" }));
+  const recent: Suggestion[] = (recents ? history : []).map((h) => h.question).filter(match).slice(0, MAX_RECENT).map((text) => ({ text, kind: "recent" }));
   const seen = new Set(recent.map((r) => r.text.toLowerCase()));
-  const examples: Suggestion[] = EXAMPLES.filter((e) => match(e) && !seen.has(e.toLowerCase())).map((text) => ({ text, kind: "example" }));
-  const items = [...recent, ...examples].slice(0, MAX_TOTAL);
+  const shownExamples: Suggestion[] = examples.filter((e) => match(e) && !seen.has(e.toLowerCase())).map((text) => ({ text, kind: "example" }));
+  const items = [...recent, ...shownExamples].slice(0, MAX_TOTAL);
   const show = !big && open && items.length > 0;
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -71,7 +74,7 @@ export function SearchBox({ action = "/", name = "question", value = "", placeho
         <>
           {input}
           <div className="composer-row">
-            <button type="submit" disabled={pending} aria-label="Search" title="Search">
+            <button type="submit" disabled={pending} aria-label={submitLabel} title={submitLabel}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" /></svg>
             </button>
           </div>
@@ -80,7 +83,7 @@ export function SearchBox({ action = "/", name = "question", value = "", placeho
         <>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           {input}
-          <button type="submit" disabled={pending}>{pending ? "Searching…" : "Search"}</button>
+          <button type="submit" disabled={pending}>{pending ? "Searching…" : submitLabel}</button>
         </>
       )}
       {show && (
@@ -100,7 +103,7 @@ export function SearchBox({ action = "/", name = "question", value = "", placeho
           ))}
         </ul>
       )}
-      {pending && <Loading label="Reading your question…" search />}
+      {pending && <Loading label={loading.label} steps={loading.steps} search />}
     </form>
   );
 }
