@@ -635,3 +635,8 @@ main:has(.serp) { max-width: 1400px; }
   main:has(.serp) .serp-main { padding: 2px 14px 72px 16px; margin: 0 -16px; scrollbar-gutter: stable; }
   main:has(.serp) .serp-rail { scrollbar-gutter: stable; padding-right: 2px; }
 }
+/* macOS overlay scrollbars float over content (scrollbar-gutter doesn't reserve space for them): keep a clear lane on the right */
+@media (min-width: 901px) {
+  main:has(.serp) .serp-main { padding-right: 26px; margin-right: -26px; }
+  main:has(.serp) .serp-rail { padding-right: 14px; margin-right: -14px; }
+}
