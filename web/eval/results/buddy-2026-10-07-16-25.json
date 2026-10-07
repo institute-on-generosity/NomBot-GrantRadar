@@ -1,0 +1,3577 @@
+{
+ "stamp": "2026-10-07-16-25",
+ "rows": [
+  {
+   "q": "animal shelters in Ohio",
+   "ask": "Which is the strongest fit, and why?",
+   "answer": "**The Cleveland Animal Protective League** is the strongest fit if you want a large, full-service shelter with clear results in its filing. It runs a 40,000-square-foot shelter, took in 6,952 animals in 2024, and reports a 92% save rate [1]. Which fit is \"strongest\" depends on what you care about most.\n\n- **Scale and scope:** The Cleveland APL has the largest revenue (about $10.4M) and is also the lead cruelty-investigation agency in Cuyahoga County [1].\n- **No-kill focus:** **League For Animal Welfare** is a no-kill shelter serving Greater Cincinnati. It reported 2,118 adoptions and 1,656 spay/neuter surgeries in 2024 [2].\n- **Mid-size with detail:** **Humane Society Of Delaware County** reported 1,906 adoptions in 2024 and says it does not euthanize for length of stay or lack of space [8].\n- **Thin evidence:** Some large groups give little program detail, so their work is hard to judge from the filings. Examples are **Cincinnati Animal Care** [5] and **Angels For Animals** [12].",
+   "ms": 9377,
+   "claims": [
+    {
+     "claim": "The Cleveland APL runs a 40,000-square-foot shelter.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 40,000-square-foot shelter and resource center."
+    },
+    {
+     "claim": "The Cleveland APL took in 6,952 animals in 2024.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 6,952 animals brought in during 2024."
+    },
+    {
+     "claim": "The Cleveland APL reports a 92% save rate.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states overall 92% save rate."
+    },
+    {
+     "claim": "The Cleveland APL has the largest revenue (about $10.4M).",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "$10,411,587 is highest among listed records."
+    },
+    {
+     "claim": "The Cleveland APL is the lead cruelty-investigation agency in Cuyahoga County.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states lead agency for investigating cruelty in Cuyahoga County."
+    },
+    {
+     "claim": "League For Animal Welfare is a no-kill shelter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions compassionate, no-kill animal shelter."
+    },
+    {
+     "claim": "League For Animal Welfare serves Greater Cincinnati.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission references Greater Cincinnati."
+    },
+    {
+     "claim": "League For Animal Welfare reported 2,118 adoptions in 2024.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 2,118 adoptions in 2024."
+    },
+    {
+     "claim": "League For Animal Welfare performed 1,656 spay/neuter surgeries in 2024.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,656 surgeries, in the 2024 filing."
+    },
+    {
+     "claim": "Humane Society Of Delaware County reported 1,906 adoptions in 2024.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,906 animals adopted in 2024."
+    },
+    {
+     "claim": "Humane Society Of Delaware County does not euthanize for length of stay or lack of space.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states no euthanasia for length of stay or overcrowding."
+    },
+    {
+     "claim": "Cincinnati Animal Care is a large group giving little program detail.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "$6.45M revenue; programs text repeats mission only."
+    },
+    {
+     "claim": "Angels For Animals is a large group giving little program detail.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "$7.6M revenue; one-line program description."
+    }
+   ],
+   "words": 160
+  },
+  {
+   "q": "animal shelters in Ohio",
+   "ask": "Which of these run low-cost spay and neuter programs?",
+   "answer": "None of these filings use the words \"low-cost,\" so I can't confirm pricing for any of them. A few do describe spay/neuter services that reach beyond their own shelter animals:\n\n- **League For Animal Welfare** runs a wellness clinic that serves other shelters, rescues and \"the community at large,\" with 1,656 spay/neuter surgeries in 2024 [2].\n- **Wood County Humane Society** has a \"SNIP\" program that gives spay/neuter \"assistance\" to pet owners, local groups and government agencies [11].\n- **Union County Humane Society** spays/neuters all its adopted animals plus many for local rescue groups [13].\n- **Toledo Animal Shelter Association** [3], **Animal Adoption Foundation** [4], **Animal Shelter Society** [6] and **Humane Society Of The Ohio Valley** [15] mention spay/neuter programs but don't say who they serve or what they cost.\n- **Stark County Humane Society** [10] and **Humane Society Of Delaware County** [8] describe spay/neuter only for adoptable animals. Stark passes the cost on through adoption fees [10].",
+   "ms": 11236,
+   "claims": [
+    {
+     "claim": "League For Animal Welfare runs a wellness clinic serving other shelters, rescues and the community at large.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record describes Wellness Clinic serving these groups."
+    },
+    {
+     "claim": "League For Animal Welfare performed 1,656 spay/neuter surgeries in 2024.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,656 spay/neuter surgeries; 2024 context given."
+    },
+    {
+     "claim": "Wood County Humane Society has a SNIP program giving spay/neuter assistance to pet owners, local groups and government agencies.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record states SNIP assists these groups."
+    },
+    {
+     "claim": "Union County Humane Society spays/neuters all its adopted animals.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record says 100% of adopted animals."
+    },
+    {
+     "claim": "Union County Humane Society spays/neuters many animals for local rescue groups.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record states many for local rescue groups."
+    },
+    {
+     "claim": "Toledo Animal Shelter Association mentions a spay/neuter program.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record mentions mandatory spay/neuter program."
+    },
+    {
+     "claim": "Animal Adoption Foundation mentions a spay/neuter program.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record mentions spay/neuter programs."
+    },
+    {
+     "claim": "Animal Shelter Society mentions spay/neuter programs.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record mentions programs promoting spaying and neutering."
+    },
+    {
+     "claim": "Humane Society Of The Ohio Valley mentions spay/neuter.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record lists spay & neuter of animals."
+    },
+    {
+     "claim": "Stark County Humane Society describes spay/neuter only for shelter animals.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record describes altering shelter animals only."
+    },
+    {
+     "claim": "Humane Society Of Delaware County describes spay/neuter only for adoptable animals.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record mentions spay/neuter for adopted animals only."
+    },
+    {
+     "claim": "Stark County Humane Society passes spay/neuter costs on through adoption fees.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record states cost passed on in adoption fees."
+    }
+   ],
+   "words": 158
+  },
+  {
+   "q": "food banks in rural Appalachia that do workforce training, under $500K",
+   "ask": "Compare the top 3",
+   "answer": "**Morgan-Scott Project** [1] has the clearest evidence of actual job training. **City of Refuge Pulaski** [2] runs by far the largest food operation, but its job help is lighter. **Empower Cocke County** [3] has the most money but the least detail.\n\n- **Job training:** Morgan-Scott reports training 42 people [1]. City of Refuge lists job training and placement in its mission, but its programs describe only interview clothing and coaching within a support program for women and children (320 families) [2]. Empower Cocke County mentions job training with no numbers [3].\n- **Food scale:** City of Refuge served 10,491 families with about 250,000 pounds of food and supplies [2]. Morgan-Scott gave out 916 food boxes and runs a weekly food line averaging 85 families [1]. Empower Cocke County gives no figures [3].\n- **Size:** Revenue is $497,979 for Empower Cocke County [3], just under your cap, versus $315,307 [1] and $227,813 [2].\n- **Finances:** Morgan-Scott's expenses ($343,037) exceeded its revenue [1]. Empower Cocke County's expenses ($154,323) were far below its revenue [3], but the filing doesn't explain the gap, and the two figures are from different years.\n- **Location caveat:** None of the filings describe themselves as rural or Appalachian. That's based only on their addresses in Tennessee [1][3] and Virginia [2].",
+   "ms": 10907,
+   "claims": [
+    {
+     "claim": "Morgan-Scott Project has the clearest evidence of actual job training among the three.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record reports job training to 42 individuals; others give no numbers."
+    },
+    {
+     "claim": "City of Refuge Pulaski runs by far the largest food operation of the three.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "10,491 families and 250,000 lbs far exceed the others' figures."
+    },
+    {
+     "claim": "City of Refuge's job help is lighter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs mention only interview clothing and coaching."
+    },
+    {
+     "claim": "Empower Cocke County has the most money of the three.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "$497,979 revenue is the highest of the three."
+    },
+    {
+     "claim": "Empower Cocke County provides the least detail.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs give a brief description with no figures."
+    },
+    {
+     "claim": "Morgan-Scott trained 42 people.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states job training to 42 individuals."
+    },
+    {
+     "claim": "City of Refuge lists job training and placement in its mission.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions job training/placement assistance."
+    },
+    {
+     "claim": "City of Refuge's programs describe interview clothing and coaching within a support program for women and children serving 320 families.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Community support program states this, with 320 families served."
+    },
+    {
+     "claim": "Empower Cocke County mentions job training with no numbers.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs list job training without figures."
+    },
+    {
+     "claim": "City of Refuge served 10,491 families.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 10,491 families served."
+    },
+    {
+     "claim": "City of Refuge issued about 250,000 pounds of food and supplies.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states approximately 250,000 pounds."
+    },
+    {
+     "claim": "Morgan-Scott gave out 916 food boxes.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 916 food boxes."
+    },
+    {
+     "claim": "Morgan-Scott runs a weekly food line averaging 85 families.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states this."
+    },
+    {
+     "claim": "Empower Cocke County gives no food figures.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record contains no food numbers."
+    },
+    {
+     "claim": "Empower Cocke County revenue is $497,979.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record lists this revenue."
+    },
+    {
+     "claim": "Morgan-Scott revenue is $315,307.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record lists this revenue."
+    },
+    {
+     "claim": "City of Refuge revenue is $227,813.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record lists this revenue."
+    },
+    {
+     "claim": "Morgan-Scott's expenses of $343,037 exceeded its revenue.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "$343,037 is greater than the stated $315,307 revenue."
+    },
+    {
+     "claim": "Empower Cocke County's expenses of $154,323 were far below its revenue.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "$154,323 is well below $497,979."
+    },
+    {
+     "claim": "Empower Cocke County's revenue and expense figures are from different years.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Revenue is from 2024; expenses are from 2023."
+    },
+    {
+     "claim": "Morgan-Scott and Empower Cocke County are located in Tennessee.",
+     "cites": [
+      1,
+      3
+     ],
+     "verdict": "supported",
+     "why": "Records list Deer Lodge, TN and Newport, TN."
+    },
+    {
+     "claim": "City of Refuge is located in Virginia.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record lists Pulaski, VA."
+    }
+   ],
+   "words": 212
+  },
+  {
+   "q": "food banks in rural Appalachia that do workforce training, under $500K",
+   "ask": "Which ones report how many people they trained?",
+   "answer": "Only two filings give a clear count of people trained: **Morgan-Scott Project For Co-Operative Christian Concerns** (42 people) [1] and **Community Cup Coffee And More Inc** (6 people) [13]. A few others give counts of people served that include some training.\n\n- **Morgan-Scott** reports job training for 42 individuals, alongside food boxes and a weekly food line [1].\n- **Community Cup** has six people in its coffee-shop job-training program, but it doesn't report running a food bank [13].\n- **Seek And Find Yourself Inc** served about 18 residents, with job readiness among its services, but doesn't say how many were trained [14].\n- **City Of Refuge Pulaski Inc** served 320 families and 800 individuals in a program that includes job-interview coaching, but doesn't count training separately [2].\n- The rest mention job training or workforce work without numbers [3][5][6][7][8][9][11][15], or list employment resources among services for over 1,000 people [4].",
+   "ms": 5536,
+   "claims": [
+    {
+     "claim": "Morgan-Scott reports job training for 42 individuals.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states job training to 42 individuals."
+    },
+    {
+     "claim": "Community Cup has six people in its job-training program.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record says six individuals in the program."
+    },
+    {
+     "claim": "Morgan-Scott provides food boxes and a weekly food line.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "916 food boxes and weekly food line stated."
+    },
+    {
+     "claim": "Community Cup's job training is in a coffee-shop setting.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record describes coffee shop setting training."
+    },
+    {
+     "claim": "Seek And Find Yourself served about 18 residents.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Approximately 18 residents stated."
+    },
+    {
+     "claim": "Seek And Find Yourself includes job readiness among its services.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Job readiness and life skills training listed."
+    },
+    {
+     "claim": "City Of Refuge served 320 families and 800 individuals in community support services.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 320 families and 800 individuals."
+    },
+    {
+     "claim": "City Of Refuge's program includes job-interview coaching.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Coaching for job interviews listed."
+    },
+    {
+     "claim": "Organizations 3,5,6,7,8,9,11,15 mention job training or workforce work.",
+     "cites": [
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      15
+     ],
+     "verdict": "supported",
+     "why": "Each record mentions training, employment, or workforce development."
+    },
+    {
+     "claim": "Pinnacle Of Purpose lists employment resources among services for over 1,000 people.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission lists employment, served over 1000 people."
+    }
+   ],
+   "words": 150
+  },
+  {
+   "q": "homeless shelters in Louisville",
+   "ask": "Which of these actually operate a shelter?",
+   "answer": "Based on the filings, six clearly describe running a shelter, two run day shelters only, and two are unclear because the relevant text is cut off or not included.\n\n- **Overnight/emergency shelter:** **Wayside Christian Mission** (400+ people nightly, plus a 100-bed low-barrier shelter) [1]; **Healing Place** (overnight shelters within an addiction-recovery program) [8]; **Sweet Evening Breeze** (LGBTQ+ youth) [3]; **House of Hope Kentucky** (homeless women in recovery) [9]; **Soul Shelter** (one home operating through a partner, two under renovation) [13].\n- **Day shelter only:** **St John Center** [2] and **Uniting Partners for Women and Children** [5].\n- **Unclear:** **St Vincent de Paul** lists Ozanam Inn but its details are in Schedule O, which isn't provided [4]. **Jefferson Street Baptist Center**'s program text cuts off at \"emergenc…\" [10].\n- **Housing, not shelter:** Transitional or permanent housing at [6], [7], [11], [12], [15].\n- **Outreach:** **Louisville Outreach for the Unsheltered** gives rides to shelters and pays for hotel rooms but runs no shelter [14].",
+   "ms": 8391,
+   "claims": [
+    {
+     "claim": "Six of the organizations clearly describe running a shelter.",
+     "cites": [],
+     "verdict": "unsupported",
+     "why": "Only five organizations are listed as shelters; count is inconsistent."
+    },
+    {
+     "claim": "Wayside Christian Mission provides emergency lodging for 400+ people nightly.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states emergency lodging for 400 and more persons nightly."
+    },
+    {
+     "claim": "Wayside Christian Mission runs a 100-person low-barrier shelter.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Low barrier shelter lodges 100 persons nightly."
+    },
+    {
+     "claim": "Healing Place operates overnight shelters within an addiction-recovery program.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Programs list overnight shelters within residential recovery program."
+    },
+    {
+     "claim": "Sweet Evening Breeze provides emergency shelter for LGBTQ+ youth.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states emergency shelter for LGBTQ+ youth experiencing homelessness."
+    },
+    {
+     "claim": "House of Hope Kentucky provides shelter to homeless women in recovery.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states shelter to homeless women during rehabilitation."
+    },
+    {
+     "claim": "Soul Shelter has one home providing shelter through a partner and two under renovation.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record states exactly this for 2024."
+    },
+    {
+     "claim": "St John Center runs a day shelter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record describes day shelter and social services center."
+    },
+    {
+     "claim": "Uniting Partners for Women and Children runs a day shelter.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mission states UP provides day shelter."
+    },
+    {
+     "claim": "St Vincent de Paul lists Ozanam Inn with details in Schedule O.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs say 'Ozanam inn - see schedule o'."
+    },
+    {
+     "claim": "Jefferson Street Baptist Center's program text cuts off at 'emergenc'.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record text ends with 'emergenc'."
+    },
+    {
+     "claim": "Community Advocates for Resources & Empowerment provides transitional housing.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Programs state transitional housing and case management."
+    },
+    {
+     "claim": "Choices Inc provides permanent housing.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Operates five permanent supported housing services."
+    },
+    {
+     "claim": "Rhondas Another Chance provides transitional housing.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record describes a transitional home for homeless women."
+    },
+    {
+     "claim": "Kaylyns House of Joy provides housing rather than shelter.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Independent Living Program houses homeless adolescent females."
+    },
+    {
+     "claim": "Women in Circle provides transitional housing.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record describes a transitional house for women in recovery."
+    },
+    {
+     "claim": "Louisville Outreach for the Unsheltered gives rides to shelters.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Cold Weather serves provided rides to shelter."
+    },
+    {
+     "claim": "Louisville Outreach for the Unsheltered pays for hotel rooms.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Provided hotel rooms for over 35 individuals."
+    }
+   ],
+   "words": 162
+  },
+  {
+   "q": "youth mentoring nonprofits in Kentucky under $1M",
+   "ask": "Which ones are small and community-run?",
+   "answer": "The filings don't say who runs these groups, so \"community-run\" can't be confirmed. All 15 are under $1M, and the smallest (under about $60K revenue) are the closest fit by size.\n\n- **100 Black Men Of Louisville Inc** is the smallest at $28,473 revenue and reports mentoring 58 young African American males [5].\n- **Youth Ethics And Skills Center** has $32,476 revenue, but its listed programs are a coat drive and tech classes rather than mentoring specifics [8].\n- **Links Inc** has $51,283 revenue. Its mission mentions \"enriching its members,\" suggesting a membership group, and it mentored youth in Frankfort and Lexington [14].\n- **Children Have Options In Choosing Experiences Inc** has $56,288 revenue and offers mentoring and counseling as alternatives to drugs and alcohol [9].\n- **Mentors & Meals** is larger ($288,782) but the only filing that names volunteers: high school mentors, college interns and adult volunteers [3].\n\nThe trade-off is that the tiniest groups give little program detail, while Mentors & Meals shows volunteer involvement and an outcome evaluation [3].",
+   "ms": 6046,
+   "claims": [
+    {
+     "claim": "All 15 organizations have revenue under $1M.",
+     "cites": [],
+     "verdict": "no_citation",
+     "why": "Factual claim about the organizations, no citation given."
+    },
+    {
+     "claim": "100 Black Men Of Louisville Inc is the smallest at $28,473 revenue.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Revenue stated; lowest among listed records."
+    },
+    {
+     "claim": "100 Black Men Of Louisville Inc reports mentoring 58 young African American males.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record says mentored 58 disadvantaged African male youths."
+    },
+    {
+     "claim": "Youth Ethics And Skills Center has $32,476 revenue.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches record."
+    },
+    {
+     "claim": "Youth Ethics And Skills Center's listed programs are a coat drive and tech classes.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Programs list coat drive and tech classes."
+    },
+    {
+     "claim": "Links Inc has $51,283 revenue.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches record."
+    },
+    {
+     "claim": "Links Inc's mission mentions enriching its members.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Mission text states this."
+    },
+    {
+     "claim": "Links Inc mentored youth in Frankfort and Lexington.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs state this."
+    },
+    {
+     "claim": "Children Have Options In Choosing Experiences Inc has $56,288 revenue.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches record."
+    },
+    {
+     "claim": "CHOICE offers mentoring and counseling as alternatives to drugs and alcohol.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Mission states this."
+    },
+    {
+     "claim": "Mentors & Meals has $288,782 revenue.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches record."
+    },
+    {
+     "claim": "Mentors & Meals is the only filing naming volunteers: high school mentors, college interns and adult volunteers.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record names these; no other record mentions volunteers."
+    },
+    {
+     "claim": "Mentors & Meals has an outcome evaluation.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "3-year program evaluation described."
+    }
+   ],
+   "words": 172
+  },
+  {
+   "q": "youth mentoring nonprofits in Kentucky under $1M",
+   "ask": "Which report outcomes for the youth they serve?",
+   "answer": "Only two filings report actual results for youth: **Mentors & Meals** [3] and **2not1 Fatherhood & Families** [15]. A few others report how many youth they served, but not results.\n\n- **Mentors & Meals** [3] has the strongest evidence. A 3-year evaluation (completed December 2016) found statistically significant gains in Language Arts and Social Studies grades and a trend toward better Math grades, compared with similar non-participating students. The evaluation is now several years old.\n- **2not1** [15] reports that 100% of its Rites of Passage youth gained conflict-management skills and mentions a decrease in negative in-school behavior, though that text is cut off. It says a research team is working on a more rigorous evaluation [15].\n- **Wanda Joyce Robinson Foundation** (500+ children) [6], **100 Black Men of Louisville** (58 youth) [5], and **Transform Scott County** (35 youth) [11] report only how many youth they served.\n- **Mentoring Plus** [4] and **Thompson Scholars Foundation** [1] state goals but report no results. The rest describe only activities.",
+   "ms": 6327,
+   "claims": [
+    {
+     "claim": "Mentors & Meals had a 3-year evaluation completed December 2016.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states 3-year evaluation completed December 2016."
+    },
+    {
+     "claim": "The evaluation found statistically significant gains in Language Arts and Social Studies grades.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Stated at 99% confidence level."
+    },
+    {
+     "claim": "The evaluation found a trend toward better Math grades.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record notes trend at 90% confidence."
+    },
+    {
+     "claim": "Comparison was with similar non-participating students.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Same district, school, demographics non-participants."
+    },
+    {
+     "claim": "100% of 2not1 Rites of Passage youth gained conflict-management skills.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states one hundred percent gained conflict management skills."
+    },
+    {
+     "claim": "2not1 mentions a decrease in negative in-school behavior, with text cut off.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Truncated sentence 'ROP reported a decrease in negative in-school'."
+    },
+    {
+     "claim": "2not1 says a research team is working on a more rigorous evaluation.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Working with research team on rigorous evaluation methodology."
+    },
+    {
+     "claim": "Wanda Joyce Robinson Foundation serves 500+ children.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "More than 500 children and youth served."
+    },
+    {
+     "claim": "100 Black Men of Louisville mentored 58 youth.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mentored 58 disadvantaged youths."
+    },
+    {
+     "claim": "Transform Scott County served 35 youth.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Youth Mentoring served 35 local youths."
+    },
+    {
+     "claim": "Mentoring Plus states goals but reports no results.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs list only objectives."
+    },
+    {
+     "claim": "Thompson Scholars Foundation states goals but reports no results.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Describes program goal only, no results."
+    }
+   ],
+   "words": 167
+  },
+  {
+   "q": "addiction recovery programs in West Virginia",
+   "ask": "Which offer residential treatment?",
+   "answer": "Only **Pollen8 Llc** explicitly describes residential treatment: a licensed behavioral health facility with 24-hour supervised residential treatment for women with substance use disorder [10]. Many others offer recovery housing rather than clinical treatment.\n\n- **Transitional or sober living homes:** **Southern West Virginia Fellowship Home** (6–18 months, 12-step) [1], **Rea Of Hope Fellowship Home** (women) [2], **Hawc Foundation** (WVARR certified) [8], **Semper Liberi** [9], **Hero House** (faith-based) [12], and **Redemption By Grace** (housed 40 men) [6].\n- **Faith-based live-in programs:** **Storehouse Inc** provides free housing for up to a year [7], and **One Unique Recovery House** provides housing and programming for women [15].\n- **Treatment plus housing:** **Ten Up Ministries Thrift Store** runs a behavioral health agency with medication-assisted treatment and a sober living home, but doesn't say whether treatment is residential [13].\n- **Clinical but setting unclear:** **Fmrs Health Systems** offers substance abuse treatment [14], and **Recovery Point Of Hunting** [4] and **Union Mission Behavioral Health Center** [3] don't describe their setting.",
+   "ms": 15844,
+   "claims": [
+    {
+     "claim": "Pollen8 Llc operates a licensed behavioral health facility offering 24-hour supervised residential treatment for women with substance use disorder.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Programs describe Appalachian Behavioral HealthCare exactly this way."
+    },
+    {
+     "claim": "Southern West Virginia Fellowship Home provides 6–18 months of transitional living.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs state 6-18 months structured transitional living."
+    },
+    {
+     "claim": "Southern West Virginia Fellowship Home uses a 12-step approach.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Residents practice principles of 12-step programs."
+    },
+    {
+     "claim": "Rea Of Hope Fellowship Home provides recovery housing for women.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission: safe housing for West Virginia women in recovery."
+    },
+    {
+     "claim": "Hawc Foundation offers WVARR certified transitional living.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs state WVARR certified transitional living."
+    },
+    {
+     "claim": "Semper Liberi offers transitional housing.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs list transitional housing services."
+    },
+    {
+     "claim": "Hero House is a faith-based sober living home.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Programs: faith based sober living home."
+    },
+    {
+     "claim": "Redemption By Grace housed 40 men.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Programs state it housed 40 men."
+    },
+    {
+     "claim": "Storehouse Inc is a faith-based live-in program.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Mission references biblical principles; provides housing."
+    },
+    {
+     "claim": "Storehouse Inc provides free housing for up to a year.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Free program providing housing up to a year."
+    },
+    {
+     "claim": "One Unique Recovery House is a faith-based program.",
+     "cites": [
+      15
+     ],
+     "verdict": "unsupported",
+     "why": "Record mentions no religious or faith component."
+    },
+    {
+     "claim": "One Unique Recovery House provides housing and programming for women.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Programs state housing and programming to women."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store runs a behavioral health agency.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions operating a behavioral health agency."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store provides medication-assisted treatment.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Programs mention medication assisted treatment."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store runs a sober living home.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions sober living home."
+    },
+    {
+     "claim": "Fmrs Health Systems offers substance abuse treatment.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs list substance abuse assessment and treatment services."
+    }
+   ],
+   "words": 162
+  },
+  {
+   "q": "addiction recovery programs in West Virginia",
+   "ask": "Compare the two largest by revenue",
+   "answer": "The two largest are **Fmrs Health Systems Inc** in Beckley [14] and **Recovery Point Of Hunting Inc** in Huntington [4]. Fmrs is a broad behavioral health provider where addiction is one service among many, while Recovery Point is focused solely on addiction but describes its work only vaguely.\n\n- **Size:** Fmrs reports $18.5M revenue (2025), $17.2M expenses and $13.1M assets (2023) [14]. Recovery Point reports $6.4M revenue (2025), $5.6M expenses and $9.4M assets (2023) [4].\n- **Focus:** Fmrs runs a federally funded substance abuse assessment and treatment program alongside outpatient, crisis, day treatment and case management services [14]. Recovery Point's mission is recovery from alcohol and drug addiction only [4].\n- **Program detail:** Fmrs itemizes its programs [14]. Recovery Point's filing repeats its mission without describing specific services, though its IRS cause category is Housing & Shelter [4].\n- **Outcomes:** Neither filing reports participant numbers or results [4][14].",
+   "ms": 7244,
+   "claims": [
+    {
+     "claim": "Fmrs Health Systems Inc is one of the two largest by revenue",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "$18.5M is the highest revenue listed."
+    },
+    {
+     "claim": "Recovery Point Of Hunting Inc is the second largest by revenue",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "$6.4M is second highest, above Ten Up's $4.7M."
+    },
+    {
+     "claim": "Fmrs is located in Beckley",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record lists Beckley, WV."
+    },
+    {
+     "claim": "Recovery Point is located in Huntington",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record lists Huntington, WV."
+    },
+    {
+     "claim": "Fmrs is a broad behavioral health provider where addiction is one service among many",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs list substance abuse among many services."
+    },
+    {
+     "claim": "Recovery Point is focused solely on addiction",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs mention only addiction recovery."
+    },
+    {
+     "claim": "Fmrs reports $18.5M revenue (2025)",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Revenue $18,531,010 (2025)."
+    },
+    {
+     "claim": "Fmrs reports $17.2M expenses (2023)",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Expenses $17,245,064."
+    },
+    {
+     "claim": "Fmrs reports $13.1M assets (2023)",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Assets $13,132,034."
+    },
+    {
+     "claim": "Recovery Point reports $6.4M revenue (2025)",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Revenue $6,437,460 (2025)."
+    },
+    {
+     "claim": "Recovery Point reports $5.6M expenses (2023)",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Expenses $5,630,510."
+    },
+    {
+     "claim": "Recovery Point reports $9.4M assets (2023)",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Assets $9,412,484."
+    },
+    {
+     "claim": "Fmrs runs a federally funded substance abuse assessment and treatment program",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "Fmrs offers outpatient, crisis, day treatment and case management services",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "All listed in programs."
+    },
+    {
+     "claim": "Recovery Point's mission is recovery from alcohol and drug addiction",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs mention addiction to alcohol and drugs."
+    },
+    {
+     "claim": "Recovery Point's filing repeats its mission without describing specific services",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs text nearly identical to mission."
+    },
+    {
+     "claim": "Recovery Point's IRS cause category is Housing & Shelter",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Cause listed as Housing & Shelter."
+    }
+   ],
+   "words": 148
+  },
+  {
+   "q": "free health clinics in Virginia",
+   "ask": "Which serve uninsured patients, and how many?",
+   "answer": "Twelve of the 15 filings explicitly mention serving uninsured people, but only four report how many patients they served. **Hanover Interfaith Free Clinics** [2], **Shenandoah County Free Clinic** [3] and **Blue Ridge Free Clinic** [8] describe low-income, underinsured or \"health-insecure\" patients without using the word \"uninsured.\"\n\n- **Sinclair Health Clinic** reports 2,650 unique patients and over 15,000 visits in FY2024 [12].\n- **The Fauquier Free Clinic** reports 2,242 patients and over 12,200 visits in the past twelve months, including Medicaid-insured as well as uninsured patients [7].\n- **St Luke Community Clinic** reports 275 unduplicated patients and 518 medical visits in 2024 [9].\n- **Virginia Telemental Health Initiative**, a statewide virtual mental health clinic, reports 300+ unique patients since it began [14].\n- Larger groups like **Piedmont Access To Health Services** (about $43M in expenses) [15], **Arlington Free Clinic** [6], **Western Tidewater Free Clinic** [5] and **Charlottesville Free Clinic** [1] don't give patient counts. Neither do **Guadalupe Free Clinic** [4], **Ledwith Lewis Free Clinic** [10], **Tri-County Health Clinic** [11] or **Baileys Crossroads Health Access Partnership** [13].",
+   "ms": 10402,
+   "claims": [
+    {
+     "claim": "Hanover Interfaith Free Clinics describes its patients without using the word 'uninsured.'",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record cites income eligibility only and never says uninsured."
+    },
+    {
+     "claim": "Shenandoah County Free Clinic describes low-income, underinsured patients without using the word 'uninsured.'",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record says low-income, underinsured; 'uninsured' is absent."
+    },
+    {
+     "claim": "Blue Ridge Free Clinic describes 'health-insecure' patients without using the word 'uninsured.'",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record uses 'health-insecure'; 'uninsured' is absent."
+    },
+    {
+     "claim": "Sinclair Health Clinic served 2,650 unique patients in FY2024.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record states 2650 unique patients in FY2024."
+    },
+    {
+     "claim": "Sinclair Health Clinic reported over 15,000 visits.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record states services totaling over 15,000 visits."
+    },
+    {
+     "claim": "The Fauquier Free Clinic served 2,242 patients in the past twelve months.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record states 2,242 different patients."
+    },
+    {
+     "claim": "The Fauquier Free Clinic provided over 12,200 visits.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record states over 12,200 patient care visits."
+    },
+    {
+     "claim": "The Fauquier Free Clinic serves Medicaid-insured as well as uninsured patients.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record mentions both Medicaid insured and uninsured patients."
+    },
+    {
+     "claim": "St Luke Community Clinic served 275 unduplicated patients in 2024.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states 275 unduplicated patients in 2024."
+    },
+    {
+     "claim": "St Luke Community Clinic conducted 518 medical visits in 2024.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states 518 medical visits."
+    },
+    {
+     "claim": "Virginia Telemental Health Initiative is a statewide virtual mental health clinic.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record states it is the first statewide virtual free mental health clinic."
+    },
+    {
+     "claim": "Virginia Telemental Health Initiative has served 300+ unique patients since inception.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record states 300+ unique patients since inception."
+    },
+    {
+     "claim": "Piedmont Access To Health Services has about $43M in expenses.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record lists expenses of $42,977,203."
+    },
+    {
+     "claim": "Piedmont, Arlington, Western Tidewater and Charlottesville do not give patient counts.",
+     "cites": [
+      15,
+      6,
+      5,
+      1
+     ],
+     "verdict": "supported",
+     "why": "None of these records give patient counts."
+    },
+    {
+     "claim": "Guadalupe, Ledwith Lewis, Tri-County and Baileys Crossroads do not give patient counts.",
+     "cites": [
+      4,
+      10,
+      11,
+      13
+     ],
+     "verdict": "supported",
+     "why": "None of these records give patient counts."
+    }
+   ],
+   "words": 175
+  },
+  {
+   "q": "domestic violence shelters in Kentucky",
+   "ask": "Which is the strongest fit, and why?",
+   "answer": "**Center For Women And Families Inc** [7] in Louisville is the strongest fit on the evidence in its filing. It describes a 79-bed emergency shelter for domestic violence victims and their children, plus a 24-hour call center that coordinates shelter admissions [7]. Others may fit better depending on location or the scope you need.\n\n- **Ion Center For Violence Prevention Inc** [6] runs two emergency shelters and a 24-hour hotline. It's a similar size [6, 7], but it covers a broader range of violence, so shelter is one part of a wider mission [6].\n- **Cumberland Valley Domestic Violence Services Inc** [3] is the most narrowly focused. Its whole mission is shelter, and it reports serving over 1,200 victims, though it's much smaller [3].\n- **Barren River Area Safe Space Inc** [2] and **Bethany House Abuse Shelter Inc** [1] are dedicated domestic violence shelters, with 24/7 shelter described by Barren River [2]. Their filings give less detail.\n- **Zerov Inc** [9] has the largest revenue but funds local providers through subcontracts rather than running a shelter itself [9].\n- **Father Bradley Shelter** [10] and **Franklin County Women And Family Shelter** [14] are general women's and homeless shelters, and their filings don't mention domestic violence [10, 14].",
+   "ms": 8195,
+   "claims": [
+    {
+     "claim": "Center For Women And Families Inc is located in Louisville.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record lists Louisville, KY."
+    },
+    {
+     "claim": "Center For Women And Families operates a 79-bed emergency shelter for domestic violence victims and their children.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Programs describe an emergency shelter with 79 beds for DV victims and children."
+    },
+    {
+     "claim": "Center For Women And Families runs a 24-hour call center that coordinates shelter admissions.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Call center program explicitly coordinates shelter admissions."
+    },
+    {
+     "claim": "Ion Center runs two emergency shelters.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Programs mention two emergency shelters."
+    },
+    {
+     "claim": "Ion Center runs a 24-hour hotline.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Programs mention a 24-hour text or hotline."
+    },
+    {
+     "claim": "Ion Center is similar in size to Center For Women And Families.",
+     "cites": [
+      6,
+      7
+     ],
+     "verdict": "supported",
+     "why": "Revenues are $6.24M and $6.90M."
+    },
+    {
+     "claim": "Ion Center covers a broader range of violence than domestic violence alone.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Mission covers sexual violence, child abuse, stalking, and intimate partner violence."
+    },
+    {
+     "claim": "Cumberland Valley's mission is shelter for domestic violence victims.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission: to provide shelter for victims of domestic violence."
+    },
+    {
+     "claim": "Cumberland Valley served over 1,200 victims.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs state over 1,200 victims received services."
+    },
+    {
+     "claim": "Cumberland Valley is much smaller than Center For Women And Families.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "$1.3M revenue versus $6.9M revenue in record 7."
+    },
+    {
+     "claim": "Barren River Area Safe Space is a dedicated domestic violence shelter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs describe a spouse abuse shelter."
+    },
+    {
+     "claim": "Bethany House is a dedicated domestic violence shelter.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission is a safe haven for domestic violence victims."
+    },
+    {
+     "claim": "Barren River describes 24/7 shelter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs mention 24 hour, 7 days per week protection."
+    },
+    {
+     "claim": "Zerov Inc has the largest revenue.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "At $25.6M, it is the highest revenue among the records."
+    },
+    {
+     "claim": "Zerov funds local providers through subcontracts.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs mention sub-contracts with primary service providers."
+    },
+    {
+     "claim": "Father Bradley Shelter is a general women's shelter.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Mission is emergency shelter for women and children."
+    },
+    {
+     "claim": "Franklin County Women And Family Shelter is a homeless shelter.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Mission serves homeless women and families."
+    }
+   ],
+   "words": 206
+  },
+  {
+   "q": "after-school STEM programs in Virginia",
+   "ask": "Which ones focus on girls or underrepresented students?",
+   "answer": "Two organizations explicitly focus on girls: **Boolean Girl Inc** and **STEM for Her Foundation** [1][15]. Only Boolean Girl's filing describes after-school classes specifically [1].\n\n- **Boolean Girl** serves girls in grades 3–8 and individuals from underrepresented groups through after-school classes, summer camps, and teacher training. It gives priority to schools with many low-income or underrepresented students [1].\n- **STEM for Her** targets high school girls, but its filing describes events and workshops, such as a 300+ student STEM day, rather than a recurring after-school program [15].\n- **Boys and Girls Club of Central Appalachia** doesn't focus on girls, but it emphasizes youth from disadvantaged circumstances and lists extensive STEM offerings like robotics and coding [13].\n- The other two Boys & Girls Clubs say they prioritize youth \"who need us most,\" but their filings don't define that group or describe a STEM-specific focus for it [11][14].\n\nThe trade-off is that Boolean Girl best matches a girls-focused after-school STEM program, while STEM for Her offers one-day exposure events for older students.",
+   "ms": 7318,
+   "claims": [
+    {
+     "claim": "Boolean Girl Inc explicitly focuses on girls.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission targets girls and women in STEM."
+    },
+    {
+     "claim": "STEM for Her Foundation explicitly focuses on girls.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Mission targets girls and young women in STEM careers."
+    },
+    {
+     "claim": "Of the two, only Boolean Girl's filing describes after-school classes.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record 1 lists after-school classes; record 15 does not."
+    },
+    {
+     "claim": "Boolean Girl serves girls in grades 3–8.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission states grades three through eight."
+    },
+    {
+     "claim": "Boolean Girl serves individuals from underrepresented groups.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs mention individuals from underrepresented groups."
+    },
+    {
+     "claim": "Boolean Girl runs after-school classes, summer camps, and teacher training.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "All three programs listed."
+    },
+    {
+     "claim": "Boolean Girl prioritizes schools with many low-income or underrepresented students.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Teacher program states this priority."
+    },
+    {
+     "claim": "STEM for Her targets high school girls.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Programs serve high school female students."
+    },
+    {
+     "claim": "STEM for Her's filing describes events and workshops, including a 300+ student STEM day.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "STEM for Her Day serves 300+ students; workshops listed."
+    },
+    {
+     "claim": "Boys and Girls Club of Central Appalachia emphasizes youth from disadvantaged circumstances.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions special concern for disadvantaged circumstances."
+    },
+    {
+     "claim": "Boys and Girls Club of Central Appalachia lists STEM offerings like robotics and coding.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Lists lego robotics, coding, and more."
+    },
+    {
+     "claim": "Boys & Girls Clubs of Southwest Virginia and Central Virginia prioritize youth who need them most.",
+     "cites": [
+      11,
+      14
+     ],
+     "verdict": "supported",
+     "why": "Both missions say 'especially those who need us most'."
+    },
+    {
+     "claim": "STEM for Her offers one-day exposure events for older students.",
+     "cites": [],
+     "verdict": "no_citation",
+     "why": "Organization-specific claim in final sentence lacks citation."
+    }
+   ],
+   "words": 170
+  },
+  {
+   "q": "river and watershed conservation groups in Tennessee",
+   "ask": "Which do hands-on cleanups or restoration?",
+   "answer": "Several groups describe hands-on work in their filings. The most detailed stream and wetland restoration comes from the larger groups, while the smaller ones focus on cleanups and site upkeep.\n\n- **Large-scale stream restoration:** **Harpeth Conservancy** lists dam removal, green infrastructure and volunteer streamside tree planting [1]. **Cumberland River Compact** runs stream restoration, a Clean Water Act mitigation program, and tree and rain-garden planting [2].\n- **Most measurable results:** **Tennessee Wildlife Federation** reports 17 completed wetland projects (over 1,200 acres) and six stream projects (about 11 miles) [14].\n- **Cleanups:** **Keep The Tennessee River Beautiful** lists river cleanup as its only program [9]. **Obed Watershed Community Association** holds stream cleanups and does planting and invasive-plant removal on two wetland sites [5].\n- **Restoration with few details:** **Southern Conservation Corp** [15], **Waterways** [6] and **Tennessee Environmental Council** [12] mention restoration but give no specifics.\n- **Species restoration:** **Conservation Fisheries** breeds and stocks rare fish [13].",
+   "ms": 9873,
+   "claims": [
+    {
+     "claim": "Harpeth Conservancy does dam removal, green infrastructure and volunteer streamside tree planting.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs list dam removal, green infrastructure, volunteer riparian reforestation."
+    },
+    {
+     "claim": "Cumberland River Compact runs stream restoration projects.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs describe stream restoration projects in the basin."
+    },
+    {
+     "claim": "Cumberland River Compact runs a Clean Water Act mitigation program.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "In-lieu fee compensatory mitigation program under Clean Water Act."
+    },
+    {
+     "claim": "Cumberland River Compact plants trees and builds rain gardens.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Urban waters program plants trees and builds rain gardens."
+    },
+    {
+     "claim": "Tennessee Wildlife Federation completed 17 wetland projects totaling over 1,200 acres.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record states seventeen wetland projects over 1,200 acres complete."
+    },
+    {
+     "claim": "Tennessee Wildlife Federation completed six stream projects totaling about 11 miles.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record states six stream projects nearly eleven miles complete."
+    },
+    {
+     "claim": "Keep The Tennessee River Beautiful lists river cleanup as its only program.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs list only river cleanup."
+    },
+    {
+     "claim": "Obed Watershed Community Association holds stream cleanups.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Education programs include stream cleanups."
+    },
+    {
+     "claim": "Obed Watershed Community Association does planting and invasive-plant removal on two wetland sites.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Wetlands maintenance on two wetland properties includes planting, invasive removal."
+    },
+    {
+     "claim": "Southern Conservation Corp mentions restoration without specifics.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Programs: restoration of land and streams, no details."
+    },
+    {
+     "claim": "Waterways mentions restoration without specifics.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Lists watershed restoration only generally."
+    },
+    {
+     "claim": "Tennessee Environmental Council mentions restoration without specifics.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mentions reestablishing habitat generally, no specifics."
+    },
+    {
+     "claim": "Conservation Fisheries breeds and stocks rare fish.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record says CFI propagates and stocks rare fish species."
+    }
+   ],
+   "words": 154
+  },
+  {
+   "q": "community foundations in Ohio",
+   "ask": "Which are the largest by assets?",
+   "answer": "**The Findlay-Hancock County Community Foundation** ($158.6M) [2] and the **Community Foundation Of Lorain County** ($155.5M) [1] are by far the largest. Each holds roughly three times the assets of the next group. All figures below are 2023 assets.\n\n- **Marietta Community Foundation** has $52.9M in assets [7].\n- **Mercer County Civic Foundation** has $35.1M in assets [13], though its filing gives almost no program detail.\n- **Muskingum County Community Foundation** has $32.7M in assets [4].\n- **The Tiffin Community Foundation** has $31.7M in assets [9].\n- **Hudson Community Foundation** has $30.5M in assets [3] and reports administering over $27M in donor funds in 2024 [3].\n\nAssets show size, not activity. Findlay's 2024 revenue ($31.0M) was far above Lorain's ($7.6M) [1][2]. Lorain, however, spent more in its latest reported expenses ($8.3M vs. $7.3M) [1][2].",
+   "ms": 6462,
+   "claims": [
+    {
+     "claim": "The Findlay-Hancock County Community Foundation has $158.6M in assets.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $158,590,213 (2023)."
+    },
+    {
+     "claim": "The Community Foundation Of Lorain County has $155.5M in assets.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $155,503,428 (2023)."
+    },
+    {
+     "claim": "Findlay and Lorain are by far the largest by assets.",
+     "cites": [
+      1,
+      2
+     ],
+     "verdict": "supported",
+     "why": "The next largest, Marietta, has $52.9M."
+    },
+    {
+     "claim": "Findlay and Lorain each hold roughly three times the assets of the next group.",
+     "cites": [],
+     "verdict": "unsupported",
+     "why": "About 3x Marietta only; roughly 4.5–5x the other organizations in the group."
+    },
+    {
+     "claim": "Marietta Community Foundation has $52.9M in assets.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $52,909,393."
+    },
+    {
+     "claim": "Mercer County Civic Foundation has $35.1M in assets.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $35,148,781."
+    },
+    {
+     "claim": "Mercer County Civic Foundation's filing gives almost no program detail.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Programs field reads only 'All program services & scholarships'."
+    },
+    {
+     "claim": "Muskingum County Community Foundation has $32.7M in assets.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $32,717,904."
+    },
+    {
+     "claim": "The Tiffin Community Foundation has $31.7M in assets.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $31,735,505."
+    },
+    {
+     "claim": "Hudson Community Foundation has $30.5M in assets.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record lists assets of $30,488,545."
+    },
+    {
+     "claim": "Hudson administered over $27M in donor funds in 2024.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs section states this directly."
+    },
+    {
+     "claim": "Findlay's 2024 revenue ($31.0M) was far above Lorain's ($7.6M).",
+     "cites": [
+      1,
+      2
+     ],
+     "verdict": "supported",
+     "why": "Records list $30,972,257 vs $7,606,198."
+    },
+    {
+     "claim": "Lorain's expenses ($8.3M) exceeded Findlay's ($7.3M).",
+     "cites": [
+      1,
+      2
+     ],
+     "verdict": "supported",
+     "why": "Records list $8,320,617 vs $7,297,049."
+    }
+   ],
+   "words": 133
+  },
+  {
+   "q": "arts organizations in West Virginia",
+   "ask": "Which ones run programs in schools?",
+   "answer": "Three organizations explicitly mention working with schools in their filings: **Artsbridge Inc** [5], **Carnegie Hall A Corporation** [11] and **Foundry Theater Inc** [13]. A couple of others serve students, but their filings don't say the work happens in schools.\n\n- **Artsbridge** [5] has the most specific school work. It runs school tours that bring national arts tours to 16,000 elementary students, and its mission includes support \"in our schools.\"\n- **Carnegie Hall** [11] runs cultural programs \"in conjunction with local education systems,\" offering classes, tours and exhibits to thousands of children and youth.\n- **Foundry Theater** [13] says it provides educational arts programming \"for area schools\" but gives no details or numbers.\n- **Artslink Inc** [14] reports 712 students among its concert audiences in 2024, but doesn't say whether those concerts were held at schools.\n- **Apollo Civic Theatre Inc** [10] runs youth theatre workshops for grades K–12. These appear to be the theatre's own programs, not school-based ones.",
+   "ms": 7622,
+   "claims": [
+    {
+     "claim": "Artsbridge Inc explicitly mentions working with schools in its filing.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions support in schools; programs include school tours."
+    },
+    {
+     "claim": "Carnegie Hall A Corporation explicitly mentions working with schools in its filing.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record mentions programs with local education systems."
+    },
+    {
+     "claim": "Foundry Theater Inc explicitly mentions working with schools in its filing.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions programming for area schools."
+    },
+    {
+     "claim": "Artsbridge has the most specific school work of the three.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Only one giving a specific number tied to school tours."
+    },
+    {
+     "claim": "Artsbridge runs school tours bringing national arts tours to 16,000 elementary students.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record states school tours provide national arts tours to 16,000 elementary."
+    },
+    {
+     "claim": "Artsbridge's mission includes support in our schools.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mission quotes support in our schools and communities."
+    },
+    {
+     "claim": "Carnegie Hall runs cultural programs in conjunction with local education systems.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record states this directly."
+    },
+    {
+     "claim": "Carnegie Hall offers classes, tours and exhibits to thousands of children and youth.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record states this directly."
+    },
+    {
+     "claim": "Foundry Theater provides educational arts programming for area schools.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission states this directly."
+    },
+    {
+     "claim": "Artslink Inc reported 712 students among its concert audiences in 2024.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record states 1162 total audience including 712 students."
+    },
+    {
+     "claim": "Apollo Civic Theatre Inc runs youth theatre workshops for grades K-12.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record states youth theatre workshops for grades K through 12."
+    },
+    {
+     "claim": "Apollo's youth workshops are the theatre's own programs, not school-based.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record describes workshops held by the organization, no school mention."
+    }
+   ],
+   "words": 159
+  },
+  {
+   "q": "housing nonprofits in Tennessee that help veterans",
+   "ask": "Which explicitly serve veterans?",
+   "answer": "All 15 mention veterans in their filings, but how central veterans are varies a lot.\n\n- **Veterans only:** **Alpha Omega Veterans Services Inc** [1], **Barron Heights Community Development Corporation** [2], **Pearl With You Inc** [3], **Unaka Residence Inc** [4], **Operation Stand Down Tennessee** [8], **Heartland Residence Inc** [10], **America First Foundation Inc** [12].\n- **Veterans alongside other groups:** **Matthew 25 Incorporated** (homeless men and veterans) [5], **2nd Chance Ministry** (at-risk women, veterans, people leaving jail) [6], **Anand Martin Foundation Inc** (veterans and at-risk residents) [7], **Team 9 Home Care** (homeless, disabled veterans, mentally ill) [9], **Butterfly Moments Inc** (women and veterans in recovery) [11], **Lugenia Jeter Foundation** (seniors and veterans 55+) [13].\n- **Veterans named in mission only:** **Rebuilding Together-Nashville** [14] and **Rebuilding Together Knoxville** [15] list veterans as a priority group, but their program descriptions don't mention them.\n- **Evidence varies:** Only [8] reports veterans served (394 through its housing-assistance grant in 2024). [12] and [13] report about $2,000 or less in revenue.",
+   "ms": 9554,
+   "claims": [
+    {
+     "claim": "Alpha Omega Veterans Services Inc serves veterans only.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs focus on homeless and disabled veterans."
+    },
+    {
+     "claim": "Barron Heights Community Development Corporation serves veterans only.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Provides transitional housing for veterans."
+    },
+    {
+     "claim": "Pearl With You Inc serves veterans only.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs focus on veterans."
+    },
+    {
+     "claim": "Unaka Residence Inc serves veterans only.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission: provide housing for veterans."
+    },
+    {
+     "claim": "Operation Stand Down Tennessee serves veterans only.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Serves military veterans and their families."
+    },
+    {
+     "claim": "Heartland Residence Inc serves veterans only.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Mission: provide housing for veterans."
+    },
+    {
+     "claim": "America First Foundation Inc serves veterans only.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Housing for war veterans."
+    },
+    {
+     "claim": "Matthew 25 serves homeless men and veterans.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Programs for homeless individuals and veterans; men."
+    },
+    {
+     "claim": "2nd Chance Ministry serves at-risk women, veterans, and people leaving jail.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs state these groups."
+    },
+    {
+     "claim": "Anand Martin Foundation serves veterans and at-risk residents.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Mission names homeless veterans and at-risk citizens."
+    },
+    {
+     "claim": "Team 9 Home Care serves the homeless, disabled veterans, and mentally ill.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Mission states exactly this."
+    },
+    {
+     "claim": "Butterfly Moments serves women and veterans in recovery.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Recovery housing for women and veterans."
+    },
+    {
+     "claim": "Lugenia Jeter Foundation serves seniors and veterans 55+.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission states seniors and veterans 55 and older."
+    },
+    {
+     "claim": "Rebuilding Together-Nashville names veterans in its mission but not its program description.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions veterans; program text does not."
+    },
+    {
+     "claim": "Rebuilding Together Knoxville names veterans in its mission but not its program description.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions veterans; program text does not."
+    },
+    {
+     "claim": "Operation Stand Down Tennessee helped 394 veterans through its SSVF housing grant in 2024.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states 394 veterans helped via SSVF in 2024."
+    },
+    {
+     "claim": "America First Foundation and Lugenia Jeter Foundation report about $2,000 or less in revenue.",
+     "cites": [
+      12,
+      13
+     ],
+     "verdict": "supported",
+     "why": "Revenues $1,500 and $2,030."
+    }
+   ],
+   "words": 164
+  },
+  {
+   "q": "adult literacy programs in Ohio under $250K",
+   "ask": "Which teach English to adult immigrants?",
+   "answer": "Only **Northwest Ohio Literacy Council Inc** says it teaches English. Its volunteers tutor adults who read below a fifth-grade level, and the council is \"increasingly teaching English, reading, and writing skills to speakers of other languages\" [1].\n\n- **Scope:** It reports 50–65 tutor-learner pairs and frames the work as helping learners meet personal goals and become more employable [1].\n- **\"Immigrants\" isn't stated:** The filing says \"speakers of other languages,\" not immigrants, and doesn't say how much of the program is English-language teaching versus basic reading [1].\n- **Size:** It's a small organization, with about $98K in revenue (2024) and $79K in expenses (2023) [1].\n- **Possible but unconfirmed:** **Muskingum County Literacy Council** aims to \"eradicate illiteracy,\" but its filing lists only grants and supplies, not who it serves or whether it teaches English [2].\n\nNone of the other organizations' filings mention English-language instruction.",
+   "ms": 3929,
+   "claims": [
+    {
+     "claim": "Northwest Ohio Literacy Council's volunteers tutor adults who read below a fifth-grade level.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states volunteers tutor adults reading below fifth grade."
+    },
+    {
+     "claim": "Northwest Ohio Literacy Council is increasingly teaching English, reading, and writing to speakers of other languages.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Directly quoted from program description."
+    },
+    {
+     "claim": "Northwest Ohio Literacy Council reports 50–65 tutor-learner pairs.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record says 50-65 pairs."
+    },
+    {
+     "claim": "Northwest Ohio Literacy Council helps learners meet personal goals and become more employable.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states this explicitly."
+    },
+    {
+     "claim": "Northwest Ohio Literacy Council had about $98K revenue in 2024.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Revenue $98,407 (2024)."
+    },
+    {
+     "claim": "Northwest Ohio Literacy Council had about $79K expenses in 2023.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Expenses $79,080 (2023)."
+    },
+    {
+     "claim": "Muskingum County Literacy Council aims to eradicate illiteracy.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission states eradicate illiteracy in community."
+    },
+    {
+     "claim": "Muskingum County Literacy Council's filing lists grants and supplies as programs.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs list grant, partners, and program supplies."
+    }
+   ],
+   "words": 144
+  },
+  {
+   "q": "senior centers and meals for elderly in West Virginia",
+   "ask": "Which deliver meals to homes?",
+   "answer": "**Twelve of the 15 filings explicitly describe delivering meals to seniors' homes. Four mention meals or nutrition but don't specify home delivery.**\n\n- **Say they deliver:** **Braxton County Senior Citizen Center** [1], **Lewis County Senior Citizens Center** [2], **Council of Senior Citizens of Gilmer County** [3], **Roane County Committee on Aging** [4], **Barbour County Senior Center** [5], **Jackson County Commission on Aging** [6], **Upshur County Senior Citizens Opportunity Center** [10], **Senior Life Services of Morgan County** [11], **Brooke County Committee on Aging** [13], **Commission on Aging Family Services** (Grant County) [14], and **Wirt County Committee on Aging** [15].\n- **Only two give numbers:** Braxton served 74,869 meals total, including home delivery [1]. Jackson delivered 25,096 meals to homes and served 25,319 on site [6].\n- **Unclear from the filing:** **Raleigh County Commission on Aging** [7], **Marion County Senior Citizens Center** [8], and **Greenbrier County Committee on Aging** [9] list meals or nutrition but don't say where they're served.\n- **On-site only:** **Clay-Battelle Area Senior Citizens** describes hot meals at its center for 20–30 people [12].",
+   "ms": 6791,
+   "claims": [
+    {
+     "claim": "Twelve of the 15 filings explicitly describe delivering meals to seniors' homes.",
+     "cites": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      10,
+      11,
+      13,
+      14,
+      15
+     ],
+     "verdict": "unsupported",
+     "why": "Only eleven organizations are listed and supported; count is wrong."
+    },
+    {
+     "claim": "Four filings mention meals or nutrition but don't specify home delivery.",
+     "cites": [
+      7,
+      8,
+      9,
+      12
+     ],
+     "verdict": "supported",
+     "why": "Records 7, 8, 9, 12 mention meals without home delivery."
+    },
+    {
+     "claim": "Braxton County Senior Citizen Center delivers meals to homes.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states daily in-home delivery of meals to homebound seniors."
+    },
+    {
+     "claim": "Lewis County Senior Citizens Center delivers meals to homes.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Title III-C provides home-delivered meals."
+    },
+    {
+     "claim": "Council of Senior Citizens of Gilmer County delivers meals to homes.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record mentions home delivered meals."
+    },
+    {
+     "claim": "Roane County Committee on Aging delivers meals to homes.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record mentions home delivered meals."
+    },
+    {
+     "claim": "Barbour County Senior Center delivers meals to homes.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Meals are delivered to homes of senior citizens."
+    },
+    {
+     "claim": "Jackson County Commission on Aging delivers meals to homes.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record states 25,096 home delivered meals."
+    },
+    {
+     "claim": "Upshur County Senior Citizens Opportunity Center delivers meals to homes.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Title III provides in-home meals."
+    },
+    {
+     "claim": "Senior Life Services of Morgan County delivers meals to homes.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Title III-C provides home-delivered meals."
+    },
+    {
+     "claim": "Brooke County Committee on Aging delivers meals to homes.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Nutrition program provides meals at home."
+    },
+    {
+     "claim": "Commission on Aging Family Services (Grant County) delivers meals to homes.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Title IIIC provides home-delivered meals in Grant County."
+    },
+    {
+     "claim": "Wirt County Committee on Aging delivers meals to homes.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Delivers meals to homebound seniors."
+    },
+    {
+     "claim": "Only Braxton and Jackson give meal numbers.",
+     "cites": [
+      1,
+      6
+     ],
+     "verdict": "supported",
+     "why": "Only records 1 and 6 state meal counts."
+    },
+    {
+     "claim": "Braxton served 74,869 meals total, including home delivery.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 74,869 meals for year ended Sept 30, 2024."
+    },
+    {
+     "claim": "Jackson delivered 25,096 meals to homes.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record states 25,096 home delivered meals."
+    },
+    {
+     "claim": "Jackson served 25,319 meals on site.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record states 25,319 congregate meals."
+    },
+    {
+     "claim": "Raleigh County Commission on Aging lists meals or nutrition.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs mention meals and nutrition."
+    },
+    {
+     "claim": "Marion County Senior Citizens Center lists meals.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Programs include meals."
+    },
+    {
+     "claim": "Greenbrier County Committee on Aging lists nutrition.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs include nutrition."
+    },
+    {
+     "claim": "Clay-Battelle Area Senior Citizens provides hot meals at its center.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mission: hot meals; place to congregate meals."
+    },
+    {
+     "claim": "Clay-Battelle's programs serve 20–30 people.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Programs benefit 20-30 citizens."
+    }
+   ],
+   "words": 175
+  },
+  {
+   "q": "foster care and adoption agencies in Kentucky",
+   "ask": "Compare the top 3",
+   "answer": "The three differ mainly in focus: **Adoption Assistance Inc** is adoption-only [2], **Fuego Corporation** does foster care only [3], and **Hope That Binds Inc** covers both on a smaller scale [1].\n\n- **Focus:** Hope That Binds is a ministry offering adoption and foster care resources in western Kentucky [1]. Adoption Assistance helps individuals process child adoptions [2]. Fuego runs Kulima Care Family Services, a licensed child-placing agency providing therapeutic foster care for children in state custody [3].\n- **Broader services:** Fuego's mission also includes counseling, education and housing for children and single mothers, plus support for foster parents [3].\n- **Size:** Adoption Assistance is largest at about $1.08M revenue [2], then Fuego at $923K [3] and Hope That Binds at $342K [1].\n- **Finances:** All hold modest assets ($103K–$158K) [1][2][3]. Reported expenses exceed revenue for Fuego and Adoption Assistance, but the figures are from different years, so this doesn't confirm a deficit [2][3].\n- **Evidence:** None of the three filings report how many children or families they served [1][2][3].",
+   "ms": 9127,
+   "claims": [
+    {
+     "claim": "Adoption Assistance Inc is adoption-only",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs mention only child adoptions."
+    },
+    {
+     "claim": "Fuego Corporation does foster care only",
+     "cites": [
+      3
+     ],
+     "verdict": "unsupported",
+     "why": "Record also lists education, counseling and housing for single mothers."
+    },
+    {
+     "claim": "Hope That Binds Inc covers both adoption and foster care on a smaller scale",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Offers adoption and foster care; its revenue is the smallest."
+    },
+    {
+     "claim": "Hope That Binds is a ministry offering adoption and foster care resources in western Kentucky",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs text states this directly."
+    },
+    {
+     "claim": "Adoption Assistance helps individuals process child adoptions",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs text states this."
+    },
+    {
+     "claim": "Fuego runs Kulima Care Family Services",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs text names Kulima Care Family Services."
+    },
+    {
+     "claim": "Kulima Care is a licensed child-placing agency",
+     "cites": [
+      3
+     ],
+     "verdict": "unsupported",
+     "why": "Record says child-placing agency; licensing is not mentioned."
+    },
+    {
+     "claim": "Kulima Care provides therapeutic foster care for children in state custody",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs text states this."
+    },
+    {
+     "claim": "Fuego's mission includes counseling, education and housing for children and single mothers, plus support for foster parents",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission text lists these."
+    },
+    {
+     "claim": "Adoption Assistance has about $1.08M revenue, the largest of the three",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Revenue is $1,079,343, highest of the three."
+    },
+    {
+     "claim": "Fuego has $923K revenue",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Revenue is $922,652."
+    },
+    {
+     "claim": "Hope That Binds has $342K revenue",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Revenue is $342,060."
+    },
+    {
+     "claim": "All three hold assets of $103K–$158K",
+     "cites": [
+      1,
+      2,
+      3
+     ],
+     "verdict": "supported",
+     "why": "Assets are $154,608, $158,464 and $103,231."
+    },
+    {
+     "claim": "Reported expenses exceed revenue for Fuego and Adoption Assistance",
+     "cites": [
+      2,
+      3
+     ],
+     "verdict": "supported",
+     "why": "Expenses of $1.13M and $1.51M exceed revenues of $923K and $1.08M."
+    },
+    {
+     "claim": "The expense and revenue figures are from different years",
+     "cites": [
+      2,
+      3
+     ],
+     "verdict": "supported",
+     "why": "Revenue figures are from 2024; expense figures are from 2023."
+    }
+   ],
+   "words": 169
+  },
+  {
+   "q": "land trusts protecting farmland in Virginia",
+   "ask": "Which have protected the most acres?",
+   "answer": "**Piedmont Environmental Council** reports the largest Virginia figure, though the numbers measure different things and can't be compared directly. Only some filings give acreage.\n\n- **The Conservation Fund**: over 9 million acres, but across all 50 states, with no Virginia-only figure [15].\n- **Piedmont Environmental Council**: has \"helped landowners permanently protect\" more than 599,100 acres of rural or natural land. This is cumulative and includes land others may hold [6].\n- **Old Dominion Land Conservancy**: holds 140 easements totaling 21,084 acres, adding 378 acres in the latest year [8].\n- **Capital Region Land Conservancy**: protected 1,437 acres in 2024 alone, including working farmland [9]. **New River Land Trust** reported 945 acres in 2020 [1].\n- **Willowsford Conservancy** stewards 2,300+ acres of open space, which is not stated to be easements [13].\n\nThe other filings don't report acreage [2][3][4][5][7][10][11][12][14].",
+   "ms": 6736,
+   "claims": [
+    {
+     "claim": "Piedmont Environmental Council reports the largest Virginia acreage figure.",
+     "cites": [],
+     "verdict": "no_citation",
+     "why": "Comparative claim in opening sentence lacks a citation."
+    },
+    {
+     "claim": "The Conservation Fund has conserved over 9 million acres across all 50 states.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states over 9 million acres across all 50 states."
+    },
+    {
+     "claim": "Piedmont Environmental Council has helped landowners permanently protect more than 599,100 acres of rural or natural land.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record states this figure verbatim."
+    },
+    {
+     "claim": "PEC's 599,100-acre figure is cumulative.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "'Has helped' phrasing indicates a cumulative total."
+    },
+    {
+     "claim": "Old Dominion Land Conservancy holds 140 easements totaling 21,084 acres.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states 140 easements totaling 21,084.07 acres."
+    },
+    {
+     "claim": "Old Dominion Land Conservancy added 378 acres in the latest year.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states new easements on 378.49 acres."
+    },
+    {
+     "claim": "Capital Region Land Conservancy protected 1,437 acres in 2024.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,437.15 acres protected in 2024."
+    },
+    {
+     "claim": "Capital Region Land Conservancy's 2024 protections included working farmland.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Easements described as protecting working farmland."
+    },
+    {
+     "claim": "New River Land Trust reported 945 acres in 2020.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "716 easement acres plus 229 fee simple acres equals 945."
+    },
+    {
+     "claim": "Willowsford Conservancy stewards over 2,300 acres of open space.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record states steward of over 2,300 acres."
+    }
+   ],
+   "words": 138
+  },
+  {
+   "q": "theater companies in Tennessee",
+   "ask": "Which is the most established, and how can you tell?",
+   "answer": "The filings don't include founding dates, so age can't be confirmed. By size and scale of programming, **Circuit Playhouse Inc** looks the most established [1], though only one organization offers direct evidence of longevity.\n\n- **Circuit Playhouse** has the highest revenue ($2.65M), stages 14 productions a season, runs a theatre school and youth programs, and hosts annual auditions attended by professional theatres from across the country [1]. Its filing doesn't list assets.\n- **Studio Tenn Theatre Company** is close in revenue ($2.28M) and reports the largest assets ($2.1M), but describes its programs only briefly [2].\n- **River And Rail Theatre Company** has $1.5M in revenue and $1.4M in assets, with a four-show season [5].\n- **Actors Bridge Ensemble Theater** is much smaller ($312K) but gives the only explicit track record: a 21st-anniversary production of its teen program [4].\n\nSize isn't the same as age. Ask the IRS or the theaters for founding dates to confirm.",
+   "ms": 6673,
+   "claims": [
+    {
+     "claim": "Circuit Playhouse has the highest revenue ($2.65M)",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "$2,650,468 is highest among records."
+    },
+    {
+     "claim": "Circuit Playhouse stages 14 productions a season",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 14 productions each season."
+    },
+    {
+     "claim": "Circuit Playhouse runs a theatre school and youth programs",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Theatre school and summer youth conservatory listed."
+    },
+    {
+     "claim": "Circuit Playhouse hosts annual auditions attended by professional theatres from across the country",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "UPTA annual auditions with companies nationwide described."
+    },
+    {
+     "claim": "Circuit Playhouse's filing doesn't list assets",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "No assets figure in record."
+    },
+    {
+     "claim": "Studio Tenn has revenue of $2.28M",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Revenue $2,280,577."
+    },
+    {
+     "claim": "Studio Tenn reports the largest assets ($2.1M)",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "$2,099,292 is highest listed assets."
+    },
+    {
+     "claim": "Studio Tenn describes its programs only briefly",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs field is one sentence."
+    },
+    {
+     "claim": "River And Rail has $1.5M in revenue",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Revenue $1,506,583."
+    },
+    {
+     "claim": "River And Rail has $1.4M in assets",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Assets $1,416,606."
+    },
+    {
+     "claim": "River And Rail has a four-show season",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Four mainstage productions listed for 2023-2024."
+    },
+    {
+     "claim": "Actors Bridge has revenue of $312K",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Revenue $312,269."
+    },
+    {
+     "claim": "Actors Bridge staged a 21st-anniversary production of its teen program",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "21th Anniversary production of Act Like a GRRRL stated."
+    }
+   ],
+   "words": 155
+  },
+  {
+   "q": "help for people getting out of prison",
+   "ask": "Which offer job placement after release?",
+   "answer": "Only **OAR of Richmond** explicitly lists job placement after release [1]. A few others describe employment help that comes close, such as connecting people with employers or hiring them directly.\n\n- **OAR of Richmond** (VA) offers job search help and placement as part of its pre- and post-release case management, serving 5,301 clients [1].\n- **Virginia Community Action Reentry System** lists temporary employment, job search and career development in its mission [2].\n- **Transformation Network** (OH) links formerly imprisoned people and welfare recipients with local businesses needing workers [10].\n- **True Freedom Enterprises** (OH) arranges externships with private companies, including employer referrals, but during the last 90 days *before* release [12].\n- **Serenelli Project** (OH) runs a social enterprise that employs formerly incarcerated people directly, though it's small (about $43K in expenses) [14].\n\nSeveral others mention job skills or vocational training but not placement, including [4], [6], [13] and [15].",
+   "ms": 8531,
+   "claims": [
+    {
+     "claim": "OAR of Richmond explicitly lists job placement as part of its services",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs list job search assistance/placement."
+    },
+    {
+     "claim": "OAR of Richmond is in Virginia",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Located in Richmond, VA."
+    },
+    {
+     "claim": "OAR of Richmond's job help is part of pre- and post-release case management",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Pre/post-Release Services Program provides case management including job placement."
+    },
+    {
+     "claim": "OAR of Richmond serves 5,301 clients",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 5,301 clients."
+    },
+    {
+     "claim": "Virginia Community Action Reentry System lists temporary employment, job search and career development in its mission",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission includes those exact items."
+    },
+    {
+     "claim": "Transformation Network is in Ohio",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Located in Ashland, OH."
+    },
+    {
+     "claim": "Transformation Network links welfare recipients with local businesses needing workers",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Work experience program links recipients with local businesses."
+    },
+    {
+     "claim": "Transformation Network links formerly imprisoned people with local businesses",
+     "cites": [
+      10
+     ],
+     "verdict": "unsupported",
+     "why": "Business linking is described only for welfare recipients."
+    },
+    {
+     "claim": "True Freedom Enterprises is in Ohio",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Located in Cleveland, OH."
+    },
+    {
+     "claim": "True Freedom Enterprises arranges externships with private companies including employer referrals",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record describes externships with employer referrals."
+    },
+    {
+     "claim": "True Freedom's externships occur during the last 90 days before release",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record says last 90 days in prison."
+    },
+    {
+     "claim": "Serenelli Project is in Ohio",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Located in Cincinnati, OH."
+    },
+    {
+     "claim": "Serenelli Project runs a social enterprise that employs formerly incarcerated people",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Serenelli Industries employs formerly incarcerated."
+    },
+    {
+     "claim": "Serenelli Project has about $43K in expenses",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Expenses $42,998."
+    },
+    {
+     "claim": "New Legacy Reentry mentions vocational training",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission includes vocational education."
+    },
+    {
+     "claim": "PPS & Focus Group Ministries mentions job skills or vocational training",
+     "cites": [
+      6
+     ],
+     "verdict": "unsupported",
+     "why": "Only says unspecified 'additional training' and education courses."
+    },
+    {
+     "claim": "Broken Chains mentions employment-related programming",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission: programming to empower individuals to become employed."
+    },
+    {
+     "claim": "Second Hope Ministries mentions job skills programs",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Provides job skill programs to incarcerated people."
+    }
+   ],
+   "words": 150
+  },
+  {
+   "q": "nonprofits fighting hunger",
+   "ask": "Which distribute the most food?",
+   "answer": "By pounds reported in their filings, **Ohio Association of Foodbanks** [15] and **Second Harvest Food Bank of Middle Tennessee** [9] lead, followed by **Feed More** [1]. Years differ, and some figures overlap.\n\n- **Ohio Association of Foodbanks**: 54.3 million pounds through one state program [15]. It supplies Ohio's food banks rather than serving people directly, so its food likely overlaps with other Ohio totals here.\n- **Second Harvest Middle Tennessee**: nearly 51 million pounds to about 410 agencies, plus 14.7 million pounds of grocery rescue. The filing doesn't say whether these overlap [9].\n- **Feed More**: almost 40 million pounds in FY2025 [1].\n- **Greater Cleveland Food Bank**: at least 25.1 million pounds across two government programs. The text is cut off, so no full total is given [4].\n- Next is **Foodbank Inc** with 18.0 million pounds [3]. **Hunger Network of Greater Cleveland** [5], **Second Harvest Mahoning Valley** [6], and several smaller pantries [7][8][12][13][14] report no poundage.",
+   "ms": 8021,
+   "claims": [
+    {
+     "claim": "By reported pounds, Ohio Association of Foodbanks and Second Harvest Middle Tennessee lead, followed by Feed More.",
+     "cites": [
+      15,
+      9,
+      1
+     ],
+     "verdict": "supported",
+     "why": "54.3M, ~51M and ~40M pounds are the largest figures stated."
+    },
+    {
+     "claim": "Ohio Association of Foodbanks reported 54.3 million pounds through one state program.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "OFPACP provided 54.3 million total pounds."
+    },
+    {
+     "claim": "Ohio Association of Foodbanks supplies Ohio's food banks rather than serving people directly.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Its mission is assisting Ohio's 12 member foodbanks."
+    },
+    {
+     "claim": "Second Harvest Middle Tennessee provided nearly 51 million pounds to about 410 agencies.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "The record states nearly 51 million pounds to about 410 agencies."
+    },
+    {
+     "claim": "Second Harvest Middle Tennessee handled 14.7 million pounds through grocery rescue.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "The record states over 14.7 million pounds were picked up."
+    },
+    {
+     "claim": "Feed More distributed almost 40 million pounds in FY2025.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "The record states almost 40 million pounds in FY 2025."
+    },
+    {
+     "claim": "Greater Cleveland Food Bank distributed at least 25.1 million pounds across two government programs.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "11.9M plus 13.2M equals 25.1M."
+    },
+    {
+     "claim": "Foodbank Inc distributed 18.0 million pounds.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "The record states 18,043,516 pounds in FY2024."
+    },
+    {
+     "claim": "Foodbank Inc ranks next after Greater Cleveland Food Bank by pounds.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "No other listed organization reports between 18M and 25.1M pounds."
+    }
+   ],
+   "words": 158
+  },
+  {
+   "q": "volunteer fire departments in rural Kentucky",
+   "ask": "Which have the biggest budgets?",
+   "answer": "By revenue, **Millard-East Shelbiana Volunteer Fire & Rescue Department** [12] and **Hiseville Community Volunteer Fire Department** [10] lead by far. But their recorded spending is much lower, so \"biggest budget\" depends on whether you mean money coming in or money spent.\n\n- **Millard-East Shelbiana** [12]: $655,342 revenue (2025), but $143,694 expenses (2023). Still the top spender listed.\n- **Hiseville** [10]: $489,997 revenue (2025) and the largest assets ($1.29M), but only $48,359 in expenses (2024).\n- **Haywood** [9]: $204,290 revenue (2025). No expense figure is provided.\n- **South Barren** [4] and **Austin-Tracy** [7] are the next-largest by spending, at $121,331 [4] and $105,655 [7] in 2023, with revenue around $120,000–$146,000.\n- The filings don't explain why revenue jumped well above spending for [10] and [12]. Revenue and expense figures also come from different years, so treat the gaps cautiously.",
+   "ms": 7770,
+   "claims": [
+    {
+     "claim": "Millard-East Shelbiana and Hiseville lead by far in revenue.",
+     "cites": [
+      12,
+      10
+     ],
+     "verdict": "supported",
+     "why": "$655,342 and $489,997 are the two highest revenues listed."
+    },
+    {
+     "claim": "Millard-East Shelbiana and Hiseville have recorded spending much lower than their revenue.",
+     "cites": [
+      12,
+      10
+     ],
+     "verdict": "supported",
+     "why": "Expenses of $143,694 and $48,359 are far below revenues."
+    },
+    {
+     "claim": "Millard-East Shelbiana had $655,342 revenue in 2025.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record states $655,342 (2025)."
+    },
+    {
+     "claim": "Millard-East Shelbiana had $143,694 expenses in 2023.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record states expenses $143,694 (2023)."
+    },
+    {
+     "claim": "Millard-East Shelbiana is the top spender listed.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Highest expense figure among all records."
+    },
+    {
+     "claim": "Hiseville had $489,997 revenue in 2025.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record states $489,997 (2025)."
+    },
+    {
+     "claim": "Hiseville has the largest assets, $1.29M.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Assets $1,286,423, highest listed."
+    },
+    {
+     "claim": "Hiseville had $48,359 in expenses in 2024.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record states expenses $48,359 (2024)."
+    },
+    {
+     "claim": "Haywood had $204,290 revenue in 2025.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states $204,290 (2025)."
+    },
+    {
+     "claim": "Haywood's record provides no expense figure.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "No expenses listed in record."
+    },
+    {
+     "claim": "South Barren and Austin-Tracy are the next-largest by spending.",
+     "cites": [
+      4,
+      7
+     ],
+     "verdict": "supported",
+     "why": "$121,331 and $105,655 follow Millard's expenses."
+    },
+    {
+     "claim": "South Barren spent $121,331 in 2023.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record states expenses $121,331 (2023)."
+    },
+    {
+     "claim": "Austin-Tracy spent $105,655 in 2023.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record states expenses $105,655 (2023)."
+    },
+    {
+     "claim": "South Barren and Austin-Tracy revenue is around $120,000–$146,000.",
+     "cites": [
+      4,
+      7
+     ],
+     "verdict": "supported",
+     "why": "Revenues $145,980 and $121,519 fall in that range."
+    }
+   ],
+   "words": 138
+  },
+  {
+   "q": "scholarship funds for first-generation college students in Ohio",
+   "ask": "Which say how many scholarships they award?",
+   "answer": "Only four filings give a scholarship count, and none of them are the first-generation-focused groups. **Level Up Cincinnati** [1] and **The Chatfield Edge** [2] describe scholarships but don't say how many.\n\n- **Atrium Auxiliary Middletown**: $20,900 to 19 students in 2024, for students pursuing healthcare careers [15].\n- **Morrison R Waite High School Alumni Association**: 18 scholarships for graduating seniors of that high school during the tax year [14].\n- **UFCW Local 880 Scholarship Fund**: 12 individuals. Most are picked from the international union's rankings, with set numbers for the Cleveland, Akron-Canton and Youngstown areas [12].\n- **Henry & Katherine Hare Memorial Scholarship Fund**: Wilmington College picks \"three or four needy students\" [10].\n\n**A Call To College** [4] describes its scholarship program, but the text cuts off before any count appears. The other filings mention scholarships without numbers [3, 5, 6, 7, 8, 9, 11, 13].",
+   "ms": 6192,
+   "claims": [
+    {
+     "claim": "Level Up Cincinnati describes scholarships",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record describes Level Up Cincinnati Scholarship Fund."
+    },
+    {
+     "claim": "Level Up Cincinnati is first-generation-focused",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission targets first-generation college students."
+    },
+    {
+     "claim": "The Chatfield Edge describes scholarships",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs mention scholarships."
+    },
+    {
+     "claim": "The Chatfield Edge is first-generation-focused",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Supports first-generation and non-traditional students."
+    },
+    {
+     "claim": "Atrium Auxiliary Middletown awarded $20,900 in scholarships to 19 students in 2024",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Stated directly in programs."
+    },
+    {
+     "claim": "Atrium Auxiliary scholarships are for students pursuing healthcare careers",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Mission states healthcare-related field."
+    },
+    {
+     "claim": "Morrison R Waite High School Alumni Association awarded 18 scholarships during the tax year",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Eighteen scholarships awarded this tax year."
+    },
+    {
+     "claim": "Morrison R Waite scholarships go to graduating seniors of that high school",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Provided to graduating high school seniors."
+    },
+    {
+     "claim": "UFCW Local 880 Scholarship Fund granted scholarships to 12 individuals",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Scholarships granted to 12 individuals."
+    },
+    {
+     "claim": "Most UFCW Local 880 recipients are picked from the international union's rankings",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Vast majority come from international program rankings."
+    },
+    {
+     "claim": "UFCW Local 880 sets numbers for Cleveland, Akron-Canton and Youngstown areas",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Three, two, one per area stated."
+    },
+    {
+     "claim": "Wilmington College picks three or four needy students for the Hare fund scholarships",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record quotes three or four needy students."
+    },
+    {
+     "claim": "A Call To College describes a scholarship program but text cuts off before any count",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Alumni and scholarship program text truncated."
+    },
+    {
+     "claim": "Hope Ignites Cincinnati, N H S Alumni, Sebring-West Branch, College Club of Canton, Inspire2teach1, Hamilton County ORTA, Salem Italian American, and Infinity Giving Works mention scholarships",
+     "cites": [
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      13
+     ],
+     "verdict": "supported",
+     "why": "Each record mentions scholarships without counts."
+    }
+   ],
+   "words": 146
+  },
+  {
+   "q": "mental health counseling for teens in Ohio",
+   "ask": "Which offer free or sliding-scale counseling?",
+   "answer": "None of these filings explicitly mention free or sliding-scale counseling. A few hint at affordability, but you'd need to confirm fees with each organization directly.\n\n- **Family Life Counseling & Psychiatric Services** (Mansfield) has the clearest signal. Its mission promises \"affordable and effective mental health intervention for youth and their families\" [4]. The filing doesn't describe actual fee terms.\n- **Wood County Childrens Services Association** (Bowling Green) says its school-based counseling aims to reduce barriers including cost, transportation and stigma. That service gets funding help from the county mental health board (ADAMHS) [8], but the filing doesn't say whether it's free to families.\n- **Ravenwood Mental Health Center** lists county and other public funding for its adolescent residential center [15]. That's residential treatment, not outpatient counseling, and the filing says nothing about costs to families.\n\nSeveral others offer school-based counseling [1][2][5][6][11]. Those settings can sometimes be lower-cost, but the filings don't state any fees.",
+   "ms": 8037,
+   "claims": [
+    {
+     "claim": "Family Life Counseling & Psychiatric Services is located in Mansfield.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record lists Mansfield, OH."
+    },
+    {
+     "claim": "Family Life's mission promises affordable and effective mental health intervention for youth and their families.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission quoted directly from record."
+    },
+    {
+     "claim": "Wood County Childrens Services Association is located in Bowling Green.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record lists Bowling Green, OH."
+    },
+    {
+     "claim": "Wood County's school-based counseling aims to reduce barriers including cost, transportation and stigma.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states decreasing barriers of transportation, cost, stigma."
+    },
+    {
+     "claim": "Wood County's school-based service receives funding assistance from the Wood County ADAMHS board.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record mentions funding assistance from Wood County ADAMHS board."
+    },
+    {
+     "claim": "Ravenwood's adolescent residential center receives county and other public funding.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Funded by county commissioners and Families and Children First Council."
+    },
+    {
+     "claim": "Ravenwood's youth center provides residential treatment.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record describes residential treatment for adolescents."
+    },
+    {
+     "claim": "Applewood, Alta Care, Beech Acres, Directions For Youth & Families, and South Community offer school-based counseling.",
+     "cites": [
+      1,
+      2,
+      5,
+      6,
+      11
+     ],
+     "verdict": "supported",
+     "why": "Each record describes school-based counseling services."
+    }
+   ],
+   "words": 154
+  },
+  {
+   "q": "boys and girls clubs in Tennessee",
+   "ask": "Compare the top 3",
+   "answer": "**Boys & Girls Clubs of the Tennessee Valley** is the largest by revenue [2], **Boys & Girls Clubs of Greater Memphis** reports serving the most youth [3], and **Boys And Girls Club of Middle Tennessee** gives the fullest program description [1].\n\n- **Size:** Tennessee Valley reports $15.6M revenue (2025) and $25.4M assets [2]. Memphis reports $8.4M revenue and $26.3M assets [3]. Middle Tennessee is smaller at $6.0M revenue and $6.7M assets [1]. Revenue years differ, so treat these as rough comparisons.\n- **Reach:** Memphis served about 7,800 youth in 2024 [3]. Middle Tennessee served over 4,800 [1]. Tennessee Valley's filing gives no youth count [2].\n- **Programs:** Middle Tennessee describes after-school, summer and digital programming built around academics, health and character [1]. Tennessee Valley shares those three focuses and runs 21st Century learning grants for academically at-risk youth [2].\n- **Evidence:** Tennessee Valley cites teacher reports of better math and reading [2]. Memphis's filing has little program detail [3].",
+   "ms": 7151,
+   "claims": [
+    {
+     "claim": "Boys & Girls Clubs of the Tennessee Valley is the largest by revenue.",
+     "cites": [
+      2
+     ],
+     "verdict": "unsupported",
+     "why": "Record [12] reports higher revenue ($19.9M); [2] alone doesn't establish largest."
+    },
+    {
+     "claim": "Boys & Girls Clubs of Greater Memphis reports serving the most youth among the three.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "7,800 exceeds Middle Tennessee's 4,800; Tennessee Valley gives no count."
+    },
+    {
+     "claim": "Tennessee Valley reports $15.6M revenue (2025).",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states $15,638,309 (2025)."
+    },
+    {
+     "claim": "Tennessee Valley reports $25.4M assets.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states assets $25,401,616."
+    },
+    {
+     "claim": "Memphis reports $8.4M revenue.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states $8,404,775."
+    },
+    {
+     "claim": "Memphis reports $26.3M assets.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states $26,290,567."
+    },
+    {
+     "claim": "Middle Tennessee has $6.0M revenue.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states $5,973,375."
+    },
+    {
+     "claim": "Middle Tennessee has $6.7M assets.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states $6,650,426."
+    },
+    {
+     "claim": "Memphis served about 7,800 youth in 2024.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states approximately 7800 served in 2024."
+    },
+    {
+     "claim": "Middle Tennessee served over 4,800 youth.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states over 4,800 young people served."
+    },
+    {
+     "claim": "Middle Tennessee offers after-school, summer and digital programming.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record lists these three vehicles of service."
+    },
+    {
+     "claim": "Middle Tennessee's programs are built around academics, health and character.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Priority outcomes: academic success, healthy lifestyles, character & leadership."
+    },
+    {
+     "claim": "Tennessee Valley focuses on academics, health and character.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Lists academic enrichment, healthy lifestyles, good character."
+    },
+    {
+     "claim": "Tennessee Valley runs 21st Century learning grants for academically at-risk youth.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Majority of clubs implement 21st Century grants for at-risk youth."
+    },
+    {
+     "claim": "Tennessee Valley cites teacher reports of better math and reading.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Teachers reported impact on math and reading skills."
+    }
+   ],
+   "words": 159
+  },
+  {
+   "q": "disaster relief after floods in eastern Kentucky",
+   "ask": "Which responded to the 2022 floods?",
+   "answer": "Only two filings explicitly name the 2022 floods: **United Helping Hands Of Pikeville Inc** [2] and **Wayland Historical Society Inc** [9]. Several others mention flood work but don't say which year.\n\n- **United Helping Hands** runs a Pike County relief program set up for the 2022 flooding and says later floods have kept it going [2]. It's the larger of the two (about $568K revenue) [2].\n- **Wayland Historical Society** says it \"helped with\" the July 2022 federally declared flood disaster but gives no details [9]. Its main work is preserving local history [9].\n- **East Kentucky Dream Center** [1] and **John Hobson Ministries** [12] list flood relief programs, but no year is given.\n- **Coc Benevolent Fund** helps with flooding damage [10], and **Florence Lions Clubs Charities** aided victims of flooding \"that occurred during this year\" in a 2024 filing [15]. Neither names 2022.",
+   "ms": 4926,
+   "claims": [
+    {
+     "claim": "United Helping Hands Of Pikeville's filing explicitly names the 2022 floods.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Program description references flooding that occurred in 2022."
+    },
+    {
+     "claim": "Wayland Historical Society's filing explicitly names the 2022 floods.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Mentions July 2022 federally declared flood disaster."
+    },
+    {
+     "claim": "United Helping Hands runs a Pike County relief program set up for the 2022 flooding.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Pike County relief services program created for 2022 flooding."
+    },
+    {
+     "claim": "United Helping Hands says later floods have kept the program going.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "States severe flooding since 2022 kept program vital."
+    },
+    {
+     "claim": "United Helping Hands is larger than Wayland Historical Society, with about $568K revenue.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "$567,645 vs Wayland's $45,492."
+    },
+    {
+     "claim": "Wayland Historical Society helped with the July 2022 federally declared flood disaster.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "Wayland Historical Society's main work is preserving local history.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Mission is to collect and preserve historical items."
+    },
+    {
+     "claim": "East Kentucky Dream Center lists a flood relief program.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs include flood relief."
+    },
+    {
+     "claim": "John Hobson Ministries lists flood relief assistance.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Outreach program assistance for flood relief."
+    },
+    {
+     "claim": "Coc Benevolent Fund helps with flooding damage.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Financial assistance for tornado and flooding damages."
+    },
+    {
+     "claim": "Florence Lions Clubs Charities aided victims of flooding that occurred during the year of its 2024 filing.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Form 990EZ (2024) mentions flooding disaster during this year."
+    }
+   ],
+   "words": 145
+  },
+  {
+   "q": "small animal rescues in Virginia under $100K",
+   "ask": "Which ones are run entirely by volunteers?",
+   "answer": "Only **A Cats Friend Inc** says in its filing that it is run entirely by volunteers. It describes itself as an \"all volunteer,\" foster-based rescue in Northern Virginia [1].\n\n- None of the other 14 organizations state whether they use volunteers, paid staff, or both [2–15].\n- Some describe fostering, which often involves volunteers, but none say they are volunteer-only. These include **Wise County Humane Society** [10], **Richmond Ruff House** [13], **King George Animal Rescue League** [9] and **Dog World Rescue Inc** [6].\n- **Commonwealth Cat Rescue Inc** lists paying for \"outside services\" for transport, care and housing. That suggests it pays others for some work but doesn't settle the question [3].\n\nTo confirm staffing for the others, you'd need information beyond these filing summaries, such as the full Form 990 or the organizations themselves.",
+   "ms": 4197,
+   "claims": [
+    {
+     "claim": "A Cats Friend Inc describes itself as an all-volunteer organization.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission states it is an all volunteer organization."
+    },
+    {
+     "claim": "A Cats Friend Inc is a foster-based rescue in Northern Virginia.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission says foster-based rescue in Northern VA."
+    },
+    {
+     "claim": "Wise County Humane Society describes fostering.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs mention fostering animals."
+    },
+    {
+     "claim": "Richmond Ruff House describes fostering.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Programs say it fosters dogs until vetted."
+    },
+    {
+     "claim": "King George Animal Rescue League describes fostering.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs mention KGARL foster animals."
+    },
+    {
+     "claim": "Dog World Rescue Inc describes fostering.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Programs mention placing dogs in foster homes."
+    },
+    {
+     "claim": "Commonwealth Cat Rescue Inc lists paying for outside services for transport, care and housing.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs list outside services for transport, care, housing."
+    }
+   ],
+   "words": 135
+  },
+  {
+   "q": "churches that run food pantries in Tennessee",
+   "ask": "Which pantries say how many families they serve?",
+   "answer": "Only one filing gives a family count for its pantry: **Regional Educational And Environmental Program** says 750 families received food [3]. Two others report people served rather than families, and a few report only pounds or meals.\n\n- **Of One Accord Inc** served 41,372 individuals through three pantries, plus 2,407 holiday boxes reaching 9,628 individuals [4].\n- **Neighborhood Christian Centers Inc** gave emergency aid, including food, to more than 25,180 individuals and handed out 10,000+ Christmas food baskets. That total isn't broken out for its mobile pantry alone [10].\n- **Resource Redistribution Ministry** reports about 635,925 pounds of food delivered, with no headcount [7].\n- **Lambscroft Ministries** reports about 5,600 sandwich meals for the homeless, not families served [8].\n\nThe other organizations describe their pantries without saying how many people or families they serve [1][2][5][6][9][11][12][13][14][15].",
+   "ms": 8548,
+   "claims": [
+    {
+     "claim": "Regional Educational And Environmental Program says 750 families received food from its pantry.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states 750 families received food from pantry."
+    },
+    {
+     "claim": "Of One Accord served 41,372 individuals through three food pantries.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record states exactly this."
+    },
+    {
+     "claim": "Of One Accord distributed 2,407 holiday food boxes to 9,628 individuals.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record states 2,407 boxes to 9,628 individuals."
+    },
+    {
+     "claim": "Neighborhood Christian Centers gave emergency aid including food to more than 25,180 individuals.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record lists emergency aid including food for 25,180+ individuals."
+    },
+    {
+     "claim": "Neighborhood Christian Centers handed out 10,000+ Christmas food baskets.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Christmas outreach lists 10,000+ food baskets."
+    },
+    {
+     "claim": "Neighborhood Christian Centers operates a mobile pantry.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record mentions mobile pantry with Mid-South Food Bank."
+    },
+    {
+     "claim": "Resource Redistribution Ministry delivered about 635,925 pounds of food.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record states approximately 635,925 pounds."
+    },
+    {
+     "claim": "Lambscroft Ministries took about 5,600 sandwich meals to the homeless.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record states approximately 5600 sandwich meals."
+    },
+    {
+     "claim": "The other organizations describe pantries without stating how many people or families served.",
+     "cites": [
+      1,
+      2,
+      5,
+      6,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15
+     ],
+     "verdict": "supported",
+     "why": "None of these records give headcounts served."
+    }
+   ],
+   "words": 135
+  }
+ ]
+}

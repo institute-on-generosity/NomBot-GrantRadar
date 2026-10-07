@@ -1,0 +1,1240 @@
+{
+ "stamp": "2026-10-07-18-12",
+ "rows": [
+  {
+   "q": "animal shelters in Ohio",
+   "ask": "Which is the strongest fit, and why?",
+   "answer": "**The Cleveland Animal Protective League** is the strongest fit if you want a well-documented shelter. Its filing describes a 40,000-square-foot animal shelter, 6,952 animals brought in during 2024, foster care for 3,126 of them, and a 92% save rate [1]. The best pick depends on what matters to you:\n\n- **Scale:** Cleveland APL reports $10,411,587 in revenue [1]. **Angels For Animals** reports $7,619,634 but describes its programs only briefly [13].\n- **Detailed results at a smaller size:** **Humane Society Of Delaware County** reports 1,906 adoptions and capacity for about 122 animals [2]. **League For Animal Welfare** reports 2,118 adoptions, a no-kill shelter and a wellness clinic [3].\n- **Cruelty investigations plus sheltering:** Cleveland APL [1], **Wood County Humane Society** [11] and **Animal Welfare League Of Trumbull County** [12] all do both.\n- **Little detail:** **Cincinnati Animal Care** repeats its mission as its program description [4].\n- **Very small:** **Crossed Paws Animal Shelter** reports $144,583 in revenue and shelters dogs [6].",
+   "ms": 11934,
+   "claims": [
+    {
+     "claim": "Cleveland APL operates a 40,000-square-foot animal shelter.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 40,000-square-foot shelter and resource center."
+    },
+    {
+     "claim": "Cleveland APL brought in 6,952 animals in 2024.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 6,952 animals brought in during 2024."
+    },
+    {
+     "claim": "3,126 of Cleveland APL's animals received foster care.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states 3,126 of 6,952 received care in foster homes."
+    },
+    {
+     "claim": "Cleveland APL achieved a 92% save rate.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states an overall 92% save rate."
+    },
+    {
+     "claim": "Cleveland APL reports $10,411,587 in revenue.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches the record."
+    },
+    {
+     "claim": "Angels For Animals reports $7,619,634 in revenue.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches the record."
+    },
+    {
+     "claim": "Angels For Animals describes its programs only briefly.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Its program description is a single short sentence."
+    },
+    {
+     "claim": "Humane Society Of Delaware County reports 1,906 adoptions.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,906 animals adopted in 2024."
+    },
+    {
+     "claim": "Humane Society Of Delaware County has capacity for about 122 animals.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states capacity of approximately 122 animals."
+    },
+    {
+     "claim": "League For Animal Welfare reports 2,118 adoptions.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states 2,118 adoptions in 2024."
+    },
+    {
+     "claim": "League For Animal Welfare runs a no-kill shelter.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission describes a no-kill animal shelter."
+    },
+    {
+     "claim": "League For Animal Welfare runs a wellness clinic.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs describe a Wellness Clinic."
+    },
+    {
+     "claim": "Cleveland APL does both cruelty investigations and sheltering.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record lists sheltering and humane investigations."
+    },
+    {
+     "claim": "Wood County Humane Society does both cruelty investigations and sheltering.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record lists shelter operations and cruelty case investigations."
+    },
+    {
+     "claim": "Animal Welfare League Of Trumbull County does both cruelty investigations and sheltering.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record states it investigates cruelty and provides shelter."
+    },
+    {
+     "claim": "Cincinnati Animal Care repeats its mission as its program description.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs text are identical in the record."
+    },
+    {
+     "claim": "Crossed Paws Animal Shelter reports $144,583 in revenue.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Revenue matches the record."
+    },
+    {
+     "claim": "Crossed Paws Animal Shelter shelters dogs.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record mentions funds to shelter the dogs."
+    }
+   ],
+   "words": 160
+  },
+  {
+   "q": "animal shelters in Ohio",
+   "ask": "Which of these run low-cost spay and neuter programs?",
+   "answer": "Only **Animal Friends Humane Society** describes a \"low cost spay and neuter\" program in its filing [15]. Others mention spay/neuter work, but their filings don't say whether it's low-cost.\n\n- **League For Animal Welfare** runs a Wellness Clinic serving shelter animals, other shelters and rescues, and \"the community at large,\" with 1,656 spay/neuter surgeries reported [3].\n- **Wood County Humane Society** has a \"snip (spay/neuter) program\" that assists local animal welfare groups, government agencies and pet owners [11].\n- **Animal Shelter Society** \"provides programs promoting spaying and neutering\" [5].\n- **Toledo Animal Shelter Association** [8], **Animal Adoption Foundation** [9] and **Humane Society Of The Ohio Valley** [14] list spay/neuter programs without saying who they serve or what they cost.\n- **Stark County Humane Society** spays/neuters shelter animals and passes the cost on through adoption fees [7].\n\nTo confirm pricing, you'd need to contact the organizations directly.",
+   "ms": 6622,
+   "claims": [
+    {
+     "claim": "Animal Friends Humane Society describes a low cost spay and neuter program.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states 'provide low cost spay and neuter programs.'"
+    },
+    {
+     "claim": "League For Animal Welfare runs a Wellness Clinic serving shelter animals, other shelters and rescues, and the community at large.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record describes the Wellness Clinic serving these groups."
+    },
+    {
+     "claim": "League For Animal Welfare reported 1,656 spay/neuter surgeries.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states 1,656 spay/neuter surgeries."
+    },
+    {
+     "claim": "Wood County Humane Society has a snip (spay/neuter) program assisting local animal welfare groups, government agencies and pet owners.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record describes the snip program and who it assists."
+    },
+    {
+     "claim": "Animal Shelter Society provides programs promoting spaying and neutering.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record states this directly."
+    },
+    {
+     "claim": "Toledo Animal Shelter Association lists a spay/neuter program.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record mentions a mandatory spay/neuter program."
+    },
+    {
+     "claim": "Animal Adoption Foundation lists a spay/neuter program.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record says AAF provides spay/neuter programs."
+    },
+    {
+     "claim": "Humane Society Of The Ohio Valley lists spay/neuter work.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs include spay & neuter of animals."
+    },
+    {
+     "claim": "Stark County Humane Society spays/neuters shelter animals.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record says animals are transported, altered, returned to shelter."
+    },
+    {
+     "claim": "Stark County Humane Society passes the spay/neuter cost on through adoption fees.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record states cost passed on in adoption fees."
+    }
+   ],
+   "words": 146
+  },
+  {
+   "q": "food banks in rural Appalachia that do workforce training, under $500K",
+   "ask": "Compare the top 3",
+   "answer": "**Morgan-Scott Project For Co-Operative Christian Concerns** shows the clearest record of both food help and job training [1]. **City Of Refuge Pulaski Inc** reports a much larger food operation but less on training [2], and **Riverplace Assistance Corporation** mentions food and career training in its mission but reports only housing in its programs [3].\n\n- **Morgan-Scott [1]:** Revenue $315,307. Reports \"job training to 42 individuals,\" \"916 food boxes,\" and a weekly food line \"averaging 85 families\" in Morgan and Scott counties, Tennessee.\n- **City of Refuge [2]:** Revenue $227,813. Served \"10,491 families\" and issued \"approximately 250,000 pounds of food and supplies.\" The mission lists \"job training/placement assistance,\" but the programs describe only \"coaching for job interviews,\" with no training numbers.\n- **Riverplace [3]:** Revenue $14,672. The mission names \"food assistance\" and \"career training,\" but the program section describes only \"transitional housing for outpatients of riverplace addiction recovery care.\"\n- **Trade-off:** [1] has the best evidence of training, [2] has the largest food reach, and [3] is smallest and has no reported food or training activity.\n- **Not stated:** None of these filings describe themselves as \"rural\" or as a \"food bank\" [1][2][3].",
+   "ms": 8012,
+   "claims": [
+    {
+     "claim": "Morgan-Scott reports both food help and job training.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Programs list job training and food boxes/food line."
+    },
+    {
+     "claim": "City of Refuge reports a much larger food operation than Morgan-Scott.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "10,491 families and 250,000 lbs versus 916 boxes."
+    },
+    {
+     "claim": "City of Refuge reports less on training.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs mention only interview coaching, no training numbers."
+    },
+    {
+     "claim": "Riverplace mentions food and career training in its mission.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission lists food assistance and career training."
+    },
+    {
+     "claim": "Riverplace reports only housing in its programs.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs list only transitional housing."
+    },
+    {
+     "claim": "Morgan-Scott revenue is $315,307.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states $315,307."
+    },
+    {
+     "claim": "Morgan-Scott provided job training to 42 individuals.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "Morgan-Scott gave out 916 food boxes.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "Morgan-Scott's weekly food line averages 85 families.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "Morgan-Scott operates in Morgan and Scott counties, Tennessee.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission names Morgan and Scott counties, Tennessee."
+    },
+    {
+     "claim": "City of Refuge revenue is $227,813.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states $227,813."
+    },
+    {
+     "claim": "City of Refuge served 10,491 families.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "City of Refuge issued approximately 250,000 pounds of food and supplies.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs."
+    },
+    {
+     "claim": "City of Refuge mission lists job training/placement assistance.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission includes that phrase."
+    },
+    {
+     "claim": "City of Refuge programs describe coaching for job interviews with no training numbers.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Programs mention interview coaching only."
+    },
+    {
+     "claim": "Riverplace revenue is $14,672.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states $14,672."
+    },
+    {
+     "claim": "Riverplace programs describe transitional housing for outpatients of Riverplace addiction recovery care.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Quoted from programs."
+    },
+    {
+     "claim": "Riverplace is the smallest of the three.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "$14,672 is lowest revenue among the three."
+    },
+    {
+     "claim": "Riverplace has no reported food or training activity.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs list only housing."
+    }
+   ],
+   "words": 192
+  },
+  {
+   "q": "food banks in rural Appalachia that do workforce training, under $500K",
+   "ask": "Which ones report how many people they trained?",
+   "answer": "**Morgan-Scott Project For Co-Operative Christian Concerns** [1] and **Community Cup Coffee And More Inc** [14] give a specific number of people in job training.\n\n- Morgan-Scott reports \"job training to 42 individuals\" [1].\n- Community Cup says \"there are six individuals in the program,\" which covers time management, customer service, point-of-sale and safe food handling [14].\n- **Highland Center** reports youth employment worksites \"for 8 youth workers,\" but doesn't call this training [15].\n- **City Of Refuge Pulaski Inc** served \"320 families and 800 individuals\" in a program that includes job interview coaching, but doesn't say how many got the coaching [2].\n- Several mention job training or workforce work without any count of people trained: [4], [5], [6], [7], [9], [12].",
+   "ms": 5455,
+   "claims": [
+    {
+     "claim": "Morgan-Scott reports job training to 42 individuals.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record states job training to 42 individuals."
+    },
+    {
+     "claim": "Community Cup reports six individuals in its program.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record says there are six individuals in the program."
+    },
+    {
+     "claim": "Community Cup's training covers time management, customer service, point-of-sale and safe food handling.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Skills training list includes these items."
+    },
+    {
+     "claim": "Highland Center provided youth employment worksites for 8 youth workers.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states local worksites for 8 youth workers."
+    },
+    {
+     "claim": "City Of Refuge Pulaski's community support program served 320 families and 800 individuals.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record states 320 families and 800 individuals in 2024."
+    },
+    {
+     "claim": "City Of Refuge Pulaski's program includes job interview coaching.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Services include coaching for job interviews."
+    },
+    {
+     "claim": "Empower Cocke County mentions job training.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs include job training to eligible clients."
+    },
+    {
+     "claim": "Knoxville Dream Center mentions job training.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Provides job training opportunities through hands-on experience."
+    },
+    {
+     "claim": "Project Healthy Kids mentions workforce work.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Seeks to develop a workforce program."
+    },
+    {
+     "claim": "Goodness Grows mentions job/vocational training.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Teaches life and vocational skills."
+    },
+    {
+     "claim": "Opportunity House mentions job training.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Job training skills are provided."
+    },
+    {
+     "claim": "Knox County Community Gardens mentions workforce work.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mentions workforce development via Battlefield Farm."
+    }
+   ],
+   "words": 122
+  },
+  {
+   "q": "homeless shelters in Louisville",
+   "ask": "Which of these actually operate a shelter?",
+   "answer": "The filings that describe running a shelter themselves are **Wayside Christian Mission** [1], **St John Center** [2], **Sweet Evening Breeze** [3], **Healing Place** [7], **Uniting Partners For Women And Children** [8], **House Of Hope Kentucky** [9] and **Soul Shelter** [13].\n\n- Overnight or emergency shelter: Wayside's emergency shelters and 100-person low barrier shelter [1]; Sweet Evening Breeze's emergency shelter for LGBTQ+ youth [3]; Healing Place's overnight shelters [7]; House of Hope's shelter for homeless women [9].\n- Day shelter only: St John Center [2] and Uniting Partners [8].\n- Soul Shelter bought homes as temporary shelters, with one run \"through a ministry partner\" [13].\n- Unclear from the text: **St Vincent de Paul**'s Ozanam Inn details are in Schedule O, which wasn't provided [4]. **Jefferson Street Baptist Center**'s program text cuts off at \"emergenc\" [10].\n- Not a shelter operator per the filings: **Coalition For The Homeless** coordinates White Flag shelters [12]. **Louisville Outreach For The Unsheltered** gives rides to shelter and hotel rooms [14]. **Choices** [5], **C.A.R.E.** [6], **Rhondas Another Chance** [11] and **Kaylyns House Of Joy** [15] describe housing, not shelter.",
+   "ms": 9420,
+   "claims": [
+    {
+     "claim": "Wayside Christian Mission operates emergency shelters and a 100-person low barrier shelter.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Mission and programs describe emergency shelters and a 100-person low barrier shelter."
+    },
+    {
+     "claim": "Sweet Evening Breeze provides emergency shelter for LGBTQ+ youth.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Programs list emergency shelter for LGBTQ+ youth experiencing homelessness."
+    },
+    {
+     "claim": "Healing Place operates overnight shelters.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Programs list overnight shelters."
+    },
+    {
+     "claim": "House of Hope provides shelter for homeless women.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record states a safe environment and shelter to homeless women."
+    },
+    {
+     "claim": "St John Center operates a day shelter.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record describes its day shelter and social services center."
+    },
+    {
+     "claim": "Uniting Partners operates a day shelter.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Mission states UP provides day shelter."
+    },
+    {
+     "claim": "Soul Shelter bought homes as temporary shelters.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record says it purchased three homes for temporary shelters."
+    },
+    {
+     "claim": "One Soul Shelter home provides emergency shelter through a ministry partner.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record states this directly."
+    },
+    {
+     "claim": "St Vincent de Paul's Ozanam Inn details are referred to Schedule O.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Record says 'Ozanam inn - see schedule o'."
+    },
+    {
+     "claim": "Coalition For The Homeless coordinates the White Flag shelter program.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record describes the White Flag program with three participating shelters."
+    },
+    {
+     "claim": "Louisville Outreach For The Unsheltered gives rides to shelter and provides hotel rooms.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs mention rides to shelter and hotel rooms."
+    },
+    {
+     "claim": "Choices describes housing rather than shelter.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record describes permanent supported housing."
+    },
+    {
+     "claim": "C.A.R.E. describes housing rather than shelter.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Record describes transitional housing."
+    },
+    {
+     "claim": "Rhondas Another Chance describes housing rather than shelter.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record describes a transitional home."
+    },
+    {
+     "claim": "Kaylyns House Of Joy describes housing rather than shelter.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record describes an independent living housing program."
+    }
+   ],
+   "words": 183
+  },
+  {
+   "q": "youth mentoring nonprofits in Kentucky under $1M",
+   "ask": "Which ones are small and community-run?",
+   "answer": "The filings don't say whether any group is \"community-run,\" so I can't confirm that. They do show which have small revenue and which mention volunteers or members.\n\n- **100 Black Men Of Louisville Inc** reports $28,473 in revenue and says it \"mentored 58 disadvantaged african male youths\" [5].\n- **Youth Ethics And Skills Center** reports $32,476 in revenue, with programs listed as fundraising for a coat drive and youth tech classes [9].\n- **Links Inc** reports $51,283 in revenue and describes \"enriching its members\" and mentoring youth in Frankfort and Lexington [13].\n- **Children Have Options In Choosing Experiences Inc** (CHOICE) reports $56,288 in revenue for counseling and mentoring youth [8].\n- **Mentors & Meals** is larger ($288,782) but names \"high school student mentors, college interns and adult volunteers\" in its mission [3].\n\nThe trade-off is that the smallest groups give little program detail [5][9][13][8]. Mentors & Meals offers the clearest description of who does the mentoring [3].",
+   "ms": 6963,
+   "claims": [
+    {
+     "claim": "100 Black Men Of Louisville Inc reports $28,473 in revenue.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $28,473."
+    },
+    {
+     "claim": "100 Black Men Of Louisville mentored 58 disadvantaged african male youths.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Programs field states this verbatim."
+    },
+    {
+     "claim": "Youth Ethics And Skills Center reports $32,476 in revenue.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $32,476."
+    },
+    {
+     "claim": "Youth Ethics And Skills Center's programs are fundraising for a coat drive and youth tech classes.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Programs mention coat drive fundraising and tech classes."
+    },
+    {
+     "claim": "Links Inc reports $51,283 in revenue.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $51,283."
+    },
+    {
+     "claim": "Links Inc describes enriching its members.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission states enriching its members."
+    },
+    {
+     "claim": "Links Inc mentors youth in Frankfort and Lexington.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Programs: mentored youth in Frankfort and Lexington."
+    },
+    {
+     "claim": "CHOICE reports $56,288 in revenue.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $56,288."
+    },
+    {
+     "claim": "CHOICE provides counseling and mentoring to youth.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Mission states counseling and mentoring youth."
+    },
+    {
+     "claim": "Mentors & Meals has revenue of $288,782.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $288,782."
+    },
+    {
+     "claim": "Mentors & Meals is larger than the four groups listed.",
+     "cites": [
+      3,
+      5,
+      9,
+      13,
+      8
+     ],
+     "verdict": "supported",
+     "why": "$288,782 exceeds all four stated revenues."
+    },
+    {
+     "claim": "Mentors & Meals uses high school student mentors, college interns and adult volunteers.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission names these mentor types."
+    },
+    {
+     "claim": "The smallest groups give little program detail.",
+     "cites": [
+      5,
+      9,
+      13,
+      8
+     ],
+     "verdict": "supported",
+     "why": "Records show brief one-line program descriptions."
+    }
+   ],
+   "words": 158
+  },
+  {
+   "q": "youth mentoring nonprofits in Kentucky under $1M",
+   "ask": "Which report outcomes for the youth they serve?",
+   "answer": "Two filings report measured results for youth: **Mentors & Meals** [3] and **2not1 Fatherhood & Families** [15]. Others report how many youth they served or list goals, not results.\n\n- **Mentors & Meals** [3] cites a 3-year evaluation completed in December 2016 showing \"statistically significant improvements in their Language Arts and Social Studies grades (99% confidence level) and a trend toward improvement in Math grades (90% confidence level)\" compared with similar non-participating students.\n- **2not1** [15] says \"one hundred percent of ROP youth gained conflict management skills.\" Its note on a decrease in negative in-school behavior is cut off in the filing [15].\n- **River City Drum Corp Cultural Arts Institute** [10] says it \"helped to build youths self-esteem\" but gives no measure.\n- **100 Black Men Of Louisville** [5], **Wanda Joyce Robinson Foundation** [7] and **Transform Scott County** [11] report numbers of youth served, not outcomes.\n- **Mentoring Plus** [4] lists objectives, such as improving attitudes toward drugs and school, without reported results.",
+   "ms": 7025,
+   "claims": [
+    {
+     "claim": "Mentors & Meals cites a 3-year evaluation completed in December 2016.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Record states 3-year evaluation completed December 2016."
+    },
+    {
+     "claim": "Mentors & Meals evaluation showed statistically significant improvements in Language Arts and Social Studies grades (99% confidence).",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs text."
+    },
+    {
+     "claim": "Mentors & Meals evaluation showed a trend toward improvement in Math grades (90% confidence) compared with similar non-participants.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Stated in programs text."
+    },
+    {
+     "claim": "2not1 says one hundred percent of ROP youth gained conflict management skills.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states this directly."
+    },
+    {
+     "claim": "2not1's note on a decrease in negative in-school behavior is cut off in the filing.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record text truncates after 'decrease in negative in-school'."
+    },
+    {
+     "claim": "River City Drum Corp says it helped to build youths' self-esteem.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Programs text states this."
+    },
+    {
+     "claim": "100 Black Men of Louisville reports number of youth served.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mentored 58 youths."
+    },
+    {
+     "claim": "Wanda Joyce Robinson Foundation reports number of youth served.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "More than 500 children and youth served."
+    },
+    {
+     "claim": "Transform Scott County reports number of youth served.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Served 35 local youths."
+    },
+    {
+     "claim": "Mentoring Plus lists objectives such as improving attitudes toward drugs and school.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Objectives listed in programs text."
+    }
+   ],
+   "words": 164
+  },
+  {
+   "q": "addiction recovery programs in West Virginia",
+   "ask": "Which offer residential treatment?",
+   "answer": "**Pollen8 Llc** is the clearest match: its filing describes \"24 hour supervised residential treatment for women with substance use disorder\" at a \"licensed behavioral health facility\" [10]. Several others offer recovery housing, but their filings don't call it treatment.\n\n- **Clarksburg Missions Inc** provides \"long term residential housing for participants focused on the addiction recovery,\" with a capacity of 75 residents [15].\n- **Ten Up Ministries Thrift Store** offers medication assisted treatment and a sober living home, but doesn't say the treatment itself is residential [12].\n- **The Storehouse Inc** runs a free recovery program that \"provides housing and provide all needs during their stay with us up to a year\" [7].\n- **Rea Of Hope Fellowship Home Inc** provides \"a safe, positive and structured home environment\" for women in recovery [3].\n- Others describe transitional or sober living instead: **Southern West Virginia Fellowship Home Inc** [1], **Hawc Foundation** [8], **Semper Liberi Incorporated** [9], **Hero House** [14].",
+   "ms": 9045,
+   "claims": [
+    {
+     "claim": "Pollen8 Llc offers 24 hour supervised residential treatment for women with substance use disorder.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record states this program."
+    },
+    {
+     "claim": "Pollen8's residential treatment is at a licensed behavioral health facility.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Record says licensed behavioral health facility."
+    },
+    {
+     "claim": "Clarksburg Missions Inc provides long term residential housing for participants focused on addiction recovery.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Quoted directly from record."
+    },
+    {
+     "claim": "Clarksburg Missions has a capacity of 75 residents.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Record states capacity of 75 residents."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store offers medication assisted treatment.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Programs mention medication assisted treatment."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store operates a sober living home.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions sober living home."
+    },
+    {
+     "claim": "The Storehouse Inc runs a free recovery program.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Record says free program."
+    },
+    {
+     "claim": "The Storehouse provides housing and all needs during stays up to a year.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Quoted from record."
+    },
+    {
+     "claim": "Rea Of Hope provides a safe, positive and structured home environment.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Quoted from record."
+    },
+    {
+     "claim": "Rea Of Hope serves women in recovery.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Mission targets West Virginia women with addiction."
+    },
+    {
+     "claim": "Southern West Virginia Fellowship Home Inc offers transitional or sober living.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record describes structured transitional living."
+    },
+    {
+     "claim": "Hawc Foundation offers transitional or sober living.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Record mentions certified transitional living."
+    },
+    {
+     "claim": "Semper Liberi Incorporated offers transitional or sober living.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Record lists transitional housing services."
+    },
+    {
+     "claim": "Hero House offers transitional or sober living.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Record says faith based sober living home."
+    }
+   ],
+   "words": 157
+  },
+  {
+   "q": "addiction recovery programs in West Virginia",
+   "ask": "Compare the two largest by revenue",
+   "answer": "By listed revenue, the two largest are **Recovery Point Of Hunting Inc** at $6,437,460 [2] and **Ten Up Ministries Thrift Store** at $4,728,665 [12]. Recovery Point is larger but describes its work only in general terms, while Ten Up names specific recovery services within a broader mission.\n\n- **Focus:** Recovery Point's stated aim is \"to offer and promote recovery to those who suffer the vicious cycle of addiction to alcohol and drugs\" [2]. Ten Up's mission also covers spreading \"the gospel of jesus christ,\" worship services, food, housing and clothing, alongside a behavioral health agency and sober living home [12].\n- **Services named:** Recovery Point's filing doesn't list specific services [2]. Ten Up cites \"peer recovery supportive services and medication assisted treatment\" [12].\n- **Finances:** Recovery Point reports expenses of $5,630,510 and assets of $9,412,484 (2023) [2]. Ten Up reports expenses of $4,741,875 and assets of $2,935,310 (2024) [12].\n- **Evidence:** Neither filing reports how many people were served or any outcomes [2][12].",
+   "ms": 7996,
+   "claims": [
+    {
+     "claim": "Recovery Point Of Hunting Inc has revenue of $6,437,460.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $6,437,460."
+    },
+    {
+     "claim": "Ten Up Ministries Thrift Store has revenue of $4,728,665.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record lists revenue $4,728,665."
+    },
+    {
+     "claim": "Recovery Point and Ten Up are the two largest organizations by revenue.",
+     "cites": [
+      2,
+      12
+     ],
+     "verdict": "supported",
+     "why": "Their revenues exceed all others listed."
+    },
+    {
+     "claim": "Recovery Point is larger than Ten Up by revenue.",
+     "cites": [
+      2,
+      12
+     ],
+     "verdict": "supported",
+     "why": "$6.44M exceeds $4.73M."
+    },
+    {
+     "claim": "Recovery Point's stated aim is to offer and promote recovery to those suffering addiction to alcohol and drugs.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Matches program description quote."
+    },
+    {
+     "claim": "Ten Up's mission includes spreading the gospel of Jesus Christ.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Stated in mission."
+    },
+    {
+     "claim": "Ten Up's mission covers worship services, food, housing and clothing.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mission lists these."
+    },
+    {
+     "claim": "Ten Up's mission includes operating a behavioral health agency and sober living home.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Mission states both."
+    },
+    {
+     "claim": "Ten Up provides peer recovery supportive services and medication assisted treatment.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Programs field quotes this."
+    },
+    {
+     "claim": "Recovery Point reported expenses of $5,630,510 in 2023.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record matches."
+    },
+    {
+     "claim": "Recovery Point reported assets of $9,412,484 in 2023.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Record matches."
+    },
+    {
+     "claim": "Ten Up reported expenses of $4,741,875 in 2024.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record matches."
+    },
+    {
+     "claim": "Ten Up reported assets of $2,935,310 in 2024.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Record matches."
+    }
+   ],
+   "words": 163
+  },
+  {
+   "q": "free health clinics in Virginia",
+   "ask": "Which serve uninsured patients, and how many?",
+   "answer": "The filings that say they serve uninsured people are **Charlottesville Free Clinic** [1], **Arlington Free Clinic** [3], **Fauquier Free Clinic** [4], **St Luke Community Clinic** [5], **Mel Leaman Free Clinic** [7], **Guadalupe Free Clinic** [9], **Free Clinic of Franklin County** [10], **Catoctin Foundation (Loudoun Free Clinic)** [11], **Western Tidewater Free Clinic** [12], **Ledwith Lewis Free Clinic** [13] and **Tri-County Health Clinic** [15].\n\n- **Patient counts:** Fauquier reports \"over 12,200 patient care visits to a total of 2,242 different patients\" [4], St Luke \"275 unduplicated patients\" [5], and Loudoun Free Clinic \"1,225 residents during 3,689 medical visits\" [11].\n- **No patient count given:** The filings for [1], [3], [7], [9], [10], [12], [13] and [15] don't report how many patients they served.\n- **Don't use the word \"uninsured\":** **Shenandoah County Free Clinic** says \"underinsured\" [2], **Bradley Free Clinic** says \"underserved\" [6], **Hanover Interfaith Free Clinics** uses income limits [8], and **Blue Ridge Free Clinic** says \"most vulnerable and health-insecure\" [14].",
+   "ms": 10003,
+   "claims": [
+    {
+     "claim": "Charlottesville Free Clinic serves uninsured people.",
+     "cites": [
+      1
+     ],
+     "verdict": "supported",
+     "why": "Record mentions serving uninsured and underinsured individuals."
+    },
+    {
+     "claim": "Arlington Free Clinic serves uninsured people.",
+     "cites": [
+      3
+     ],
+     "verdict": "supported",
+     "why": "Serves Arlington adults living without health insurance."
+    },
+    {
+     "claim": "Fauquier Free Clinic serves uninsured people.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Programs mention uninsured low-income families."
+    },
+    {
+     "claim": "St Luke Community Clinic serves uninsured people.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Mission names low income uninsured residents."
+    },
+    {
+     "claim": "Mel Leaman Free Clinic serves uninsured people.",
+     "cites": [
+      7
+     ],
+     "verdict": "supported",
+     "why": "Serves working residents who are uninsured."
+    },
+    {
+     "claim": "Guadalupe Free Clinic serves uninsured people.",
+     "cites": [
+      9
+     ],
+     "verdict": "supported",
+     "why": "Serves medically uninsured residents."
+    },
+    {
+     "claim": "Free Clinic of Franklin County serves uninsured people.",
+     "cites": [
+      10
+     ],
+     "verdict": "supported",
+     "why": "Mission names low-income uninsured adults."
+    },
+    {
+     "claim": "Catoctin Foundation (Loudoun Free Clinic) serves uninsured people.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Serves low-income, uninsured Loudoun residents."
+    },
+    {
+     "claim": "Western Tidewater Free Clinic serves uninsured people.",
+     "cites": [
+      12
+     ],
+     "verdict": "supported",
+     "why": "Founders aimed to improve lives of the uninsured."
+    },
+    {
+     "claim": "Ledwith Lewis Free Clinic serves uninsured people.",
+     "cites": [
+      13
+     ],
+     "verdict": "supported",
+     "why": "Mission names low income, uninsured people."
+    },
+    {
+     "claim": "Tri-County Health Clinic serves uninsured people.",
+     "cites": [
+      15
+     ],
+     "verdict": "supported",
+     "why": "Serves low income, uninsured residents."
+    },
+    {
+     "claim": "Fauquier reports over 12,200 patient care visits to 2,242 different patients.",
+     "cites": [
+      4
+     ],
+     "verdict": "supported",
+     "why": "Exact figures in record."
+    },
+    {
+     "claim": "St Luke served 275 unduplicated patients.",
+     "cites": [
+      5
+     ],
+     "verdict": "supported",
+     "why": "Record states 275 unduplicated patients in 2024."
+    },
+    {
+     "claim": "Loudoun Free Clinic served 1,225 residents during 3,689 medical visits.",
+     "cites": [
+      11
+     ],
+     "verdict": "supported",
+     "why": "Record states these figures for FY2025."
+    },
+    {
+     "claim": "Shenandoah County Free Clinic says underinsured rather than uninsured.",
+     "cites": [
+      2
+     ],
+     "verdict": "supported",
+     "why": "Mission uses underinsured; uninsured absent."
+    },
+    {
+     "claim": "Bradley Free Clinic says underserved.",
+     "cites": [
+      6
+     ],
+     "verdict": "supported",
+     "why": "Mission mentions underserved residents."
+    },
+    {
+     "claim": "Hanover Interfaith Free Clinics uses income limits.",
+     "cites": [
+      8
+     ],
+     "verdict": "supported",
+     "why": "Eligibility at or below 150% of poverty level."
+    },
+    {
+     "claim": "Blue Ridge Free Clinic says most vulnerable and health-insecure.",
+     "cites": [
+      14
+     ],
+     "verdict": "supported",
+     "why": "Programs use that exact phrasing."
+    }
+   ],
+   "words": 159
+  }
+ ]
+}
