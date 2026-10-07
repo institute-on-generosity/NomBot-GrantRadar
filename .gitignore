@@ -1,0 +1,8 @@
+.archify/
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+__pycache__/
+.DS_Store

@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "NomBot System Architecture",
+    "output": ".archify/architecture-nombot-supabase-20261006-170423/nombot.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "propublica",
+      "type": "external",
+      "label": "ProPublica API",
+      "sublabel": "per-org detail",
+      "pos": [
+        250,
+        40
+      ],
+      "size": [
+        150,
+        60
+      ],
+      "tag": "on demand"
+    },
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Users",
+      "sublabel": "donors \u00b7 researchers",
+      "pos": [
+        40,
+        200
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Search UI",
+      "sublabel": "Next.js page",
+      "pos": [
+        250,
+        200
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "devs",
+      "type": "external",
+      "label": "Developers",
+      "sublabel": "external tools",
+      "pos": [
+        40,
+        400
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "JSON API",
+      "sublabel": "Next.js route",
+      "pos": [
+        250,
+        400
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "LLM Query Parser",
+      "sublabel": "any provider",
+      "pos": [
+        500,
+        300
+      ],
+      "size": [
+        170,
+        60
+      ],
+      "tag": "question \u2192 filters"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Postgres + pgvector",
+      "sublabel": "orgs \u00b7 financials \u00b7 filing_text",
+      "pos": [
+        870,
+        290
+      ],
+      "size": [
+        200,
+        80
+      ],
+      "tag": "managed \u00b7 HNSW index"
+    },
+    {
+      "id": "etl",
+      "type": "backend",
+      "label": "Python ETL",
+      "sublabel": "GitHub Actions \u00b7 monthly",
+      "pos": [
+        880,
+        600
+      ],
+      "size": [
+        180,
+        100
+      ]
+    },
+    {
+      "id": "emb",
+      "type": "backend",
+      "label": "Embedding Job",
+      "sublabel": "changed rows only",
+      "pos": [
+        880,
+        780
+      ],
+      "size": [
+        180,
+        60
+      ],
+      "tag": "512-dim"
+    },
+    {
+      "id": "rag",
+      "type": "backend",
+      "label": "RAG Answerer",
+      "sublabel": "cited summary of results",
+      "pos": [
+        500,
+        200
+      ],
+      "size": [
+        170,
+        60
+      ],
+      "tag": "phase 2 \u00b7 month 6"
+    },
+    {
+      "id": "bmf",
+      "type": "external",
+      "label": "IRS EO BMF",
+      "sublabel": "1.8M orgs \u00b7 monthly",
+      "pos": [
+        540,
+        560
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "soi",
+      "type": "external",
+      "label": "IRS SOI Extract",
+      "sublabel": "financials \u00b7 annual",
+      "pos": [
+        540,
+        640
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "xml",
+      "type": "external",
+      "label": "IRS 990 e-file XML",
+      "sublabel": "mission + programs",
+      "pos": [
+        540,
+        720
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "ntee",
+      "type": "external",
+      "label": "NCCS NTEE Codes",
+      "sublabel": "cause taxonomy",
+      "pos": [
+        540,
+        800
+      ],
+      "size": [
+        170,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "NomBot \u00b7 Vercel",
+      "wraps": [
+        "ui",
+        "api",
+        "llm",
+        "rag"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "generosity-data \u00b7 GitHub Actions",
+      "wraps": [
+        "etl",
+        "emb"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Public data sources",
+      "wraps": [
+        "bmf",
+        "soi",
+        "xml",
+        "ntee"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Supabase Pro \u00b7 hosted Postgres",
+      "wraps": [
+        "db"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-question",
+      "from": "users",
+      "to": "ui",
+      "label": "question",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dev-request",
+      "from": "devs",
+      "to": "api",
+      "label": "HTTPS"
+    },
+    {
+      "id": "ui-parse",
+      "from": "ui",
+      "to": "llm",
+      "label": "parse"
+    },
+    {
+      "id": "api-parse",
+      "from": "api",
+      "to": "llm",
+      "label": "parse"
+    },
+    {
+      "id": "hybrid-query",
+      "from": "llm",
+      "to": "db",
+      "label": "SQL filters + vector search",
+      "variant": "emphasis"
+    },
+    {
+      "id": "detail-lookup",
+      "from": "ui",
+      "to": "propublica",
+      "label": "detail page",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "etl-upsert",
+      "from": "etl",
+      "to": "db",
+      "label": "upsert",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "etl-to-embed",
+      "from": "etl",
+      "to": "emb",
+      "label": "new text"
+    },
+    {
+      "id": "embed-write",
+      "from": "emb",
+      "to": "db",
+      "label": "vectors",
+      "variant": "dashed"
+    },
+    {
+      "id": "ask-results",
+      "from": "ui",
+      "to": "rag",
+      "label": "ask about results",
+      "variant": "dashed"
+    },
+    {
+      "id": "rag-fetch",
+      "from": "rag",
+      "to": "db",
+      "label": "result text",
+      "variant": "dashed"
+    },
+    {
+      "id": "bmf-load",
+      "from": "bmf",
+      "to": "etl",
+      "label": "org list"
+    },
+    {
+      "id": "soi-load",
+      "from": "soi",
+      "to": "etl",
+      "label": "financials"
+    },
+    {
+      "id": "xml-load",
+      "from": "xml",
+      "to": "etl",
+      "label": "text"
+    },
+    {
+      "id": "ntee-load",
+      "from": "ntee",
+      "to": "etl",
+      "label": "categories"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Query path",
+      "items": [
+        "LLM turns a question into filters (state, NTEE, budget) + search text",
+        "One Postgres query: SQL filters + pgvector similarity",
+        "Same engine serves the UI and the JSON API",
+        "Phase 2: RAG answers questions about the shown results, citing 990 filings"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Data",
+      "items": [
+        "BMF: ~1.8M orgs, active only",
+        "SOI: financials for ~300K e-filers",
+        "990 XML: mission + program text, the only embedding source"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cost",
+      "items": [
+        "Supabase Pro $25/mo (~1\u20132 GB)",
+        "LLM parsing $5\u201320/mo",
+        "Vercel + GitHub Actions free"
+      ]
+    }
+  ]
+}
