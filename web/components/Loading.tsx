@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 const SEARCH_STEPS = ["Searching nonprofits…", "Scoring relevance…", "Almost there…"];
 const STEP_AT = [0, 2000, 4500, 9000]; // ms; a new question takes ~3–10s (parse, search, scoring)
 
-// Loading popup + progress bar. Portaled to <body>: a frosted (backdrop-filter) ancestor such as
+// Loading card centered in the viewport over a frosted veil, plus a progress bar along the top. Portaled to <body>: a frosted (backdrop-filter) ancestor such as
 // the search bar would otherwise trap position: fixed and pin the popup on top of the input.
 // Appears after a short delay (CSS) so instant navigations don't flash it.
 export function Loading({ label = "Loading…", search = false }: { label?: string; search?: boolean }) {
@@ -14,9 +14,7 @@ export function Loading({ label = "Loading…", search = false }: { label?: stri
   useEffect(() => {
     const start = performance.now();
     const id = setInterval(() => setElapsed(performance.now() - start), 200);
-    const root = document.documentElement;
-    root.dataset.loading = "";
-    return () => { clearInterval(id); delete root.dataset.loading; };
+    return () => clearInterval(id);
   }, []);
 
   const steps = search ? [label, ...SEARCH_STEPS] : [label];

@@ -3,7 +3,7 @@
   --g: #248a3d; --g-dark: #1b6e30; --g-fill: #248a3d; --g-fill-hover: #1b6e30; --g-tint: rgba(36,138,61,.09); --g-line: rgba(36,138,61,.28);
   --ink: #1d1d1f; --ink-2: #424245; --mute: #6e6e73; --faint: #86868b;
   --bg: #ffffff; --fill: #f5f5f7; --fill-2: #e8e8ed; --line: rgba(0,0,0,.08);
-  --glass: rgba(246,246,248,.72); --glass-2: rgba(255,255,255,.72);
+  --glass: rgba(246,246,248,.72); --glass-2: rgba(255,255,255,.72); --veil: rgba(236,236,240,.55);
   --shadow: 0 2px 6px rgba(0,0,0,.04), 0 10px 32px rgba(0,0,0,.07);
   --spring: cubic-bezier(.32,.72,0,1);
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
@@ -14,7 +14,7 @@
     --g: #30d158; --g-dark: #4ade80; --g-fill: #248a3d; --g-fill-hover: #2a9d46; --g-tint: rgba(48,209,88,.13); --g-line: rgba(48,209,88,.35);
     --ink: #f5f5f7; --ink-2: #d2d2d7; --mute: #98989d; --faint: #6e6e73;
     --bg: #000000; --fill: #1c1c1e; --fill-2: #2c2c2e; --line: rgba(255,255,255,.1);
-    --glass: rgba(28,28,30,.72); --glass-2: rgba(28,28,30,.72);
+    --glass: rgba(28,28,30,.72); --glass-2: rgba(28,28,30,.72); --veil: rgba(0,0,0,.45);
     --shadow: 0 2px 6px rgba(0,0,0,.3), 0 10px 32px rgba(0,0,0,.45);
   }
 }
@@ -307,7 +307,16 @@ button.fchip-main { cursor: pointer; }
 .modal { position: relative; width: min(760px, 100%); max-height: 92vh; display: flex; border-radius: 22px; background: var(--bg); box-shadow: 0 24px 80px rgba(0,0,0,.28); animation: modal-in .35s var(--spring) both; overflow: hidden; }
 .modal-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 .modal-body main { padding: 28px 32px 36px; }
+.modal-loading { padding: 32px; }
 .modal-close { position: absolute; top: 14px; right: 14px; z-index: 1; background: var(--fill); }
+/* Split view: a source opens beside the organization, inside the same popover */
+.modal.split { width: min(1320px, 100%); }
+.modal.split .modal-close { right: auto; left: 14px; }
+.modal-source { flex: 0 0 48%; display: flex; flex-direction: column; min-width: 0; border-left: 1px solid var(--line); background: var(--bg); animation: pane-in .35s var(--spring) both; }
+.modal-source .panel-head { padding-right: 10px; }
+.modal-source .iconbtn { text-decoration: none; }
+@keyframes pane-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@media (max-width: 900px) { .modal.split { flex-direction: column; } .modal-source { flex: 1 1 55%; border-left: 0; border-top: 1px solid var(--line); } }
 @keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
 
 /* History and saved pages */
@@ -367,19 +376,18 @@ button.fchip-main { cursor: pointer; }
 @keyframes shimmer { 50% { opacity: .55; } }
 
 /* Loading popup: progress bar along the top + a step pill below the search bar, centered on the content */
-.loading { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: 0; animation: show .15s ease-out .15s forwards; }
+/* Frosted, slightly grayed layer over the whole viewport while a page loads */
+.loading { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: 0; animation: show .2s ease-out .15s forwards; background: var(--veil); -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%); }
 .loading-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--g); transform-origin: left; transform: scaleX(0); transition: transform .3s ease-out; box-shadow: 0 0 8px var(--g-line); }
-.loading-pill { position: absolute; top: 76px; left: calc(50% + 130px); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); color: var(--ink); font-size: 14px; font-weight: 500; border-radius: 999px; padding: 10px 16px; box-shadow: 0 0 0 1px var(--line), var(--shadow); white-space: nowrap; }
-body:has(.side.collapsed) .loading-pill { left: calc(50% + 30px); }
+/* Status card, centered exactly in the viewport */
+.loading-pill { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 12px; background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 500; border-radius: 999px; padding: 14px 22px; box-shadow: 0 0 0 1px var(--line), 0 18px 50px rgba(0,0,0,.16); white-space: nowrap; animation: pill-in .35s var(--spring) .15s both; }
+@keyframes pill-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.94); } to { opacity: 1; transform: translate(-50%, -50%); } }
 .loading-text { animation: step-in .3s var(--spring) both; }
 .loading-steps { display: flex; gap: 4px; margin-left: 2px; }
 .loading-steps i { width: 6px; height: 6px; border-radius: 999px; background: var(--fill-2); transition: background-color .3s, width .3s var(--spring); }
 .loading-steps i.done { background: var(--g-line); }
 .loading-steps i.now { width: 16px; background: var(--g); }
 .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--fill-2); border-top-color: var(--g); animation: spin .7s linear infinite; flex: none; }
-/* While a new page loads, fade what's on screen (but not the search bar) so it reads as "being replaced" */
-.content main > * { transition: opacity .25s ease .2s; }
-:root[data-loading] .content main > :not(.search):not(.hero) { opacity: .4; }
 @keyframes step-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes show { to { opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -395,7 +403,6 @@ body:has(.side.collapsed) .loading-pill { left: calc(50% + 30px); }
   .scrim { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.25); }
   main { padding: 20px 16px 56px; }
   .search { top: 62px; }
-  .loading-pill, body:has(.side.collapsed) .loading-pill { left: 50%; top: 124px; }
   .greet { font-size: 32px; gap: 14px; }
   .greet .logo { width: 32px; height: 32px; font-size: 16px; }
   .hero { min-height: calc(100vh - 140px); }

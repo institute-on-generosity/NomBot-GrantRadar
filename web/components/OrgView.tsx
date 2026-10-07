@@ -24,9 +24,14 @@ export function OrgView(props: Props) {
   );
 }
 
-function Src({ href, children }: { href?: string; children: React.ReactNode }) {
+// In a modal, NomBot's own source viewers open beside the organization inside the popover
+// (/preview/org/<ein>?src=<viewer url>), replacing the history entry so × still closes it all.
+export const previewWithSource = (ein: string, src: string) => `/preview/org/${ein}?src=${encodeURIComponent(src)}`;
+
+function Src({ href, children, inModal }: { href?: string; children: React.ReactNode; inModal?: string }) {
   if (!href) return null;
-  return href.startsWith("/") ? <NavLink className="cite" href={href} label="Opening the IRS file…">{children}</NavLink> : <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
+  if (!href.startsWith("/")) return <a className="cite" href={href} target="_blank" rel="noreferrer">{children} ↗</a>;
+  return <NavLink className="cite" href={inModal ? previewWithSource(inModal, href) : href} replace={Boolean(inModal)} label="Opening the IRS file…">{children}</NavLink>;
 }
 
 async function Org({ params, searchParams, modal }: Props) {
@@ -70,7 +75,7 @@ async function Org({ params, searchParams, modal }: Props) {
                   <td className="n">{money(y.revenue)}</td>
                   <td className="n">{y.expenses != null ? money(y.expenses) : "—"}</td>
                   <td className="n">{y.assets != null ? money(y.assets) : "—"}</td>
-                  <td><Src href={y.url}>{y.source}</Src></td>
+                  <td><Src href={y.url} inModal={modal ? o.ein : undefined}>{y.source}</Src></td>
                 </tr>
               ))}
             </tbody>
@@ -91,7 +96,7 @@ async function Org({ params, searchParams, modal }: Props) {
       <section>
         <h2>Sources</h2>
         <ul className="sources">
-          {o.sources.map((s) => <li key={s.url}>{s.internal ? <NavLink href={s.url} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
+          {o.sources.map((s) => <li key={s.url}>{s.internal ? <NavLink href={modal ? previewWithSource(o.ein, s.url) : s.url} replace={modal} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
         </ul>
       </section>
     </article>

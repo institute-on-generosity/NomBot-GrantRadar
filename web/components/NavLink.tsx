@@ -9,9 +9,10 @@ function Pending({ label, search }: { label?: string; search?: boolean }) {
 
 // A Link that shows the loading popup while its page is on the way.
 // search: the target runs a search (shows the step-by-step progress).
-export function NavLink({ href, className, children, label, title, current, search }: { href: string; className?: string; children: React.ReactNode; label?: string; title?: string; current?: boolean; search?: boolean }) {
+// replace: swap the history entry instead of adding one (e.g. switching panes inside a modal).
+export function NavLink({ href, className, children, label, title, current, search, replace }: { href: string; className?: string; children: React.ReactNode; label?: string; title?: string; current?: boolean; search?: boolean; replace?: boolean }) {
   return (
-    <Link href={href} className={className} title={title} aria-current={current ? "page" : undefined}>
+    <Link href={href} className={className} title={title} aria-current={current ? "page" : undefined} replace={replace} scroll={replace ? false : undefined}>
       {children}
       <Pending label={label} search={search} />
     </Link>
