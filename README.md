@@ -1,7 +1,7 @@
 # NomBot
 
 **Plain-language search over every registered US nonprofit, built only on public IRS data.**
-An [Institute on Generosity](https://instituteongenerosity.org) AI Fellowship project · Sep 2026 – Feb 2027
+An [Institute on Generosity](https://instituteongenerosity.org) AI Fellowship project · **Deadline: Dec 31, 2026**
 
 ## Problem
 IRS data on ~1.8M nonprofits is public, but it is buried in raw files. Paid tools (Candid, Charity Navigator) don't support plain-language search.
@@ -10,8 +10,8 @@ A donor asking *"food banks in rural Appalachia that also do workforce training,
 ## Solution
 Built in two phases: **search first, then RAG.**
 
-1. **Phase 1, Search (months 1–5).** Type a question and get a ranked list of nonprofits, each with EIN, location, financials and cause code. The same search is available as a **JSON API**.
-2. **Phase 2, RAG (month 6).** An **"Ask about these results"** button gives a written answer about the results on screen, for example *"Which of these also run job training?"*. Every claim cites a 990 filing.
+1. **Phase 1, Search (by Nov 15).** Type a question and get a ranked list of nonprofits, each with EIN, location, financials and cause code. The same search is available as a **JSON API**.
+2. **Phase 2, RAG (by Nov 22).** An **"Ask about these results"** button gives a written answer about the results on screen, for example *"Which of these also run job training?"*. Every claim cites a 990 filing.
 
 Free and open source. Runs for about $30–60/mo.
 
@@ -19,13 +19,13 @@ Free and open source. Runs for about $30–60/mo.
 
 | Who | What they want | Served by |
 |---|---|---|
-| **Developers** | Raw, structured nonprofit data to build their own tools | **Phase 1, Search:** filtered + semantic search returning records (EIN, location, financials, NTEE) via the JSON API, read-only from **month 2** |
+| **Developers** | Raw, structured nonprofit data to build their own tools | **Phase 1, Search:** filtered + semantic search returning records (EIN, location, financials, NTEE) via the JSON API, read-only from **Oct 25** |
 | **LLM users** (donors, IoG researchers, program officers, journalists) | High-reasoning answers: comparisons, summaries, "which of these…?" | **Phase 2, RAG:** written answers over search results, with every claim cited to a 990 filing |
 
 ## User experience
 > All names, EINs and figures below are **mock data** for illustration.
 
-### Developer: raw data via the JSON API (Phase 1, read-only from month 2)
+### Developer: raw data via the JSON API (Phase 1, read-only from Oct 25)
 
 **Question:** *"Give me food banks in West Virginia and Kentucky with revenue under $500K that do workforce training."*
 
@@ -64,7 +64,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 }
 ```
 
-### End user: plain-language search (Phase 1, web UI from month 4)
+### End user: plain-language search (Phase 1, web UI from Nov 8)
 
 **Question:** *"Food banks in rural Appalachia that also do workforce training, under $500K budget."*
 
@@ -72,7 +72,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 ![NomBot search results mockup: plain-language query, "Understood as" filter chips, filter sidebar, two result cards with financials and highlighted mission text, and an "Ask about these results" button](docs/ux/ux-search.png)
 
-### End user: reasoning over results with RAG (Phase 2, month 6)
+### End user: reasoning over results with RAG (Phase 2, from Nov 22)
 
 **Question** (asked about the 12 results above): *"Which of these combine food distribution with real job training, and which is the most efficient?"*
 
@@ -88,7 +88,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | **Gets** | JSON records | A ranked list with filters | A written, cited answer |
 | **Speed** | <1s | <2s | 4–10s, streamed in |
 | **Who decides** | Their own code | The user | The user, helped by the AI |
-| **Available** | Month 2 | Month 4 | Month 6 |
+| **Available** | Oct 25 | Nov 8 | Nov 22 |
 
 ## Architecture
 
@@ -119,38 +119,22 @@ Next.js + Vercel · Supabase Pro (hosted Postgres + pgvector, HNSW index; shared
 The data pipeline lives in [`generosity-data`](https://github.com/institute-on-generosity/generosity-data). [GrantRadar](https://github.com/institute-on-generosity/GrantRadar) uses the same database.
 
 ## Roadmap
+**Deadline: Dec 31, 2026.** NomBot and GrantRadar are built back to back on the shared `generosity-data` pipeline, so each project gets one focused stretch.
 
-| Month | Milestone | Done when |
+| Dates | Work | Done when |
 |---|---|---|
-| 1 | Schema; load BMF + SOI; extract 990 text; keyword search | 1.8M orgs searchable by keyword |
-| 2 | Embeddings for orgs with text (~300–600K); **basic read-only JSON API** (search endpoint, rate-limited) | Semantic search works internally; **developers can query the data** |
-| 3 | LLM query parsing; 50-query eval set | ≥90% relevant results on the eval set |
-| 4 | Web UI: search, result cards, filters | Public URL; IoG team using it |
-| 5 | Full JSON API (docs, API keys); automated monthly refresh; testing with IoG + 5 external users | **Phase 1 launch:** search + API public |
-| 6 | **Phase 2, RAG:** "Ask about these results" with citations; docs | RAG live; handoff complete |
-
-### Proposed: accelerated timeline (pending IoG approval)
-
-**Request:** build NomBot and GrantRadar back to back in **~2–3 months** instead of 6.
-
-**Why:** building one project in a concentrated stretch keeps all the context fresh, so details don't slip between sessions, and keeps momentum through to done.
-
-| Weeks | NomBot build | Done when |
-|---|---|---|
-| 1–2 | Schema; load BMF + SOI; extract 990 text; keyword search | 1.8M orgs searchable |
-| 3 | Embeddings; basic read-only JSON API | Developers can query the data |
-| 4 | LLM query parsing; 50-query eval set | ≥90% relevant results |
-| 5 | Web UI | **Phase 1 (search) build complete** |
-| 6 | Full API + docs; monthly refresh; **Phase 2 RAG** | **NomBot build complete** |
-| 7–11 | GrantRadar on the same `generosity-data` pipeline | GrantRadar build complete |
-
-**What stays on the original schedule:** testing with IoG staff and external users, and the usage-based success metrics. These need real usage time, so they run after the build, with light support through Feb.
-
-**Open questions for IoG:** is early completion approved, and does it change how milestones or the stipend are tracked?
+| Oct 5 – Oct 18 | Schema; load BMF + SOI; extract 990 text; keyword search | 1.8M orgs searchable by keyword |
+| Oct 19 – Oct 25 | Embeddings for orgs with text (~300–600K); **basic read-only JSON API** | Developers can query the data |
+| Oct 26 – Nov 1 | LLM query parsing; 50-query eval set | ≥90% relevant results on the eval set |
+| Nov 2 – Nov 8 | Web UI: search, result cards, filters | Public URL; IoG team using it |
+| Nov 9 – Nov 15 | Full JSON API (docs, keys); monthly refresh; start testing with IoG + 5 external users | **Phase 1 launch:** search + API public |
+| Nov 16 – Nov 22 | **Phase 2, RAG:** "Ask about these results" with citations | **NomBot build complete** |
+| Nov 23 – Dec 20 | GrantRadar build (lighter Thanksgiving week); NomBot testing continues alongside | GrantRadar build complete |
+| Dec 21 – Dec 31 | Buffer; fixes from testing; documentation; IoG handoff | **Everything done** |
 
 ## Success metrics
 - ≥90% of test queries return relevant results in under 2 seconds
-- IoG research uses NomBot for one real task before month 5
+- IoG research uses NomBot for one real task before Dec 15
 - ≥3 external users give positive feedback
 - Monthly refresh runs with no manual steps
 - Phase 2: 100% of RAG claims cite a filing; zero unsupported claims on a 30-question eval set
@@ -186,38 +170,41 @@ The data pipeline lives in [`generosity-data`](https://github.com/institute-on-g
 - [x] System architecture diagram
 - [x] User experience mockups
 - [x] Repos created: `NomBot`, `GrantRadar`, `generosity-data`
-- [ ] Accelerated timeline approved by IoG
+- [x] Deadline set: Dec 31, 2026
 - [ ] Supabase Pro project created
 
-### Month 1: Data + keyword search
+### Oct 5 – Oct 18: Data + keyword search
 - [ ] Database schema (`orgs`, `financials`, `filing_text`)
 - [ ] Load IRS BMF (active orgs only)
 - [ ] Load IRS SOI financials
 - [ ] Extract mission + program text from 990 XML
 - [ ] Keyword search over name, city, mission
 
-### Month 2: Semantic search + read-only API
+### Oct 19 – Oct 25: Semantic search + read-only API
 - [ ] Embeddings for orgs with text (~300–600K)
 - [ ] pgvector HNSW index
 - [ ] Basic read-only JSON API (search endpoint, rate-limited)
 
-### Month 3: Plain-language queries
+### Oct 26 – Nov 1: Plain-language queries
 - [ ] LLM query parser (question → filters + search text)
 - [ ] 50-query eval set
 - [ ] ≥90% relevant results on the eval set
 
-### Month 4: Web UI
+### Nov 2 – Nov 8: Web UI
 - [ ] Search page, result cards, filters
 - [ ] Public URL on Vercel
 - [ ] IoG team using it
 
-### Month 5: Phase 1 launch
+### Nov 9 – Nov 15: Phase 1 launch
 - [ ] Full JSON API (docs, API keys)
 - [ ] Automated monthly refresh (GitHub Actions)
 - [ ] Testing with IoG staff + 5 external users
 - [ ] **Phase 1 launch:** search + API public
 
-### Month 6: Phase 2 RAG + handoff
+### Nov 16 – Nov 22: Phase 2 RAG
 - [ ] "Ask about these results" with citations
 - [ ] 30-question RAG eval: every claim cited, zero unsupported claims
+
+### Dec 21 – Dec 31: Wrap-up
+- [ ] Fixes from user testing
 - [ ] Documentation and IoG handoff

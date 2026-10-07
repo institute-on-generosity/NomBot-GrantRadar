@@ -610,8 +610,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
         <text x="970" y="832" class="t-backend" font-size="7" text-anchor="middle">512-dim</text>
         </g>
 
-        <g id="node-rag" data-node-id="rag" data-node-label="RAG Answerer" tabindex="0" role="button" aria-label="Focus RAG Answerer, cited summary of results, NomBot · Vercel" aria-pressed="false" data-node-kind="backend" data-node-sublabel="cited summary of results" data-node-tag="phase 2 · month 6" data-node-context="NomBot · Vercel">
-          <title>RAG Answerer · cited summary of results · NomBot · Vercel · phase 2 · month 6</title>
+        <g id="node-rag" data-node-id="rag" data-node-label="RAG Answerer" tabindex="0" role="button" aria-label="Focus RAG Answerer, cited summary of results, NomBot · Vercel" aria-pressed="false" data-node-kind="backend" data-node-sublabel="cited summary of results" data-node-tag="phase 2 · Nov 22" data-node-context="NomBot · Vercel">
+          <title>RAG Answerer · cited summary of results · NomBot · Vercel · phase 2 · Nov 22</title>
           <rect x="500" y="200" width="170" height="60" rx="6" class="c-mask"/>
           <rect x="500" y="200" width="170" height="60" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(506 206) scale(0.6875)">
@@ -619,7 +619,7 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           </g>
           <text data-node-label="" x="585" y="228" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">RAG Answerer</text>
         <text x="585" y="244" class="t-muted" font-size="9" text-anchor="middle">cited summary of results</text>
-        <text x="585" y="252" class="t-backend" font-size="7" text-anchor="middle">phase 2 · month 6</text>
+        <text x="585" y="252" class="t-backend" font-size="7" text-anchor="middle">phase 2 · Nov 22</text>
         </g>
 
         <g id="node-bmf" data-node-id="bmf" data-node-label="IRS EO BMF" tabindex="0" role="button" aria-label="Focus IRS EO BMF, 1.8M orgs · monthly, Public data sources" aria-pressed="false" data-node-kind="external" data-node-sublabel="1.8M orgs · monthly" data-node-context="Public data sources">

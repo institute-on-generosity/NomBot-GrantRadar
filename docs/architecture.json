@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-supabase-20261006-170423/nombot.html",
+    "output": ".archify/architecture-nombot-dates-20261006-172306/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -150,7 +150,7 @@
         170,
         60
       ],
-      "tag": "phase 2 \u00b7 month 6"
+      "tag": "phase 2 \u00b7 Nov 22"
     },
     {
       "id": "bmf",
