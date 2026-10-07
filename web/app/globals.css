@@ -74,6 +74,26 @@ main.wide { max-width: 1100px; }
 .suggest { justify-content: center; margin-top: 20px; }
 .chips:not(.suggest) .chip { color: var(--g-dark); background: var(--g-tint); }
 
+/* Filter chips: tap to change, × to remove; dashed = no filter yet */
+.filters { align-items: center; position: relative; z-index: 10; }
+.fchip { position: relative; display: inline-flex; align-items: center; border-radius: 999px; background: var(--g-tint); color: var(--g-dark); font-size: 13px; }
+.fchip.topic { background: var(--fill); color: var(--ink); font-weight: 500; }
+.fchip.unset { background: none; color: var(--mute); box-shadow: inset 0 0 0 1px var(--fill-2); }
+.fchip.unset:hover, .fchip.unset.open { color: var(--ink); box-shadow: inset 0 0 0 1px var(--faint); }
+.fchip-main { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font: inherit; color: inherit; background: none; border: 0; border-radius: 999px; cursor: default; }
+button.fchip-main { cursor: pointer; }
+.fchip-main svg { opacity: .6; transition: transform .2s var(--spring); }
+.fchip.open .fchip-main svg { transform: rotate(180deg); }
+.fchip:has(.fchip-x) .fchip-main { padding-right: 4px; }
+.fchip-x { display: grid; place-items: center; width: 22px; height: 22px; margin-right: 4px; border-radius: 999px; color: inherit; opacity: .65; transition: background-color .15s, opacity .15s; }
+.fchip-x:hover { opacity: 1; background: var(--g-tint); }
+.fmenu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 210px; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; padding: 5px; border-radius: 14px; background: var(--bg); box-shadow: 0 0 0 1px var(--line), var(--shadow); animation: drop .2s var(--spring) both; z-index: 30; }
+.fmenu-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 9px; font-size: 13.5px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.fmenu-item:hover { background: var(--fill); }
+.fmenu-item.on { color: var(--g-dark); font-weight: 600; }
+.freset { font-size: 13px; color: var(--mute); text-decoration: none; margin-left: 4px; }
+.freset:hover { color: var(--g); }
+
 /* Results */
 .bar, .count { font-size: 13px; color: var(--mute); margin: 26px 0 6px; }
 .group { font-size: 15px; font-weight: 600; margin: 24px 0 4px; }
@@ -93,7 +113,19 @@ main.wide { max-width: 1100px; }
 .src { font-size: 12px; color: var(--faint); margin-top: 6px; }
 .src a { text-decoration: none; }
 .src a:hover { text-decoration: underline; }
-.rev { text-align: right; flex: none; }
+.row-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.rev { text-align: right; }
+.vote { display: flex; gap: 2px; }
+.vote button { display: grid; place-items: center; width: 30px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--faint); opacity: .55; cursor: pointer; transition: opacity .15s, background-color .15s, color .15s, transform .2s var(--spring); }
+.row:hover .vote button, .vote button:focus-visible { opacity: 1; }
+.vote button:hover { background: var(--fill-2); color: var(--ink); }
+.vote button:active { transform: scale(.9); }
+.vote button.on { opacity: 1; }
+.vote button.on.up { color: var(--g); background: var(--g-tint); }
+.vote button.on.down { color: var(--ink-2); background: var(--fill-2); }
+.vote button.on svg { fill: currentColor; fill-opacity: .18; }
+@media (hover: none) { .vote button { opacity: 1; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .rev b { font-size: 17px; font-weight: 600; letter-spacing: -.02em; display: block; font-variant-numeric: tabular-nums; }
 .rev span { font-size: 12px; color: var(--mute); }
 .row.focused { background: var(--g-tint); }

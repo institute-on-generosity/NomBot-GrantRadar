@@ -4,11 +4,12 @@ import { StarButton } from "./StarButton";
 import type { Result } from "@/lib/search";
 import { Snippet } from "./Snippet";
 import { titleCase } from "./text";
+import { Vote } from "./Vote";
 
 
 export { money };
 
-export function ResultRow({ r, href, patterns, focused = false, index = 0 }: { r: Result; href: string; patterns: string[]; focused?: boolean; index?: number }) {
+export function ResultRow({ r, href, patterns, focused = false, index = 0, feedback }: { r: Result; href: string; patterns: string[]; focused?: boolean; index?: number; feedback?: { question: string; rank: number; filters: Record<string, unknown> } }) {
   const text = [r.mission, r.programs].filter(Boolean).join(" ");
   return (
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
@@ -32,9 +33,10 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0 }: { r
           </div>
         )}
       </div>
-      {r.revenue && (
-        <div className="rev"><b>{money(r.revenue.amount)}</b><span>revenue{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>
-      )}
+      <div className="row-side">
+        {r.revenue && <div className="rev"><b>{money(r.revenue.amount)}</b><span>revenue{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>}
+        {feedback && <Vote question={feedback.question} ein={r.ein} rank={feedback.rank} filters={feedback.filters} />}
+      </div>
     </div>
   );
 }

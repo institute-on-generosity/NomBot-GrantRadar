@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { Chips } from "@/components/Chips";
+import { FilterChips, type Chip } from "@/components/FilterChips";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
@@ -8,9 +8,11 @@ import { ResultRow } from "@/components/ResultRow";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
+import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
+import type { Filters } from "@/lib/parse";
 import { search } from "@/lib/search";
 
-type Params = { question?: string; n?: string; all?: string; focus?: string };
+type Params = { question?: string; n?: string; all?: string; focus?: string } & Overrides;
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
@@ -48,14 +50,19 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const filters = await parseQuestion(question);
+  const overrides: Overrides = { st: p.st, max: p.max, cause: p.cause, drop: p.drop };
+  const filters = applyOverrides(await parseQuestion(question), overrides);
   const res = await search({ ...filters, includeInactive, limit: n });
   const patterns = filters.requirements.map((r) => r.pattern);
   const exact = res.results.filter((r) => r.exact);
   const closest = res.results.filter((r) => !r.exact);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
-  const row = (r: (typeof res.results)[number], i: number) => <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus} />;
+  const shown = describeFilters(filters);
+  const row = (r: (typeof res.results)[number], i: number) => (
+    <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
+      feedback={{ question, rank: res.results.indexOf(r) + 1, filters: shown }} />
+  );
   const must = filters.requirements.map((r) => r.label).join(" + ");
 
   return (
@@ -63,7 +70,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
-      <Chips items={filters.labels} />
+      <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
       <div className="bar"><span>{res.total} results</span></div>
 
@@ -78,13 +85,47 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <div className="more">
         {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
-        <a href={`/export?${new URLSearchParams({ question, ...(includeInactive ? { all: "1" } : {}) })}`}>Download as spreadsheet (CSV)</a>
+        <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
       <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
       <Footer />
     </>
   );
+}
+
+// Chips for the filters in effect. Each change keeps the question and starts from the top.
+function filterChips(f: Filters, p: Params): Chip[] {
+  const go = (change: Partial<Params>) => url(p, { n: "", ...change });
+  const dropped = p.drop ? p.drop.split(",") : [];
+  return [
+    ...(f.topic ? [{ key: "topic", kind: "topic", label: f.topic } as Chip] : []),
+    {
+      key: "place", kind: f.states.length ? "set" : "unset",
+      label: f.placeLabel ?? (f.states.length > 3 ? `${f.states.length} states` : f.states.join(", ") || "Any state"),
+      removeHref: f.states.length ? go({ st: "all" }) : undefined,
+      options: [{ label: "Any state", href: go({ st: "all" }), on: !f.states.length },
+        ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: f.states.length === 1 && f.states[0] === code }))],
+    },
+    {
+      key: "budget", kind: f.maxRevenue ? "set" : "unset",
+      label: f.maxRevenue ? `Under ${money(f.maxRevenue)}` : "Any size",
+      removeHref: f.maxRevenue ? go({ max: "none" }) : undefined,
+      options: [{ label: "Any size", href: go({ max: "none" }), on: !f.maxRevenue },
+        ...BUDGETS.map((b) => ({ label: `Under ${money(b)}`, href: go({ max: String(b) }), on: f.maxRevenue === b }))],
+    },
+    {
+      key: "cause", kind: f.ntee ? "set" : "unset",
+      label: f.ntee ? causeLabel(f.ntee) : "Any cause",
+      removeHref: f.ntee ? go({ cause: "any" }) : undefined,
+      options: [{ label: "Any cause", href: go({ cause: "any" }), on: !f.ntee },
+        ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c }))],
+    },
+    ...f.requirements.map((r): Chip => ({
+      key: `must-${reqSlug(r.label)}`, kind: "must", label: `Must mention: ${r.label}`,
+      removeHref: go({ drop: [...dropped, reqSlug(r.label)].join(",") }),
+    })),
+  ];
 }
 
 // Shown only while a question loads. Hidden for the first 300ms (CSS) so quick loads

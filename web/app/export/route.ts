@@ -1,6 +1,7 @@
 // Download the results of a plain-language search as a CSV spreadsheet.
-// GET /export?question=...&sort=match|largest|smallest&all=1
+// GET /export?question=...&sort=match|largest|smallest&all=1 (+ the filter edits: st, max, cause, drop)
 import type { NextRequest } from "next/server";
+import { applyOverrides } from "@/lib/filters";
 import { parseQuestion } from "@/lib/parse";
 import { search, type Sort } from "@/lib/search";
 
@@ -14,7 +15,8 @@ export async function GET(request: NextRequest) {
   const question = (p.get("question") ?? "").trim().slice(0, 300);
   if (!question) return new Response("Missing question", { status: 400 });
   const sort = (["match", "largest", "smallest"].includes(p.get("sort") ?? "") ? p.get("sort") : "match") as Sort;
-  const filters = await parseQuestion(question);
+  const overrides = { st: p.get("st") ?? undefined, max: p.get("max") ?? undefined, cause: p.get("cause") ?? undefined, drop: p.get("drop") ?? undefined };
+  const filters = applyOverrides(await parseQuestion(question), overrides);
   const res = await search({ ...filters, sort, includeInactive: p.get("all") === "1", limit: 500 });
   const origin = request.nextUrl.origin;
 
