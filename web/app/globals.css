@@ -74,28 +74,34 @@ main.wide { max-width: 1100px; }
 .suggest { justify-content: center; margin-top: 20px; }
 .chips:not(.suggest) .chip { color: var(--g-dark); background: var(--g-tint); }
 
-/* Research Buddy: one quiet line under the chips; answers expand in place */
-.buddy { margin-top: 16px; }
-.buddy.open { padding: 16px; border-radius: 18px; background: var(--fill); }
-.buddy-form { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 5px 0 14px; border-radius: 999px; background: var(--bg); box-shadow: 0 0 0 1px var(--line); transition: box-shadow .2s var(--spring); }
-.buddy-form:focus-within { box-shadow: 0 0 0 1px var(--g-line), 0 0 0 4px var(--g-tint); }
-.buddy-mark { color: var(--g); font-size: 15px; }
-.buddy-form input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 15px; color: var(--ink); background: none; }
+/* Research Buddy: a floating button opens a chat panel docked on the right */
+.buddy-fab { position: fixed; right: 24px; bottom: 24px; z-index: 30; display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border: 0; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; color: #fff; background: var(--g-fill); box-shadow: var(--shadow); cursor: pointer; animation: settle .5s var(--spring) .4s both; transition: background-color .15s, transform .2s var(--spring); }
+.buddy-fab:hover { background: var(--g-fill-hover); transform: translateY(-1px); }
+.buddy-fab:active { transform: scale(.96); }
+.buddy-panel { position: sticky; top: 0; height: 100vh; width: clamp(360px, 32vw, 520px); flex: none; display: flex; flex-direction: column; background: var(--bg); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(0,0,0,.05); animation: panel-in .4s var(--spring) both; z-index: 25; }
+.buddy-mark { color: var(--g); font-weight: 400; }
+.buddy-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px 20px; }
+.buddy-empty p { font-size: 14px; line-height: 1.55; color: var(--mute); }
+.buddy-empty b { color: var(--ink); font-weight: 600; }
+.buddy-form { display: flex; align-items: center; gap: 8px; margin: 0 14px 14px; padding: 6px 6px 6px 16px; border-radius: 22px; background: var(--bg); box-shadow: 0 0 0 1px var(--line), var(--shadow); transition: box-shadow .2s var(--spring); }
+.buddy-form:focus-within { box-shadow: 0 0 0 1px var(--g-line), 0 0 0 4px var(--g-tint), var(--shadow); }
+.buddy-form input { flex: 1; min-width: 0; height: 34px; border: 0; outline: 0; font: inherit; font-size: 15px; color: var(--ink); background: none; }
 .buddy-form input::placeholder { color: var(--faint); }
-.buddy-form button { flex: none; border: 0; border-radius: 999px; padding: 7px 16px; font: inherit; font-size: 14px; font-weight: 600; color: var(--g-dark); background: var(--g-tint); cursor: pointer; transition: background-color .15s, transform .15s var(--spring); }
-.buddy-form button:hover:not(:disabled) { background: var(--g-line); }
-.buddy-form button:disabled { opacity: .5; cursor: default; }
-.buddy-suggest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.buddy-suggest .chip { font: inherit; font-size: 13px; border: 0; cursor: pointer; }
+.buddy-form button { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 999px; color: #fff; background: var(--g-fill); cursor: pointer; transition: background-color .15s, transform .2s var(--spring); }
+.buddy-form button:hover:not(:disabled) { background: var(--g-fill-hover); }
+.buddy-form button:active:not(:disabled) { transform: scale(.9); }
+.buddy-form button:disabled { opacity: .35; cursor: default; }
+.buddy-suggest { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 14px; }
+.buddy-suggest .chip { font: inherit; font-size: 13px; border: 0; cursor: pointer; text-align: left; }
 .buddy-turn { margin-bottom: 16px; animation: settle .35s var(--spring) both; }
-.buddy-ask { display: inline-block; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 12px; background: var(--bg); margin-bottom: 10px; }
+.buddy-ask { display: inline-block; font-size: 14px; font-weight: 600; padding: 7px 12px; border-radius: 14px; background: var(--fill); margin-bottom: 10px; }
 .buddy-wait, .buddy-thinking summary { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mute); cursor: pointer; }
 .buddy-thinking { margin-bottom: 8px; }
 .buddy-thinking summary { list-style: none; }
 .buddy-thinking summary::before { content: "›"; display: inline-block; transition: transform .2s; }
 .buddy-thinking[open] summary::before { transform: rotate(90deg); }
 .buddy-thinking p { font-size: 13px; line-height: 1.55; color: var(--mute); margin: 6px 0 0 14px; white-space: pre-wrap; max-width: 70ch; }
-.buddy-answer { font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 72ch; }
+.buddy-answer { font-size: 14.5px; line-height: 1.6; color: var(--ink); }
 .buddy-answer p + p, .buddy-answer p + ul, .buddy-answer ul + p { margin-top: 10px; }
 .buddy-answer ul { padding-left: 18px; margin-top: 6px; }
 .buddy-answer li + li { margin-top: 4px; }
@@ -292,7 +298,7 @@ button.fchip-main { cursor: pointer; }
 .panel-scrim { display: none; }
 @keyframes panel-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (max-width: 1100px) {
-  .side-panel { position: fixed; right: 0; top: 0; width: min(92vw, 640px); box-shadow: var(--shadow); }
+  .side-panel, .buddy-panel { position: fixed; right: 0; top: 0; width: min(92vw, 640px); box-shadow: var(--shadow); }
   .panel-scrim { display: block; position: fixed; inset: 0; z-index: 24; background: rgba(0,0,0,.2); animation: show .2s both; opacity: 0; }
 }
 
