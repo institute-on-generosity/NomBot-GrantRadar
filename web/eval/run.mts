@@ -20,12 +20,12 @@ try { process.loadEnvFile(join(import.meta.dirname, "..", ".env.local")); } catc
 const { db } = await import("../lib/db");
 const { claude, LLM_MODEL } = await import("../lib/llm");
 const { parseQuestion } = await import("../lib/parse");
-const { search } = await import("../lib/search");
+const { rankedSearch } = await import("../lib/rerank");
 const { describeFilters } = await import("../lib/filters");
 const { historyKey } = await import("../lib/history");
 const { readable } = await import("../components/text");
 
-type Result = Awaited<ReturnType<typeof search>>["results"][number];
+type Result = Awaited<ReturnType<typeof rankedSearch>>["results"][number];
 type Label = { relevant: boolean; why: string; by: "people" | "claude" };
 
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}`))?.split("=")[1] ?? (process.argv.includes(`--${name}`) ? "" : undefined);
@@ -88,13 +88,13 @@ async function judge(question: string, results: Result[]): Promise<Map<string, L
 
 type Row = {
   q: string; tags: string[]; parser: string; filters: ReturnType<typeof describeFilters>; ms: number; total: number;
-  shown: { rank: number; ein: string; name: string; place: string; label: Label | null }[];
+  shown: { rank: number; ein: string; name: string; place: string; score: number | null; label: Label | null }[];
 };
 
 async function runOne({ q, tags }: { q: string; tags: string[] }, people: Map<string, number>): Promise<Row> {
   const t0 = performance.now();
   const filters = await parseQuestion(q);
-  const res = await search({ ...filters, limit: K });
+  const res = await rankedSearch(q, filters, { limit: K });
   const ms = Math.round(performance.now() - t0);
 
   const labels = new Map<string, Label>();
@@ -115,7 +115,7 @@ async function runOne({ q, tags }: { q: string; tags: string[] }, people: Map<st
   }
   return {
     q, tags, parser: filters.parser, filters: describeFilters(filters), ms, total: res.total,
-    shown: res.results.map((r, i) => ({ rank: i + 1, ein: r.ein, name: r.name, place: [r.city, r.state].filter(Boolean).join(", "), label: labels.get(r.ein) ?? null })),
+    shown: res.results.map((r, i) => ({ rank: i + 1, ein: r.ein, name: r.name, place: [r.city, r.state].filter(Boolean).join(", "), score: r.relevance?.score ?? null, label: labels.get(r.ein) ?? null })),
   };
 }
 
@@ -155,6 +155,11 @@ const empty = rows.filter((r) => r.total === 0);
 const times = rows.map((r) => r.ms).sort((a, b) => a - b);
 const median = times[Math.floor(times.length / 2)] ?? 0;
 const parsers = [...new Set(rows.map((r) => r.parser))].join(", ");
+// Does the relevance score agree with the labels? Relevant results should score higher.
+const avgScore = (rel: boolean) => {
+  const xs = judged.filter((s) => s.label!.relevant === rel && s.score != null).map((s) => s.score!);
+  return xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
+};
 const met = macro >= GOAL;
 
 const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
@@ -173,6 +178,7 @@ const lines = [
   `| Results labeled | ${judged.length} / ${all.length} (people ${judged.filter((s) => s.label!.by === "people").length}, Claude ${judged.filter((s) => s.label!.by === "claude").length}) |`,
   `| Median time (parse + search) | ${median}ms |`,
   `| Parser | ${parsers} |`,
+  `| Avg relevance score: relevant / not relevant | ${avgScore(true) ?? "—"} / ${avgScore(false) ?? "—"} |`,
   `| Judge | ${JUDGE ? LLM_MODEL : "off"}, top ${K} |`,
   "",
   "## Per question (worst first)",

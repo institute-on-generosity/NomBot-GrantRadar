@@ -10,7 +10,7 @@ import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
 import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
-import { search } from "@/lib/search";
+import { rankedSearch } from "@/lib/rerank";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string } & Overrides;
 type SearchParams = Promise<Params>;
@@ -52,17 +52,11 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const includeInactive = p.all === "1";
   const overrides: Overrides = { st: p.st, max: p.max, cause: p.cause, drop: p.drop };
   const filters = applyOverrides(await parseQuestion(question), overrides);
-  const res = await search({ ...filters, includeInactive, limit: n });
+  const res = await rankedSearch(question, filters, { includeInactive, limit: n });
   const patterns = filters.requirements.map((r) => r.pattern);
-  const exact = res.results.filter((r) => r.exact);
-  const closest = res.results.filter((r) => !r.exact);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
   const shown = describeFilters(filters);
-  const row = (r: (typeof res.results)[number], i: number) => (
-    <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-      feedback={{ question, rank: res.results.indexOf(r) + 1, filters: shown }} />
-  );
   const must = filters.requirements.map((r) => r.label).join(" + ");
 
   return (
@@ -72,16 +66,13 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {focus && <ScrollToResult id={`org-${focus}`} />}
       <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
 
-      <div className="bar"><span>{res.total} results</span></div>
+      <div className="bar"><span>{res.total} results</span>{res.scored && <span>Most relevant first</span>}</div>
 
-      {res.exact_total !== null && (
-        res.exact_total > 0
-          ? <h2 className="group">{res.exact_total} exact {res.exact_total === 1 ? "match" : "matches"} <span>mention {must}</span></h2>
-          : <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>
-      )}
-      {exact.map(row)}
-      {res.exact_total !== null && res.exact_total > 0 && closest.length > 0 && <h2 className="group">Closest results</h2>}
-      {closest.map(row)}
+      {res.exact_total === 0 && <p className="notice">No organizations clearly mention <b>{must}</b> in their filings. Showing the closest results.</p>}
+      {res.results.map((r, i) => (
+        <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
+          relevance={r.relevance} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
+      ))}
 
       <div className="more">
         {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
