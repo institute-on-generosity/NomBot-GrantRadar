@@ -1,26 +1,13 @@
 // Mirrors generosity-data/embed/embedder.mjs: query vectors must come from the same
-// model as the stored document vectors.
-//   EMBED_PROVIDER=openai -> text-embedding-3-small @512 (needs OPENAI_API_KEY)
-//   EMBED_PROVIDER=local  -> LOCAL POC FALLBACK: nomic-embed-text-v1.5, Matryoshka 512
-import { embed as aiEmbed } from "ai";
-import { openai } from "@ai-sdk/openai";
-
+// model as the stored document vectors. Proof of concept: local nomic-embed-text-v1.5,
+// Matryoshka 512 (free, runs on the laptop; Claude has no embedding model).
 const DIMS = 512;
-const provider = process.env.EMBED_PROVIDER || (process.env.OPENAI_API_KEY ? "openai" : "local");
-export const MODEL_ID = provider === "openai" ? "openai:text-embedding-3-small@512" : "local:nomic-embed-text-v1.5@512";
+export const MODEL_ID = "local:nomic-embed-text-v1.5@512";
 
 type Extractor = (t: string[], o: { pooling: "mean" }) => Promise<{ tolist(): number[][] }>;
 let extractor: Promise<Extractor> | undefined;
 
 export async function embedQuery(text: string): Promise<number[]> {
-  if (provider === "openai") {
-    const { embedding } = await aiEmbed({
-      model: openai.embedding("text-embedding-3-small"),
-      value: text,
-      providerOptions: { openai: { dimensions: DIMS } },
-    });
-    return embedding;
-  }
   extractor ??= import("@huggingface/transformers").then(
     ({ pipeline }) => pipeline("feature-extraction", "nomic-ai/nomic-embed-text-v1.5", { dtype: "q8" }) as unknown as Extractor,
   );

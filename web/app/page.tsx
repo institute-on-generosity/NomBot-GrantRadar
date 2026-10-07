@@ -22,7 +22,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
             <ResultRow key={r.ein} name={r.name} place={`${r.city ? r.city.toLowerCase().replace(/\b[a-z]/g, (c: string) => c.toUpperCase()) + ", " : ""}${r.state}`} line={r.mission} amount={r.financials?.revenue} />
           ))}
           <div className="ask">✦ Ask Research Buddy about these results · coming in Phase 2</div>
-          <p className="note">Parser: {filters?.parser === "llm" ? "LLM" : "rules (no LLM key set)"} · Semantic: {res.semantic ? res.model : "off"} · Data: IRS BMF, SOI, 990 e-file (POC: WV, KY, TN, VA, OH)</p>
+          <p className="note">Parser: {filters?.parser === "llm" ? "Claude" : "rules (no ANTHROPIC_API_KEY set)"} · Semantic: {res.semantic ? res.model : "off"} · Data: IRS BMF, SOI, 990 e-file (POC: WV, KY, TN, VA, OH)</p>
         </>
       )}
     </main>

@@ -69,9 +69,10 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | Data | 5 states (WV, KY, TN, VA, OH) | All US |
 | ETL | Python, run by hand | GitHub Actions, monthly |
 | App | Next.js, `localhost` | Vercel |
-| LLM | Vercel AI SDK, any provider | Same |
+| LLM | Claude API (`@anthropic-ai/sdk`); model via `LLM_MODEL` | Same |
+| Embeddings | nomic-embed-text (local, free) | Decide at cloud move: nomic or Voyage AI |
 
-No LangChain. Pipeline: [`generosity-data`](https://github.com/institute-on-generosity/generosity-data).
+No LangChain: switching Claude models is one env var. Pipeline: [`generosity-data`](https://github.com/institute-on-generosity/generosity-data).
 
 ## Roadmap
 
@@ -108,8 +109,8 @@ No LangChain. Pipeline: [`generosity-data`](https://github.com/institute-on-gene
 - [x] BMF: 204,564 orgs
 - [x] SOI financials: 54,590 rows
 - [x] 990 text: 12,354 filings
-- [x] Embeddings + index (local model until an OpenAI key is set)
-- [ ] LLM query parser (built; needs API key)
+- [x] Embeddings + index (local nomic, free)
+- [ ] Claude query parser (built; needs `ANTHROPIC_API_KEY` to verify)
 - [x] Search page + read-only API on `localhost`
 - [x] **Demo works end to end** (68 results, ~0.15s)
 

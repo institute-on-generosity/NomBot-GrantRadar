@@ -1,8 +1,8 @@
 // Turn a plain-language question into search filters.
-// Uses an LLM when a provider key is set (see lib/llm.ts); otherwise a small
-// rule-based parser (POC fallback).
-import { generateObject } from "ai";
-import { languageModel } from "./llm";
+// Uses Claude (structured outputs) when ANTHROPIC_API_KEY is set (see lib/llm.ts);
+// otherwise, or if the call fails, a small rule-based parser (POC fallback).
+import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import { claude, LLM_MODEL } from "./llm";
 import { z } from "zod";
 
 export type Filters = { q: string; semantic: string; states: string[]; maxRevenue?: number; ntee?: string; parser: "llm" | "rules"; labels: string[] };
@@ -13,7 +13,7 @@ const NTEE: [RegExp, string, string][] = [[/\bfood (banks?|pantr(y|ies))\b|\bpan
 
 const schema = z.object({
   topic: z.string().describe("What the organizations do, as search words, without places or budget"),
-  states: z.array(z.string().length(2)).describe("US state codes; expand regions like Appalachia"),
+  states: z.array(z.string()).describe("Two-letter US state codes; expand regions like Appalachia"),
   maxRevenue: z.number().nullable().describe("Upper revenue/budget limit in dollars, or null"),
   ntee: z.string().nullable().describe("NTEE code prefix if the cause is clear (e.g. K3 for food banks), or null"),
 });
@@ -21,11 +21,26 @@ const schema = z.object({
 function money(n: number) { return n >= 1e6 ? `$${n / 1e6}M` : `$${Math.round(n / 1e3)}K`; }
 
 export async function parseQuestion(question: string): Promise<Filters> {
-  const model = languageModel();
-  if (model) {
-    const { object } = await generateObject({ model, schema, prompt: `Turn this nonprofit search into filters: ${question}` });
-    const labels = [object.topic, ...(object.states.length ? [object.states.join(" · ")] : []), ...(object.maxRevenue ? [`Under ${money(object.maxRevenue)}`] : [])];
-    return { q: object.topic, semantic: object.topic, states: object.states.map((s) => s.toUpperCase()), maxRevenue: object.maxRevenue ?? undefined, ntee: object.ntee ?? undefined, parser: "llm", labels };
+  const client = claude();
+  if (client) {
+    try {
+      const res = await client.beta.messages.parse({
+        model: LLM_MODEL,
+        max_tokens: 2048,
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+        output_config: { effort: "low", format: betaZodOutputFormat(schema) },
+        system: "You turn a plain-language US nonprofit search into database filters.",
+        messages: [{ role: "user", content: question }],
+      });
+      const object = res.stop_reason === "refusal" ? null : res.parsed_output;
+      if (object) {
+        const labels = [object.topic, ...(object.states.length ? [object.states.join(" · ")] : []), ...(object.maxRevenue ? [`Under ${money(object.maxRevenue)}`] : [])];
+        return { q: object.topic, semantic: object.topic, states: object.states.map((s) => s.toUpperCase()), maxRevenue: object.maxRevenue ?? undefined, ntee: object.ntee ?? undefined, parser: "llm", labels };
+      }
+    } catch (err) {
+      console.error("Claude parse failed; using rule-based parser", err);
+    }
   }
   let rest = ` ${question.toLowerCase()} `;
   let topic = rest; // keeps cause words (e.g. "food banks") for semantic search
