@@ -25,18 +25,22 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
     ["Tax year", f.taxYear ?? "—"],
   ] as const;
 
+  const head = (
+    <header className="funder-head big">
+      <h1>{titleCase(f.name)}</h1>
+      <p className="meta">
+        {[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")} · EIN {f.ein.slice(0, 2)}-{f.ein.slice(2)} ·{" "}
+        <a href={filingUrl(f.ein, f.objectId)} target="_blank" rel="noreferrer">Form 990-PF ({f.taxYear}) ↗</a>
+      </p>
+    </header>
+  );
+
   return (
     <article className={`funder-view${sheet ? " sheet" : ""}`}>
       {!sheet && <BackLink fallback={back || "/grants"}>← Back to matches</BackLink>}
-      <ViewTransition name={`funder-${f.ein}`} share="morph" default="none">
-        <header className="funder-head big">
-          <h1>{titleCase(f.name)}</h1>
-          <p className="meta">
-            {[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")} · EIN {f.ein.slice(0, 2)}-{f.ein.slice(2)} ·{" "}
-            <a href={filingUrl(f.ein, f.objectId)} target="_blank" rel="noreferrer">Form 990-PF ({f.taxYear}) ↗</a>
-          </p>
-        </header>
-      </ViewTransition>
+      {/* The full page morphs from the funder row it replaces. The sheet rises over the list instead:
+          the row stays mounted under it, and two live elements can't share a transition name. */}
+      {sheet ? head : <ViewTransition name={`funder-${f.ein}`} share="morph" default="none">{head}</ViewTransition>}
 
       <div className="fv-body">
         <dl className="fv-facts">
