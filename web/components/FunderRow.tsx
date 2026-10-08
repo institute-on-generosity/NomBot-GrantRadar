@@ -45,7 +45,7 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
           </div>
         </div>
         <div className="funder-side">
-          <div className="side-top">
+          <div className="funder-side-top">
             <span className="typical"><b>{f.typical != null ? money(f.typical) : "—"}</b><small>typical grant</small></span>
             <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? <><Lock size={12} />Invite only</> : <><Check size={12} />Open</>}</span>
             {lean && <span className={`gtype ${lean}`} title={`${Math.round(100 * share(f.mix!, lean))}% of grant dollars with a clear purpose`}>{LEAN_LABEL[lean]}</span>}
