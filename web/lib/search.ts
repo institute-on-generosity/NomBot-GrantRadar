@@ -17,9 +17,26 @@ export type Result = {
   ntee: { code: string; label: string | null } | null;
   revenue: { amount: number; year: number | null; source: "IRS BMF" | "IRS SOI" } | null;
   financials: { tax_year: number; revenue: number; expenses: number; assets: number } | null;
+  health: Health | null;
   mission: string | null; programs: string | null; team: { staff: number | null; volunteers: number | null } | null; filing: { year: number | null; form: string | null } | null;
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
 };
+
+// One organization's financial signals, for the badges on its result row.
+// trend: revenue change from the newest SOI year to the master file's newer figure (when there is one).
+// margin: (revenue - expenses) / revenue in the newest SOI year; reserveMonths: net assets / monthly spending.
+export type Health = {
+  trend: { change: number; from: { year: number; amount: number }; to: { year: number; amount: number } } | null;
+  margin: number | null; year: number; revenue: number; expenses: number; reserveMonths: number | null;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function orgHealth(r: any): Health | null {
+  if (!r.has_fin) return null;
+  const rev = Number(r.fin_rev), exp = Number(r.expenses), net = r.net_assets == null ? null : Number(r.net_assets);
+  const trend = r.rev_src === "bmf" && rev > 10_000 && r.revenue_amt != null
+    ? { change: (Number(r.revenue_amt) - rev) / rev, from: { year: r.fin_year, amount: rev }, to: { year: r.rev_year, amount: Number(r.revenue_amt) } } : null;
+  return { trend, margin: rev > 0 ? (rev - exp) / rev : null, year: r.fin_year, revenue: rev, expenses: exp, reserveMonths: exp > 0 && net != null ? net / (exp / 12) : null };
+}
 
 export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
@@ -33,12 +50,14 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
     `WITH t AS (
        SELECT DISTINCT ON (ein) ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
        FROM filing_text ORDER BY ein, tax_year DESC NULLS LAST),
-     f AS (SELECT DISTINCT ON (ein) ein, tax_year, form, revenue, expenses, assets FROM financials ORDER BY ein, tax_year DESC),
+     f AS (SELECT DISTINCT ON (ein) ein, tax_year, form, revenue, expenses, assets,
+                  coalesce(raw->>'totnetassetend', raw->>'totnetassetsend')::numeric AS net_assets
+           FROM financials ORDER BY ein, tax_year DESC),
      base AS (
        SELECT o.ein, o.name, o.city, o.state, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period,
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
               t.mission AS raw_mission, t.programs, t.employees, t.volunteers, t.embedding, t.embedding_model, t.search AS tsearch,
-              f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets,
+              f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets, f.net_assets,
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
@@ -85,6 +104,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
       ntee: r.ntee_cd ? { code: r.ntee_cd, label: nteeLabel(r.ntee_cd) } : null,
       revenue: r.rev != null ? { amount: Number(r.rev), year: r.rev_year, source: r.rev_src === "bmf" ? "IRS BMF" : "IRS SOI" } : null,
       financials: r.has_fin ? { tax_year: r.fin_year, revenue: Number(r.fin_rev), expenses: Number(r.expenses), assets: Number(r.assets) } : null,
+      health: orgHealth(r),
       mission: r.mission,
       programs: r.programs,
       team: r.has_text ? { staff: r.employees ?? null, volunteers: r.volunteers ?? null } : null,

@@ -1,15 +1,20 @@
 import { Suspense } from "react";
 
+import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
 import { money } from "@/lib/filters";
+import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
+import { isStrong, type rank } from "@/lib/rerank";
+import { titleCase } from "./text";
 import type { Filters } from "@/lib/parse";
 import { themes } from "@/lib/themes";
 
 
-// Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it.
-export async function Landscape({ question, filters, includeInactive, map, overview }: {
-  question: string; filters: Filters; includeInactive: boolean; overview: React.ReactNode;
+// Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it
+// (plus strong matches no foundation funds yet). Finances: growing, shrinking, deficits, thin reserves.
+export async function Landscape({ question, filters, includeInactive, map, overview, gems }: {
+  question: string; filters: Filters; includeInactive: boolean; overview: React.ReactNode; gems?: React.ReactNode;
   map: (counts: Record<string, number>, appalachia: string[], states: string[]) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
@@ -27,6 +32,9 @@ export async function Landscape({ question, filters, includeInactive, map, overv
           <Bars title="Team" bars={l.team} note={`${l.teamReported} report staff`} />
         </div>
       ) },
+      { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
+        <FinanceView signals={l.health.signals} orgs={Object.fromEntries(l.orgs.map((o, i) => [o.ein.replace("-", ""), { ein: o.ein, name: o.name, place: [o.city, o.state].filter(Boolean).join(", "), rank: i }]))} />
+      ) },
       { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
       { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
@@ -42,6 +50,7 @@ export async function Landscape({ question, filters, includeInactive, map, overv
                 </li>
               ))}
             </ul>
+            {gems}
           </>
         ) : <p className="ls-note">No foundation grants to these organizations in the loaded 990-PF data.</p>
       ) },
@@ -81,6 +90,22 @@ async function Themes({ question, l }: { question: string; l: Awaited<ReturnType
           <ul>{t.orgs.map((o) => <li key={o.ein} title={`${o.name} · ${o.place}`}><b>{o.name}</b><span>{o.place}</span></li>)}</ul>
         </details>
       ))}
+    </div>
+  );
+}
+
+// Strong matches with no foundation grant on file: hidden gems for a funder, or groups still unfunded.
+export async function Gems({ ranking }: { ranking: ReturnType<typeof rank> }) {
+  const strong = (await ranking).results.filter((r) => r.relevance && isStrong(r));
+  if (!strong.length) return null;
+  const { rows } = await db.query(`SELECT DISTINCT recipient_ein AS ein FROM grants WHERE recipient_ein = ANY($1)`, [strong.map((r) => r.ein.replace("-", ""))]);
+  const funded = new Set(rows.map((r) => r.ein as string));
+  const gems = strong.filter((r) => !funded.has(r.ein.replace("-", "")));
+  if (!gems.length) return null;
+  return (
+    <div className="unfunded">
+      <h3>Strong matches no foundation funds yet<small>{gems.length} of {strong.length}</small></h3>
+      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><b>{titleCase(o.name)}</b><span>{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}</span></li>)}</ul>
     </div>
   );
 }

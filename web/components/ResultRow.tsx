@@ -4,6 +4,7 @@ import { StarButton } from "./StarButton";
 import { CompareButton } from "./CompareButton";
 import type { Relevance } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
+import { HealthBadges } from "./HealthBadges";
 import { Preview } from "./Snippet";
 import { titleCase } from "./text";
 import { Vote } from "./Vote";
@@ -29,7 +30,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
           {r.ntee?.label && <> · {r.ntee.label}</>}
         </div>
         <Preview mission={r.mission} programs={r.programs} expenses={r.financials?.expenses ?? null} staff={r.team?.staff ?? null} volunteers={r.team?.volunteers ?? null} patterns={patterns} />
-        {mentions && <div className="why"><span className="mentions">Mentions {mentions}</span></div>}
+        {(mentions || r.health) && <div className="why">{mentions && <span className="mentions">Mentions {mentions}</span>}<HealthBadges h={r.health} /></div>}
         {r.sources.length > 0 && (
           <div className="src">
             Source:{" "}

@@ -663,3 +663,46 @@ main:has(.serp) { max-width: 1400px; }
 .panel-close:hover svg { transform: translateX(2px); }
 .panel-close svg { transition: transform .25s var(--spring); }
 .panel-close:active { transform: scale(.96); }
+.unfunded h3 { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 6px; display: flex; justify-content: space-between; }
+.unfunded h3 small { font-weight: 400; color: var(--faint); }
+.unfunded { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.unfunded li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.unfunded li b { font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unfunded li span { color: var(--faint); white-space: nowrap; }
+/* Segmented tabs: equal columns however long a label is, so the thumb lines up with the selected tab */
+.seg { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+.seg button { padding: 5px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Per-organization financial badges on result rows (growing/shrinking, surplus/deficit) */
+.fin { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 1px 8px; cursor: help; }
+.fin.up, .fin.ok { color: var(--g-dark); background: var(--g-tint); }
+.fin.down, .fin.bad { color: #b4232a; background: rgba(229,72,77,.1); }
+@media (prefers-color-scheme: dark) { .fin.down, .fin.bad { color: #ff8a8e; background: rgba(229,72,77,.18); } }
+.fin { position: relative; outline: none; }
+.fin-tip { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: max-content; max-width: 300px; padding: 7px 10px; border-radius: 9px; background: var(--bg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 12px; font-weight: 400; color: var(--ink-2); white-space: normal; animation: drop .15s var(--spring) both; }
+.fin:hover .fin-tip, .fin:focus-visible .fin-tip { display: block; }
+.row:has(.fin:hover, .fin:focus-visible) { z-index: 20; }
+/* Finances tab: four selectable statements, one-color share bars, the organizations behind the pick */
+.fin-rows { display: grid; gap: 2px; }
+.fin-rows button { display: grid; grid-template-columns: 7em 1fr 5.8em; align-items: center; gap: 12px; padding: 6px 8px; margin: 0 -8px; font: inherit; font-size: 13px; text-align: left; color: var(--ink-2); background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.fin-rows button:hover { background: var(--fill); }
+.fin-rows button.on { background: var(--fill); color: var(--ink); font-weight: 600; }
+.fr-bar { height: 6px; border-radius: 3px; background: var(--fill-2); overflow: hidden; }
+.fr-bar i { display: block; height: 100%; border-radius: 3px; transform-origin: left; animation: grow .7s var(--spring) both; }
+.fr-bar .good { background: var(--g); } .fr-bar .bad { background: #e5484d; }
+.fin-rows button:not(.on) .fr-bar i { opacity: .45; }
+.fr-n { text-align: right; white-space: nowrap; font-weight: 400; color: var(--mute); font-variant-numeric: tabular-nums; }
+.fr-n b { font-weight: 600; color: var(--ink); }
+.fin-list { margin: 12px 0 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.fin-list h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 400; color: var(--ink-2); margin-bottom: 4px; }
+.fin-list h3 b { font-weight: 600; color: var(--ink); }
+.fin-list h3 small { font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+.fin-list ul { list-style: none; display: grid; }
+.fin-list li { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+.fin-list li:first-child { border-top: 0; }
+.fin-list li a { flex: 1; min-width: 0; display: flex; flex-direction: column; text-decoration: none; }
+.fl-name { font-size: 13.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fl-place { font-size: 11.5px; color: var(--faint); }
+.fin-list li a:hover .fl-name { color: var(--g); }
+.fin-list li b { flex: none; min-width: 4.4em; text-align: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; border-radius: 999px; padding: 2px 8px; }
+.fin-list li b.good { color: var(--g-dark); background: var(--g-tint); } .fin-list li b.bad { color: #b4232a; background: rgba(229,72,77,.1); }
+@media (prefers-color-scheme: dark) { .fin-list li b.bad { color: #ff8a8e; } }

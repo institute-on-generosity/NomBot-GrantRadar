@@ -8,7 +8,7 @@ import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
-import { Landscape } from "@/components/Landscape";
+import { Gems, Landscape } from "@/components/Landscape";
 import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
@@ -90,6 +90,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive}
             overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
+            gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
             map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
         </Suspense>
       </aside>

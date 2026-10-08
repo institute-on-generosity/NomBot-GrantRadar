@@ -8,6 +8,7 @@ import { readable, titleCase } from "../components/text";
 import { db } from "./db";
 import { claude, LLM_MODEL } from "./llm";
 import { memo } from "./memo";
+import { healthOf } from "./landscape";
 import { isStrong, type Ranked } from "./rerank";
 
 export type Overview = { summary: string; patterns: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number };
@@ -16,7 +17,7 @@ const SYSTEM = `You write the short overview shown above nonprofit search result
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
 Help the user zoom out: what does this landscape look like?
 - summary: 1-2 sentences, at most 38 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
-- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), program types named in the text.
+- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text.
 - explore: 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle: a nearby cause, another place, or a narrower activity. Don't repeat the question.
 Cite organizations only by their number in square brackets. Plain language, no hype, no advice.`;
 
@@ -43,6 +44,8 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
     facts: [r.ntee?.label, r.revenue ? `${money(r.revenue.amount)} revenue` : null, team.get(r.ein)?.staff != null ? `${team.get(r.ein)!.staff} staff` : null].filter(Boolean).join(" · "),
     about: clip(readable([r.mission, r.programs].filter(Boolean).join(" ")), 160),
   }));
+  const h = await healthOf(strong.map((r) => r.ein.replace("-", "")));
+  const count = (bars: { label: string; count: number }[]) => bars.map((b) => `${b.label} ${b.count}`).join(", ");
   const revs = strong.map((r) => r.revenue?.amount).filter((x): x is number => x != null && x > 0);
   const staffed = strong.filter((r) => team.get(r.ein)?.staff != null);
   const allVol = staffed.filter((r) => team.get(r.ein)!.staff === 0 && (team.get(r.ein)!.vols ?? 0) > 0).length;
@@ -53,6 +56,7 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
     `States: ${top(strong.map((r) => r.state), 5)}`,
     `Cities: ${top(strong.map((r) => r.city && titleCase(r.city)), 6)}`,
     `Causes: ${top(strong.map((r) => r.ntee?.label ?? null), 5)}`,
+    h.reported ? `Finances (${h.reported} report): last year ${count(h.margin)}; reserves ${count(h.reserves)}; revenue trend (${h.trendReported} with two years) ${count(h.trend)}` : "Finances: not reported",
     staffed.length ? `Team size (${staffed.length} report it): median staff ${median(staffed.map((r) => team.get(r.ein)!.staff!))}; all-volunteer (0 staff): ${allVol}` : "Team size: not reported",
   ].join("\n");
   const list = strong.map((r, i) => {
@@ -76,7 +80,7 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v4", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<Overview | null>("overview:v5", 200, 24 * 3600_000); // bump when the prompt changes
 export function overview(question: string, results: Ranked[]) {
   const strong = results.filter((r) => r.relevance && isStrong(r));
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;

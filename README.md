@@ -20,10 +20,10 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 |---|---|
 | **Ranking** | **Relevance score** 0–100 per result, with Claude's one-line reason on hover · strong matches first, weaker ones folded under "Show N weaker matches" |
 | **Filters** | **Editable chips** read from the question: state, city, **Appalachia region**, budget, cause, "must mention" · results update in ~0.4s |
-| **Search** | **Suggestions** under the search box · **exact-mention** badges · **bullet previews** (mission, matching program, spending, staff, volunteers) · include tiny/inactive orgs · **CSV export** |
+| **Search** | **Suggestions** under the search box · **exact-mention** badges · **bullet previews** (mission, matching program, spending, staff, volunteers) · **finance tags** (Growing/Shrinking, Surplus/Deficit; hover for the figures) · include tiny/inactive orgs · **CSV export** |
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover · one side panel with a **tab per source**, closed in one step |
-| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants); hover-only for now |
+| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants, plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves; pick one to list the orgs) |
 | **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
@@ -115,6 +115,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Appalachia region filter** (ZIP → county → ARC list) | State filters can't express "rural Appalachia" |
 | **Source viewers** for the IRS master file and SOI financials | Every number links to the exact row it came from |
 | **Search takes ~6–14s, not <2s** | Scoring costs time; results show in ~0.5s and re-sort when scores arrive |
+| **Financial health** from SOI + the master file (trend = newer master-file revenue vs. newest SOI year) | Zoom-out feedback; only ~3K orgs have two SOI years, but 53K have a newer master-file revenue |
 
 ## Success metrics
 - ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~6–14s)
