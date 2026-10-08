@@ -15,7 +15,7 @@ import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
-import { applyOverrides, BUDGETS, describeFilters, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
+import { applyOverrides, BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
@@ -67,9 +67,8 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const patterns = filters.requirements.map((r) => r.pattern);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
-  const shown = describeFilters(filters);
   const must = filters.requirements.map((r) => r.label).join(" + ");
-  const rowProps = { question, patterns, back, focus, must, shown, noMention: res.exact_total === 0 };
+  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0 };
 
   return (
     <>
@@ -118,7 +117,7 @@ async function OverviewPanel({ question, ranking }: { question: string; ranking:
   return o ? <AiOverview o={o} /> : <p className="ls-note">No overview for these results.</p>;
 }
 
-type RowProps = { question: string; patterns: string[]; back: string; focus: string; must: string; shown: Record<string, unknown>; noMention: boolean };
+type RowProps = { patterns: string[]; back: string; focus: string; must: string; noMention: boolean };
 
 async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; rankingAll: ReturnType<typeof rank>; total: number }) {
   const [{ results, scored }, all] = await Promise.all([ranking, rankingAll]);
@@ -128,12 +127,12 @@ async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ran
 
 // pending: search order, while relevance scores are still being computed.
 // Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
-function ResultList({ rows, total, pending = false, scored = false, strongTotal, question, patterns, back, focus, must, shown, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
+function ResultList({ rows, total, pending = false, scored = false, strongTotal, patterns, back, focus, must, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
   const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
   const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
   const row = (r: Result | Ranked, i: number) => (
     <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-      relevance={"relevance" in r ? r.relevance : null} mentions={r.exact ? must : undefined} feedback={{ question, rank: i + 1, filters: shown }} />
+      relevance={"relevance" in r ? r.relevance : null} />
   );
   return (
     <div className={`results${pending ? " ranking" : ""}`}>

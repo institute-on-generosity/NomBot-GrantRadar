@@ -12,10 +12,11 @@ const TEXT: Record<Signal["key"], { label: string; says: string; tone: "good" | 
   shrinking: { label: "Shrinking", says: "lost 10% or more of revenue", tone: "bad" },
   deficit: { label: "Deficit", says: "spent more than they took in", tone: "bad" },
   thin: { label: "Thin reserves", says: "have under 3 months of spending saved", tone: "bad" },
+  reliant: { label: "Donor-reliant", says: "get 90%+ of revenue from gifts and grants", tone: "bad" },
 };
 const show = (k: Signal["key"], v: number) =>
   k === "growing" || k === "shrinking" ? `${v > 0 ? "+" : "−"}${Math.round(Math.abs(v) * 100)}%`
-    : k === "deficit" ? `−${money(-v)}` : v < 1 ? "<1 mo" : `${Math.floor(v)} mo`;
+    : k === "deficit" ? `−${money(-v)}` : k === "reliant" ? `${Math.round(v * 100)}% gifts` : v < 1 ? "<1 mo" : `${Math.floor(v)} mo`;
 
 export function FinanceView({ signals, orgs }: { signals: Signal[]; orgs: Record<string, { ein: string; name: string; place: string; rank: number }> }) {
   const [pick, setPick] = useState<Signal["key"]>("growing");
@@ -49,7 +50,7 @@ export function FinanceView({ signals, orgs }: { signals: Signal[]; orgs: Record
           ))}</ul>
         ) : <p className="ls-note">None of these organizations.</p>}
       </div>
-      <p className="ls-note">From the newest IRS filings · same as the tags on each result</p>
+      <p className="ls-note">From the newest IRS filings · Growing, Shrinking and Deficit match the tags on each result</p>
     </div>
   );
 }

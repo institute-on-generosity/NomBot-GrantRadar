@@ -7,15 +7,14 @@ import type { Result } from "@/lib/search";
 import { HealthBadges } from "./HealthBadges";
 import { Preview } from "./Snippet";
 import { titleCase } from "./text";
-import { Vote } from "./Vote";
 
 
 export { money };
 
-// relevance: 0–100 score + reason (lib/rerank). mentions: the required activity this org's filing mentions.
-export function ResultRow({ r, href, patterns, focused = false, index = 0, feedback, relevance, mentions }: {
+// relevance: 0–100 score + reason (lib/rerank).
+export function ResultRow({ r, href, patterns, focused = false, index = 0, relevance }: {
   r: Result; href: string; patterns: string[]; focused?: boolean; index?: number;
-  feedback?: { question: string; rank: number; filters: Record<string, unknown> }; relevance?: Relevance | null; mentions?: string;
+  relevance?: Relevance | null;
 }) {
   return (
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
@@ -25,20 +24,28 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
           <NavLink href={href} className="name">{titleCase(r.name)}</NavLink>
           {focused && <span className="lastviewed">last viewed</span>}
         </div>
+        {/* One quiet line of facts: place, cause, then size and team */}
         <div className="sub">
-          {[r.city ? titleCase(r.city) : null, r.state].filter(Boolean).join(", ")}
-          {r.ntee?.label && <> · {r.ntee.label}</>}
+          {[
+            [r.city ? titleCase(r.city) : null, r.state].filter(Boolean).join(", "),
+            r.ntee?.label,
+            r.financials?.expenses ? `${money(r.financials.expenses)} spent` : null,
+            r.team?.staff != null ? `${r.team.staff.toLocaleString("en-US")} staff` : null,
+            r.team?.volunteers ? `${r.team.volunteers.toLocaleString("en-US")} volunteers` : null,
+          ].filter(Boolean).join(" · ")}
         </div>
-        <Preview mission={r.mission} programs={r.programs} expenses={r.financials?.expenses ?? null} staff={r.team?.staff ?? null} volunteers={r.team?.volunteers ?? null} patterns={patterns} />
-        {(mentions || r.health) && <div className="why">{mentions && <span className="mentions">Mentions {mentions}</span>}<HealthBadges h={r.health} /></div>}
-        {r.sources.length > 0 && (
-          <div className="src">
-            Source:{" "}
-            {r.sources.map((s, i) => (
-              <span key={s.url}>{i > 0 && " · "}{s.internal ? <NavLink href={s.url} title={s.detail} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a>}</span>
-            ))}
-          </div>
-        )}
+        <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
+        {/* Footer: finance tags; sources appear on hover (they're also on the org page) */}
+        <div className="row-foot">
+          <HealthBadges h={r.health} />
+          {r.sources.length > 0 && (
+            <span className="src">
+              {r.sources.map((s, i) => (
+                <span key={s.url}>{i > 0 && " · "}{s.internal ? <NavLink href={s.url} title={s.detail} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a>}</span>
+              ))}
+            </span>
+          )}
+        </div>
       </div>
       <div className="row-side">
         {relevance && (
@@ -55,8 +62,10 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
           </button>
         )}
         {r.revenue && <div className="rev"><b>{money(r.revenue.amount)}</b><span>revenue{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>}
-        {feedback && <Vote question={feedback.question} ein={r.ein} rank={feedback.rank} filters={feedback.filters} />}
-        <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />
+        {/* Compare shows on hover (or once picked), so the column reads score → revenue */}
+        <div className="row-actions">
+          <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />
+        </div>
       </div>
     </div>
   );

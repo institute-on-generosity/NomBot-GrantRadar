@@ -29,7 +29,7 @@ export type Landscape = {
 };
 // Financial health, from the newest SOI extract year (and the IRS master file for a newer revenue figure).
 // signals: the organizations behind each plain statement ("82 of 178 ran a deficit"), for the Finances tab.
-export type Signal = { key: "growing" | "shrinking" | "deficit" | "thin"; of: number; orgs: { ein: string; value: number }[] };
+export type Signal = { key: "growing" | "shrinking" | "deficit" | "thin" | "reliant"; of: number; orgs: { ein: string; value: number }[] };
 export type Health = {
   trend: Bar[]; trendReported: number;   // revenue change since the previous filing, shrinking → growing
   margin: Bar[]; reserves: Bar[]; mix: Bar[]; reported: number;
@@ -107,7 +107,7 @@ function health(rows: FinRow[]): Health {
   for (const r of rows) by.set(r.ein, [...(by.get(r.ein) ?? []), r].sort((a, b) => Number(a.k) - Number(b.k)));
   const changes: { ein: string; change: number }[] = [];
   const margins: number[] = [], reserves: number[] = [], gifts: number[] = [];
-  const marginOf: { ein: string; value: number }[] = [], reserveOf: { ein: string; value: number }[] = [];
+  const marginOf: { ein: string; value: number }[] = [], reserveOf: { ein: string; value: number }[] = [], giftOf: { ein: string; value: number }[] = [];
   for (const [ein, [now]] of by) {
     const rev = num(now.revenue), exp = num(now.expenses);
     // Trend: the master file's newer revenue vs. the newest SOI year (same rule as the row tags).
@@ -116,7 +116,7 @@ function health(rows: FinRow[]): Health {
     if (rev && rev > 0 && exp != null) { margins.push((rev - exp) / rev); marginOf.push({ ein, value: rev - exp }); }
     const net = num(now.net_assets) ?? num(now.assets);
     if (exp && exp > 0 && net != null) { reserves.push(net / (exp / 12)); reserveOf.push({ ein, value: net / (exp / 12) }); }
-    if (rev && rev > 0 && now.gifts != null) gifts.push(Math.min(1, Math.max(0, num(now.gifts)! / rev)));
+    if (rev && rev > 0 && now.gifts != null) { const g = Math.min(1, Math.max(0, num(now.gifts)! / rev)); gifts.push(g); giftOf.push({ ein, value: g }); }
   }
   const band = (xs: number[], cuts: [string, (x: number) => boolean][]) => cuts.map(([label, f]) => ({ key: label, label, count: xs.filter(f).length }));
   const ch = changes.map((c) => c.change);
@@ -132,11 +132,12 @@ function health(rows: FinRow[]): Health {
       { key: "shrinking", of: changes.length, orgs: changes.filter((c) => c.change <= -0.1).sort((x, y) => x.change - y.change).map((c) => ({ ein: c.ein, value: c.change })) },
       { key: "deficit", of: marginOf.length, orgs: marginOf.filter((m) => m.value < 0).sort((x, y) => x.value - y.value) },
       { key: "thin", of: reserveOf.length, orgs: reserveOf.filter((r) => r.value < 3).sort((x, y) => x.value - y.value) },
+      { key: "reliant", of: giftOf.length, orgs: giftOf.filter((g) => g.value >= 0.9).sort((x, y) => y.value - x.value) },
     ],
   };
 }
 
-const cached = memo<Landscape>("landscape:v7", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v8", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

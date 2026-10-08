@@ -1,4 +1,3 @@
-import { money } from "./money";
 import { readable } from "./text";
 
 const MAX = 150; // characters per bullet (CSS trims each to one line)
@@ -21,29 +20,14 @@ function Marked({ text, patterns }: { text: string; patterns: string[] }) {
   return <>{parts.map((p, i) => (re && i % 2 === 1 ? <mark key={i}>{p}</mark> : <span key={i}>{p}</span>))}</>;
 }
 
-// A result's preview, one line each: what the organization says it does, the program that
-// matches the search (required terms highlighted), and its size and team.
-export function Preview({ mission, programs, expenses, staff, volunteers, patterns }: {
-  mission: string | null; programs: string | null; expenses: number | null; staff: number | null; volunteers: number | null; patterns: string[];
-}) {
+// A result's preview: one line, the mission (searched terms highlighted). Programs only when there's
+// no mission on file. Size and team sit in the line above.
+export function Preview({ mission, programs, patterns }: { mission: string | null; programs: string | null; patterns: string[] }) {
   const find = patterns.length ? new RegExp(patterns.join("|"), "i") : null;
   const tidy = (t: string) => readable(t).replace(/\s+/g, " ").trim(); // filings wrap lines and double-space
   const m = mission ? tidy(mission) : null;
   const p = programs && programs !== mission ? tidy(programs) : null;
-  const size = [
-    expenses ? `${money(expenses)} spent` : null,
-    staff != null ? `${staff.toLocaleString("en-US")} staff` : null,
-    volunteers ? `${volunteers.toLocaleString("en-US")} volunteers` : null,
-  ].filter(Boolean).join(" · ");
-  const items = [
-    m && { k: "Mission", v: excerpt(m, find) },
-    p && { k: "Programs", v: excerpt(p, find) },
-    size && { k: "Size", v: size },
-  ].filter((x): x is { k: string; v: string } => Boolean(x));
-  if (!items.length) return null;
-  return (
-    <ul className="preview">
-      {items.map(({ k, v }) => <li key={k}><b>{k}:</b> <Marked text={v} patterns={patterns} /></li>)}
-    </ul>
-  );
+  const text = m ?? p;
+  if (!text) return null;
+  return <p className="preview-line"><b>{m ? "Mission:" : "Programs:"}</b> <Marked text={excerpt(text, find)} patterns={patterns} /></p>;
 }

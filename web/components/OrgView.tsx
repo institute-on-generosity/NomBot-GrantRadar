@@ -9,7 +9,7 @@ import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
 import { readable, titleCase } from "@/components/text";
-import { getOrg } from "@/lib/org";
+import { getOrg, type Diligence, type Income } from "@/lib/org";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -87,13 +87,18 @@ async function Org({ params, searchParams, modal }: Props) {
             </tbody>
           </table>
         ) : <p>No financial figures on file.</p>}
+        {o.income && <IncomeMix i={o.income} />}
+        {o.flag && <YearOverYear d={o.flag} />}
       </section>
+
+      {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} />}
 
       <section>
         <h2>Details</h2>
         <dl>
           {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
-          {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)})</dd></>}
+          {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
+          <dt>IRS status</dt><dd>{o.status.standing}</dd>
           {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}</dd></>}
           <dt>Address</dt><dd>{[o.careOf, o.street && titleCase(o.street), [o.city && titleCase(o.city), o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</dd>
         </dl>
@@ -120,5 +125,92 @@ function Team({ staff, volunteers, year }: { staff: number | null; volunteers: n
       {volunteers != null && <span><b>{n(volunteers)}</b> volunteers</span>}
       {allVolunteer && <span className="badge">All-volunteer</span>}
     </p>
+  );
+}
+
+// Where the money comes from: one row per source with a share bar. Over 70% from gifts and grants
+// gets a note, since that means depending on donors (slide-style "funding concentration").
+function IncomeMix({ i }: { i: Income }) {
+  const pct = (x: number) => `${Math.round((100 * x) / i.total)}%`;
+  return (
+    <div className="income">
+      <h3>Where the money comes from <small>{i.year} · Form {i.form === "990EZ" ? "990-EZ" : "990"}</small></h3>
+      <ul>
+        {i.parts.map((p) => (
+          <li key={p.key}>
+            <span>{p.label}</span>
+            <span className="income-bar"><i style={{ width: pct(p.amount) }} /></span>
+            <b>{pct(p.amount)}</b><small>{money(p.amount)}</small>
+          </li>
+        ))}
+      </ul>
+      {i.gifts >= 0.7 && <p className="income-note">Relies on donors: {Math.round(i.gifts * 100)}% of revenue is gifts and grants. Ask how many donors give most of it.</p>}
+    </div>
+  );
+}
+
+const change = (now: number, before: number | null) => (before && before > 0 ? (now - before) / before : null);
+const pctText = (x: number) => `${x > 0 ? "+" : "−"}${Math.abs(Math.round(x * 100))}%`;
+
+// This year vs last year from the same 990 (Part I), then three plain liquidity and spending figures.
+function YearOverYear({ d }: { d: Diligence }) {
+  const rows = d.compare.filter((c) => c.before != null);
+  const facts = [
+    d.cashMonths != null && { k: "Cash on hand", v: d.cashMonths >= 12 ? `${(d.cashMonths / 12).toFixed(1)} years of spending` : `${Math.max(0, Math.round(d.cashMonths))} ${Math.round(d.cashMonths) === 1 ? "month" : "months"} of spending`, bad: d.cashMonths < 3 },
+    d.programShare != null && { k: "Spent on programs", v: `${Math.round(d.programShare * 100)}% of expenses`, bad: d.programShare < 0.65 },
+    d.debtShare != null && { k: "Liabilities", v: `${Math.round(d.debtShare * 100)}% of assets`, bad: d.debtShare > 0.5 },
+  ].filter((x): x is { k: string; v: string; bad: boolean } => Boolean(x));
+  if (!rows.length && !facts.length) return null;
+  return (
+    <div className="yoy">
+      {rows.length > 0 && (
+        <table>
+          <thead><tr><th>Form {d.form === "990EZ" ? "990-EZ" : "990"}, {d.year}</th><th className="n">Last year</th><th className="n">This year</th><th className="n">Change</th></tr></thead>
+          <tbody>
+            {rows.map((c) => {
+              const x = change(c.now, c.before);
+              return (
+                <tr key={c.label}>
+                  <td>{c.label}</td>
+                  <td className="n">{money(c.before!)}</td>
+                  <td className="n">{money(c.now)}</td>
+                  {/* Color only income lines: growth is good there; for spending it depends */}
+                  <td className={`n chg${x == null || !c.income ? "" : x <= -0.1 ? " down" : x >= 0.1 ? " up" : ""}`}>{x == null ? "—" : pctText(x)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      {facts.length > 0 && <dl className="yoy-facts">{facts.map((f) => <div key={f.k}><dt>{f.k}</dt><dd className={f.bad ? "bad" : undefined}>{f.v}</dd></div>)}</dl>}
+    </div>
+  );
+}
+
+// Who leads it (Part VII): paid staff first with their pay, then the board in one line; then the
+// governance answers (Part VI, IV) as a short checklist, problems first.
+function Leadership({ d }: { d: Diligence }) {
+  const paid = d.people.filter((p) => p.pay + p.other > 0).slice(0, 6);
+  const unpaid = d.people.filter((p) => p.pay + p.other === 0);
+  const checks = [...d.checks].sort((a, b) => Number(a.ok) - Number(b.ok));
+  return (
+    <section>
+      <h2>Leadership and governance</h2>
+      {paid.length > 0 && (
+        <ul className="people">
+          {paid.map((p) => <li key={p.name + p.title}><span><b>{titleCase(p.name)}</b><small>{titleCase(p.title)}</small></span><span>{money(p.pay + p.other)}</span></li>)}
+        </ul>
+      )}
+      <p className="board-line">
+        {d.board ? <><b>{d.board.members}</b> board members, <b>{d.board.independent}</b> independent</> : unpaid.length ? <><b>{unpaid.length}</b> unpaid officers and directors</> : null}
+        {d.board && unpaid.length > 0 && <> · {unpaid.length} serve unpaid</>}
+      </p>
+      {checks.length > 0 && (
+        <ul className="checks">
+          {checks.map((c) => <li key={c.label} className={c.ok ? "ok" : c.minor ? "minor" : "bad"}>{c.ok ? "✓" : "!"} {c.ok ? c.label : c.label.replace(/^No /, "Reports ").replace("Financial statements audited", "Financial statements not audited").replace(/ policy$/, " policy missing")}</li>)}
+        </ul>
+      )}
+      <p className="note-small">Form {d.form === "990EZ" ? "990-EZ" : "990"}, tax year {d.year}, Parts IV, VI and VII{d.url && <> · <a href={d.url} target="_blank" rel="noreferrer">filing ↗</a></>}</p>
+    </section>
   );
 }

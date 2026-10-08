@@ -40,13 +40,16 @@ export async function Landscape({ question, filters, includeInactive, map, overv
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (
           <>
-            <ul className="ls-funders">
+            {/* One line per funder; place, policy and the groups it paid show on hover */}
+            <ul className="ls-flist">
               {l.funders.map((f) => (
-                <li key={f.ein}>
-                  <span className="ls-fname" title={`${f.name} funded ${f.orgs} of these organizations, ${money(f.amount)} in all${f.inviteOnly ? " · gives only to preselected charities" : ""}`}>{f.name}</span>
-                  <span className="ls-fmeta">{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly && " · invite only"}</span>
-                  <span className="ls-fstat"><b>{f.orgs}</b> funded · <b>{money(f.amount)}</b></span>
-                  <span className="ls-fgrantees">{f.grantees.join(", ")}{f.orgs > f.grantees.length ? "…" : ""}</span>
+                <li key={f.ein} tabIndex={0}>
+                  <span className="ls-fname">{f.name}</span>
+                  <span className="ls-fstat"><b>{money(f.amount)}</b> · {f.orgs} {f.orgs === 1 ? "org" : "orgs"}</span>
+                  <span className="ls-ftip" role="tooltip">
+                    <span>{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly ? " · invite only" : " · open to applications"}</span>
+                    <span>Funded {f.grantees.join(", ")}{f.orgs > f.grantees.length ? "…" : ""}</span>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -104,8 +107,8 @@ export async function Gems({ ranking }: { ranking: ReturnType<typeof rank> }) {
   if (!gems.length) return null;
   return (
     <div className="unfunded">
-      <h3>Strong matches no foundation funds yet<small>{gems.length} of {strong.length}</small></h3>
-      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><b>{titleCase(o.name)}</b><span>{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}</span></li>)}</ul>
+      <h3>Not yet funded<small>{gems.length} of {strong.length} strong matches</small></h3>
+      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><b>{titleCase(o.name)}</b><span>{o.state}</span></li>)}</ul>
     </div>
   );
 }
