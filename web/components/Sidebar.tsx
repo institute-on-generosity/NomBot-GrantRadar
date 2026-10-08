@@ -2,11 +2,9 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { HISTORY_KEY, historyKey, type HistoryEntry } from "@/lib/history";
-import { SAVED_KEY, type SavedOrg } from "@/lib/saved";
+import { historyKey } from "@/lib/history";
 import { GR_HISTORY_EVENT, GR_HISTORY_KEY, GR_SAVED_EVENT, GR_SAVED_KEY, missionKey, type RecentMission, type SavedFunder } from "@/lib/grantStore";
 import { MATCH_STEPS } from "@/lib/grantExamples";
-import { historyTarget } from "./HistoryList";
 import { NavLink } from "./NavLink";
 import { RadarMark } from "./RadarMark";
 import { titleCase } from "./text";
@@ -32,46 +30,32 @@ function TrackHere({ onChange }: { onChange: (h: Here) => void }) {
   return null;
 }
 
-// Left navigation, like Claude's: new search, starred organizations, recent questions.
-// Collapses to a rail on desktop; slides in as a drawer on phones.
+// Left navigation, like Claude's: new match, starred funders, recent missions.
+// GrantRadar stands alone here (no switch to NomBot). Collapses to a rail on desktop; slides in as a drawer on phones.
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
-  const saved = useStoredList<SavedOrg>(SAVED_KEY, "nombot-saved");
-  const history = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
   const funders = useStoredList<SavedFunder>(GR_SAVED_KEY, GR_SAVED_EVENT);
   const missions = useStoredList<RecentMission>(GR_HISTORY_KEY, GR_HISTORY_EVENT);
   const [here, setHere] = useState<Here>({ path: "", question: "" });
   const item = (on: boolean) => `side-item${on ? " on" : ""}`;
-  const grants = here.path.startsWith("/grants");
 
   return (
     <>
       <div className="mobilebar">
         <button className="iconbtn" onClick={() => setOpen(true)} aria-label="Open sidebar"><PanelIcon /></button>
-        <Link href="/" className="brand"><span className="logo">N</span>NomBot</Link>
+        <Link href="/grants" className="brand"><span className="logo radar"><RadarMark size={16} /></span>GrantRadar</Link>
       </div>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
       {/* Any link tap closes the phone drawer. */}
       <Suspense fallback={null}><TrackHere onChange={setHere} /></Suspense>
       <aside className={`side${collapsed ? " collapsed" : ""}${open ? " open" : ""}`} onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setOpen(false); }}>
         <div className="side-top">
-          {grants
-            ? <Link href="/grants" className="brand"><span className="logo radar"><RadarMark size={16} /></span><span className="side-label">GrantRadar</span></Link>
-            : <Link href="/" className="brand"><span className="logo">N</span><span className="side-label">NomBot</span></Link>}
+          <Link href="/grants" className="brand"><span className="logo radar"><RadarMark size={16} /></span><span className="side-label">GrantRadar</span></Link>
           <button className="iconbtn side-toggle" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}><PanelIcon /></button>
         </div>
-        {/* NomBot finds nonprofits; GrantRadar finds the foundations that fund work like yours */}
-        <div className="side-apps" role="tablist" aria-label="App">
-          <span className={`thumb${grants ? " right" : ""}`} aria-hidden />
-          <Link href="/" className={grants ? "" : "on"} role="tab" aria-selected={!grants}><span className="logo mini">N</span>NomBot</Link>
-          <Link href="/grants" className={grants ? "on" : ""} role="tab" aria-selected={grants}><RadarMark size={14} />GrantRadar</Link>
-        </div>
-        {grants
-          ? <NavLink href="/grants" className={`side-new${here.path === "/grants" && !here.question ? " on" : ""}`} title="New match" current={here.path === "/grants" && !here.question}><PlusIcon /><span className="side-label">New match</span></NavLink>
-          : <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">New search</span></NavLink>}
+        <NavLink href="/grants" className={`side-new${here.path === "/grants" && !here.question ? " on" : ""}`} title="New match" current={here.path === "/grants" && !here.question}><PlusIcon /><span className="side-label">New match</span></NavLink>
 
-{grants ? (
         <nav className="side-scroll">
           <Section title="Starred" all="/grants/saved" active={here.path === "/grants/saved"} empty="Tap ☆ on any funder to keep it here.">
             {funders.slice(0, SHOWN).map((f) => (
@@ -87,24 +71,6 @@ export function Sidebar() {
             })}
           </Section>
         </nav>
-        ) : (
-        <nav className="side-scroll">
-          <Section title="Starred" all="/saved" active={here.path === "/saved"}
-            empty="Tap ☆ on any organization to keep it here.">
-            {saved.slice(0, SHOWN).map((o) => (
-              <NavLink key={o.ein} href={`/org/${o.ein}`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={titleCase(o.name)}>
-                <span className="side-star">★</span>{titleCase(o.name)}
-              </NavLink>
-            ))}
-          </Section>
-          <Section title="Recents" all="/history" active={here.path === "/history"}
-            empty="Your questions will show up here.">
-            {history.slice(0, SHOWN).map((e) => (
-              <NavLink key={e.key} href={historyTarget(e)} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…" search>{e.question}</NavLink>
-            ))}
-          </Section>
-        </nav>
-        )}
       </aside>
     </>
   );

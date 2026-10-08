@@ -10,8 +10,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NomBot",
-  description: "Plain-language search over US nonprofits",
+  title: "GrantRadar",
+  description: "Find the private foundations that already fund nonprofits like yours",
 };
 
 export const viewport: Viewport = {

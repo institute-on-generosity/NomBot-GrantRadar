@@ -99,6 +99,7 @@ GrantRadar is NomBot plus a grants table.
 | **Starred funders + recent missions** in the sidebar (this browser only), before logins | Same habit as NomBot: come back to a funder or a past match in one click |
 | **Research Buddy on `/grants`** (NomBot's panel, made configurable) | Oct 7 feedback ("for this one, especially"). Same rules and look; own conversation history |
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
+| **Standalone app** on the `GrantRadar` branch (no NomBot toggle; `/` → `/grants`) | Oct 7 feedback: different audiences. NomBot's org pages stay, since funder sheets link to grantees |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Peers** (groups like yours with the most funders) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
 
 ## Success metrics
@@ -121,7 +122,7 @@ GrantRadar is NomBot plus a grants table.
 | Show **restricted vs. unrestricted** giving, and whether a funder backs programs or policy | ✅ **Done Oct 7:** grant purposes sorted into unrestricted / project / policy; row tag, sheet breakdown, filter |
 | Add **Research Buddy** to GrantRadar | ✅ **Done Oct 7:** NomBot's Buddy over the top matched funders: facts, how to apply, grant types, groups like yours |
 | Zoom **out** to patterns, not only details | ✅ **Done Oct 8:** landscape panel beside the matches: AI overview with next steps, breakdown, peers |
-| GrantRadar and NomBot serve **different audiences** | One app with a toggle while testing; standalone later |
+| GrantRadar and NomBot serve **different audiences** | ✅ **Oct 8:** the `GrantRadar` branch runs standalone: no NomBot toggle, titled GrantRadar, home page is `/grants` |
 | **Real-time budget** and fundraising gap | Not in public data; would need self-reporting + verification |
 
 **Next steps**
