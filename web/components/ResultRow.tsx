@@ -4,7 +4,7 @@ import { StarButton } from "./StarButton";
 import { CompareButton } from "./CompareButton";
 import type { Relevance } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
-import { Snippet } from "./Snippet";
+import { Preview } from "./Snippet";
 import { titleCase } from "./text";
 import { Vote } from "./Vote";
 
@@ -16,7 +16,6 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
   r: Result; href: string; patterns: string[]; focused?: boolean; index?: number;
   feedback?: { question: string; rank: number; filters: Record<string, unknown> }; relevance?: Relevance | null; mentions?: string;
 }) {
-  const text = [r.mission, r.programs].filter(Boolean).join(" ");
   return (
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
       <div className="row-main">
@@ -29,7 +28,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, feedb
           {[r.city ? titleCase(r.city) : null, r.state].filter(Boolean).join(", ")}
           {r.ntee?.label && <> · {r.ntee.label}</>}
         </div>
-        {text && <Snippet text={text} patterns={patterns} />}
+        <Preview mission={r.mission} programs={r.programs} expenses={r.financials?.expenses ?? null} staff={r.team?.staff ?? null} volunteers={r.team?.volunteers ?? null} patterns={patterns} />
         {mentions && <div className="why"><span className="mentions">Mentions {mentions}</span></div>}
         {r.sources.length > 0 && (
           <div className="src">

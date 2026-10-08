@@ -17,7 +17,7 @@ export type Result = {
   ntee: { code: string; label: string | null } | null;
   revenue: { amount: number; year: number | null; source: "IRS BMF" | "IRS SOI" } | null;
   financials: { tax_year: number; revenue: number; expenses: number; assets: number } | null;
-  mission: string | null; programs: string | null; filing: { year: number | null; form: string | null } | null;
+  mission: string | null; programs: string | null; team: { staff: number | null; volunteers: number | null } | null; filing: { year: number | null; form: string | null } | null;
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
 };
 
@@ -31,13 +31,13 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
   }
   const { rows } = await db.query(
     `WITH t AS (
-       SELECT DISTINCT ON (ein) ein, object_id, tax_year, form, mission, programs, embedding, embedding_model, search
+       SELECT DISTINCT ON (ein) ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
        FROM filing_text ORDER BY ein, tax_year DESC NULLS LAST),
      f AS (SELECT DISTINCT ON (ein) ein, tax_year, form, revenue, expenses, assets FROM financials ORDER BY ein, tax_year DESC),
      base AS (
        SELECT o.ein, o.name, o.city, o.state, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period,
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
-              t.mission AS raw_mission, t.programs, t.embedding, t.embedding_model, t.search AS tsearch,
+              t.mission AS raw_mission, t.programs, t.employees, t.volunteers, t.embedding, t.embedding_model, t.search AS tsearch,
               f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets,
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
@@ -87,6 +87,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
       financials: r.has_fin ? { tax_year: r.fin_year, revenue: Number(r.fin_rev), expenses: Number(r.expenses), assets: Number(r.assets) } : null,
       mission: r.mission,
       programs: r.programs,
+      team: r.has_text ? { staff: r.employees ?? null, volunteers: r.volunteers ?? null } : null,
       filing: r.has_text ? { year: r.text_year, form: r.text_form } : null,
       exact: r.exact,
       score: Math.round(Number(r.score) * 100) / 100,

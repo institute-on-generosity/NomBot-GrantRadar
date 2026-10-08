@@ -20,7 +20,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 |---|---|
 | **Ranking** | **Relevance score** 0–100 per result, with Claude's one-line reason on hover · strong matches first, weaker ones folded under "Show N weaker matches" |
 | **Filters** | **Editable chips** read from the question: state, city, **Appalachia region**, budget, cause, "must mention" · results update in ~0.4s |
-| **Search** | **Suggestions** under the search box · **exact-mention** badges · include tiny/inactive orgs · **CSV export** |
+| **Search** | **Suggestions** under the search box · **exact-mention** badges · **bullet previews** (mission, matching program, spending, staff, volunteers) · include tiny/inactive orgs · **CSV export** |
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover · one side panel with a **tab per source**, closed in one step |
 | **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants); hover-only for now |
@@ -46,7 +46,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 ```
 → JSON records: `ein`, `name`, `city`, `state`, `ntee`, `financials`, `mission`, `score`.
 
-**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → editable filter chips (Appalachia, under $500K, must mention workforce training) → strong matches ranked by relevance score, each with revenue, the matching filing text and its IRS source.
+**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → editable filter chips (Appalachia, under $500K, must mention workforce training) → strong matches ranked by relevance score, each with revenue, a bullet preview (mission, the program that matches, spending and team) and its IRS source.
 
 ![NomBot search: the Appalachia food-bank question, filter chips, "7 strong matches", and results scored 82, 80, 72 with revenue and Form 990 sources](docs/ux/search-real.png)
 
