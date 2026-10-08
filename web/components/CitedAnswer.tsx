@@ -1,9 +1,10 @@
 "use client";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 
 // What a citation [n] points to: a tooltip and, when there is a page for it, a link.
-export type Cite = (n: number) => { title: string; href?: string } | null | undefined;
+export type Cite = (n: number) => { title: string; href?: string; lines?: string[] } | null | undefined;
 
 // Minimal, safe rendering of a cited answer: paragraphs, "- " bullets, **bold**, and [n] citations.
 // Shared by Research Buddy and GrantRadar's "Why this funder?".
@@ -38,7 +39,7 @@ function Inline({ text, cite }: { text: string; cite: Cite }) {
               const s = cite(Number(n));
               return s?.href
                 ? <Link key={n} href={s.href} scroll={false} className="cite-n" title={s.title}>{n}</Link>
-                : <span key={n} className="cite-n" title={s?.title}>{n}</span>;
+                : s ? <CiteTip key={n} n={Number(n)} title={s.title} lines={s.lines} /> : <span key={n} className="cite-n">{n}</span>;
             })}
           </span>
         );
@@ -47,3 +48,28 @@ function Inline({ text, cite }: { text: string; cite: Cite }) {
   );
 }
 
+
+// A citation that isn't a link: hovering (or focusing) shows a small card right away. Portaled to
+// <body> with fixed positioning so scrolling panels can't clip it.
+function CiteTip({ n, title, lines = [] }: { n: number; title: string; lines?: string[] }) {
+  const [at, setAt] = useState<{ x: number; y: number; below: boolean } | null>(null);
+  const show = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const below = r.top < 170; // not enough room above: open below
+    setAt({ x: Math.min(Math.max(r.left + r.width / 2, 150), window.innerWidth - 150), y: below ? r.bottom + 8 : r.top - 8, below });
+  };
+  return (
+    <>
+      <span className="cite-n" tabIndex={0} aria-label={`${n}: ${title}`}
+        onMouseEnter={(e) => show(e.currentTarget)} onMouseLeave={() => setAt(null)}
+        onFocus={(e) => show(e.currentTarget)} onBlur={() => setAt(null)}>{n}</span>
+      {at && createPortal(
+        <span className={`cite-tip${at.below ? " below" : ""}`} role="tooltip" style={{ left: at.x, top: at.y }}>
+          <b>{title}</b>
+          {lines.filter(Boolean).map((l, i) => <span key={i}>{l}</span>)}
+        </span>,
+        document.body,
+      )}
+    </>
+  );
+}

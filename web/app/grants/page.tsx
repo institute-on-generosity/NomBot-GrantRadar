@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { FilterChips, type Chip } from "@/components/FilterChips";
 import { FunderRow } from "@/components/FunderRow";
 import { GrantBuddy } from "@/components/GrantBuddy";
+import { GrantLandscape, GrantLandscapeSkeleton } from "@/components/GrantLandscape";
 import { NavLink } from "@/components/NavLink";
 import { RecordMission } from "@/components/GrantStore";
 import { SearchBox } from "@/components/SearchBox";
@@ -83,9 +84,19 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
 
   return (
     <>
-      <SearchBox key={mission} action="/grants" name="mission" value={mission} placeholder={PLACEHOLDER} examples={MISSIONS} recents={false} submitLabel="Match" loading={{ label: "Reading your mission…", steps: MATCH_STEPS }} />
+      {/* Search bar + filters stay put; below them the funders and the analysis panel scroll on their own. */}
+      <div className="serp-head">
+        <SearchBox key={mission} action="/grants" name="mission" value={mission} placeholder={PLACEHOLDER} examples={MISSIONS} recents={false} submitLabel="Match" loading={{ label: "Reading your mission…", steps: MATCH_STEPS }} />
+        <FilterChips chips={chips} />
+      </div>
       <RecordMission mission={mission} href={url(p, {})} total={total} />
-      <FilterChips chips={chips} />
+      <div className="serp">
+      <aside className="serp-rail" aria-label="Analysis">
+        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<GrantLandscapeSkeleton />}>
+          <GrantLandscape mission={mission} filters={filters} />
+        </Suspense>
+      </aside>
+      <div className="serp-main">
       {funders.length === 0 ? (
         <p className="notice">No matching funders{state ? ` in ${state}` : ""}. Remove a filter or reword your mission.</p>
       ) : (
@@ -105,6 +116,8 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
         {total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
       </div>
       <p className="note">IRS Form 990-PF, 2025 · WV, KY, TN, VA, OH</p>
+      </div>
+      </div>
       {funders.length > 0 && (
         <GrantBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} mission={mission} state={state}
           filters={{ st: state || undefined, open: p.open === "1" ? "1" : undefined, size, type }} />
