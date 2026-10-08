@@ -815,3 +815,10 @@ main:has(.serp) { max-width: 1400px; }
 .ov-next h3 { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 3px; }
 .ov-next .buddy-answer { font-size: 13.5px; color: var(--ink-2); }
 .ov-next .buddy-answer ul { padding-left: 18px; display: grid; gap: 3px; }
+/* Funder row, right column: typical grant, then two quiet text lines (no pills, no "Why" link;
+   the whole row opens "Why this funder?") */
+.funder-side .policy { background: none; padding: 0; border-radius: 0; font-size: 12.5px; }
+.funder-side .policy.closed { background: none; color: var(--mute); }
+.funder-side .gtype { box-shadow: none; padding: 0; font-size: 12.5px; color: var(--mute); }
+.funder-side-top { gap: 5px; }
+.funder-side-top .typical { margin-bottom: 3px; }

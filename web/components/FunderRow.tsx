@@ -1,7 +1,7 @@
 import { ViewTransition } from "react";
 import Link from "next/link";
 import { FunderStar } from "./GrantStore";
-import { Bank, Check, Chevron, Lock, People, Pin, Spark } from "./icons";
+import { Bank, Check, Lock, People, Pin } from "./icons";
 import { titleCase } from "./text";
 import { money } from "@/lib/filters";
 import type { FunderMatch } from "@/lib/grants";
@@ -50,7 +50,6 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
             <span className={`policy${f.inviteOnly ? " closed" : ""}`}>{f.inviteOnly ? <><Lock size={12} />Invite only</> : <><Check size={12} />Open</>}</span>
             {lean && <span className={`gtype ${lean}`} title={`${Math.round(100 * share(f.mix!, lean))}% of grant dollars with a clear purpose`}>{LEAN_LABEL[lean]}</span>}
           </div>
-          <span className="why-cta"><Spark size={13} />Why<Chevron size={13} /></span>
         </div>
       </Link>
     </article>
