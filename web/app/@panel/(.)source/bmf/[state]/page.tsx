@@ -1,8 +1,6 @@
-import { RouteGate } from "@/components/RouteGate";
-import { SidePanel } from "@/components/SidePanel";
 import { BmfViewer } from "@/components/viewers/BmfViewer";
 
-// /source/bmf/<state> opened from inside the app: the compact viewer in the right-hand panel.
+// /source/bmf/<state> opened from inside the app: the compact viewer in the right-hand panel (see layout).
 export default function BmfPanel(props: PageProps<"/source/bmf/[state]">) {
-  return <RouteGate prefix="/source/"><SidePanel title="IRS master file"><BmfViewer {...props} compact /></SidePanel></RouteGate>;
+  return <BmfViewer {...props} compact />;
 }

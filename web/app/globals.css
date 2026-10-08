@@ -297,6 +297,12 @@ button.fchip-main { cursor: pointer; }
 .side-panel { position: sticky; top: 0; height: 100vh; width: clamp(440px, 44vw, 760px); flex: none; display: flex; flex-direction: column; background: var(--bg); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(0,0,0,.05); animation: panel-in .4s var(--spring) both; z-index: 25; }
 .panel-head { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--line); background: var(--glass-2); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
 .panel-head > span { flex: 1; font-size: 14px; font-weight: 600; }
+/* Sources opened in this panel, one tab each */
+.panel-tabs { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: var(--fill); width: fit-content; max-width: max-content; overflow-x: auto; scrollbar-width: none; }
+.panel-tabs a { flex: none; font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; white-space: nowrap; transition: background-color .15s, color .15s; }
+.panel-tabs a:hover { color: var(--ink); }
+.panel-tabs a.on { color: var(--ink); font-weight: 600; background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.panel-head .panel-tabs + .panel-close { margin-left: auto; }
 .panel-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 .panel-body main { max-width: none; padding: 20px 24px 48px; }
 .panel-body .keyfigs { grid-template-columns: repeat(3, 1fr); gap: 8px; }
