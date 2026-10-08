@@ -8,6 +8,7 @@ import { memo } from "./memo";
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 import { searchCandidates } from "./rerank";
+import { orgHealth, type Health as OrgHealth } from "./search";
 
 export const LANDSCAPE = 200;
 
@@ -87,57 +88,54 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   };
 }
 
-type FinRow = { ein: string; tax_year: number; revenue: string | null; expenses: string | null; assets: string | null; net_assets: string | null; gifts: string | null; revenue_amt: string | null; bmf_year: number | null; k: string };
-const num = (v: string | null) => (v == null ? null : Number(v));
-
-// Financial health of a set of organizations (eins without the dash).
+// Financial health of a set of organizations (eins without the dash), by the same rules as the tags on
+// each result (lib/search orgHealth): the newest e-filed 990 when there is one, else SOI + master file.
 export async function healthOf(eins: string[]): Promise<Health> {
-  // Newest two SOI years per org, plus the master file's revenue when its tax period is newer.
-  const { rows } = await db.query<FinRow>(`SELECT f.ein, f.tax_year, f.revenue, f.expenses, f.assets,
-                     coalesce(f.raw->>'totnetassetend', f.raw->>'totnetassetsend')::numeric AS net_assets,
-                     coalesce(f.raw->>'totcntrbgfts', f.raw->>'totcntrbs')::numeric AS gifts,
-                     o.revenue_amt, left(o.tax_period, 4)::int AS bmf_year,
-                     row_number() OVER (PARTITION BY f.ein ORDER BY f.tax_year DESC) AS k
-              FROM financials f JOIN orgs o USING (ein) WHERE f.ein = ANY($1)`, [eins]);
-  return health(rows);
+  const { rows } = await db.query(`
+    SELECT o.ein, o.revenue_amt, left(o.tax_period, 4)::int AS rev_year,
+           f.tax_year AS fin_year, f.revenue AS fin_rev, f.expenses, f.net_assets, f.gifts,
+           x.x_year, x.x_rev, x.x_prev, x.x_exp, x.x_cash, x.x_gifts
+    FROM orgs o
+    LEFT JOIN LATERAL (SELECT tax_year, revenue, expenses, coalesce(raw->>'totnetassetend', raw->>'totnetassetsend')::numeric AS net_assets,
+                              coalesce(raw->>'totcntrbgfts', raw->>'totcntrbs')::numeric AS gifts
+                       FROM financials WHERE ein = o.ein ORDER BY tax_year DESC LIMIT 1) f ON true
+    LEFT JOIN LATERAL (SELECT tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash, cy_contributions AS x_gifts
+                       FROM filing_flag WHERE ein = o.ein ORDER BY tax_year DESC NULLS LAST LIMIT 1) x ON true
+    WHERE o.ein = ANY($1)`, [eins]);
+  const orgs = rows.map((r) => {
+    const h = orgHealth({ ...r, has_fin: r.fin_year != null, rev_src: r.revenue_amt != null && (r.fin_year == null || r.rev_year > r.fin_year) ? "bmf" : "soi" });
+    const gifts = r.x_year != null && Number(r.x_rev) > 0 ? (r.x_gifts == null ? null : Number(r.x_gifts) / Number(r.x_rev))
+      : r.fin_rev > 0 && r.gifts != null ? Number(r.gifts) / Number(r.fin_rev) : null;
+    return { ein: r.ein as string, h, gifts: gifts == null ? null : Math.min(1, Math.max(0, gifts)) };
+  });
+  return health(orgs);
 }
 
-function health(rows: FinRow[]): Health {
-  const by = new Map<string, FinRow[]>();
-  for (const r of rows) by.set(r.ein, [...(by.get(r.ein) ?? []), r].sort((a, b) => Number(a.k) - Number(b.k)));
-  const changes: { ein: string; change: number }[] = [];
-  const margins: number[] = [], reserves: number[] = [], gifts: number[] = [];
-  const marginOf: { ein: string; value: number }[] = [], reserveOf: { ein: string; value: number }[] = [], giftOf: { ein: string; value: number }[] = [];
-  for (const [ein, [now]] of by) {
-    const rev = num(now.revenue), exp = num(now.expenses);
-    // Trend: the master file's newer revenue vs. the newest SOI year (same rule as the row tags).
-    const [a, b] = now.bmf_year && now.bmf_year > now.tax_year && num(now.revenue_amt) ? [num(now.revenue_amt)!, rev] : [null, null];
-    if (a != null && b != null && b > 10_000) changes.push({ ein, change: (a - b) / b });
-    if (rev && rev > 0 && exp != null) { margins.push((rev - exp) / rev); marginOf.push({ ein, value: rev - exp }); }
-    const net = num(now.net_assets) ?? num(now.assets);
-    if (exp && exp > 0 && net != null) { reserves.push(net / (exp / 12)); reserveOf.push({ ein, value: net / (exp / 12) }); }
-    if (rev && rev > 0 && now.gifts != null) { const g = Math.min(1, Math.max(0, num(now.gifts)! / rev)); gifts.push(g); giftOf.push({ ein, value: g }); }
-  }
+function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }[]): Health {
+  const changes = orgs.filter((o) => o.h?.trend).map((o) => ({ ein: o.ein, change: o.h!.trend!.change }));
+  const marginOf = orgs.filter((o) => o.h?.margin != null).map((o) => ({ ein: o.ein, value: o.h!.revenue - o.h!.expenses, share: o.h!.margin! }));
+  const reserveOf = orgs.filter((o) => o.h?.reserveMonths != null).map((o) => ({ ein: o.ein, value: o.h!.reserveMonths! }));
+  const giftOf = orgs.filter((o) => o.gifts != null).map((o) => ({ ein: o.ein, value: o.gifts! }));
   const band = (xs: number[], cuts: [string, (x: number) => boolean][]) => cuts.map(([label, f]) => ({ key: label, label, count: xs.filter(f).length }));
-  const ch = changes.map((c) => c.change);
+  const ch = changes.map((c) => c.change), margins = marginOf.map((m) => m.share), reserves = reserveOf.map((r) => r.value), gifts = giftOf.map((g) => g.value);
   return {
     trend: band(ch, [["Shrinking 25%+", (x) => x <= -0.25], ["Shrinking 10–25%", (x) => x > -0.25 && x <= -0.1], ["Steady (±10%)", (x) => x > -0.1 && x < 0.1], ["Growing 10–25%", (x) => x >= 0.1 && x < 0.25], ["Growing 25%+", (x) => x >= 0.25]]),
     trendReported: changes.length,
     margin: band(margins, [["Deficit", (x) => x < 0], ["Break-even (0–5%)", (x) => x >= 0 && x < 0.05], ["Surplus (5%+)", (x) => x >= 0.05]]),
     reserves: band(reserves, [["Under 1 month", (x) => x < 1], ["1–3 months", (x) => x >= 1 && x < 3], ["3–6 months", (x) => x >= 3 && x < 6], ["6–12 months", (x) => x >= 6 && x < 12], ["1 year+", (x) => x >= 12]]),
     mix: band(gifts, [["Mostly donations (70%+)", (x) => x >= 0.7], ["Mixed", (x) => x >= 0.3 && x < 0.7], ["Mostly earned (<30% gifts)", (x) => x < 0.3]]),
-    reported: margins.length,
+    reported: marginOf.length,
     signals: [
       { key: "growing", of: changes.length, orgs: changes.filter((c) => c.change >= 0.1).sort((x, y) => y.change - x.change).map((c) => ({ ein: c.ein, value: c.change })) },
       { key: "shrinking", of: changes.length, orgs: changes.filter((c) => c.change <= -0.1).sort((x, y) => x.change - y.change).map((c) => ({ ein: c.ein, value: c.change })) },
-      { key: "deficit", of: marginOf.length, orgs: marginOf.filter((m) => m.value < 0).sort((x, y) => x.value - y.value) },
+      { key: "deficit", of: marginOf.length, orgs: marginOf.filter((m) => m.value < 0).sort((x, y) => x.value - y.value).map((m) => ({ ein: m.ein, value: m.value })) },
       { key: "thin", of: reserveOf.length, orgs: reserveOf.filter((r) => r.value < 3).sort((x, y) => x.value - y.value) },
       { key: "reliant", of: giftOf.length, orgs: giftOf.filter((g) => g.value >= 0.9).sort((x, y) => y.value - x.value) },
     ],
   };
 }
 
-const cached = memo<Landscape>("landscape:v8", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v9", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

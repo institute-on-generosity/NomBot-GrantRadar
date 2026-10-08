@@ -11,7 +11,7 @@ const TEXT: Record<Signal["key"], { label: string; says: string; tone: "good" | 
   growing: { label: "Growing", says: "grew revenue 10% or more", tone: "good" },
   shrinking: { label: "Shrinking", says: "lost 10% or more of revenue", tone: "bad" },
   deficit: { label: "Deficit", says: "spent more than they took in", tone: "bad" },
-  thin: { label: "Thin reserves", says: "have under 3 months of spending saved", tone: "bad" },
+  thin: { label: "Thin reserves", says: "have under 3 months of spending in cash (or reserves, without an e-filed 990)", tone: "bad" },
   reliant: { label: "Donor-reliant", says: "get 90%+ of revenue from gifts and grants", tone: "bad" },
 };
 const show = (k: Signal["key"], v: number) =>

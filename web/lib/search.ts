@@ -22,20 +22,29 @@ export type Result = {
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
 };
 
-// One organization's financial signals, for the badges on its result row.
-// trend: revenue change from the newest SOI year to the master file's newer figure (when there is one).
-// margin: (revenue - expenses) / revenue in the newest SOI year; reserveMonths: net assets / monthly spending.
+// One organization's financial signals, for the badges on its result row. Prefers the newest e-filed
+// 990 (generosity-data filing_flag): its own prior-year column gives the trend, and cash the reserves.
+// Without one: the newest SOI year, with the master file's newer revenue for the trend.
+// margin: (revenue - expenses) / revenue; reserveMonths: cash (990) or net assets (SOI) / monthly spending.
 export type Health = {
   trend: { change: number; from: { year: number; amount: number }; to: { year: number; amount: number } } | null;
-  margin: number | null; year: number; revenue: number; expenses: number; reserveMonths: number | null;
+  margin: number | null; year: number; revenue: number; expenses: number; reserveMonths: number | null; reserveBasis: "cash" | "net assets";
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function orgHealth(r: any): Health | null {
+export function orgHealth(r: any): Health | null {
+  if (r.x_year != null && Number(r.x_rev) > 0) {
+    const rev = Number(r.x_rev), exp = Number(r.x_exp ?? 0), prev = r.x_prev == null ? null : Number(r.x_prev);
+    return {
+      trend: prev != null && prev > 10_000 ? { change: (rev - prev) / prev, from: { year: r.x_year - 1, amount: prev }, to: { year: r.x_year, amount: rev } } : null,
+      margin: (rev - exp) / rev, year: r.x_year, revenue: rev, expenses: exp,
+      reserveMonths: exp > 0 && r.x_cash != null ? Number(r.x_cash) / (exp / 12) : null, reserveBasis: "cash",
+    };
+  }
   if (!r.has_fin) return null;
   const rev = Number(r.fin_rev), exp = Number(r.expenses), net = r.net_assets == null ? null : Number(r.net_assets);
   const trend = r.rev_src === "bmf" && rev > 10_000 && r.revenue_amt != null
     ? { change: (Number(r.revenue_amt) - rev) / rev, from: { year: r.fin_year, amount: rev }, to: { year: r.rev_year, amount: Number(r.revenue_amt) } } : null;
-  return { trend, margin: rev > 0 ? (rev - exp) / rev : null, year: r.fin_year, revenue: rev, expenses: exp, reserveMonths: exp > 0 && net != null ? net / (exp / 12) : null };
+  return { trend, margin: rev > 0 ? (rev - exp) / rev : null, year: r.fin_year, revenue: rev, expenses: exp, reserveMonths: exp > 0 && net != null ? net / (exp / 12) : null, reserveBasis: "net assets" };
 }
 
 export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
@@ -53,15 +62,18 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
      f AS (SELECT DISTINCT ON (ein) ein, tax_year, form, revenue, expenses, assets,
                   coalesce(raw->>'totnetassetend', raw->>'totnetassetsend')::numeric AS net_assets
            FROM financials ORDER BY ein, tax_year DESC),
+     x AS (SELECT DISTINCT ON (ein) ein, tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash
+           FROM filing_flag ORDER BY ein, tax_year DESC NULLS LAST),
      base AS (
        SELECT o.ein, o.name, o.city, o.state, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period,
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
               t.mission AS raw_mission, t.programs, t.employees, t.volunteers, t.embedding, t.embedding_model, t.search AS tsearch,
               f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets, f.net_assets,
+              x.x_year, x.x_rev, x.x_prev, x.x_exp, x.x_cash,
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
-       FROM orgs o LEFT JOIN t USING (ein) LEFT JOIN f USING (ein)
+       FROM orgs o LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein)
        WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
          AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))  -- headquarters city

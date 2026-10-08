@@ -8,7 +8,7 @@ const pct = (x: number) => `${x > 0 ? "+" : "−"}${Math.round(Math.abs(x) * 100
 export function HealthBadges({ h }: { h: Health | null }) {
   if (!h) return null;
   const t = h.trend;
-  const reserves = h.reserveMonths == null ? "" : ` · reserves ${h.reserveMonths >= 12 ? `${(h.reserveMonths / 12).toFixed(1)} years` : `${Math.max(0, Math.round(h.reserveMonths))} months`} of spending`;
+  const reserves = h.reserveMonths == null ? "" : ` · ${h.reserveBasis === "cash" ? "cash covers" : "reserves"} ${h.reserveMonths >= 12 ? `${(h.reserveMonths / 12).toFixed(1)} years` : `${Math.max(0, Math.round(h.reserveMonths))} months`} of spending`;
   return (
     <>
       {t && Math.abs(t.change) >= 0.1 && (

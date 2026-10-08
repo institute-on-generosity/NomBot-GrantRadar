@@ -9,7 +9,7 @@ import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
 import { readable, titleCase } from "@/components/text";
-import { getOrg, type Diligence, type Income } from "@/lib/org";
+import { getOrg, RULES, type Diligence, type Income } from "@/lib/org";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -68,6 +68,8 @@ async function Org({ params, searchParams, modal }: Props) {
           <p>{readable(o.programs)}</p>
         </section>
       )}
+
+      {o.flag && o.flag.rating.signals.length >= 3 && <HealthRating d={o.flag} />}
 
       <section>
         <h2>Finances</h2>
@@ -211,6 +213,26 @@ function Leadership({ d }: { d: Diligence }) {
         </ul>
       )}
       <p className="note-small">Form {d.form === "990EZ" ? "990-EZ" : "990"}, tax year {d.year}, Parts IV, VI and VII{d.url && <> · <a href={d.url} target="_blank" rel="noreferrer">filing ↗</a></>}</p>
+    </section>
+  );
+}
+
+// Overall financial health from the newest 990, by fixed rules (RULES): the level, then each signal
+// with its figure, problems first. The rules are one click away so the rating can be checked.
+function HealthRating({ d }: { d: Diligence }) {
+  const order = { weak: 0, watch: 1, ok: 2 } as const;
+  const signals = [...d.rating.signals].sort((a, b) => order[a.level] - order[b.level]);
+  return (
+    <section className={`rating ${d.rating.level.toLowerCase()}`}>
+      <h2>Financial health <span className="rating-level">{d.rating.level}</span><small>Form {d.form === "990EZ" ? "990-EZ" : "990"}, {d.year}</small></h2>
+      <ul>
+        {signals.map((x) => <li key={x.label} className={x.level}><b>{x.label}</b>{x.note}</li>)}
+      </ul>
+      <details>
+        <summary>How this is rated</summary>
+        <p>Any weak signal makes it Weak; two or more to watch make it Medium; otherwise Strong. Fixed rules, no AI:</p>
+        <ul>{RULES.map((r) => <li key={r}>{r}</li>)}</ul>
+      </details>
     </section>
   );
 }
