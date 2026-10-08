@@ -8,6 +8,7 @@ import { titleCase } from "../components/text";
 import { db } from "./db";
 import { money } from "./filters";
 import { matchFunders, SIZES, type FunderMatch, type MatchFilters } from "./grants";
+import { MONTH_LABELS, parseDeadline } from "./grantDeadlines";
 import { LEAN_LABEL } from "./grantTypes";
 import { claude, LLM_MODEL } from "./llm";
 import { memo } from "./memo";
@@ -17,10 +18,15 @@ const READ = 15;  // funders Claude reads: the top of the list
 
 export type Bar = { label: string; count: number };
 export type Winner = { name: string; place: string; funders: number; amount: number };
+// Grants these funders paid to groups like yours, by the grantee's annual revenue: what to ask for.
+export type AskBand = { label: string; grants: number; p25: number; median: number; p75: number };
+// Open funders by the month their 990-PF names as a deadline (n: rank in the list).
+export type Calendar = { months: { label: string; funders: { n: number; ein: string; name: string; typical: number | null }[] }[]; anytime: number; quarterly: number; unclear: number; now: number };
 export type GrantLandscape = {
   funders: FunderMatch[]; total: number; peers: number;
   open: number; toPeers: number; topShare: number | null; // share of those dollars from the 3 biggest givers
   sizes: Bar[]; policy: Bar[]; types: Bar[]; homes: Bar[]; winners: Winner[];
+  ask: AskBand[]; calendar: Calendar;
 };
 
 const place = (city: string | null, state: string | null) => [city && titleCase(city), state].filter(Boolean).join(", ");
@@ -31,6 +37,8 @@ const tally = (xs: string[], k = 6): Bar[] => {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, k).map(([label, count]) => ({ label, count }));
 };
 const SIZE_LABEL = { small: "Under $5K", mid: "$5K–$25K", large: "$25K+" } as const;
+const pct = (sorted: number[], p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
+const REVENUE_BANDS: [string, number, number][] = [["Under $250K", 0, 250_000], ["$250K–$1M", 250_000, 1_000_000], ["$1M–$5M", 1_000_000, 5_000_000], ["$5M+", 5_000_000, Infinity]];
 
 export async function grantLandscape(mission: string, filters: MatchFilters): Promise<GrantLandscape> {
   const { funders, total, peers } = await matchFunders(mission, filters, ALL);
@@ -45,8 +53,31 @@ export async function grantLandscape(mission: string, filters: MatchFilters): Pr
     byPeer.set(e.ein, { ...w, funders: w.funders + 1, amount: w.amount + (e.amount ?? 0) });
   }
 
+  // Grantee budgets (IRS master file revenue) and funder deadlines, for every match.
+  const [{ rows: revs }, { rows: dls }] = await Promise.all([
+    db.query(`SELECT ein, revenue_amt FROM orgs WHERE ein = ANY($1) AND revenue_amt > 0`, [[...byPeer.keys()]]),
+    db.query(`SELECT ein, apply_deadlines FROM funders WHERE ein = ANY($1)`, [funders.map((f) => f.ein)]),
+  ]);
+  const revenue = new Map(revs.map((r) => [r.ein as string, Number(r.revenue_amt)]));
+  const ask = REVENUE_BANDS.map(([label, lo, hi]): AskBand | null => {
+    const amounts = funders.flatMap((f) => f.evidence).filter((e) => e.amount && e.amount > 0 && revenue.has(e.ein) && revenue.get(e.ein)! >= lo && revenue.get(e.ein)! < hi).map((e) => e.amount!).sort((a, b) => a - b);
+    return amounts.length >= 3 ? { label, grants: amounts.length, p25: pct(amounts, 0.25), median: pct(amounts, 0.5), p75: pct(amounts, 0.75) } : null;
+  }).filter((b): b is AskBand => b !== null);
+
+  const deadlineOf = new Map(dls.map((r) => [r.ein as string, parseDeadline(r.apply_deadlines)]));
+  const calendar: Calendar = { months: MONTH_LABELS.map((label) => ({ label, funders: [] })), anytime: 0, quarterly: 0, unclear: 0, now: new Date().getMonth() };
+  funders.forEach((f, i) => {
+    if (f.inviteOnly) return; // invite-only funders take no applications
+    const d = deadlineOf.get(f.ein);
+    if (!d) calendar.unclear++;
+    else if (d.anytime) calendar.anytime++;
+    else if (d.quarterly) calendar.quarterly++;
+    else for (const m of d.months) calendar.months[m].funders.push({ n: i + 1, ein: f.ein, name: titleCase(f.name), typical: f.typical });
+  });
+
   const typicals = funders.map((f) => f.typical).filter((x): x is number => x != null);
   return {
+    ask, calendar,
     funders, total, peers, toPeers,
     open: funders.filter((f) => !f.inviteOnly).length,
     topShare: funders.length > 3 && toPeers > 0 ? top3 / toPeers : null,
@@ -69,7 +100,7 @@ You get their mission, figures computed from every matched foundation, and the t
 Help them zoom out: what does the funding landscape for groups like theirs look like, and where should they start?
 - summary: 1-2 sentences, at most 40 words: how many foundations, typical grant sizes, how many accept applications, where they are based. Use the computed figures for counts and ranges; never count yourself.
 - patterns: 2-3 observations of at most 14 words each about groups of foundations, each citing one or two examples like [2, 7]: what they pay for, grant sizes, unrestricted vs. project money, local vs. distant givers, deadlines. Only what the data shows.
-- next: 2-3 concrete next steps of at most 12 words each, each citing the foundations it means, e.g. "Start with the open Kentucky funders that paid food pantries [1, 4]". Never recommend an invite-only foundation as an application target.
+- next: 2-3 concrete next steps of at most 12 words each, each citing the foundations it means, e.g. "Start with the open Kentucky funders that paid food pantries [1, 4]". Never recommend an invite-only foundation as an application target. When the budget figures allow, one step suggests an ask range ("Ask $5K–$15K, what groups under $250K usually get"), and when deadlines are named, one step says which come up first.
 Cite foundations only by their number in square brackets. When you name a foundation, use its full name as given (never an abbreviation or initials). Plain language, no hype.`;
 
 const schema = z.object({ summary: z.string(), patterns: z.array(z.string()), next: z.array(z.string()) });
@@ -101,7 +132,9 @@ async function fresh(mission: string, l: GrantLandscape): Promise<GrantOverview 
     `Grant types: ${l.types.map((t) => `${t.label} ${t.count}`).join(", ")}`,
     `Based in: ${l.homes.map((h) => `${h.label} ${h.count}`).join(", ")}`,
     `Paid to groups like theirs: ${money(l.toPeers)}${l.topShare != null ? `; ${Math.round(100 * l.topShare)}% of it from the 3 biggest givers` : ""}`,
-  ].join("\n");
+    l.ask.length ? `Grants to groups like theirs, by grantee budget: ${l.ask.map((b) => `${b.label}: middle half ${money(b.p25)}–${money(b.p75)}, median ${money(b.median)} (${b.grants} grants)`).join("; ")}` : null,
+    `Open funders' deadlines: any time ${l.calendar.anytime}, quarterly ${l.calendar.quarterly}, unclear ${l.calendar.unclear}; by month ${l.calendar.months.filter((m) => m.funders.length).map((m) => `${m.label} ${m.funders.length}`).join(", ") || "none named"}`,
+  ].filter(Boolean).join("\n");
 
   const res = await client.beta.messages.parse({
     model: LLM_MODEL,
@@ -117,7 +150,7 @@ async function fresh(mission: string, l: GrantLandscape): Promise<GrantOverview 
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), next: o.next.slice(0, 3), count: l.total, funders };
 }
 
-const cached = memo<GrantOverview | null>("grant-overview:v2", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<GrantOverview | null>("grant-overview:v3", 200, 24 * 3600_000); // bump when the prompt changes
 export function grantOverview(mission: string, l: GrantLandscape) {
   const key = `${mission.toLowerCase().replace(/\s+/g, " ").trim()}|${l.funders.slice(0, READ).map((f) => f.ein).join(",")}`;
   return cached(key, () => fresh(mission, l).catch((err) => { console.error("GrantRadar overview failed", err); return null; }));

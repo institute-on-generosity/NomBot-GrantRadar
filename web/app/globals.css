@@ -822,3 +822,56 @@ main:has(.serp) { max-width: 1400px; }
 .funder-side .gtype { box-shadow: none; padding: 0; font-size: 12.5px; color: var(--mute); }
 .funder-side-top { gap: 5px; }
 .funder-side-top .typical { margin-bottom: 3px; }
+/* GrantRadar "Ask" chart: grant ranges by grantee budget (log scale) */
+.ask ul { list-style: none; display: grid; gap: 10px; }
+.ask li { display: grid; grid-template-columns: 7.2em 1fr 5.6em; align-items: center; gap: 10px; font-size: 13px; }
+.ask-label { display: flex; flex-direction: column; color: var(--ink); font-weight: 500; }
+.ask-label small, .ask-val small { font-size: 11px; font-weight: 400; color: var(--faint); }
+.ask-track { position: relative; height: 18px; border-radius: 9px; background: var(--fill); }
+.ask-tick { position: absolute; top: 3px; bottom: 3px; width: 1px; background: var(--line); }
+.ask-range { position: absolute; top: 5px; height: 8px; border-radius: 4px; background: var(--g); opacity: .35; transform-origin: left; animation: grow .7s var(--spring) both; }
+.ask-mid { position: absolute; top: 3px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--g); box-shadow: 0 0 0 2px var(--bg); }
+.ask-val { display: flex; flex-direction: column; text-align: right; font-variant-numeric: tabular-nums; }
+.ask-val b { font-weight: 600; color: var(--ink); }
+.ask-axis { position: relative; height: 14px; margin: 4px calc(5.6em + 10px) 6px calc(7.2em + 10px); }
+.ask-axis small { position: absolute; transform: translateX(-50%); font-size: 10.5px; color: var(--faint); }
+/* GrantRadar "Calendar": open funders by deadline month */
+.cal-cols { list-style: none; display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 130px; }
+.cal-cols li { display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; }
+.cal-n { font-size: 11px; color: var(--mute); font-variant-numeric: tabular-nums; min-height: 14px; }
+.cal-bar { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 6px; background: var(--fill); overflow: hidden; }
+.cal-bar i { display: block; width: 100%; border-radius: 6px; background: var(--g); opacity: .35; transform-origin: bottom; animation: rise-bar .6s var(--spring) both; }
+.cal-cols li.soon .cal-bar i { opacity: .8; }
+.cal-cols li.now .cal-bar { box-shadow: inset 0 0 0 1.5px var(--g); }
+.cal-m { font-size: 11px; color: var(--mute); }
+.cal-m span { display: none; }
+.cal-cols li.now .cal-m { color: var(--g-dark); font-weight: 600; }
+@media (min-width: 1300px) { .cal-m span { display: inline; } }
+@keyframes rise-bar { from { transform: scaleY(0); } to { transform: none; } }
+.cal-other { margin-top: 10px; font-size: 12.5px; color: var(--mute); }
+.cal-other b { color: var(--ink); font-weight: 600; }
+.cal-soon { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
+.cal-soon h3 { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 4px; }
+.cal-soon ul { list-style: none; display: grid; gap: 3px; }
+.cal-soon li { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--ink); }
+.cal-soon li > span { width: 2.4em; flex: none; font-size: 12px; font-weight: 600; color: var(--g-dark); }
+.cal-soon li small { margin-left: auto; color: var(--faint); font-size: 11.5px; }
+/* Column heights: pin bars to the bottom of their track so % heights resolve against it */
+.cal-bar { position: relative; }
+.cal-bar i { position: absolute; left: 0; right: 0; bottom: 0; }
+/* Segmented tabs: equal columns however long a label is, so the thumb lines up with the selected tab */
+.seg { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+.seg button { padding: 5px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Calendar months are buttons; exactly one is selected (solid bar, bold label), the rest stay light */
+.cal-cols button { display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; padding: 0; font: inherit; background: none; border: 0; cursor: pointer; outline: none; }
+.cal-cols button .cal-bar { box-shadow: none; }
+.cal-cols button .cal-bar i { opacity: .3; transition: opacity .2s; }
+.cal-cols button:hover .cal-bar i { opacity: .55; }
+.cal-cols button.on .cal-bar i { opacity: 1; }
+.cal-cols button.on .cal-m { color: var(--g-dark); font-weight: 600; }
+.cal-cols button:focus-visible .cal-bar { box-shadow: 0 0 0 2px var(--g-tint), inset 0 0 0 1px var(--g); }
+.cal-cols .cal-m { position: relative; font-size: 11px; color: var(--mute); }
+.cal-m small { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: 10px; line-height: 1; color: var(--g); }
+.cal-soon h3 { display: flex; justify-content: space-between; align-items: baseline; }
+.cal-soon li a { color: var(--ink); text-decoration: none; }
+.cal-soon li a:hover { color: var(--g); }
