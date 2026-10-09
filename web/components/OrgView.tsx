@@ -9,7 +9,8 @@ import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
 import { readable, titleCase } from "@/components/text";
-import { getOrg, RULES, type Diligence, type Income } from "@/lib/org";
+import { getOrg, type Income } from "@/lib/org";
+import { prettyTitle, type Diligence } from "@/lib/flag";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -89,7 +90,8 @@ async function Org({ params, searchParams, modal }: Props) {
             </tbody>
           </table>
         ) : <p>No financial figures on file.</p>}
-        {o.income && <IncomeMix i={o.income} />}
+        {/* The 990's own split (with government grants) when there is one, else the SOI extract */}
+        {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
         {o.flag && <YearOverYear d={o.flag} />}
       </section>
 
@@ -146,7 +148,10 @@ function IncomeMix({ i }: { i: Income }) {
           </li>
         ))}
       </ul>
-      {i.gifts >= 0.7 && <p className="income-note">Relies on donors: {Math.round(i.gifts * 100)}% of revenue is gifts and grants. Ask how many donors give most of it.</p>}
+      {i.gifts >= 0.7 && (() => {
+        const gov = i.parts.find((p) => p.key === "gov")?.amount ?? 0;
+        return <p className="income-note">Relies on grants and gifts: {Math.round(i.gifts * 100)}% of revenue{gov > 0 && <>, {pct(gov)} from government</>}. Ask how many funders give most of it.</p>;
+      })()}
     </div>
   );
 }
@@ -159,7 +164,8 @@ function YearOverYear({ d }: { d: Diligence }) {
   const rows = d.compare.filter((c) => c.before != null);
   const facts = [
     d.cashMonths != null && { k: "Cash on hand", v: d.cashMonths >= 12 ? `${(d.cashMonths / 12).toFixed(1)} years of spending` : `${Math.max(0, Math.round(d.cashMonths))} ${Math.round(d.cashMonths) === 1 ? "month" : "months"} of spending`, bad: d.cashMonths < 3 },
-    d.programShare != null && { k: "Spent on programs", v: `${Math.round(d.programShare * 100)}% of expenses`, bad: d.programShare < 0.65 },
+    d.spending ? { k: "Spending", v: `${Math.round(d.spending.program * 100)}% programs · ${Math.round(d.spending.admin * 100)}% admin · ${Math.round(d.spending.fundraising * 100)}% fundraising`, bad: d.spending.program < 0.65 }
+      : d.programShare != null && { k: "Spent on programs", v: `${Math.round(d.programShare * 100)}% of expenses`, bad: d.programShare < 0.65 },
     d.debtShare != null && { k: "Liabilities", v: `${Math.round(d.debtShare * 100)}% of assets`, bad: d.debtShare > 0.5 },
   ].filter((x): x is { k: string; v: string; bad: boolean } => Boolean(x));
   if (!rows.length && !facts.length) return null;
@@ -200,7 +206,7 @@ function Leadership({ d }: { d: Diligence }) {
       <h2>Leadership and governance</h2>
       {paid.length > 0 && (
         <ul className="people">
-          {paid.map((p) => <li key={p.name + p.title}><span><b>{titleCase(p.name)}</b><small>{titleCase(p.title)}</small></span><span>{money(p.pay + p.other)}</span></li>)}
+          {paid.map((p) => <li key={p.name + p.title}><span><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></span><span>{money(p.pay + p.other)}</span></li>)}
         </ul>
       )}
       <p className="board-line">
@@ -217,22 +223,17 @@ function Leadership({ d }: { d: Diligence }) {
   );
 }
 
-// Overall financial health from the newest 990, by fixed rules (RULES): the level, then each signal
-// with its figure, problems first. The rules are one click away so the rating can be checked.
+// Financial health from the newest 990: each signal with its figure, problems first (red, then amber),
+// colored by fixed rules (lib/org RULES).
 function HealthRating({ d }: { d: Diligence }) {
   const order = { weak: 0, watch: 1, ok: 2 } as const;
   const signals = [...d.rating.signals].sort((a, b) => order[a.level] - order[b.level]);
   return (
     <section className={`rating ${d.rating.level.toLowerCase()}`}>
-      <h2>Financial health <span className="rating-level">{d.rating.level}</span><small>Form {d.form === "990EZ" ? "990-EZ" : "990"}, {d.year}</small></h2>
+      <h2>Financial health <small>Form {d.form === "990EZ" ? "990-EZ" : "990"}, {d.year}</small></h2>
       <ul>
         {signals.map((x) => <li key={x.label} className={x.level}><b>{x.label}</b>{x.note}</li>)}
       </ul>
-      <details>
-        <summary>How this is rated</summary>
-        <p>Any weak signal makes it Weak; two or more to watch make it Medium; otherwise Strong. Fixed rules, no AI:</p>
-        <ul>{RULES.map((r) => <li key={r}>{r}</li>)}</ul>
-      </details>
     </section>
   );
 }
