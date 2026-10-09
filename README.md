@@ -1,7 +1,7 @@
 # GrantRadar
 
 **Describe your mission. Get the foundations most likely to fund you, from public IRS data.**
-Institute on Generosity AI Fellowship · **Deadline: Dec 31, 2026** · Ships as **`/grants` in the [NomBot](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot) app** (one codebase, one deploy)
+Institute on Generosity AI Fellowship · **Deadline: Dec 31, 2026** · Same codebase as [NomBot](https://github.com/institute-on-generosity/NomBot-GrantRadar/tree/NomBot); the `GrantRadar` branch runs it **standalone** (home page `/grants`)
 
 ## Problem
 Every foundation grant is public (990-PF, Part XV), but small nonprofits can't use it. Discovery tools cost $150–400/mo.
@@ -14,6 +14,8 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 | **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 | ✅ **Built Oct 7** (local) |
 | **Grant types** | Unrestricted vs. project vs. policy giving, read from grant purposes | — | ✅ **Built Oct 7** (local, from feedback) |
 | **Research Buddy** | Follow-up questions about the matched funders; cites each funder, opens its sheet | — | ✅ **Built Oct 7** (local, from feedback) |
+| **Landscape panel** | Beside the matches: **Overview** (AI summary, patterns, "Where to start"), **Breakdown**, **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month), **Peers** | — | ✅ **Built Oct 8** (local, from feedback) |
+| **How funders will see you** | Look up your nonprofit (name or EIN): what a foundation will notice on your 990, and what to prepare | — | ✅ **Built Oct 8** (local, from the Oct 8 GSB class) |
 
 **A funder ranks high only if it already funded orgs like yours.**
 
@@ -37,7 +39,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 | First-time grant writers | *Why* a funder fits, with evidence |
 
 ## Experience
-*Mock data.*
+*Early mockups (the local app now has real data, the landscape panel and "How funders will see you"; fresh screenshots to come).*
 
 ![GrantRadar match mockup: mission box, chips, three ranked foundations with evidence and typical grant size](docs/grantradar/ux/match-v1.png)
 
@@ -51,6 +53,8 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 </picture>
 
 [Interactive diagram](docs/grantradar/architecture.html)
+
+> Diagram out of date: GrantRadar now runs **standalone** (not as NomBot's `/grants` section), and the **landscape panel**, **deadline calendar** and **"How funders will see you"** (reads `filing_flag` from the 990 XML) aren't drawn.
 
 **Hardest step:** grants list recipients by name + address, usually without an EIN. The matcher links them to `orgs` with a confidence score; weak links are excluded.
 
@@ -66,6 +70,7 @@ GrantRadar is NomBot plus a grants table.
 | Mission embeddings | Funder ranking query |
 | Research Buddy reasoner + panel | "Why this funder?" prompt; Buddy over the top 12 matched funders (`/api/grants/buddy`) |
 | AI overview + landscape tabs | Funder figures + Claude overview over the top 15 matched funders (`web/lib/grantLandscape.ts`) |
+| FLAG diligence rules (`lib/flag.ts`) | "How funders will see you" (`/grants/check`) |
 | App, UI, API, Vercel, GitHub Actions | `/grants` pages, Supabase Auth, digest |
 
 ## Data
@@ -75,6 +80,7 @@ GrantRadar is NomBot plus a grants table.
 | IRS 990-PF XML | Grants paid (Part XV) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | IRS EO BMF | Orgs + funders (already loaded) | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI 990-PF | Foundation assets + giving | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
+| IRS 990 e-file XML (applicants' own 990) | "How funders will see you": prior year, cash, spending, board, policies, officers (`filing_flag`, 50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | Foundation sites | Contacts, deadlines (top ~500) | Public web |
 
 ## Roadmap
@@ -127,6 +133,14 @@ GrantRadar is NomBot plus a grants table.
 | GrantRadar and NomBot serve **different audiences** | ✅ **Oct 8:** the `GrantRadar` branch runs standalone: no NomBot toggle, titled GrantRadar, home page is `/grants` |
 | **Real-time budget** and fundraising gap | Not in public data; would need self-reporting + verification |
 
+### Oct 8, 2026: GSB philanthropy class (Nancy Lue, Valhalla Foundation): nonprofit diligence
+Funders read your 990 before your proposal: liquidity, reserves, growth, funding concentration, board, pay.
+
+| Takeaway | Plan |
+|---|---|
+| Applicants should see their 990 the way a funder does | ✅ **"How funders will see you"** (`/grants/check`): signals, "be ready to answer" cards, key numbers |
+| Ratings depend on definitions | ✅ Same fixed, visible rules as NomBot's org page (`lib/flag.ts`) |
+
 **Next steps**
 - **Competitor scan:** Grant Guardian, a new grant-matching startup, Renaissance Philanthropy; state GrantRadar's unique value.
 - **User testing:** nonprofit development staff and foundation staff; PostHog for usability analytics.
@@ -134,7 +148,7 @@ GrantRadar is NomBot plus a grants table.
 - **Data privacy:** agree a policy before handling financial data.
 
 ## Progress
-> ✅ **Oct 7, 2026: local proof of concept built**, ~8 weeks ahead of plan: grants loaded for 5 states, matcher, ranking, `/grants` pages and "Why this funder?". Recipient linking is at 51% (goal 70%).
+> ✅ **Oct 8, 2026: local proof of concept built**, ~8 weeks ahead of plan: grants loaded for 5 states, matcher, ranking, `/grants` pages, "Why this funder?", Research Buddy, the landscape panel (ask sizes, deadline calendar) and "How funders will see you". Recipient linking is at 51% (goal 70%).
 
 
 **Planning**
@@ -160,7 +174,7 @@ GrantRadar is NomBot plus a grants table.
 
 **Dec 7–13: Cloud**
 - [ ] National 990-PF load
-- [ ] `/grants` live on NomBot deploy
+- [ ] GrantRadar live (own deploy, or `/grants` on NomBot's)
 - [ ] Logins + saved matches (in-browser **Starred funders** and **Recent missions** already work; logins will sync them)
 
 **Dec 14–20: Test + launch**
