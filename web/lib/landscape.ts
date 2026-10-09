@@ -23,6 +23,12 @@ export type Landscape = {
   teamReported: number;
   counties: Record<string, number>;
   appalachia: string[];
+  // Need vs supply (Census SAIPE + population, generosity-data county_need), for the states in play
+  // (Appalachian counties only when the search is limited to Appalachia).
+  mapStates: string[];
+  need: Record<string, { poverty: number | null; population: number | null }>;
+  underserved: { fips: string; name: string; state: string; poverty: number; population: number | null }[]; // 20%+ poverty, none of these orgs
+  highNeed: number; // counties at 20%+ poverty in the area
   funders: Funder[];
   funded: number;    // organizations in the landscape that received at least one foundation grant
   orgs: { ein: string; name: string; city: string | null; state: string | null; text: string }[];
@@ -51,7 +57,8 @@ const tally = <T,>(xs: T[], key: (x: T) => string | null) => {
 async function build(filters: Filters, includeInactive: boolean): Promise<Landscape> {
   const { results } = await searchCandidates(filters, { limit: LANDSCAPE, includeInactive });
   const eins = results.map((r) => r.ein.replace("-", ""));
-  const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health] = await Promise.all([
+  const mapStates = filters.states.length ? filters.states : [...new Set(results.map((r) => r.state).filter((x): x is string => Boolean(x)))];
+  const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health, { rows: need }] = await Promise.all([
     db.query(`SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [eins]),
     db.query(`SELECT z.county_fips, count(*)::int AS n FROM orgs o JOIN zip_regions z ON z.zip5 = left(o.zip, 5) WHERE o.ein = ANY($1) GROUP BY 1`, [eins]),
     db.query(`SELECT DISTINCT county_fips FROM zip_regions WHERE appalachia`),
@@ -63,6 +70,9 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
               GROUP BY 1, 2, 3, 4, 5 ORDER BY orgs DESC, amount DESC LIMIT 6`, [eins]),
     db.query(`SELECT count(DISTINCT recipient_ein)::int AS n FROM grants WHERE recipient_ein = ANY($1)`, [eins]),
     healthOf(eins),
+    db.query(`SELECT c.county_fips, c.name, c.state, c.population, c.poverty_rate FROM county_need c
+              WHERE c.state = ANY($1) AND (NOT $2 OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.county_fips = c.county_fips AND z.appalachia))`,
+      [mapStates, Boolean(filters.appalachia)]),
   ]);
 
   const revs = results.map((r) => r.revenue?.amount).filter((x): x is number => x != null);
@@ -81,6 +91,12 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
     team: TEAM.map(([key, label]) => ({ key, label, count: teamCounts.find(([k]) => k === key)?.[1] ?? 0 })),
     teamReported: t.length,
     counties: Object.fromEntries(geo.map((r) => [r.county_fips, r.n])),
+    mapStates,
+    need: Object.fromEntries(need.map((r) => [r.county_fips, { poverty: r.poverty_rate == null ? null : Number(r.poverty_rate), population: r.population }])),
+    underserved: need.filter((r) => Number(r.poverty_rate) >= 20 && !geo.some((g) => g.county_fips === r.county_fips))
+      .sort((a, b) => Number(b.poverty_rate) - Number(a.poverty_rate))
+      .map((r) => ({ fips: r.county_fips, name: r.name, state: r.state, poverty: Number(r.poverty_rate), population: r.population })),
+    highNeed: need.filter((r) => Number(r.poverty_rate) >= 20).length,
     appalachia: app.map((r) => r.county_fips),
     funders: funders.map((f) => ({ ein: f.ein, name: title(f.name), city: f.city ? title(f.city) : null, state: f.state, orgs: f.orgs, amount: Number(f.amount), inviteOnly: f.invite_only, grantees: (f.grantees ?? []).map(title) })),
     funded: funded?.n ?? 0,
@@ -135,7 +151,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v9", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v10", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

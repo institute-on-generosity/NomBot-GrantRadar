@@ -9,6 +9,7 @@ import { ResultRow } from "@/components/ResultRow";
 import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
 import { overview } from "@/lib/overview";
 import { Gems, Landscape } from "@/components/Landscape";
+import { landscape } from "@/lib/landscape";
 import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
@@ -88,9 +89,9 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive}
-            overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} /></Suspense>}
+            overview={<Suspense fallback={<AiOverviewSkeleton />}><OverviewPanel question={question} ranking={rankingAll} filters={filters} includeInactive={includeInactive} /></Suspense>}
             gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
-            map={(counts, appalachia, states) => <LandscapeMap counts={counts} appalachia={appalachia} states={states} />} />
+            map={(m) => <LandscapeMap {...m} />} />
         </Suspense>
       </aside>
       <div className="serp-main">
@@ -112,8 +113,11 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   );
 }
 
-async function OverviewPanel({ question, ranking }: { question: string; ranking: ReturnType<typeof rank> }) {
-  const o = await overview(question, (await ranking).results);
+async function OverviewPanel({ question, ranking, filters, includeInactive }: { question: string; ranking: ReturnType<typeof rank>; filters: Filters; includeInactive: boolean }) {
+  // County need for the AI overview: high-poverty counties with none of the 200 closest organizations.
+  const l = await landscape(filters, includeInactive);
+  const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have 20%+ poverty; ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
+  const o = await overview(question, (await ranking).results, need);
   return o ? <AiOverview o={o} /> : <p className="ls-note">No overview for these results.</p>;
 }
 

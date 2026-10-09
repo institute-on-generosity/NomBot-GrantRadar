@@ -23,7 +23,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Search** | **Suggestions** under the search box · **exact-mention** badges · compact rows: name, one grey line of facts (place, cause, spending, staff, volunteers), **one mission line**, **finance tags** (Growing/Shrinking, Surplus/Deficit, from the newest e-filed 990 when there is one; hover for the figures) · include tiny/inactive orgs · **CSV export** |
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge · **where the money comes from** (Part VIII, government grants split out) · **this year vs last year** (Part I) · cash on hand, spending split (programs / admin / fundraising), liabilities · **leadership and governance**: paid leaders, board independence, audit and policy checklist (Parts IV, VI, VII) · IRS status · **financial health rating** (Strong / Medium / Weak) from fixed, visible rules |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover · one side panel with a **tab per source**, closed in one step |
-| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants, plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves, donor-reliant; pick one to list the orgs) |
+| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded; switch to **Poverty** for Census county need and high-poverty counties with none of these orgs), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants, plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves, donor-reliant; pick one to list the orgs) |
 | **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
@@ -77,6 +77,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 |---|---|---|
 | IRS EO BMF | 1.8M orgs: name, EIN, address, NTEE | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI extract | Revenue, expenses, assets (~300K orgs) | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
+| Census SAIPE + population estimates | County poverty, income, population (3,144 counties) | [census.gov](https://www.census.gov/programs-surveys/saipe.html) |
 | IRS 990 e-file XML | Mission + program text (embeddings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | NCCS NTEE | Cause categories | [nccs](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
 | ProPublica API | Per-org detail, on demand | [propublica](https://projects.propublica.org/nonprofits/api) |
@@ -117,6 +118,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Search takes ~6–14s, not <2s** | Scoring costs time; results show in ~0.5s and re-sort when scores arrive |
 | **Financial health** from SOI + the master file (trend = newer master-file revenue vs. newest SOI year) | Zoom-out feedback; only ~3K orgs have two SOI years, but 53K have a newer master-file revenue |
 | **FLAG diligence** on the org page (Financial, Legal and Governance, from 990 XML) | Oct 8 GSB philanthropy class (Nancy Lue, Valhalla): funders vet liquidity, reserves, growth, concentration, board and pay. Fixed, visible rules; no single AI verdict |
+| **Underserved areas** (Census SAIPE poverty + population by county) | Zoom-out feedback: show where need is high but matching groups are missing. Census file downloads, no API key; general poverty, not cause-specific need |
 
 ## Success metrics
 - ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~6–14s)

@@ -17,7 +17,7 @@ const SYSTEM = `You write the short overview shown above nonprofit search result
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
 Help the user zoom out: what does this landscape look like?
 - summary: 1-2 sentences, at most 38 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
-- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text.
+- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text, and need where the figures give it (high-poverty counties with none of these organizations).
 - explore: 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle: a nearby cause, another place, or a narrower activity. Don't repeat the question.
 Cite organizations only by their number in square brackets. Plain language, no hype, no advice.`;
 
@@ -33,7 +33,7 @@ const top = (xs: (string | null)[], k: number) => {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, k).map(([x, n]) => `${x} (${n})`).join(", ");
 };
 
-async function fresh(question: string, strong: Ranked[]): Promise<Overview | null> {
+async function fresh(question: string, strong: Ranked[], need?: string): Promise<Overview | null> {
   const client = claude();
   if (!client || strong.length < 3) return null;
   const { rows } = await db.query(
@@ -58,7 +58,8 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
     `Causes: ${top(strong.map((r) => r.ntee?.label ?? null), 5)}`,
     h.reported ? `Finances (${h.reported} report): last year ${count(h.margin)}; reserves ${count(h.reserves)}; revenue trend (${h.trendReported} with two years) ${count(h.trend)}` : "Finances: not reported",
     staffed.length ? `Team size (${staffed.length} report it): median staff ${median(staffed.map((r) => team.get(r.ein)!.staff!))}; all-volunteer (0 staff): ${allVol}` : "Team size: not reported",
-  ].join("\n");
+    need ?? null,
+  ].filter(Boolean).join("\n");
   const list = strong.map((r, i) => {
     const t = team.get(r.ein);
     return [`[${i + 1}] ${orgs[i].name} — ${orgs[i].place}`, r.ntee?.label, r.revenue ? `revenue ${money(r.revenue.amount)}` : null,
@@ -80,9 +81,10 @@ async function fresh(question: string, strong: Ranked[]): Promise<Overview | nul
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v5", 200, 24 * 3600_000); // bump when the prompt changes
-export function overview(question: string, results: Ranked[]) {
+const cached = memo<Overview | null>("overview:v6", 200, 24 * 3600_000); // bump when the prompt changes
+// need: an optional figures line about county poverty vs. where these organizations are (lib/landscape).
+export function overview(question: string, results: Ranked[], need?: string) {
   const strong = results.filter((r) => r.relevance && isStrong(r));
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
-  return cached(key, () => fresh(question, strong).catch((err) => { console.error("AI overview failed", err); return null; }));
+  return cached(`${key}|${need ?? ""}`, () => fresh(question, strong, need).catch((err) => { console.error("AI overview failed", err); return null; }));
 }

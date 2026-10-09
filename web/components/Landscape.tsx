@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
+import type { MapData } from "./LandscapeMap";
 import { NavLink } from "./NavLink";
 import { money } from "@/lib/filters";
 import { db } from "@/lib/db";
@@ -16,12 +17,11 @@ import { themes } from "@/lib/themes";
 // (plus strong matches no foundation funds yet). Finances: growing, shrinking, deficits, thin reserves.
 export async function Landscape({ question, filters, includeInactive, map, overview, gems }: {
   question: string; filters: Filters; includeInactive: boolean; overview: React.ReactNode; gems?: React.ReactNode;
-  map: (counts: Record<string, number>, appalachia: string[], states: string[]) => React.ReactNode;
+  map: (m: MapData) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
   const first = { key: "overview", label: "Overview", title: "AI overview", node: overview };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
-  const states = [...new Set(l.cities.map((c) => c.label.slice(-2)))];
   return (
     <LandscapeTabs views={[
       first,
@@ -36,7 +36,7 @@ export async function Landscape({ question, filters, includeInactive, map, overv
       { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
         <FinanceView signals={l.health.signals} orgs={Object.fromEntries(l.orgs.map((o, i) => [o.ein.replace("-", ""), { ein: o.ein, name: o.name, place: [o.city, o.state].filter(Boolean).join(", "), rank: i }]))} />
       ) },
-      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map(l.counties, l.appalachia, filters.states.length ? filters.states : states) },
+      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map({ counts: l.counties, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed }) },
       { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (

@@ -13,12 +13,16 @@ type Props = {
   label?: string;                          // plural noun for tooltips/legend, e.g. "organizations"
   onSelect?: (fips: string, name: string) => void; // when absent, counties aren't clickable/focusable
   focusStates?: string[];                  // state abbrs to zoom to; default all 5
+  bands?: number[];                        // 4 ascending cut points for a linear scale (e.g. poverty %), instead of log counts
+  color?: string;                          // ramp color, default the brand green
+  details?: Record<string, string>;        // extra tooltip line per county FIPS
+  valueText?: (n: number) => string;       // tooltip/legend text for a value, default "12 organizations"
 };
 
 const STEPS = 5;
 // Share of --g mixed into the empty-county fill per step (lightest -> darkest); works in light and dark.
 const MIX = [20, 36, 54, 74, 94];
-const fillFor = (step: number) => (step < 0 ? "var(--fill)" : `color-mix(in srgb, var(--g) ${MIX[step]}%, var(--fill))`);
+const fillFor = (step: number, color = "var(--g)") => (step < 0 ? "var(--fill)" : `color-mix(in srgb, ${color} ${MIX[step]}%, var(--fill))`);
 
 // Virginia FIPS x5xx are independent cities, not counties.
 export const countyLabel = (c: { fips: string; name: string; state: string }) =>
@@ -27,7 +31,7 @@ export const countyLabel = (c: { fips: string; name: string; state: string }) =>
 const singular = (label: string) => label.replace(/ies$/, "y").replace(/s$/, "");
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates }: Props) {
+export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates, bands, color, details, valueText }: Props) {
   const uid = useId().replace(/:/g, "");
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ c: County; x: number; y: number; flip: boolean } | null>(null);
@@ -35,9 +39,11 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
   const max = useMemo(() => Object.values(counts).reduce((m, n) => Math.max(m, n), 0), [counts]);
   // Log scale: step = floor(STEPS * ln(n) / ln(max + 1)); thresholds = smallest n landing in each step.
   const stepOf = useMemo(() => {
+    if (bands) return (n: number) => (n > 0 ? bands.filter((b) => n >= b).length : -1);
     const L = Math.log(max + 1);
     return (n: number) => (n > 0 ? Math.min(STEPS - 1, Math.floor((STEPS * Math.log(n)) / L)) : -1);
-  }, [max]);
+  }, [max, bands]);
+  const text = valueText ?? ((v: number) => `${fmt(v)} ${v === 1 ? singular(label) : label}`);
   const thresholds = useMemo(() => {
     const t: (number | null)[] = [];
     for (let i = 0; i < STEPS; i++) {
@@ -110,7 +116,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
                 key={c.fips}
                 d={c.d}
                 className={focus && !focus.has(c.state) ? `${s.county} ${s.dim}` : s.county}
-                style={{ fill: fillFor(stepOf(v)) }}
+                style={{ fill: fillFor(stepOf(v), color) }}
                 tabIndex={onSelect ? 0 : undefined}
                 role={onSelect ? "button" : undefined}
                 aria-label={onSelect ? `${countyLabel(c)}: ${v ? `${fmt(v)} ${v === 1 ? singular(label) : label}` : "no matches"}` : undefined}
@@ -145,13 +151,20 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
           role="presentation"
         >
           <strong>{countyLabel(hover.c)}</strong>
-          <span>{n ? `${fmt(n)} ${n === 1 ? singular(label) : label}` : "No matches"}</span>
+          <span>{n ? text(n) : bands ? "No data" : "No matches"}</span>
+          {details?.[hover.c.fips] && <span>{details[hover.c.fips]}</span>}
         </div>
       )}
 
       <div className={s.legend} aria-hidden>
-        <span className={s.key}><i className={s.sw} style={{ background: fillFor(-1) }} />0</span>
-        {max > 0 && (
+        {bands ? (
+          <span className={s.key}>
+            {`<${bands[0]}%`}
+            <span className={s.ramp}>{MIX.map((_, i) => <i key={i} className={s.sw} style={{ background: fillFor(i, color) }} />)}</span>
+            {`${bands[bands.length - 1]}%+ ${label}`}
+          </span>
+        ) : <span className={s.key}><i className={s.sw} style={{ background: fillFor(-1) }} />0</span>}
+        {!bands && max > 0 && (
           <span className={s.key}>
             {fmt(thresholds.find((t) => t != null) ?? 1)}
             <span className={s.ramp}>
