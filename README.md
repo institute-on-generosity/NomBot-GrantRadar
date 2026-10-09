@@ -150,6 +150,7 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 ## Progress
 > ✅ **Oct 8, 2026: local proof of concept built**, ~8 weeks ahead of plan: grants loaded for 5 states, matcher, ranking, `/grants` pages, "Why this funder?", Research Buddy, the landscape panel (ask sizes, deadline calendar) and "How funders will see you". Recipient linking is at 51% (goal 70%).
 
+📋 Tracker: [Issue #2](https://github.com/institute-on-generosity/NomBot-GrantRadar/issues/2)
 
 **Planning**
 - [x] Plan, diagram, mockups
