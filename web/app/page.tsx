@@ -116,7 +116,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 async function OverviewPanel({ question, ranking, filters, includeInactive }: { question: string; ranking: ReturnType<typeof rank>; filters: Filters; includeInactive: boolean }) {
   // County need for the AI overview: high-poverty counties with none of the 200 closest organizations.
   const l = await landscape(filters, includeInactive);
-  const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have 20%+ poverty; ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
+  const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have ${l.povertyCut}%+ poverty (the poorest quarter, up to 20%); ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
   const o = await overview(question, (await ranking).results, need);
   return o ? <AiOverview o={o} /> : <p className="ls-note">No overview for these results.</p>;
 }

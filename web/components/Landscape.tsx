@@ -36,7 +36,7 @@ export async function Landscape({ question, filters, includeInactive, map, overv
       { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
         <FinanceView signals={l.health.signals} orgs={Object.fromEntries(l.orgs.map((o, i) => [o.ein.replace("-", ""), { ein: o.ein, name: o.name, place: [o.city, o.state].filter(Boolean).join(", "), rank: i }]))} />
       ) },
-      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map({ counts: l.counties, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed, usPoverty: l.usPoverty }) },
+      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map({ counts: l.counties, countyOrgs: l.countyOrgs, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed, usPoverty: l.usPoverty, povertyCut: l.povertyCut }) },
       { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (

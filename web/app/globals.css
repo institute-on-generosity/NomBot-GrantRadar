@@ -833,3 +833,14 @@ main:has(.serp) { max-width: 1400px; }
 .gap-list li { padding: 3px 6px; border-radius: 6px; cursor: default; }
 .gap-list li.on { background: rgba(232,89,12,.1); }
 .gap-list li.on span { color: #c2410c; }
+/* Map: organizations in a clicked county */
+.county-list { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.county-list h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.county-list h3 small { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--faint); }
+.county-list h3 button { font: inherit; font-size: 12px; font-weight: 500; color: var(--g); background: none; border: 0; padding: 0; cursor: pointer; }
+.county-list ul { list-style: none; display: grid; max-height: 220px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.county-list li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.county-list li:first-child { border-top: 0; }
+.county-list li a { color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.county-list li a:hover { color: var(--g); }
+.county-list li span { color: var(--faint); font-size: 12px; white-space: nowrap; }

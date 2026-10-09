@@ -11,7 +11,7 @@ type Props = {
   counts: Record<string, number>;          // county FIPS (5 digits) -> organizations matching the search
   appalachia?: string[];                   // county FIPS in Appalachia (hatched, outlined region)
   label?: string;                          // plural noun for tooltips/legend, e.g. "organizations"
-  onSelect?: (fips: string, name: string) => void; // when absent, counties aren't clickable/focusable
+  onSelect?: (fips: string, name: string, state: string) => void; // when absent, counties aren't clickable/focusable
   focusStates?: string[];                  // state abbrs to zoom to; default all 5
   bands?: number[];                        // 4 ascending cut points for a linear scale (e.g. poverty %), instead of log counts
   color?: string;                          // ramp color, default the brand green
@@ -142,8 +142,8 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
                 onPointerMove={(e) => place(c, e.clientX, e.clientY)}
                 onFocus={(e) => placeAtEl(c, e.currentTarget)}
                 onBlur={() => setHover(null)}
-                onClick={onSelect ? () => onSelect(c.fips, c.name) : undefined}
-                onKeyDown={onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(c.fips, c.name); } } : undefined}
+                onClick={onSelect ? () => onSelect(c.fips, c.name, c.state) : undefined}
+                onKeyDown={onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(c.fips, c.name, c.state); } } : undefined}
               />
             );
           })}
