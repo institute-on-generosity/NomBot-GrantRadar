@@ -1,3 +1,4 @@
+import { RadarMark } from "@/components/RadarMark";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { FilterChips, type Chip } from "@/components/FilterChips";
@@ -187,7 +188,7 @@ function ResultsSkeleton() {
 function Hero({ children }: { children?: React.ReactNode }) {
   return (
     <div className="hero">
-      <h1 className="greet"><span className="logo">N</span>{ASK}</h1>
+      <h1 className="greet"><span className="logo radar"><RadarMark /></span>{ASK}</h1>
       <SearchBox value="" placeholder={PLACEHOLDER} big />
       {children}
       <Footer />

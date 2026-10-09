@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- NomBot logo: white N on the brand green (#248a3d), same as the in-app logo -->
+  <!-- GrantRadar logo: white radar mark (components/RadarMark) on the brand green (#248a3d), same as the in-app logo -->
   <rect width="32" height="32" rx="8" fill="#248a3d"/>
-  <path d="M9.5 23V9h3.2l6.9 9.4V9h2.9v14h-3.1l-7-9.5V23z" fill="#fff"/>
+  <g transform="translate(4 4)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+    <circle cx="12" cy="12" r="2.2" fill="#fff" stroke="none"/>
+    <path d="M12 12 19 6.5"/>
+    <path d="M17.7 17.7A8 8 0 1 1 20 12" opacity=".6"/>
+    <path d="M15.5 15.5A5 5 0 1 1 17 12" opacity=".85"/>
+  </g>
 </svg>
