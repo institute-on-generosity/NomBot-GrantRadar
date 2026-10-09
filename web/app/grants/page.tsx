@@ -137,6 +137,7 @@ function Hero() {
         ))}
       </div>
       <p className="note">Ranked by who they already fund · IRS Form 990-PF · WV, KY, TN, VA, OH</p>
+      <p className="note"><NavLink href="/grants/check" className="check-link">Already file a 990? See how funders will see you →</NavLink></p>
     </div>
   );
 }

@@ -100,6 +100,7 @@ GrantRadar is NomBot plus a grants table.
 | **Research Buddy on `/grants`** (NomBot's panel, made configurable) | Oct 7 feedback ("for this one, especially"). Same rules and look; own conversation history |
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 | **Standalone app** on the `GrantRadar` branch (no NomBot toggle; `/` → `/grants`) | Oct 7 feedback: different audiences. NomBot's org pages stay, since funder sheets link to grantees |
+| **"How funders will see you"** (`/grants/check`): look up your nonprofit by name or EIN, see the diligence a foundation runs on your newest 990 and what to prepare | Oct 8 GSB philanthropy class: funders vet finances, board and pay before reading a proposal. Same fixed rules as NomBot's org page (`lib/flag.ts`) |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month; pick a month to list them), **Peers** (groups like yours with the most funders) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
 | **Deadlines read by rules**, not Claude (months, "12/31", "none" → any time) | 79% of filed deadline answers parse; instant and repeatable. Can't yet tell a scholarship deadline from a grant deadline |
 
@@ -154,6 +155,7 @@ GrantRadar is NomBot plus a grants table.
 - [x] Grant types: unrestricted vs. project vs. policy (feedback, Oct 7)
 - [x] Research Buddy on `/grants` (feedback, Oct 7)
 - [x] Landscape panel: AI overview + breakdown + ask size + deadline calendar + peers (feedback, Oct 7)
+- [x] "How funders will see you": FLAG check on your own 990 with what to prepare
 - [x] **Demo works locally**
 
 **Dec 7–13: Cloud**

@@ -875,3 +875,40 @@ main:has(.serp) { max-width: 1400px; }
 .cal-soon h3 { display: flex; justify-content: space-between; align-items: baseline; }
 .cal-soon li a { color: var(--ink); text-decoration: none; }
 .cal-soon li a:hover { color: var(--g); }
+/* "How funders will see you" (/grants/check) */
+main.check { max-width: 760px; }
+.check h1 { font-size: 30px; font-weight: 600; letter-spacing: -.03em; }
+.check-sub { margin-top: 6px; font-size: 15px; color: var(--ink-2); max-width: 60ch; }
+.check-form { display: flex; gap: 8px; margin-top: 22px; }
+.check-form input { flex: 1; font: inherit; font-size: 15px; padding: 11px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); outline: none; box-shadow: var(--shadow); }
+.check-form input:focus { border-color: var(--g); }
+.check-form button { font: inherit; font-size: 14px; font-weight: 600; padding: 0 20px; border-radius: 999px; border: 0; background: var(--g-fill); color: #fff; cursor: pointer; }
+.check-found { list-style: none; margin-top: 14px; display: grid; }
+.check-found li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.check-found a { color: var(--ink); font-weight: 500; text-decoration: none; }
+.check-found a:hover { color: var(--g); }
+.check-found span { color: var(--mute); }
+.check-found small { color: var(--faint); font-size: 12.5px; }
+.check-report { margin-top: 24px; }
+.check-report header h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+.check-report header p { font-size: 13px; color: var(--mute); margin-top: 3px; }
+.check-report section { margin-top: 22px; }
+.check-report h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.check-report .rating ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 20px; font-size: 14px; }
+.check-report .rating li { display: flex; gap: 8px; align-items: baseline; color: var(--ink-2); }
+.check-report .rating li b { flex: none; width: 5.6em; font-weight: 500; color: var(--mute); }
+.check-report .rating li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; align-self: center; background: var(--g); opacity: .8; }
+.check-report .rating li.watch::before { background: #f5a524; } .check-report .rating li.weak::before { background: #e5484d; }
+.check-report .rating li.weak { color: #b4232a; }
+.check-prep ol { list-style: none; display: grid; gap: 8px; counter-reset: q; }
+.check-prep li { display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; background: var(--fill); font-size: 14px; }
+.check-prep li b { font-weight: 600; color: var(--ink); }
+.check-prep li span { color: var(--ink-2); }
+.check-facts dl { display: grid; grid-template-columns: 7em 1fr; gap: 6px 14px; font-size: 14px; }
+.check-facts dt { color: var(--mute); }
+.check-facts dd { color: var(--ink); }
+.check-report .note { margin-top: 24px; }
+.check-link { color: var(--g); text-decoration: none; font-weight: 500; }
+.check-link:hover { text-decoration: underline; }
+@media (max-width: 640px) { .check-report .rating ul { grid-template-columns: 1fr; } }
+.check-facts dl > div { display: contents; }

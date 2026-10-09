@@ -12,6 +12,7 @@ import { useStoredList } from "./useStored";
 
 // Line icons in the spirit of SF Symbols.
 const PanelIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden><rect x="3" y="4.5" width="18" height="15" rx="3.5" /><path d="M9 4.5v15" /></svg>;
+const EyeIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="2.8" /></svg>;
 const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>;
 
 const SHOWN = 8; // items per section before "See all"
@@ -55,6 +56,7 @@ export function Sidebar() {
           <button className="iconbtn side-toggle" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}><PanelIcon /></button>
         </div>
         <NavLink href="/grants" className={`side-new${here.path === "/grants" && !here.question ? " on" : ""}`} title="New match" current={here.path === "/grants" && !here.question}><PlusIcon /><span className="side-label">New match</span></NavLink>
+        <NavLink href="/grants/check" className={`side-new${here.path === "/grants/check" ? " on" : ""}`} title="How funders will see you" current={here.path === "/grants/check"}><EyeIcon /><span className="side-label">How funders see you</span></NavLink>
 
         <nav className="side-scroll">
           <Section title="Starred" all="/grants/saved" active={here.path === "/grants/saved"} empty="Tap ☆ on any funder to keep it here.">
