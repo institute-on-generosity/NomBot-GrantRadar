@@ -4,6 +4,7 @@
 // financial health: revenue trend, surplus or deficit, reserves and where the money comes from.
 import { titleCase } from "../components/text";
 import { db } from "./db";
+import { LOADED_STATES } from "./filters";
 import { memo } from "./memo";
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
@@ -13,6 +14,7 @@ import { orgHealth, type Health as OrgHealth } from "./search";
 export const LANDSCAPE = 200;
 
 export type Bar = { key: string; label: string; count: number };
+export type Underserved = { fips: string; name: string; state: string; poverty: number; low: number | null; high: number | null; poor: number | null; population: number | null };
 export type Funder = { ein: string; name: string; city: string | null; state: string | null; orgs: number; amount: number; inviteOnly: boolean; grantees: string[] };
 export type Landscape = {
   size: number;
@@ -27,8 +29,9 @@ export type Landscape = {
   // (Appalachian counties only when the search is limited to Appalachia).
   mapStates: string[];
   need: Record<string, { poverty: number | null; population: number | null }>;
-  underserved: { fips: string; name: string; state: string; poverty: number; population: number | null }[]; // 20%+ poverty, none of these orgs
+  underserved: Underserved[]; // 20%+ poverty, none of these orgs
   highNeed: number; // counties at 20%+ poverty in the area
+  usPoverty: number | null; // national poverty rate, for comparison
   funders: Funder[];
   funded: number;    // organizations in the landscape that received at least one foundation grant
   orgs: { ein: string; name: string; city: string | null; state: string | null; text: string }[];
@@ -57,7 +60,9 @@ const tally = <T,>(xs: T[], key: (x: T) => string | null) => {
 async function build(filters: Filters, includeInactive: boolean): Promise<Landscape> {
   const { results } = await searchCandidates(filters, { limit: LANDSCAPE, includeInactive });
   const eins = results.map((r) => r.ein.replace("-", ""));
-  const mapStates = filters.states.length ? filters.states : [...new Set(results.map((r) => r.state).filter((x): x is string => Boolean(x)))];
+  // Only states whose nonprofits are loaded: elsewhere every county would look like a gap.
+  const loaded = new Set(LOADED_STATES.map(([c]) => c));
+  const mapStates = (filters.states.length ? filters.states : [...new Set(results.map((r) => r.state).filter((x): x is string => Boolean(x)))]).filter((st) => loaded.has(st));
   const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health, { rows: need }] = await Promise.all([
     db.query(`SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [eins]),
     db.query(`SELECT z.county_fips, count(*)::int AS n FROM orgs o JOIN zip_regions z ON z.zip5 = left(o.zip, 5) WHERE o.ein = ANY($1) GROUP BY 1`, [eins]),
@@ -70,7 +75,8 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
               GROUP BY 1, 2, 3, 4, 5 ORDER BY orgs DESC, amount DESC LIMIT 6`, [eins]),
     db.query(`SELECT count(DISTINCT recipient_ein)::int AS n FROM grants WHERE recipient_ein = ANY($1)`, [eins]),
     healthOf(eins),
-    db.query(`SELECT c.county_fips, c.name, c.state, c.population, c.poverty_rate FROM county_need c
+    db.query(`SELECT c.county_fips, c.name, c.state, c.population, c.poverty_rate, c.poverty_low, c.poverty_high, c.people_in_poverty,
+                     (SELECT poverty_rate FROM county_need WHERE county_fips = '00000') AS us_rate FROM county_need c
               WHERE c.state = ANY($1) AND (NOT $2 OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.county_fips = c.county_fips AND z.appalachia))`,
       [mapStates, Boolean(filters.appalachia)]),
   ]);
@@ -95,7 +101,9 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
     need: Object.fromEntries(need.map((r) => [r.county_fips, { poverty: r.poverty_rate == null ? null : Number(r.poverty_rate), population: r.population }])),
     underserved: need.filter((r) => Number(r.poverty_rate) >= 20 && !geo.some((g) => g.county_fips === r.county_fips))
       .sort((a, b) => Number(b.poverty_rate) - Number(a.poverty_rate))
-      .map((r) => ({ fips: r.county_fips, name: r.name, state: r.state, poverty: Number(r.poverty_rate), population: r.population })),
+      .map((r) => ({ fips: r.county_fips, name: r.name, state: r.state, poverty: Number(r.poverty_rate), low: r.poverty_low == null ? null : Number(r.poverty_low),
+        high: r.poverty_high == null ? null : Number(r.poverty_high), poor: r.people_in_poverty, population: r.population })),
+    usPoverty: need[0]?.us_rate == null ? null : Number(need[0].us_rate),
     highNeed: need.filter((r) => Number(r.poverty_rate) >= 20).length,
     appalachia: app.map((r) => r.county_fips),
     funders: funders.map((f) => ({ ein: f.ein, name: title(f.name), city: f.city ? title(f.city) : null, state: f.state, orgs: f.orgs, amount: Number(f.amount), inviteOnly: f.invite_only, grantees: (f.grantees ?? []).map(title) })),
@@ -151,7 +159,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v10", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v12", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

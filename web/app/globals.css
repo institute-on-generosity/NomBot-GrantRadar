@@ -808,15 +808,28 @@ main:has(.serp) { max-width: 1400px; }
 .ls-org:hover b { color: var(--g); }
 .unfunded .ls-org:hover { background: var(--fill); }
 .ls-org b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Map tab: Organizations | Poverty switch, and the underserved counties list */
+/* Map tab: Organizations | Gaps switch; gaps = high-poverty counties with no match */
 .lmap-switch { display: inline-flex; gap: 2px; padding: 2px; margin-bottom: 8px; border-radius: 8px; background: var(--fill); }
-.lmap-switch button { font: inherit; font-size: 12px; font-weight: 500; padding: 4px 10px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); cursor: pointer; }
+.lmap-switch button { font: inherit; font-size: 12px; font-weight: 500; padding: 4px 12px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); cursor: pointer; outline: none; }
 .lmap-switch button.on { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
-.underserved { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-.underserved h3 { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 6px; }
-.underserved h3 small { font-weight: 400; color: var(--faint); white-space: nowrap; }
-.underserved ul { list-style: none; display: grid; gap: 2px; margin-bottom: 8px; }
-.underserved li { display: grid; grid-template-columns: minmax(0, 1fr) auto 3.4em; gap: 10px; align-items: baseline; font-size: 13px; }
-.underserved li b { font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.underserved li span { color: var(--faint); font-size: 12px; }
-.underserved li em { font-style: normal; text-align: right; font-weight: 600; color: #b4410c; font-variant-numeric: tabular-nums; }
+.lmap-switch button:focus-visible { box-shadow: 0 0 0 2px var(--g-tint); }
+.gap-head { font-size: 14px; color: var(--ink-2); margin: 2px 0 8px; }
+.gap-head b { font-weight: 600; color: #c2410c; }
+.gap-key { display: inline-flex; align-items: center; gap: 6px; margin-right: 14px; }
+.gap-key i { width: 10px; height: 10px; border-radius: 3px; }
+.gap-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; margin: 10px 0 8px; }
+.gap-list li { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--ink); }
+.gap-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gap-list li b { font-weight: 500; color: #c2410c; white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (max-width: 1150px) { .gap-list { grid-template-columns: 1fr; } }
+/* Gap list: "48% poverty" explains itself on hover (popover portaled to <body>, fixed position) */
+.pov { cursor: help; outline: none; text-decoration: underline dotted; text-underline-offset: 3px; }
+.pov-tip { position: fixed; z-index: 60; transform: translate(-100%, 0); width: 240px; display: flex; flex-direction: column; gap: 3px; padding: 9px 12px; border-radius: 12px; background: var(--bg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 12.5px; line-height: 1.4; color: var(--ink-2); pointer-events: none; animation: tip-in .12s ease-out both; }
+.pov-tip.up { transform: translate(-100%, -100%); }
+.pov-tip strong { font-weight: 600; color: var(--ink); }
+.pov-tip small { font-size: 11px; color: var(--faint); }
+/* Gap list: every gap county, scrollable; the hovered row is outlined on the map */
+.gap-list { max-height: 196px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px; margin-left: -4px; margin-right: -4px; scrollbar-width: thin; }
+.gap-list li { padding: 3px 6px; border-radius: 6px; cursor: default; }
+.gap-list li.on { background: rgba(232,89,12,.1); }
+.gap-list li.on span { color: #c2410c; }

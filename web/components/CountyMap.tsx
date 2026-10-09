@@ -1,5 +1,5 @@
 "use client";
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import geo from "@/lib/geo/counties.json";
 import s from "./CountyMap.module.css";
 
@@ -17,6 +17,9 @@ type Props = {
   color?: string;                          // ramp color, default the brand green
   details?: Record<string, string>;        // extra tooltip line per county FIPS
   valueText?: (n: number) => string;       // tooltip/legend text for a value, default "12 organizations"
+  fillOf?: (fips: string) => string | null; // categorical fill per county (overrides the ramp); null = plain
+  legend?: React.ReactNode;                // replaces the default legend
+  highlight?: string | null;               // county FIPS to outline and show the card for (e.g. hovered in a list beside the map)
 };
 
 const STEPS = 5;
@@ -31,7 +34,7 @@ export const countyLabel = (c: { fips: string; name: string; state: string }) =>
 const singular = (label: string) => label.replace(/ies$/, "y").replace(/s$/, "");
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates, bands, color, details, valueText }: Props) {
+export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates, bands, color, details, valueText, fillOf, legend, highlight }: Props) {
   const uid = useId().replace(/:/g, "");
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ c: County; x: number; y: number; flip: boolean } | null>(null);
@@ -75,8 +78,10 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
       if (v > topN) { topN = v; top = c; }
     }
     if (!n) return `Map: no ${label} in any county`;
+    if (bands || fillOf) return `Map of counties by ${label}; highest: ${countyLabel(top!)} (${text(topN)})`; // rates: don't sum
     return `Map: ${fmt(total)} ${total === 1 ? singular(label) : label} in ${fmt(n)} ${n === 1 ? "county" : "counties"}; most in ${countyLabel(top!)} (${fmt(topN)})`;
-  }, [counts, label]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [counts, label, bands, fillOf]);
 
   const place = (c: County, clientX: number, clientY: number) => {
     const r = wrap.current?.getBoundingClientRect();
@@ -86,6 +91,19 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
     const b = el.getBoundingClientRect();
     place(c, b.left + b.width / 2, b.top + b.height / 2);
   };
+
+  // A county picked outside the map (a list row): outline it and open its card at its center.
+  // Measured on the next frame (the path's on-screen box), so the card lines up with the county.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (!highlight) { setHover(null); return; }
+      const c = GEO.counties.find((x) => x.fips === highlight);
+      const el = wrap.current?.querySelector(`[data-fips="${highlight}"]`);
+      if (c && el) placeAtEl(c, el);
+    });
+    return () => cancelAnimationFrame(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlight]);
 
   const n = hover ? counts[hover.c.fips] ?? 0 : 0;
 
@@ -115,8 +133,9 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
               <path
                 key={c.fips}
                 d={c.d}
+                data-fips={c.fips}
                 className={focus && !focus.has(c.state) ? `${s.county} ${s.dim}` : s.county}
-                style={{ fill: fillFor(stepOf(v), color) }}
+                style={{ fill: fillOf ? fillOf(c.fips) ?? fillFor(-1) : fillFor(stepOf(v), color) }}
                 tabIndex={onSelect ? 0 : undefined}
                 role={onSelect ? "button" : undefined}
                 aria-label={onSelect ? `${countyLabel(c)}: ${v ? `${fmt(v)} ${v === 1 ? singular(label) : label}` : "no matches"}` : undefined}
@@ -141,7 +160,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
         )}
 
         <path d={GEO.borders} className={s.states} aria-hidden />
-        {hover && <path d={hover.c.d} className={s.lift} aria-hidden />}
+        {hover && <path d={hover.c.d} className={highlight === hover.c.fips ? `${s.lift} ${s.mark}` : s.lift} aria-hidden />}
       </svg>
 
       {hover && (
@@ -156,7 +175,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
         </div>
       )}
 
-      <div className={s.legend} aria-hidden>
+      {legend ? <div className={s.legend} aria-hidden>{legend}</div> : <div className={s.legend} aria-hidden>
         {bands ? (
           <span className={s.key}>
             {`<${bands[0]}%`}
@@ -179,7 +198,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
             Appalachia
           </span>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

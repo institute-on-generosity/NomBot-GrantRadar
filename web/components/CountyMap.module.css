@@ -118,3 +118,7 @@ svg.sw { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .county { transition: none; }
 }
+
+/* County picked from a list beside the map: thicker outline that pulses once */
+.mark { stroke-width: 2.6; animation: mark-pulse .6s ease-out; }
+@keyframes mark-pulse { from { stroke-width: 6; stroke-opacity: .3; } to { stroke-width: 2.6; stroke-opacity: 1; } }
