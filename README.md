@@ -48,13 +48,11 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 ## Architecture
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/grantradar/architecture-dark-v2.svg" />
-  <img src="docs/grantradar/architecture-light-v2.svg" alt="GrantRadar architecture: IRS BMF, 990-PF XML and foundation websites feed the generosity-data grant parser, recipient matcher and site scraper into Supabase Postgres + pgvector shared with NomBot; nonprofits use the /grants section of the NomBot app, whose matching engine and explainer query the database" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/grantradar/architecture-dark-v3.svg" />
+  <img src="docs/grantradar/architecture-light-v3.svg" alt="GrantRadar architecture: nonprofits enter a mission or EIN in the standalone GrantRadar app (Next.js); the app calls the matching engine (mission to 150 similar grantees to ranked funders), Why this funder? and Research Buddy, the landscape panel (overview, ask sizes, deadline calendar, peers) and How funders see you (fixed FLAG rules on the nonprofit's own 990); matching and explanations call the Claude API; services read Postgres + pgvector (funders, grants, filing_text, filing_flag), shared with NomBot; the generosity-data ETL loads it from IRS 990-PF XML, 990 / 990-EZ XML and the IRS master file" />
 </picture>
 
 [Interactive diagram](docs/grantradar/architecture.html)
-
-> Diagram out of date: GrantRadar now runs **standalone** (not as NomBot's `/grants` section), and the **landscape panel**, **deadline calendar** and **"How funders will see you"** (reads `filing_flag` from the 990 XML) aren't drawn.
 
 **Hardest step:** grants list recipients by name + address, usually without an EIN. The matcher links them to `orgs` with a confidence score; weak links are excluded.
 

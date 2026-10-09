@@ -912,3 +912,8 @@ main.check { max-width: 760px; }
 .check-link:hover { text-decoration: underline; }
 @media (max-width: 640px) { .check-report .rating ul { grid-template-columns: 1fr; } }
 .check-facts dl > div { display: contents; }
+.check-found li { align-items: flex-start; }
+.cf-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cf-main em { font-style: normal; font-size: 13px; color: var(--mute); line-height: 1.45; }
+.cf-main em a { color: var(--g); font-weight: 500; }
+.check-found li > small { white-space: nowrap; padding-top: 2px; }

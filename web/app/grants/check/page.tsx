@@ -27,6 +27,8 @@ async function Body({ searchParams }: { searchParams: Promise<Params> }) {
   await connection();
   if (p.ein) return <Report ein={p.ein} />;
   const found = p.q?.trim() ? await findOrgs(p.q) : [];
+  // One clear match with a 990: go straight to its report.
+  if (found.length === 1 && found[0].filed) return <Report ein={found[0].ein} />;
   return (
     <>
       <form action="/grants/check" className="check-form">
@@ -37,8 +39,13 @@ async function Body({ searchParams }: { searchParams: Promise<Params> }) {
         <ul className="check-found">
           {found.map((o) => (
             <li key={o.ein}>
-              {o.filed ? <Link href={`/grants/check?ein=${o.ein}`}>{o.name}</Link> : <span>{o.name}</span>}
-              <small>{o.place}{!o.filed && " · no e-filed 990 loaded"}</small>
+              <span className="cf-main">
+                {o.filed ? <Link href={`/grants/check?ein=${o.ein}`}>{o.name}</Link> : <span>{o.name}</span>}
+                {!o.filed && (o.foundation
+                  ? <em>A private foundation: it files a 990-PF, not the Form 990 this check reads. <Link href={`/grants/funder/${o.ein}`}>See it as a funder →</Link></em>
+                  : <em>No e-filed Form 990 loaded. Small groups file only the 990-N postcard, which has no financial detail; others may not be in our 2025 data yet.</em>)}
+              </span>
+              <small>{o.place}</small>
             </li>
           ))}
         </ul>

@@ -5,7 +5,7 @@ import { titleCase } from "../components/text";
 import { db } from "./db";
 import { diligence, type Diligence, type FlagRow, type Signal } from "./flag";
 
-export type Found = { ein: string; name: string; place: string; filed: boolean };
+export type Found = { ein: string; name: string; place: string; filed: boolean; foundation: boolean }; // foundation: files a 990-PF (in funders)
 
 // Name search (trigram on the normalized name) or an exact EIN; filers of an e-filed 990 first.
 export async function findOrgs(q: string): Promise<Found[]> {
@@ -16,9 +16,13 @@ export async function findOrgs(q: string): Promise<Found[]> {
       `SELECT o.ein, o.name, o.city, o.state FROM orgs o
        WHERE org_norm(o.name) % org_norm($1) OR o.name ILIKE '%' || $1 || '%'
        ORDER BY (EXISTS (SELECT 1 FROM filing_flag f WHERE f.ein = o.ein)) DESC, similarity(org_norm(o.name), org_norm($1)) DESC LIMIT 8`, [q.trim()]);
-  const { rows: filed } = await db.query(`SELECT DISTINCT ein FROM filing_flag WHERE ein = ANY($1)`, [rows.map((r) => r.ein)]);
-  const has = new Set(filed.map((r) => r.ein as string));
-  return rows.map((r) => ({ ein: r.ein, name: titleCase(r.name), place: [r.city && titleCase(r.city), r.state].filter(Boolean).join(", "), filed: has.has(r.ein) }));
+  const eins = rows.map((r) => r.ein);
+  const [{ rows: filed }, { rows: pf }] = await Promise.all([
+    db.query(`SELECT DISTINCT ein FROM filing_flag WHERE ein = ANY($1)`, [eins]),
+    db.query(`SELECT ein FROM funders WHERE ein = ANY($1)`, [eins]),
+  ]);
+  const has = new Set(filed.map((r) => r.ein as string)), funder = new Set(pf.map((r) => r.ein as string));
+  return rows.map((r) => ({ ein: r.ein, name: titleCase(r.name), place: [r.city && titleCase(r.city), r.state].filter(Boolean).join(", "), filed: has.has(r.ein), foundation: funder.has(r.ein) }));
 }
 
 export type Check = { ein: string; name: string; place: string; d: Diligence; prepare: { topic: string; ask: string }[] };

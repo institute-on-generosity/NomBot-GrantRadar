@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "GrantRadar System Architecture",
-    "output": ".archify/architecture-grantradar-grants-20261006-175141/grantradar.html",
+    "output": "docs/grantradar/architecture.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -11,156 +11,170 @@
       "id": "users",
       "type": "external",
       "label": "Nonprofits",
-      "sublabel": "dev directors \u00b7 grant writers",
+      "sublabel": "dev directors · grant writers",
       "pos": [
         40,
-        120
+        215
       ],
       "size": [
-        170,
-        60
+        160,
+        64
       ]
     },
     {
-      "id": "ui",
+      "id": "app",
       "type": "frontend",
-      "label": "Profile + Matches",
-      "sublabel": "/grants \u00b7 Next.js",
+      "label": "GrantRadar app",
+      "sublabel": "Next.js · /grants · standalone",
       "pos": [
-        270,
-        120
+        340,
+        40
       ],
       "size": [
-        170,
-        60
+        190,
+        420
+      ]
+    },
+    {
+      "id": "explain",
+      "type": "backend",
+      "label": "Why this funder? + Buddy",
+      "sublabel": "cited reasoning over grants",
+      "pos": [
+        710,
+        50
+      ],
+      "size": [
+        230,
+        64
       ]
     },
     {
       "id": "match",
       "type": "backend",
-      "label": "Matching Engine",
-      "sublabel": "similar grantees \u2192 funders",
+      "label": "Matching engine",
+      "sublabel": "mission → 150 peers → ranked funders",
       "pos": [
-        520,
-        120
+        710,
+        160
       ],
       "size": [
-        190,
-        60
+        230,
+        64
       ],
-      "tag": "rank: count \u00b7 amount \u00b7 recency"
+      "tag": "≥70 fit = like yours"
     },
     {
-      "id": "explain",
+      "id": "landscape",
       "type": "backend",
-      "label": "Match Explainer",
-      "sublabel": "LLM \u00b7 cited reasoning",
+      "label": "Landscape panel",
+      "sublabel": "overview · ask · calendar · peers",
       "pos": [
-        520,
-        260
+        710,
+        270
       ],
       "size": [
-        190,
-        60
+        230,
+        64
+      ]
+    },
+    {
+      "id": "check",
+      "type": "backend",
+      "label": "How funders see you",
+      "sublabel": "fixed FLAG rules on your own 990",
+      "pos": [
+        710,
+        380
+      ],
+      "size": [
+        230,
+        64
+      ]
+    },
+    {
+      "id": "claude",
+      "type": "cloud",
+      "label": "Claude API",
+      "sublabel": "peer fit · answers · overviews",
+      "pos": [
+        1120,
+        40
+      ],
+      "size": [
+        230,
+        100
       ]
     },
     {
       "id": "db",
       "type": "database",
       "label": "Postgres + pgvector",
-      "sublabel": "orgs \u00b7 grants \u00b7 funders \u00b7 filing_text",
+      "sublabel": "funders · grants · filing_text · filing_flag",
       "pos": [
-        860,
-        110
+        1120,
+        200
       ],
       "size": [
-        220,
-        80
+        250,
+        180
       ],
-      "tag": "shared with NomBot \u00b7 Auth"
+      "tag": "shared with NomBot"
     },
     {
-      "id": "bmf",
-      "type": "external",
-      "label": "IRS EO BMF",
-      "sublabel": "org list \u00b7 monthly",
+      "id": "etl",
+      "type": "backend",
+      "label": "generosity-data ETL",
+      "sublabel": "grants + recipient matcher · 990 text + FLAG",
       "pos": [
-        520,
-        440
+        1120,
+        560
       ],
       "size": [
-        190,
-        60
-      ]
+        250,
+        80
+      ],
+      "tag": "Python"
     },
     {
       "id": "pfxml",
       "type": "external",
       "label": "IRS 990-PF XML",
-      "sublabel": "Part XV grants paid",
+      "sublabel": "foundations · Part XV grants",
       "pos": [
-        520,
-        580
+        710,
+        500
       ],
       "size": [
-        190,
+        230,
         60
       ]
     },
     {
-      "id": "web",
+      "id": "nxml",
       "type": "external",
-      "label": "Foundation Websites",
-      "sublabel": "top ~500 only",
+      "label": "IRS 990 / 990-EZ XML",
+      "sublabel": "mission text · FLAG fields",
       "pos": [
-        520,
-        720
+        710,
+        590
       ],
       "size": [
-        190,
+        230,
         60
       ]
     },
     {
-      "id": "matcher",
-      "type": "backend",
-      "label": "Recipient Matcher",
-      "sublabel": "name + city/state \u2192 EIN",
+      "id": "bmf",
+      "type": "external",
+      "label": "IRS master file (BMF)",
+      "sublabel": "organizations · EINs",
       "pos": [
-        870,
-        440
+        710,
+        680
       ],
       "size": [
-        200,
-        60
-      ],
-      "tag": "hardest step"
-    },
-    {
-      "id": "parser",
-      "type": "backend",
-      "label": "Grant Parser",
-      "sublabel": "990-PF Part XV",
-      "pos": [
-        870,
-        580
-      ],
-      "size": [
-        200,
-        60
-      ]
-    },
-    {
-      "id": "scraper",
-      "type": "backend",
-      "label": "Site Scraper",
-      "sublabel": "quarterly",
-      "pos": [
-        870,
-        720
-      ],
-      "size": [
-        200,
+        230,
         60
       ]
     }
@@ -168,111 +182,110 @@
   "boundaries": [
     {
       "kind": "region",
-      "label": "NomBot app \u00b7 /grants \u00b7 Vercel",
+      "label": "GrantRadar app (Next.js, standalone)",
       "wraps": [
-        "ui",
+        "app",
+        "explain",
         "match",
-        "explain"
+        "landscape",
+        "check"
       ]
     },
     {
       "kind": "region",
-      "label": "Supabase Pro \u00b7 hosted Postgres",
+      "label": "Data pipeline (generosity-data)",
       "wraps": [
-        "db"
-      ]
-    },
-    {
-      "kind": "region",
-      "label": "Public data sources",
-      "wraps": [
-        "bmf",
-        "pfxml",
-        "web"
-      ]
-    },
-    {
-      "kind": "region",
-      "label": "generosity-data \u00b7 GitHub Actions",
-      "wraps": [
-        "matcher",
-        "parser",
-        "scraper"
+        "etl"
       ]
     }
   ],
   "connections": [
     {
-      "id": "enter-mission",
+      "id": "users-app",
       "from": "users",
-      "to": "ui",
-      "label": "mission",
+      "to": "app",
+      "label": "mission or EIN",
       "variant": "emphasis"
     },
     {
-      "id": "find-funders",
-      "from": "ui",
+      "id": "app-explain",
+      "from": "app",
+      "to": "explain",
+      "label": "ask why / follow up"
+    },
+    {
+      "id": "app-match",
+      "from": "app",
       "to": "match",
-      "label": "find funders",
+      "label": "mission + filters",
       "variant": "emphasis"
     },
     {
-      "id": "match-query",
+      "id": "app-landscape",
+      "from": "app",
+      "to": "landscape",
+      "label": "panel tabs"
+    },
+    {
+      "id": "app-check",
+      "from": "app",
+      "to": "check",
+      "label": "your EIN"
+    },
+    {
+      "id": "explain-claude",
+      "from": "explain",
+      "to": "claude",
+      "label": "cited answers"
+    },
+    {
+      "id": "match-claude",
+      "from": "match",
+      "to": "claude",
+      "label": "peer fit 0–100"
+    },
+    {
+      "id": "match-db",
       "from": "match",
       "to": "db",
-      "label": "vector + SQL",
+      "label": "peer grants",
       "variant": "emphasis"
     },
     {
-      "id": "ask-why",
-      "from": "ui",
-      "to": "explain",
-      "label": "why this funder?",
-      "variant": "dashed"
-    },
-    {
-      "id": "explain-read",
-      "from": "explain",
+      "id": "landscape-db",
+      "from": "landscape",
       "to": "db",
-      "label": "grant history",
-      "variant": "dashed"
+      "label": "deadlines · budgets"
     },
     {
-      "id": "bmf-load",
-      "from": "bmf",
-      "to": "matcher",
-      "label": "org list"
+      "id": "check-db",
+      "from": "check",
+      "to": "db",
+      "label": "filing_flag"
     },
     {
-      "id": "pf-load",
+      "id": "etl-db",
+      "from": "etl",
+      "to": "db",
+      "label": "load"
+    },
+    {
+      "id": "pfxml-etl",
       "from": "pfxml",
-      "to": "parser",
-      "label": "grants"
+      "to": "etl",
+      "label": "Part XV grants"
     },
     {
-      "id": "web-load",
-      "from": "web",
-      "to": "scraper",
-      "label": "contacts"
+      "id": "nxml-etl",
+      "from": "nxml",
+      "to": "etl",
+      "label": "990 returns"
     },
     {
-      "id": "parser-to-matcher",
-      "from": "parser",
-      "to": "matcher",
-      "label": "recipients"
-    },
-    {
-      "id": "matcher-upsert",
-      "from": "matcher",
-      "to": "db",
-      "label": "linked grants"
-    },
-    {
-      "id": "scraper-upsert",
-      "from": "scraper",
-      "to": "db",
-      "label": "deadlines",
-      "variant": "dashed"
+      "id": "bmf-etl",
+      "from": "bmf",
+      "to": "etl",
+      "label": "org list"
     }
   ],
   "cards": [
@@ -280,26 +293,26 @@
       "dot": "emerald",
       "title": "Matching",
       "items": [
-        "Mission \u2192 similar grantees (NomBot embeddings)",
-        "Their funders, ranked by count, amount, recency",
-        "Purpose text alone is weak (often 'general support')"
+        "Mission embedded and compared with grantees' filed missions (pgvector)",
+        "Claude scores each candidate's work 0–100; 70+ counts as like yours",
+        "Funders rank by the close peers they already paid"
       ]
     },
     {
       "dot": "cyan",
-      "title": "Data",
+      "title": "Panel and self-check",
       "items": [
-        "990-PF Part XV: who each foundation paid, how much",
-        "Recipients often lack EINs \u2192 name + city/state match",
-        "Contacts/deadlines only for top ~500 foundations"
+        "Landscape: Claude overview plus ask sizes, a rule-based deadline calendar and peers",
+        "How funders see you: fixed FLAG rules shared with NomBot (lib/flag.ts), no AI verdict"
       ]
     },
     {
-      "dot": "amber",
-      "title": "Cloud",
+      "dot": "slate",
+      "title": "Data",
       "items": [
-        "Supabase Pro shared with NomBot; Auth for logins + saved matches",
-        "Vercel + GitHub Actions free tiers"
+        "5 states: 8,030 foundations, 102,725 grants, 50,971 e-filed 990s",
+        "Recipients linked to EINs at 51% (precision first)",
+        "Planned: national load, foundation-site scraper"
       ]
     }
   ]
