@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
+import { NavLink } from "./NavLink";
 import { money } from "@/lib/filters";
 import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
@@ -90,7 +91,7 @@ async function Themes({ question, l }: { question: string; l: Awaited<ReturnType
       {ts.map((t) => (
         <details key={t.label}>
           <summary><b>{t.label}</b><span>{t.orgs.length}</span></summary>
-          <ul>{t.orgs.map((o) => <li key={o.ein} title={`${o.name} · ${o.place}`}><b>{o.name}</b><span>{o.place}</span></li>)}</ul>
+          <ul>{t.orgs.map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" title={`${o.name} · ${o.place}`} label="Opening the organization…"><b>{o.name}</b><span>{o.place}</span></NavLink></li>)}</ul>
         </details>
       ))}
     </div>
@@ -108,7 +109,7 @@ export async function Gems({ ranking }: { ranking: ReturnType<typeof rank> }) {
   return (
     <div className="unfunded">
       <h3>Not yet funded<small>{gems.length} of {strong.length} strong matches</small></h3>
-      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><b>{titleCase(o.name)}</b><span>{o.state}</span></li>)}</ul>
+      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" label="Opening the organization…"><b>{titleCase(o.name)}</b><span>{o.state}</span></NavLink></li>)}</ul>
     </div>
   );
 }
