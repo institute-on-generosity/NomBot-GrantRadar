@@ -46,7 +46,9 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 ```
 → JSON records: `ein`, `name`, `city`, `state`, `ntee`, `financials`, `mission`, `score`.
 
-**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → editable filter chips (Appalachia, under $500K, must mention workforce training) → strong matches ranked by relevance score, each with revenue, a bullet preview (mission, the program that matches, spending and team) and its IRS source.
+**Search:** *"food banks in rural Appalachia that do workforce training, under $500K"* → editable filter chips (Appalachia, under $500K, must mention workforce training) → strong matches ranked by relevance score, each with revenue, one grey line of facts (place, cause, spending, staff, volunteers), its mission and finance tags; IRS sources on hover. Beside them, the analysis panel zooms out (overview, finances, gaps map, themes, funders).
+
+> Screenshot from Oct 7: rows have since been simplified (one mission line, finance tags) and the analysis panel added.
 
 ![NomBot search: the Appalachia food-bank question, filter chips, "7 strong matches", and results scored 82, 80, 72 with revenue and Form 990 sources](docs/ux/search-real.png)
 
@@ -63,13 +65,16 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
 
-> Diagram out of date: the **AI overview**, **Landscape** (incl. funders from GrantRadar's `grants` table) and **Compare** aren't drawn yet.
+> Diagram out of date: the **AI overview**, **analysis panel** (incl. funders from GrantRadar's `grants` table), **Compare**, **FLAG diligence** (`filing_flag`) and **county need** (`county_need`, Census SAIPE) aren't drawn yet.
 
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
 - **Landscape:** the 200 closest orgs (same filters and ranking) → counts by size, city, cause, team; counties via `zip_regions`; funders via `grants`; themes by Claude.
 - **AI overview:** the scored strong matches (up to 40) + computed figures (sizes, places, causes, team sizes) → Claude → summary, patterns [n], related searches.
 - **Regions:** ZIP → county lookup (`zip_regions`) powers the Appalachia filter (ARC's 420 counties).
+- **Finances:** one rule set (`orgHealth`) for row tags, the Finances tab and the AI overview: the newest e-filed 990 (this year vs its prior-year column, cash on hand), else SOI + master file.
+- **FLAG diligence (org page):** the newest 990's `filing_flag` row → fixed rules in `lib/flag.ts` (revenue, result, cash, liabilities, funding, board, insiders) → red / amber / green signals. Shared with GrantRadar. No AI verdict.
+- **Gaps (Map):** `county_need` (Census poverty, 3,144 counties) vs. where the 200 closest orgs are based → high-poverty counties (20%+) with none, limited to loaded states.
 
 ## Data
 
@@ -150,8 +155,18 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - **Infrastructure:** Vercel Pro (shareable link), Supabase Pro or Neon (pgvector), PostHog.
 - **Data privacy:** agree a policy before any project handles financial data.
 
+### Oct 8, 2026: GSB philanthropy class (Nancy Lue, Valhalla Foundation): nonprofit diligence
+Funders read the 990 before the proposal: liquidity, reserves, revenue and expense growth, funding concentration, program expense ratio, board independence, pay. Two AI tools rated the same filing differently because their definitions differed.
+
+| Takeaway | Plan |
+|---|---|
+| Diligence questions funders ask (FLAG: Financial, Legal and Governance) | ✅ **Org page:** health signals, this year vs last year, cash, spending split, government grants, leadership, board, audit and policy checklist |
+| Ratings depend on definitions | ✅ Fixed, visible rules (`lib/flag.ts`); Claude only summarizes |
+| "Questions to ask" an organization | Next: Claude, from the signals |
+| Pay vs. industry standard, big-donor concentration, revocation check | Not yet (benchmark, Schedule A, IRS revocation list) |
+
 ## Progress
-> ✅ **Oct 7, 2026: Search and Research Buddy both built** on the local proof of concept, 5–6 weeks ahead of plan. Still to do: cloud, national data, user testing and launch.
+> ✅ **Oct 8, 2026: Search, Research Buddy, the analysis panel and FLAG diligence built** on the local proof of concept, 5–6 weeks ahead of plan. Still to do: cloud, national data, user testing and launch.
 
 📋 Tracker: [Issue #1](https://github.com/institute-on-generosity/NomBot-GrantRadar/issues/1)
 
@@ -175,6 +190,11 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 - [x] Relevance score 0–100 with an AI reason on hover; weak matches folded
 - [x] Editable filter chips (place, city, Appalachia, size, cause); results update in ~0.4s
 - [x] IRS financial (SOI) viewer; sources open beside the org in a popover
+- [x] Analysis panel: AI overview, breakdown, finances, map with Gaps, themes, funders (feedback, Oct 7)
+- [x] Compare 2–4 orgs; starred folders; staff + volunteer counts (feedback, Oct 7)
+- [x] FLAG diligence from 990 XML: 50,971 filings (prior year, balance sheet, spending, board, policies, officers)
+- [x] Finance tags on results; Finances tab
+- [x] County need (Census SAIPE): 3,144 counties; Gaps view
 
 **Oct 19–25: Cloud**
 - [ ] Supabase + data migrated
