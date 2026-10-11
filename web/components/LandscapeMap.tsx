@@ -21,6 +21,7 @@ const people = (n: number | null) => (n == null ? "" : n >= 1e6 ? `${(n / 1e6).t
 export function LandscapeMap({ counts, countyOrgs, appalachia, states, need, underserved, highNeed, usPoverty, povertyCut }: MapData) {
   const [view, setView] = useState<"orgs" | "gaps">("orgs");
   const [picked, setPicked] = useState<string | null>(null); // gap county hovered in the list -> outlined on the map
+  const [onMap, setOnMap] = useState<string | null>(null);   // county hovered on the map -> its list row lights up
   const [county, setCounty] = useState<{ fips: string; name: string; state: string } | null>(null); // clicked on the Organizations map
   const focus = states.length ? states : undefined;
   const gaps = new Set(underserved.map((c) => c.fips));
@@ -45,7 +46,7 @@ export function LandscapeMap({ counts, countyOrgs, appalachia, states, need, und
           <CountyMap
             counts={Object.fromEntries(Object.entries(need).map(([f, x]) => [f, x.poverty ?? 0]))}
             focusStates={focus} label="in poverty" bands={[20]} valueText={(v) => `${v}% in poverty`}
-            fillOf={(f) => (gaps.has(f) ? GAP : counts[f] ? SERVED : null)} highlight={picked}
+            fillOf={(f) => (gaps.has(f) ? GAP : counts[f] ? SERVED : null)} highlight={picked} onHover={setOnMap}
             details={Object.fromEntries(Object.entries(need).map(([f, x]) => [f, `${people(x.population)} · ${counts[f] ? `${counts[f]} of these orgs` : "none of these orgs"}`]))}
             legend={<>
               <span className="gap-key"><i style={{ background: GAP }} />High poverty, no match</span>
@@ -54,7 +55,8 @@ export function LandscapeMap({ counts, countyOrgs, appalachia, states, need, und
           />
           {underserved.length > 0 && (
             <ul className="gap-list" onMouseLeave={() => setPicked(null)}>{underserved.map((c) => (
-              <li key={c.fips} className={picked === c.fips ? "on" : undefined} onMouseEnter={() => setPicked(c.fips)} onFocus={() => setPicked(c.fips)} onBlur={() => setPicked(null)}><span>{countyLabel({ fips: c.fips, name: c.name.replace(/ (County|city|Parish)$/, ""), state: c.state })}</span><PovertyRate c={c} us={usPoverty} /></li>
+              <li key={c.fips} ref={onMap === c.fips ? scrollRowIntoList : undefined}
+                className={picked === c.fips || onMap === c.fips ? "on" : undefined} onMouseEnter={() => setPicked(c.fips)} onFocus={() => setPicked(c.fips)} onBlur={() => setPicked(null)}><span>{countyLabel({ fips: c.fips, name: c.name.replace(/ (County|city|Parish)$/, ""), state: c.state })}</span><PovertyRate c={c} us={usPoverty} /></li>
             ))}</ul>
           )}
           <p className="ls-note">High poverty = {povertyCut}%+ ({povertyCut < 20 ? "the poorest quarter of these counties" : "20% or more"}; Census, 2023). &quot;No match&quot; = none of the 200 closest organizations is based there.</p>
@@ -102,4 +104,13 @@ function CountyList({ fips, name, state, orgs, onClose }: { fips: string; name: 
       {orgs.length > 0 && <ul>{orgs.map((o) => <li key={o.ein}><Link href={`/org/${o.ein}`}>{o.name}</Link><span>{o.city}</span></li>)}</ul>}
     </div>
   );
+}
+
+// Bring a row into view inside its own scrolling list only (not the page or panel, which would move the map).
+function scrollRowIntoList(el: HTMLLIElement | null) {
+  const list = el?.parentElement;
+  if (!el || !list) return;
+  const top = el.offsetTop, bottom = top + el.offsetHeight; // .gap-list is position: relative
+  if (top < list.scrollTop) list.scrollTop = top - 4;
+  else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight + 4;
 }

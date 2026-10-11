@@ -333,8 +333,18 @@ button.fchip-main { cursor: pointer; }
 .viewer.compact .tabs { margin-top: 0; }
 .panel-scrim { display: none; }
 @keyframes panel-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Mid-size screens: the source panel still docks and pushes the page left, just narrower */
 @media (max-width: 1100px) {
-  .side-panel, .buddy-panel { position: fixed; right: 0; top: 0; width: min(92vw, 640px); box-shadow: var(--shadow); }
+  .buddy-panel { position: fixed; right: 0; top: 0; width: min(92vw, 640px); box-shadow: var(--shadow); }
+  .side-panel { width: clamp(340px, 40vw, 440px); }
+  /* The page column is narrow while the panel is open: stack two-column grids */
+  .shell:has(.side-panel) .content :is(.rating ul, .keyfigs, .yoy-facts) { grid-template-columns: 1fr; }
+  .shell:has(.side-panel) .content .income li { grid-template-columns: 9em 1fr 3em; }
+  .shell:has(.side-panel) .content .income li small { display: none; }
+}
+/* Small screens: no room to dock, so it floats over the page */
+@media (max-width: 900px) {
+  .side-panel { position: fixed; right: 0; top: 0; width: min(92vw, 640px); box-shadow: var(--shadow); }
   .panel-scrim { display: block; position: fixed; inset: 0; z-index: 24; background: rgba(0,0,0,.2); animation: show .2s both; opacity: 0; }
 }
 
@@ -844,3 +854,4 @@ main:has(.serp) { max-width: 1400px; }
 .county-list li a { color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .county-list li a:hover { color: var(--g); }
 .county-list li span { color: var(--faint); font-size: 12px; white-space: nowrap; }
+.gap-list { position: relative; }

@@ -20,6 +20,7 @@ type Props = {
   fillOf?: (fips: string) => string | null; // categorical fill per county (overrides the ramp); null = plain
   legend?: React.ReactNode;                // replaces the default legend
   highlight?: string | null;               // county FIPS to outline and show the card for (e.g. hovered in a list beside the map)
+  onHover?: (fips: string | null) => void; // the county under the pointer, so a list beside the map can follow
 };
 
 const STEPS = 5;
@@ -34,7 +35,7 @@ export const countyLabel = (c: { fips: string; name: string; state: string }) =>
 const singular = (label: string) => label.replace(/ies$/, "y").replace(/s$/, "");
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates, bands, color, details, valueText, fillOf, legend, highlight }: Props) {
+export function CountyMap({ counts, appalachia, label = "organizations", onSelect, focusStates, bands, color, details, valueText, fillOf, legend, highlight, onHover }: Props) {
   const uid = useId().replace(/:/g, "");
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ c: County; x: number; y: number; flip: boolean } | null>(null);
@@ -114,7 +115,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
         viewBox={viewBox}
         role="img"
         aria-label={summary}
-        onPointerLeave={() => setHover(null)}
+        onPointerLeave={() => { setHover(null); onHover?.(null); }}
       >
         <defs>
           <pattern id={`${uid}h`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -139,7 +140,7 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
                 tabIndex={onSelect ? 0 : undefined}
                 role={onSelect ? "button" : undefined}
                 aria-label={onSelect ? `${countyLabel(c)}: ${v ? `${fmt(v)} ${v === 1 ? singular(label) : label}` : "no matches"}` : undefined}
-                onPointerMove={(e) => place(c, e.clientX, e.clientY)}
+                onPointerMove={(e) => { place(c, e.clientX, e.clientY); if (hover?.c.fips !== c.fips) onHover?.(c.fips); }}
                 onFocus={(e) => placeAtEl(c, e.currentTarget)}
                 onBlur={() => setHover(null)}
                 onClick={onSelect ? () => onSelect(c.fips, c.name, c.state) : undefined}
