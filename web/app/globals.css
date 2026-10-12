@@ -767,8 +767,8 @@ main:has(.serp) { max-width: 1400px; }
 .ls-flist details[open] .ls-fname { color: var(--g); }
 .ls-fmore { display: flex; flex-direction: column; gap: 3px; padding: 6px 0 2px; font-size: 12.5px; color: var(--ink-2); animation: drop .15s var(--spring) both; }
 .ls-fmore p:first-child { color: var(--mute); }
-.ls-fmore a { color: var(--g); text-decoration: none; }
-.ls-fmore a:hover { text-decoration: underline; }
+.ls-fmore a { color: var(--ink); text-decoration: none; }
+.ls-fmore a:hover { color: var(--g); text-decoration: underline; }
 .unfunded { margin-top: 10px; }
 .unfunded li { padding: 3px 0; }
 .unfunded li b { font-size: 13px; }
