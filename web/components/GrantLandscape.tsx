@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { CalendarChart } from "./CalendarChart";
 import { GrantOverview, GrantOverviewSkeleton } from "./GrantOverview";
 import { LandscapeTabs } from "./LandscapeTabs";
@@ -31,12 +32,20 @@ export async function GrantLandscape({ mission, filters }: { mission: string; fi
       { key: "calendar", label: "Calendar", title: "When to apply", sub: `${l.open} open funders`, node: <CalendarChart c={l.calendar} mission={mission} /> },
       { key: "peers", label: "Peers", title: "Groups like yours they fund most", sub: `${money(l.toPeers)} to ${l.peers} groups`, node: (
         l.winners.length ? (
-          <ul className="ls-funders">
+          <ul className="ls-funders ls-peers">
+            {/* Click a group to see which of these funders paid it */}
             {l.winners.map((w) => (
-              <li key={`${w.name}-${w.place}`}>
-                <span className="ls-fname">{w.name}</span>
-                <span className="ls-fmeta">{w.place}</span>
-                <span className="ls-fstat"><b>{w.funders}</b> funders · <b>{money(w.amount)}</b></span>
+              <li key={w.ein}>
+                <details>
+                  <summary>
+                    <span className="ls-fname">{w.name}</span>
+                    <span className="ls-fmeta">{w.place}</span>
+                    <span className="ls-fstat"><b>{w.funders}</b> funders · <b>{money(w.amount)}</b></span>
+                  </summary>
+                  <ul className="ls-paidby">
+                    {w.paidBy.map((f) => <li key={f.ein}><Link href={`/grants/funder/${f.ein}`}>{f.name}</Link>{f.amount ? <span>{money(f.amount)}</span> : null}</li>)}
+                  </ul>
+                </details>
               </li>
             ))}
           </ul>

@@ -17,7 +17,7 @@ const ALL = 200; // funders the figures cover (every match, in practice)
 const READ = 15;  // funders Claude reads: the top of the list
 
 export type Bar = { label: string; count: number };
-export type Winner = { name: string; place: string; funders: number; amount: number };
+export type Winner = { ein: string; name: string; place: string; funders: number; amount: number; paidBy: { ein: string; name: string; amount: number | null }[] };
 // Grants these funders paid to groups like yours, by the grantee's annual revenue: what to ask for.
 export type AskBand = { label: string; grants: number; p25: number; median: number; p75: number };
 // Open funders by the month their 990-PF names as a deadline (n: rank in the list).
@@ -49,8 +49,8 @@ export async function grantLandscape(mission: string, filters: MatchFilters): Pr
   // Groups like yours that the most matched funders pay: who already wins this money.
   const byPeer = new Map<string, Winner>();
   for (const f of funders) for (const e of f.evidence) {
-    const w = byPeer.get(e.ein) ?? { name: titleCase(e.recipient), place: place(e.city, e.state), funders: 0, amount: 0 };
-    byPeer.set(e.ein, { ...w, funders: w.funders + 1, amount: w.amount + (e.amount ?? 0) });
+    const w = byPeer.get(e.ein) ?? { ein: e.ein, name: titleCase(e.recipient), place: place(e.city, e.state), funders: 0, amount: 0, paidBy: [] };
+    byPeer.set(e.ein, { ...w, funders: w.funders + 1, amount: w.amount + (e.amount ?? 0), paidBy: [...w.paidBy, { ein: f.ein, name: titleCase(f.name), amount: e.amount }] });
   }
 
   // Grantee budgets (IRS master file revenue) and funder deadlines, for every match.
@@ -85,7 +85,7 @@ export async function grantLandscape(mission: string, filters: MatchFilters): Pr
     policy: [{ label: "Open to applications", count: funders.filter((f) => !f.inviteOnly).length }, { label: "Invite only", count: funders.filter((f) => f.inviteOnly).length }],
     types: tally(funders.map((f) => (f.mix?.lean ? LEAN_LABEL[f.mix.lean] : "Mixed or unclear"))),
     homes: tally(funders.map((f) => f.state ?? "Unknown")),
-    winners: [...byPeer.values()].filter((w) => w.funders > 1).sort((a, b) => b.funders - a.funders || b.amount - a.amount).slice(0, 6),
+    winners: [...byPeer.values()].filter((w) => w.funders > 1).map((w) => ({ ...w, paidBy: w.paidBy.sort((a, b) => (b.amount ?? 0) - (a.amount ?? 0)) })).sort((a, b) => b.funders - a.funders || b.amount - a.amount).slice(0, 6),
   };
 }
 
