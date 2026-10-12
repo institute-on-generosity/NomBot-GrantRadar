@@ -928,3 +928,40 @@ main.check { max-width: 760px; }
 .ls-paidby a { color: var(--ink); text-decoration: none; }
 .ls-paidby a:hover { color: var(--g); text-decoration: underline; }
 .ls-paidby span { color: var(--mute); font-variant-numeric: tabular-nums; }
+
+/* ---------- Optical alignment ----------
+   Measured in Chrome against the system font (SF Pro): what the eye sees, not the box math.
+   Text in pills/buttons sits ~0.8px low (SF's ascent > descent), so padding shifts it up 0.75px;
+   icons beside text are nudged to the cap-height middle; large headings pull back their side bearing;
+   dots hang in the gutter so labels share one edge. */
+/* Large left-aligned headings: the first glyph's side bearing makes them look indented */
+main h1:not(.hero h1), .funder-head h1 { margin-inline-start: -0.045em; }
+/* Pill and button text: up to the cap-height middle */
+.chip { padding-top: 5.25px; padding-bottom: 6.75px; }
+.tab { padding-top: 5.25px; padding-bottom: 6.75px; }
+.h-clear { padding-top: 6.25px; padding-bottom: 7.75px; }
+.search button { padding-top: 7.25px; padding-bottom: 8.75px; }
+.side-new { padding-top: 6.25px; padding-bottom: 7.75px; }
+.buddy-fab { padding-top: 11.25px; padding-bottom: 12.75px; }
+.fchip-main { padding-top: 5.25px; padding-bottom: 6.75px; }
+/* Icons beside text: down to the text's cap middle */
+.side-new > svg { translate: 0 .75px; }
+:is(.meta span, .fv-apply dt, .fv-apply h2, .fv-site, .fv-facts dt) > .ico { translate: 0 .75px; }
+.why h2 .why-mark { translate: 0 1.5px; }
+/* Panel titles flush with the content under them; the sparkle's padding hangs into the gutter */
+.serp-rail .landscape h2, .landscape h2 { padding-left: 0; }
+.landscape .overview { padding-left: 0; padding-right: 0; }
+.landscape h2 > svg:first-child { margin-left: -2.5px; }
+/* Funder card star: centred on the title's cap height (it sat 2.75px high) */
+.funder > .star { top: 23.75px; }
+/* How to apply: labels on the first line of their value, not the middle of a long paragraph */
+.fv-apply dl div { align-items: baseline; }
+/* Org tables (shared with NomBot): numbers end on the right edge; gap where numbers meet text */
+.org th:last-child, .org td:last-child { padding-right: 0; }
+.org th.n + th:not(.n), .org td.n + td:not(.n) { padding-left: 16px; }
+.org dl:not(.yoy-facts), .sources li { grid-template-columns: 176px 1fr; }
+.sources li { display: grid; gap: 12px; }
+.sources a { white-space: nowrap; }
+.panel-head { padding-left: 24px; }
+.vc-list dt .dot { margin-left: -13px; }
+.vc-legend .dot { margin-left: -12px; }
