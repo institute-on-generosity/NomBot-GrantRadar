@@ -861,3 +861,40 @@ main:has(.serp) { max-width: 1400px; }
 .county-list li a:hover { color: var(--g); }
 .county-list li span { color: var(--faint); font-size: 12px; white-space: nowrap; }
 .gap-list { position: relative; }
+
+/* ---------- Optical alignment ----------
+   Measured in Chrome against the system font (SF Pro): what the eye sees, not the box math.
+   Text in pills/buttons sits ~0.8px low (SF's ascent > descent), so padding shifts it up 0.75px;
+   icons beside text are nudged to the cap-height middle; large headings pull back their side bearing;
+   dots hang in the gutter so labels share one edge. */
+/* Large left-aligned headings: the first glyph's side bearing makes them look indented */
+main h1:not(.hero h1) { margin-inline-start: -0.045em; }
+/* Pill and button text: up to the cap-height middle */
+.chip { padding-top: 5.25px; padding-bottom: 6.75px; }
+.tab { padding-top: 5.25px; padding-bottom: 6.75px; }
+.h-clear { padding-top: 6.25px; padding-bottom: 7.75px; }
+.search button { padding-top: 7.25px; padding-bottom: 8.75px; }
+.panel-close { padding-top: 5.25px; padding-bottom: 6.75px; }
+.side-new { padding-top: 6.25px; padding-bottom: 7.75px; }
+.buddy-fab { padding-top: 11.25px; padding-bottom: 12.75px; }
+.fchip-main { padding-top: 5.25px; padding-bottom: 6.75px; }
+.logo { padding-bottom: 1.5px; }
+/* Segmented control: equal columns, so the sliding thumb sits under its label */
+.seg { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+/* Panel titles flush with the content under them; the sparkle's padding hangs into the gutter */
+.serp-rail .landscape h2, .landscape h2 { padding-left: 0; }
+.landscape .overview { padding-left: 0; padding-right: 0; }
+.landscape h2 > svg:first-child { margin-left: -2.5px; }
+/* Org tables: numbers end on the column's right edge; a gap where right-aligned numbers meet left-aligned text */
+.org th:last-child, .org td:last-child { padding-right: 0; }
+.org th.n + th:not(.n), .org td.n + td:not(.n) { padding-left: 16px; }
+/* Sources: descriptions share one column, the same one as Details above */
+.org dl:not(.yoy-facts), .sources li { grid-template-columns: 176px 1fr; }
+.sources li { display: grid; gap: 12px; }
+.sources a { white-space: nowrap; }
+/* Source panel: title on the body's left edge; "used by NomBot" dots hang so every label starts on one edge */
+.panel-head { padding-left: 24px; }
+.vc-list dt .dot { margin-left: -13px; }
+.vc-legend .dot { margin-left: -12px; }
+/* Icons in flex rows: the text's cap middle sits ~0.8px below the line's middle, so icons come down to it */
+.side-new > svg, .panel-close > svg, .team > svg { translate: 0 .75px; }
