@@ -769,6 +769,7 @@ main:has(.serp) { max-width: 1400px; }
 .ls-fmore p:first-child { color: var(--mute); }
 .ls-fmore a { color: var(--ink); text-decoration: none; }
 .ls-fmore a:hover { color: var(--g); text-decoration: underline; }
+.ls-fmore a.ls-fprofile { color: var(--g); }
 .unfunded { margin-top: 10px; }
 .unfunded li { padding: 3px 0; }
 .unfunded li b { font-size: 13px; }

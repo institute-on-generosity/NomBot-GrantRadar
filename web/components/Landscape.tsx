@@ -52,7 +52,7 @@ export async function Landscape({ question, filters, includeInactive, map, overv
                       <span className="ls-fstat"><b>{money(f.amount)}</b> · {f.orgs} {f.orgs === 1 ? "org" : "orgs"}</span>
                     </summary>
                     <div className="ls-fmore">
-                      <p>{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly ? " · invite only" : " · open to applications"} · <Link href={`/org/${f.ein}`}>Foundation profile →</Link></p>
+                      <p>{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly ? " · invite only" : " · open to applications"} · <Link href={`/org/${f.ein}`} className="ls-fprofile">Foundation profile →</Link></p>
                       <p>Funded {f.grantees.map((g, i) => <span key={g.ein}>{i > 0 && ", "}<Link href={`/org/${g.ein}`}>{g.name}</Link></span>)}</p>
                     </div>
                   </details>
