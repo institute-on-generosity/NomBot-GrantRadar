@@ -6,7 +6,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { readable, titleCase } from "../components/text";
 import { db } from "./db";
-import { claude, LLM_MODEL } from "./llm";
+import { claude, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import { healthOf } from "./landscape";
 import { isStrong, type Ranked } from "./rerank";
@@ -68,7 +68,7 @@ async function fresh(question: string, strong: Ranked[], need?: string): Promise
   }).join("\n");
 
   const res = await client.beta.messages.parse({
-    model: LLM_MODEL,
+    model: FAST_MODEL,
     max_tokens: 3000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
@@ -81,7 +81,7 @@ async function fresh(question: string, strong: Ranked[], need?: string): Promise
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v6", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<Overview | null>("overview:v7", 200, 24 * 3600_000); // bump when the prompt changes
 // need: an optional figures line about county poverty vs. where these organizations are (lib/landscape).
 export function overview(question: string, results: Ranked[], need?: string) {
   const strong = results.filter((r) => r.relevance && isStrong(r));

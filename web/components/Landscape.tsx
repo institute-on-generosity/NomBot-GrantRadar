@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
@@ -41,16 +42,20 @@ export async function Landscape({ question, filters, includeInactive, map, overv
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (
           <>
-            {/* One line per funder; place, policy and the groups it paid show on hover */}
+            {/* One line per funder; click to open where it is, its policy and the groups it paid */}
             <ul className="ls-flist">
               {l.funders.map((f) => (
-                <li key={f.ein} tabIndex={0}>
-                  <span className="ls-fname">{f.name}</span>
-                  <span className="ls-fstat"><b>{money(f.amount)}</b> · {f.orgs} {f.orgs === 1 ? "org" : "orgs"}</span>
-                  <span className="ls-ftip" role="tooltip">
-                    <span>{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly ? " · invite only" : " · open to applications"}</span>
-                    <span>Funded {f.grantees.join(", ")}{f.orgs > f.grantees.length ? "…" : ""}</span>
-                  </span>
+                <li key={f.ein}>
+                  <details>
+                    <summary>
+                      <span className="ls-fname">{f.name}</span>
+                      <span className="ls-fstat"><b>{money(f.amount)}</b> · {f.orgs} {f.orgs === 1 ? "org" : "orgs"}</span>
+                    </summary>
+                    <div className="ls-fmore">
+                      <p>{[f.city, f.state].filter(Boolean).join(", ")}{f.inviteOnly ? " · invite only" : " · open to applications"} · <Link href={`/org/${f.ein}`}>Foundation profile →</Link></p>
+                      <p>Funded {f.grantees.map((g, i) => <span key={g.ein}>{i > 0 && ", "}<Link href={`/org/${g.ein}`}>{g.name}</Link></span>)}</p>
+                    </div>
+                  </details>
                 </li>
               ))}
             </ul>

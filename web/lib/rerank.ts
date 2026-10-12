@@ -5,7 +5,7 @@
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { readable } from "../components/text";
-import { claude, LLM_MODEL } from "./llm";
+import { claude, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Filters } from "./parse";
 import { search, type Result } from "./search";
@@ -47,7 +47,7 @@ async function scoreBatch(question: string, results: Result[]): Promise<Map<stri
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
   }));
   const res = await client.beta.messages.parse({
-    model: LLM_MODEL,
+    model: FAST_MODEL,
     max_tokens: 4096,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
@@ -64,7 +64,7 @@ async function scoreBatch(question: string, results: Result[]): Promise<Map<stri
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = memo<Map<string, Relevance>>("rerank", 300, 24 * 3600_000);
+const cached = memo<Map<string, Relevance>>("rerank:v2", 300, 24 * 3600_000);
 function score(question: string, results: Result[]) {
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
   return cached(key, () => scoreFresh(question, results).catch((err) => {

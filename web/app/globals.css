@@ -615,7 +615,7 @@ main:has(.serp) { max-width: 1400px; }
 /* Analysis panel is hover-only for now */
 .ls-row:hover { background: var(--fill); color: var(--ink); }
 .ls-row:hover .ls-track i { opacity: 1; }
-.ls-fname { cursor: default; }
+.ls-fname { cursor: pointer; }
 .ls-themes li b { font-weight: 400; color: var(--ink); }
 .explore-link { cursor: default; }
 .explore-link:hover { text-decoration: none; color: var(--g-dark); }
@@ -756,14 +756,19 @@ main:has(.serp) { max-width: 1400px; }
 .preview-line b { font-weight: 500; color: var(--faint); }
 /* Funders tab: one line per funder (name · amount · orgs), details on hover */
 .ls-flist { list-style: none; display: grid; }
-.ls-flist li { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 7px 8px; margin: 0 -8px; border-radius: 8px; font-size: 13.5px; outline: none; }
-.ls-flist li:hover, .ls-flist li:focus-visible { background: var(--fill); }
+.ls-flist li { position: relative; padding: 7px 8px; margin: 0 -8px; border-radius: 8px; font-size: 13.5px; outline: none; }
+.ls-flist li:hover, .ls-flist li:has(summary:focus-visible) { background: var(--fill); }
+.ls-flist summary:focus-visible { outline: none; }
 .ls-flist .ls-fname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 500; }
 .ls-flist .ls-fstat { flex: none; font-size: 12.5px; color: var(--mute); }
 .ls-flist .ls-fstat b { color: var(--ink); font-weight: 600; }
-.ls-ftip { display: none; position: absolute; z-index: 5; left: 8px; right: 8px; top: calc(100% + 2px); flex-direction: column; gap: 3px; padding: 8px 11px; border-radius: 10px; background: var(--bg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 12px; color: var(--ink-2); animation: drop .15s var(--spring) both; }
-.ls-ftip span:first-child { color: var(--mute); }
-.ls-flist li:hover .ls-ftip, .ls-flist li:focus-visible .ls-ftip { display: flex; }
+.ls-flist details > summary { list-style: none; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; cursor: pointer; }
+.ls-flist details > summary::-webkit-details-marker { display: none; }
+.ls-flist details[open] .ls-fname { color: var(--g); }
+.ls-fmore { display: flex; flex-direction: column; gap: 3px; padding: 6px 0 2px; font-size: 12.5px; color: var(--ink-2); animation: drop .15s var(--spring) both; }
+.ls-fmore p:first-child { color: var(--mute); }
+.ls-fmore a { color: var(--g); text-decoration: none; }
+.ls-fmore a:hover { text-decoration: underline; }
 .unfunded { margin-top: 10px; }
 .unfunded li { padding: 3px 0; }
 .unfunded li b { font-size: 13px; }

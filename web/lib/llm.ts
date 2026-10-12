@@ -4,6 +4,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 export const LLM_MODEL = process.env.LLM_MODEL || "claude-opus-5-5";
+// Faster model for the calls people wait on after every search (relevance scores, AI overview).
+export const FAST_MODEL = process.env.FAST_MODEL || "claude-sonnet-5-5";
 
 let client: Anthropic | null | undefined;
 

@@ -15,7 +15,7 @@ export const LANDSCAPE = 200;
 
 export type Bar = { key: string; label: string; count: number };
 export type Underserved = { fips: string; name: string; state: string; poverty: number; low: number | null; high: number | null; poor: number | null; population: number | null };
-export type Funder = { ein: string; name: string; city: string | null; state: string | null; orgs: number; amount: number; inviteOnly: boolean; grantees: string[] };
+export type Funder = { ein: string; name: string; city: string | null; state: string | null; orgs: number; amount: number; inviteOnly: boolean; grantees: { ein: string; name: string }[] };
 export type Landscape = {
   size: number;
   sizes: Bar[];      // revenue bands
@@ -71,7 +71,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
     db.query(`SELECT DISTINCT county_fips FROM zip_regions WHERE appalachia`),
     db.query(`SELECT g.funder_ein AS ein, f.name, f.city, f.state, f.invite_only,
                      count(DISTINCT g.recipient_ein)::int AS orgs, coalesce(sum(g.amount), 0)::bigint AS amount,
-                     (array_agg(DISTINCT o.name))[1:3] AS grantees
+                     json_agg(DISTINCT jsonb_build_object('ein', o.ein, 'name', o.name)) AS grantees
               FROM grants g JOIN funders f ON f.ein = g.funder_ein JOIN orgs o ON o.ein = g.recipient_ein
               WHERE g.recipient_ein = ANY($1)
               GROUP BY 1, 2, 3, 4, 5 ORDER BY orgs DESC, amount DESC LIMIT 6`, [eins]),
@@ -121,7 +121,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
     usPoverty: need[0]?.us_rate == null ? null : Number(need[0].us_rate),
     highNeed: need.filter((r) => Number(r.poverty_rate) >= cut).length,
     appalachia: app.map((r) => r.county_fips),
-    funders: funders.map((f) => ({ ein: f.ein, name: title(f.name), city: f.city ? title(f.city) : null, state: f.state, orgs: f.orgs, amount: Number(f.amount), inviteOnly: f.invite_only, grantees: (f.grantees ?? []).map(title) })),
+    funders: funders.map((f) => ({ ein: f.ein, name: title(f.name), city: f.city ? title(f.city) : null, state: f.state, orgs: f.orgs, amount: Number(f.amount), inviteOnly: f.invite_only, grantees: ((f.grantees ?? []) as { ein: string; name: string }[]).map((g) => ({ ein: g.ein, name: title(g.name) })).sort((a, b) => a.name.localeCompare(b.name)) })),
     funded: funded?.n ?? 0,
     orgs: results.map((r) => ({ ein: r.ein, name: title(r.name), city: r.city ? title(r.city) : null, state: r.state, text: [r.mission, r.programs].filter(Boolean).join(" ").slice(0, 220) })),
   };
@@ -174,7 +174,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v14", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v15", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

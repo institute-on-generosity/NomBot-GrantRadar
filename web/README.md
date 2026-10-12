@@ -34,7 +34,7 @@ npm run eval -- --no-judge   # only existing labels, no Claude calls
 
 Labels: people's 👍/👎 first, then Claude's judgments (cached in `eval/judgments.json`, committed so scores are stable). Needs `ANTHROPIC_API_KEY` for new judgments.
 
-Latest: **91% relevant** (`eval/results/2026-10-07-16-21.md`). The eval counts the strong matches (relevance ≥50) shown by default.
+Latest: **91% relevant**, median 7.2s, with Sonnet 5.5 scoring (`eval/results/2026-10-11-23-55.md`; Opus run: `2026-10-07-16-21.md`, median 14s). The eval counts the strong matches (relevance ≥50) shown by default.
 
 ## Research Buddy eval
 

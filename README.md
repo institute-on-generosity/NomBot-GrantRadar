@@ -23,7 +23,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Search** | **Suggestions** under the search box · **exact-mention** badges · compact rows: name, one grey line of facts (place, cause, spending, staff, volunteers), **one mission line**, **finance tags** (Growing/Shrinking, Surplus/Deficit, from the newest e-filed 990 when there is one; hover for the figures) · include tiny/inactive orgs · **CSV export** |
 | **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge · **where the money comes from** (Part VIII, government grants split out) · **this year vs last year** (Part I) · cash on hand, spending split (programs / admin / fundraising), liabilities · **leadership and governance**: paid leaders, board independence, audit and policy checklist (Parts IV, VI, VII) · IRS status · **financial health rating** (Strong / Medium / Weak) from fixed, visible rules |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover · one side panel with a **tab per source** that pushes the page aside (doesn't cover it), closed in one step |
-| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded; click a county to list its orgs; switch to **Gaps**: high-poverty counties (the poorest quarter of the map's counties, up to 20%; Census) with none of these orgs, listed beside the map; hovering a county on the map or in the list highlights it in both, hover its rate for a plain-language explanation), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants, plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves, donor-reliant; pick one to list the orgs) |
+| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded; click a county to list its orgs; switch to **Gaps**: high-poverty counties (the poorest quarter of the map's counties, up to 20%; Census) with none of these orgs, listed beside the map; hovering a county on the map or in the list highlights it in both, hover its rate for a plain-language explanation), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants; click one for the orgs here it paid and its profile; plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves, donor-reliant; pick one to list the orgs) |
 | **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
@@ -95,7 +95,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | Data | 5 states (WV, KY, TN, VA, OH) | All US |
 | ETL | Python, run by hand | GitHub Actions, monthly |
 | App | Next.js, `localhost` | Vercel |
-| LLM | Claude API (`@anthropic-ai/sdk`): parse, relevance scoring, Research Buddy; model via `LLM_MODEL` | Same |
+| LLM | Claude API (`@anthropic-ai/sdk`): parse and Research Buddy on Opus 5.5 (`LLM_MODEL`); relevance scoring and the AI overview on Sonnet 5.5 (`FAST_MODEL`) | Same |
 | Embeddings | nomic-embed-text (local, free) | Decide at cloud move: nomic or Voyage AI |
 
 No LangChain: switching Claude models is one env var. Pipeline: [`generosity-data`](https://github.com/institute-on-generosity/generosity-data).
@@ -120,13 +120,13 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Research Buddy built early** (Oct 6–7, planned Nov 16–22) | Fastest way to test the "reason over filings" idea |
 | **Appalachia region filter** (ZIP → county → ARC list) | State filters can't express "rural Appalachia" |
 | **Source viewers** for the IRS master file and SOI financials | Every number links to the exact row it came from |
-| **Search takes ~6–14s, not <2s** | Scoring costs time; results show in ~0.5s and re-sort when scores arrive |
+| **Search takes ~7s, not <2s** | Scoring costs time; results show in ~0.5s and re-sort when scores arrive. Oct 11: scoring and the AI overview moved to Sonnet 5.5, median 14s → 7.2s, relevance unchanged (91%) |
 | **Financial health** from SOI + the master file (trend = newer master-file revenue vs. newest SOI year) | Zoom-out feedback; only ~3K orgs have two SOI years, but 53K have a newer master-file revenue |
 | **FLAG diligence** on the org page (Financial, Legal and Governance, from 990 XML) | Oct 8 GSB philanthropy class (Nancy Lue, Valhalla): funders vet liquidity, reserves, growth, concentration, board and pay. Fixed, visible rules; no single AI verdict |
 | **Underserved areas** (Census SAIPE poverty + population by county) | Zoom-out feedback: show where need is high but matching groups are missing. Census file downloads, no API key; general poverty, not cause-specific need |
 
 ## Success metrics
-- ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~6–14s)
+- ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~7s median)
 - IoG uses it for real research by Dec 15
 - ≥3 positive external users
 - Every Research Buddy claim cited (**1 unsupported of 401** in the 30-question eval)
@@ -203,7 +203,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [ ] **API live**
 
 **Oct 26–Nov 1: Quality**
-- [x] 50-query eval, ≥90% relevant: **91%** (was 35%) · median ~14s, goal <2s
+- [x] 50-query eval, ≥90% relevant: **91%** (was 35%) · median ~7s (was ~14s), goal <2s
 
 **Nov 2–8: Web UI**
 - [ ] Search page, filters; IoG using it
