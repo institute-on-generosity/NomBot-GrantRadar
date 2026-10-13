@@ -16,7 +16,8 @@ export const Coins = (p: P) => <Svg {...p}><ellipse cx="12" cy="7" rx="6.5" ry="
 export const ListIcon = (p: P) => <Svg {...p}><path d="M9 6.5h11M9 12h11M9 17.5h11" /><circle cx="4.5" cy="6.5" r=".9" fill="currentColor" /><circle cx="4.5" cy="12" r=".9" fill="currentColor" /><circle cx="4.5" cy="17.5" r=".9" fill="currentColor" /></Svg>;
 export const Calendar = (p: P) => <Svg {...p}><rect x="4" y="5.5" width="16" height="14.5" rx="2.5" /><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" /></Svg>;
 export const Doc = (p: P) => <Svg {...p}><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5Z" /><path d="M13.5 3.5V8.5h5M9 13h6M9 16.5h4" /></Svg>;
-export const Phone = (p: P) => <Svg {...p}><path d="M6.6 3.5h2.6l1.4 4-1.9 1.3a10.5 10.5 0 0 0 5.5 5.5l1.3-1.9 4 1.4v2.6a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z" /></Svg>;
+// Phone: drawn 1 unit low; the handset's ink otherwise reads high beside text.
+export const Phone = (p: P) => <Svg {...p}><path transform="translate(0 1)" d="M6.6 3.5h2.6l1.4 4-1.9 1.3a10.5 10.5 0 0 0 5.5 5.5l1.3-1.9 4 1.4v2.6a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z" /></Svg>;
 export const Info = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5M12 7.8v.2" /></Svg>;
 export const Globe = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5Z" /></Svg>;
 export const MapIcon = (p: P) => <Svg {...p}><path d="m3.5 6.5 5.5-2.5 6 2.5 5.5-2.5v13.5l-5.5 2.5-6-2.5-5.5 2.5Z" /><path d="M9 4v13.5M15 6.5V20" /></Svg>;

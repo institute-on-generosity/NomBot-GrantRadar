@@ -897,7 +897,8 @@ main.check { max-width: 760px; }
 .check-report .rating ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 20px; font-size: 14px; }
 .check-report .rating li { display: flex; gap: 8px; align-items: baseline; color: var(--ink-2); }
 .check-report .rating li b { flex: none; width: 5.6em; font-weight: 500; color: var(--mute); }
-.check-report .rating li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; align-self: center; background: var(--g); opacity: .8; }
+.check-report /* Dot on the first line's cap height, so a note that wraps doesn't pull it down between lines */
+.rating li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; align-self: flex-start; margin-top: calc((1lh - 7px) / 2 + .75px); background: var(--g); opacity: .8; }
 .check-report .rating li.watch::before { background: #f5a524; } .check-report .rating li.weak::before { background: #e5484d; }
 .check-report .rating li.weak { color: #b4232a; }
 .check-prep ol { list-style: none; display: grid; gap: 8px; counter-reset: q; }
@@ -946,12 +947,13 @@ main h1:not(.hero h1), .funder-head h1 { margin-inline-start: -0.045em; }
 .fchip-main { padding-top: 5.25px; padding-bottom: 6.75px; }
 /* Icons beside text: down to the text's cap middle */
 .side-new > svg { translate: 0 .75px; }
-:is(.meta span, .fv-apply dt, .fv-apply h2, .fv-site, .fv-facts dt) > .ico { translate: 0 .75px; }
+:is(.meta span, .fv-apply dt, .fv-site, .fv-facts dt) > .ico { translate: 0 .75px; }
+.icon-sub span > .ico { translate: 0 .75px; }
 .why h2 .why-mark { translate: 0 1.5px; }
 /* Panel titles flush with the content under them; the sparkle's padding hangs into the gutter */
 .serp-rail .landscape h2, .landscape h2 { padding-left: 0; }
 .landscape .overview { padding-left: 0; padding-right: 0; }
-.landscape h2 > svg:first-child { margin-left: -2.5px; }
+.landscape h2 > svg:first-child { margin-left: -2.5px; translate: 0 .5px; }
 /* Funder card star: centred on the title's cap height (it sat 2.75px high) */
 .funder > .star { top: 23.75px; }
 /* How to apply: labels on the first line of their value, not the middle of a long paragraph */
@@ -968,3 +970,5 @@ main h1:not(.hero h1), .funder-head h1 { margin-inline-start: -0.045em; }
 /* Circles tab: giving circles nearby, each linking to its own site */
 .ls-circles a.ls-fname { cursor: pointer; }
 .ls-circles-intro { margin-top: 0; }
+/* Oct 13 optical pass */
+.check-form button { padding-bottom: 1.5px; } /* text sat 0.8px low in the 46px button */
