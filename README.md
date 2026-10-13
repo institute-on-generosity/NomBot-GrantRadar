@@ -14,7 +14,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 | **Why this funder?** | LLM reasons over the funder's grants, shows steps, cites every claim | Dec 6 | ✅ **Built Oct 7** (local) |
 | **Grant types** | Unrestricted vs. project vs. policy giving, read from grant purposes | — | ✅ **Built Oct 7** (local, from feedback) |
 | **Research Buddy** | Follow-up questions about the matched funders; cites each funder, opens its sheet | — | ✅ **Built Oct 7** (local, from feedback) |
-| **Landscape panel** | Beside the matches: **Overview** (AI summary, patterns, "Where to start"), **Breakdown**, **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month), **Peers** | — | ✅ **Built Oct 8** (local, from feedback) |
+| **Landscape panel** | Beside the matches: **Overview** (AI summary, patterns, "Where to start"), **Breakdown**, **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month), **Peers**, **Circles** (giving circles nearby) | — | ✅ **Built Oct 8** (local, from feedback); Circles Oct 13 |
 | **How funders will see you** | Look up your nonprofit (name or EIN): what a foundation will notice on your 990, and what to prepare | — | ✅ **Built Oct 8** (local, from the Oct 8 GSB class) |
 
 **A funder ranks high only if it already funded orgs like yours.**
@@ -54,6 +54,8 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 
 [Interactive diagram](docs/grantradar/architecture.html)
 
+> Diagram out of date: the landscape panel's **Circles** tab (generosity-data's `giving_circles` view) isn't drawn yet.
+
 **Hardest step:** grants list recipients by name + address, usually without an EIN. The matcher links them to `orgs` with a confidence score; weak links are excluded.
 
 ## Reused from NomBot
@@ -79,6 +81,7 @@ GrantRadar is NomBot plus a grants table.
 | IRS EO BMF | Orgs + funders (already loaded) | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI 990-PF | Foundation assets + giving | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | IRS 990 e-file XML (applicants' own 990) | "How funders will see you": prior year, cash, spending, board, policies, officers (`filing_flag`, 50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS EO BMF + SOI (giving circles) | 15 giving circles in the 5 states, found by name (Impact 100, 100 Who Care, women's funds, "giving circle"), grants paid (Part IX line 1); `giving_circles` view | generosity-data migration 013 |
 | Foundation sites | Contacts, deadlines (top ~500) | Public web |
 
 ## Roadmap
@@ -104,6 +107,7 @@ GrantRadar is NomBot plus a grants table.
 | **Research Buddy on `/grants`** (NomBot's panel, made configurable) | Oct 7 feedback ("for this one, especially"). Same rules and look; own conversation history |
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 | **Standalone app** on the `GrantRadar` branch (no NomBot toggle; `/` → `/grants`) | Oct 7 feedback: different audiences. NomBot's org pages stay, since funder sheets link to grantees |
+| **Circles** tab: giving circles in your state (or where groups like yours are), with grants paid and a link to each | Oct 12 feedback (Keith): nonprofits should know about pooled giving near them. Only circles that are their own nonprofit show; the big directory (Grapevine / Philanthropy Together) blocks bots, so wider coverage needs a data partnership |
 | **"How funders will see you"** (`/grants/check`): look up your nonprofit by name or EIN, see the diligence a foundation runs on your newest 990 and what to prepare | Oct 8 GSB philanthropy class: funders vet finances, board and pay before reading a proposal. Same fixed rules as NomBot's org page (`lib/flag.ts`) |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month; pick a month to list them), **Peers** (groups like yours with the most funders; click one to list the funders that paid it) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
 | **Deadlines read by rules**, not Claude (months, "12/31", "none" → any time) | 79% of filed deadline answers parse; instant and repeatable. Can't yet tell a scholarship deadline from a grant deadline |
@@ -138,6 +142,13 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 |---|---|
 | Applicants should see their 990 the way a funder does | ✅ **"How funders will see you"** (`/grants/check`): signals, "be ready to answer" cards, key numbers |
 | Ratings depend on definitions | ✅ Same fixed, visible rules as NomBot's org page (`lib/flag.ts`) |
+
+### Oct 12, 2026: IoG fellows meeting (Keith, Helen, Tyler, Muneeb)
+| Feedback | Plan |
+|---|---|
+| **Giving circles** (people pooling gifts, e.g. Latino Community Foundation's) aren't in 990-PF data | ✅ **Circles** tab from IRS records (15 in 5 states); next: ask Philanthropy Together and the 100 Who Care Alliance for their directories |
+| A deficit can be planned (crisis spending), not mismanagement | ✅ "How funders will see you": one deficit year is amber; the prep card asks what it paid for and whether it was planned |
+| Plain language for everyday readers | ✅ Plain labels (Income, Bottom line, Debts, Donations) and checklist sentences |
 
 **Next steps**
 - **Competitor scan:** Grant Guardian, a new grant-matching startup, Renaissance Philanthropy; state GrantRadar's unique value.

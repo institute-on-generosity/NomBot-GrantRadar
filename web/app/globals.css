@@ -965,3 +965,6 @@ main h1:not(.hero h1), .funder-head h1 { margin-inline-start: -0.045em; }
 .panel-head { padding-left: 24px; }
 .vc-list dt .dot { margin-left: -13px; }
 .vc-legend .dot { margin-left: -12px; }
+/* Circles tab: giving circles nearby, each linking to its own site */
+.ls-circles a.ls-fname { cursor: pointer; }
+.ls-circles-intro { margin-top: 0; }

@@ -28,14 +28,14 @@ export async function findOrgs(q: string): Promise<Found[]> {
 export type Check = { ein: string; name: string; place: string; d: Diligence; prepare: { topic: string; ask: string }[] };
 
 // What a program officer will likely ask about each concern, and what to have ready.
-const PREPARE: Record<string, string> = {
-  Revenue: "Explain the drop in revenue and what replaces it this year.",
-  Result: "Show how next year's budget closes the deficit.",
-  Cash: "Have a cash plan: months of runway today and your reserve goal.",
-  Liabilities: "Explain what you owe and how you'll pay it down.",
-  Funding: "Show you're widening your funding base: number of funders, earned income.",
-  Board: "Add independent board members, or explain who sits on the board and why.",
-  Insiders: "Disclose insider transactions and how the board reviewed them.",
+const PREPARE: Record<Signal["key"], string> = {
+  revenue: "Explain the drop in income and what replaces it this year.",
+  result: "Explain the deficit: what it paid for, whether it was planned, and how next year's budget covers it.",
+  cash: "Have a cash plan: months of spending you can cover today, and your reserve goal.",
+  debt: "Explain what you owe and how you'll pay it down.",
+  funding: "Show you're widening your funding base: number of funders, earned income.",
+  board: "Add independent board members, or explain who sits on the board and why.",
+  insiders: "Disclose dealings with your leaders and how the board reviewed them.",
 };
 
 export async function getCheck(einParam: string): Promise<Check | null> {
@@ -49,8 +49,8 @@ export async function getCheck(einParam: string): Promise<Check | null> {
   const d = diligence(f as FlagRow, `https://projects.propublica.org/nonprofits/organizations/${ein}/${f.object_id}/full`);
   const concerns = d.rating.signals.filter((s: Signal) => s.level !== "ok").sort((a, b) => Number(a.level === "watch") - Number(b.level === "watch")); // weak first
   const prepare = [
-    ...concerns.map((s) => ({ topic: `${s.label}: ${s.note}`, ask: PREPARE[s.label] })),
-    ...d.checks.filter((c) => !c.ok && !c.minor).map((c) => ({ topic: c.label.replace(/^No /, "Reports ").replace("Financial statements audited", "Financial statements not audited").replace(/ policy$/, " policy missing"), ask: c.label.includes("audited") ? "Get an audit or an independent review; most foundations expect one at your size." : c.label.includes("policy") ? `Adopt a ${c.label.toLowerCase().replace(/^no /, "")} and note it in your next 990.` : "Be ready to explain this and how the board handled it." })),
+    ...concerns.map((s) => ({ topic: `${s.label}: ${s.note}`, ask: PREPARE[s.key] })),
+    ...d.checks.filter((c) => !c.ok && !c.minor).map((c) => ({ topic: c.label, ask: c.key === "audited" ? "Get an audit or an independent review; most foundations expect one at your size." : c.key.endsWith("_policy") ? "Adopt the policy and note it in your next 990." : "Be ready to explain this and how the board handled it." })),
   ];
   return { ein: `${ein.slice(0, 2)}-${ein.slice(2)}`, name: titleCase(o.name), place: [o.city && titleCase(o.city), o.state].filter(Boolean).join(", "), d, prepare };
 }

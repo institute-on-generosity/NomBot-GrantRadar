@@ -22,11 +22,14 @@ export type Winner = { ein: string; name: string; place: string; funders: number
 export type AskBand = { label: string; grants: number; p25: number; median: number; p75: number };
 // Open funders by the month their 990-PF names as a deadline (n: rank in the list).
 export type Calendar = { months: { label: string; funders: { n: number; ein: string; name: string; typical: number | null }[] }[]; anytime: number; quarterly: number; unclear: number; now: number };
+// Giving circles (people pooling gifts and voting on grants) based where your peers are: they don't file
+// a 990-PF, so they never show up as matched funders. generosity-data's giving_circles view (IRS names).
+export type Circle = { ein: string; name: string; place: string; state: string; kind: string; grantsPaid: number | null; website: string | null };
 export type GrantLandscape = {
   funders: FunderMatch[]; total: number; peers: number;
   open: number; toPeers: number; topShare: number | null; // share of those dollars from the 3 biggest givers
   sizes: Bar[]; policy: Bar[]; types: Bar[]; homes: Bar[]; winners: Winner[];
-  ask: AskBand[]; calendar: Calendar;
+  ask: AskBand[]; calendar: Calendar; circles: Circle[]; circleStates: string[];
 };
 
 const place = (city: string | null, state: string | null) => [city && titleCase(city), state].filter(Boolean).join(", ");
@@ -54,10 +57,15 @@ export async function grantLandscape(mission: string, filters: MatchFilters): Pr
   }
 
   // Grantee budgets (IRS master file revenue) and funder deadlines, for every match.
-  const [{ rows: revs }, { rows: dls }] = await Promise.all([
+  // Circles in your state (the filter), else in the states where most groups like yours are.
+  const peerStates = tally(funders.flatMap((f) => f.evidence).map((e) => e.state ?? "").filter(Boolean), 3).map((b) => b.label);
+  const circleStates = filters.state ? [filters.state] : peerStates;
+  const [{ rows: revs }, { rows: dls }, { rows: circ }] = await Promise.all([
     db.query(`SELECT ein, revenue_amt FROM orgs WHERE ein = ANY($1) AND revenue_amt > 0`, [[...byPeer.keys()]]),
     db.query(`SELECT ein, apply_deadlines FROM funders WHERE ein = ANY($1)`, [funders.map((f) => f.ein)]),
+    db.query(`SELECT ein, name, city, state, kind, grants_paid, website FROM giving_circles WHERE state = ANY($1) ORDER BY grants_paid DESC NULLS LAST, revenue DESC NULLS LAST`, [circleStates]),
   ]);
+  const circles: Circle[] = circ.map((c) => ({ ein: c.ein, name: titleCase(c.name), place: place(c.city, c.state), state: c.state, kind: c.kind, grantsPaid: c.grants_paid == null ? null : Number(c.grants_paid), website: c.website }));
   const revenue = new Map(revs.map((r) => [r.ein as string, Number(r.revenue_amt)]));
   const ask = REVENUE_BANDS.map(([label, lo, hi]): AskBand | null => {
     const amounts = funders.flatMap((f) => f.evidence).filter((e) => e.amount && e.amount > 0 && revenue.has(e.ein) && revenue.get(e.ein)! >= lo && revenue.get(e.ein)! < hi).map((e) => e.amount!).sort((a, b) => a - b);
@@ -77,7 +85,7 @@ export async function grantLandscape(mission: string, filters: MatchFilters): Pr
 
   const typicals = funders.map((f) => f.typical).filter((x): x is number => x != null);
   return {
-    ask, calendar,
+    ask, calendar, circles, circleStates,
     funders, total, peers, toPeers,
     open: funders.filter((f) => !f.inviteOnly).length,
     topShare: funders.length > 3 && toPeers > 0 ? top3 / toPeers : null,

@@ -70,7 +70,7 @@ async function Report({ ein }: { ein: string }) {
 
       <section className="rating">
         <h3>What they&apos;ll see first</h3>
-        <ul>{signals.map((x) => <li key={x.label} className={x.level}><b>{x.label}</b>{x.note}</li>)}</ul>
+        <ul>{signals.map((x) => <li key={x.key} className={x.level}><b>{x.label}</b>{x.note}</li>)}</ul>
       </section>
 
       <section className="check-prep">

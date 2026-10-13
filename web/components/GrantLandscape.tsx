@@ -4,7 +4,7 @@ import { CalendarChart } from "./CalendarChart";
 import { GrantOverview, GrantOverviewSkeleton } from "./GrantOverview";
 import { LandscapeTabs } from "./LandscapeTabs";
 import { money } from "@/lib/filters";
-import { grantLandscape, grantOverview, type AskBand, type Bar, type GrantLandscape as Landscape } from "@/lib/grantLandscape";
+import { grantLandscape, grantOverview, type AskBand, type Bar, type Circle, type GrantLandscape as Landscape } from "@/lib/grantLandscape";
 import { money as dollars } from "./money";
 import type { MatchFilters } from "@/lib/grants";
 
@@ -12,7 +12,8 @@ const first = (node: React.ReactNode) => ({ key: "overview", label: "Overview", 
 export const GrantLandscapeSkeleton = () => <LandscapeTabs views={[first(<GrantOverviewSkeleton />)]} />;
 
 // Zoom out over the matched funders: an AI overview, how they give (sizes, policy, grant types,
-// where they're based), what to ask for, when to apply, and which groups like yours they fund most.
+// where they're based), what to ask for, when to apply, which groups like yours they fund most, and
+// giving circles nearby (pooled giving that no 990-PF shows).
 export async function GrantLandscape({ mission, filters }: { mission: string; filters: MatchFilters }) {
   const l = await grantLandscape(mission, filters);
   const overview = first(<Suspense fallback={<GrantOverviewSkeleton />}><Overview mission={mission} l={l} /></Suspense>);
@@ -51,6 +52,7 @@ export async function GrantLandscape({ mission, filters }: { mission: string; fi
           </ul>
         ) : <p className="ls-note">No group like yours is funded by more than one of these foundations.</p>
       ) },
+      { key: "circles", label: "Circles", title: "Giving circles nearby", sub: l.circleStates.join(", "), node: <Circles circles={l.circles} /> },
     ]} />
   );
 }
@@ -104,5 +106,27 @@ function AskChart({ bands }: { bands: AskBand[] }) {
       <div className="ask-axis" aria-hidden><span />{ticks.map((t) => <small key={t} style={{ left: x(t) }}>{dollars(t)}</small>)}<span /></div>
       <p className="ls-note">Bar: middle half of grants · dot: median. Find your budget row for a realistic ask.</p>
     </div>
+  );
+}
+
+// Giving circles: groups of people who pool their gifts and vote on where they go. Most pick grantees by
+// member nomination, so the way in is a member or the circle's own site, not a grant portal.
+function Circles({ circles }: { circles: Circle[] }) {
+  return (
+    <>
+      <p className="ls-note ls-circles-intro">Groups of people who pool their gifts and vote on where they go. Most choose groups that members nominate, so reach out before their yearly grant cycle.</p>
+      {circles.length ? (
+        <ul className="ls-funders ls-circles">
+          {circles.map((c) => (
+            <li key={c.ein}>
+              {c.website ? <a className="ls-fname" href={`https://${c.website}`} target="_blank" rel="noreferrer">{c.name} ↗</a> : <span className="ls-fname">{c.name}</span>}
+              <span className="ls-fmeta">{c.kind} · {c.place}</span>
+              <span className="ls-fstat">{c.grantsPaid ? <><b>{money(c.grantsPaid)}</b> in grants</> : "Grants not on file"}</span>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="ls-note">No giving circles found here in IRS records.</p>}
+      <p className="ls-note">From IRS records, so only circles that are their own nonprofit show. Many are run by a community foundation; ask yours.</p>
+    </>
   );
 }
