@@ -44,7 +44,7 @@ export async function grantBuddyContext(mission: string, filters: MatchFilters =
       d?.apply.restrictions && `Restrictions: ${clip(d.apply.restrictions)}`,
       mixLine(m.mix ?? undefined),
       d?.byState.length ? `Where its grants go: ${d.byState.map((s) => `${s.state} ${money(s.amount)}`).join(", ")}` : null,
-      `Groups like yours it funded: ${m.evidence.slice(0, 5).map((e) => `${titleCase(e.recipient)} (${[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}): ${money(e.amount)}${e.purpose ? ` — ${clip(e.purpose, 120)}` : ""}`).join("; ")}`,
+      `Groups like yours it funded: ${m.evidence.slice(0, 5).map((e) => `${titleCase(e.recipient)} (${[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}): ${money(e.amount)}${e.years > 1 ? ` (paid in ${e.years} tax years)` : ""}${e.purpose ? ` — ${clip(e.purpose, 120)}` : ""}`).join("; ")}`,
     ].filter(Boolean).join("\n");
   });
   const context = `Nonprofit's mission: ${mission}\n\nFoundations (top ${funders.length} by fit):\n\n${blocks.join("\n\n")}`;

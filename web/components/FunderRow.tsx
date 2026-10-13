@@ -37,7 +37,7 @@ export function FunderRow({ f, index, href, state }: { f: FunderMatch; index: nu
             {like.map((e) => (
               <li key={e.grantId} className={e.fit >= 85 ? "fit-same" : "fit-close"} title={`${e.fit >= 85 ? "Same kind of work" : "Closely related work"} · match ${e.fit}/100`}>
                 <span className="grantee-name">{titleCase(e.recipient)}</span>
-                <span className="grantee-place">{[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}</span>
+                <span className="grantee-place">{[e.city && titleCase(e.city), e.state].filter(Boolean).join(", ")}{e.years > 1 && <> · {e.years} years</>}</span>
                 <span className="grantee-amt">{e.amount != null ? money(e.amount) : "—"}</span>
               </li>
             ))}

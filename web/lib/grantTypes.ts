@@ -5,7 +5,6 @@
 //   unknown: uninformative ("donation", "support", a bare cause like "education")
 // Deterministic keyword rules (no Claude): fast, offline, and the same answer every time.
 import { db } from "./db";
-import { memo } from "./memo";
 
 export type GrantType = "general" | "program" | "policy" | "unknown";
 
@@ -53,15 +52,16 @@ function finish(m: Omit<GrantMix, "lean">): GrantMix {
 
 const empty = () => ({ general: 0, program: 0, policy: 0, unknown: 0 });
 
-// Every funder's mix, built once from the distinct purposes (~23K) and cached for a day.
-const cached = memo<Map<string, GrantMix>>("grants:types:v1", 1, 24 * 3600_000);
-export function grantMixes(): Promise<Map<string, GrantMix>> {
-  return cached("all", async () => {
+// The mix for the funders on screen (every year loaded), from their distinct purposes. Purpose
+// classifications are kept across calls: the same phrases ("general support") repeat everywhere.
+const types = new Map<string, GrantType>();
+export async function grantMixes(eins: string[]): Promise<Map<string, GrantMix>> {
+  {
     const { rows } = await db.query(
       `SELECT funder_ein, purpose, count(*)::int AS n, coalesce(sum(amount) FILTER (WHERE amount > 0), 0)::float8 AS amount
-       FROM grants GROUP BY 1, 2`);
+       FROM grants WHERE funder_ein = ANY($1) GROUP BY 1, 2`, [eins]);
     const acc = new Map<string, Omit<GrantMix, "lean">>();
-    const types = new Map<string, GrantType>();
+    if (types.size > 200_000) types.clear();
     for (const r of rows) {
       const key = r.purpose ?? "";
       if (!types.has(key)) types.set(key, classifyPurpose(r.purpose));
@@ -71,7 +71,7 @@ export function grantMixes(): Promise<Map<string, GrantMix>> {
       acc.set(r.funder_ein, m);
     }
     return new Map([...acc].map(([ein, m]) => [ein, finish(m)]));
-  });
+  }
 }
 
 export const LEAN_LABEL = { general: "Mostly unrestricted", program: "Mostly project grants", policy: "Mostly policy" } as const;

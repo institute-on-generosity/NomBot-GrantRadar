@@ -16,7 +16,8 @@ export const SIZES = { small: [0, 5_000], mid: [5_000, 25_000], large: [25_000, 
 export type Size = keyof typeof SIZES;
 
 export type MatchFilters = { state?: string; open?: boolean; size?: Size; type?: "general" | "program" };
-export type Evidence = { grantId: number; recipient: string; ein: string; city: string | null; state: string | null; amount: number | null; purpose: string | null; year: number | null; fit: number }; // fit: 0-100, how alike its work is
+// fit: 0-100, how alike its work is; years: how many tax years (of those loaded) the funder paid this grantee
+export type Evidence = { grantId: number; recipient: string; ein: string; city: string | null; state: string | null; amount: number | null; purpose: string | null; year: number | null; fit: number; years: number };
 export type FunderMatch = {
   ein: string; name: string; city: string | null; state: string | null;
   assets: number | null; grantsPaid: number | null; grantCount: number; inviteOnly: boolean;
@@ -44,7 +45,7 @@ async function peerGrants(mission: string): Promise<Row[]> {
   );
   return rows;
 }
-const cachedPeers = memo<Row[]>("grants:peers", 200, 24 * 3600_000);
+const cachedPeers = memo<Row[]>("grants:peers:v2", 200, 24 * 3600_000); // v2: every US foundation, several years
 
 export async function matchFunders(mission: string, f: MatchFilters = {}, limit = 20): Promise<{ funders: FunderMatch[]; total: number; peers: number }> {
   const candidates = await cachedPeers(mission.toLowerCase().replace(/\s+/g, " ").trim(), () => peerGrants(mission));
@@ -63,15 +64,20 @@ export async function matchFunders(mission: string, f: MatchFilters = {}, limit 
             (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
      FROM funders f WHERE f.ein = ANY($1)`,
     [[...byFunder.keys()], f.state ?? ""],
-  ), grantMixes()]);
+  ), grantMixes([...byFunder.keys()])]);
 
   const scored: FunderMatch[] = info.map((x) => {
     const gs = byFunder.get(x.ein)!;
     const best = new Map<string, Row>(); // strongest grant per grantee
-    for (const g of gs) if (!best.has(g.recipient_ein) || Number(g.amount ?? 0) > Number(best.get(g.recipient_ein)!.amount ?? 0)) best.set(g.recipient_ein, g);
+    const years = new Map<string, Set<number>>(); // tax years it paid each grantee: repeat funding is a strong signal
+    for (const g of gs) {
+      if (!best.has(g.recipient_ein) || Number(g.amount ?? 0) > Number(best.get(g.recipient_ein)!.amount ?? 0)) best.set(g.recipient_ein, g);
+      if (g.tax_year != null) years.set(g.recipient_ein, (years.get(g.recipient_ein) ?? new Set()).add(g.tax_year));
+    }
     const evidence = [...best.values()].map((g): Evidence => ({
       grantId: g.grant_id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state,
       amount: g.amount == null ? null : Number(g.amount), purpose: g.purpose, year: g.tax_year, fit: fitOf(g.recipient_ein),
+      years: years.get(g.recipient_ein)?.size ?? 1,
     })).sort((a, b) => b.fit - a.fit || (b.amount ?? 0) - (a.amount ?? 0));
     // Closer grantees count much more than loose ones: ((fit - 50) / 50)^2, summed (70 -> 0.16, 85 -> 0.49, 100 -> 1).
     const score = evidence.reduce((s, e) => s + ((e.fit - 50) / 50) ** 2, 0);
@@ -109,11 +115,12 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
   const [{ rows: [f] }, { rows: gs }, { rows: st }, mixes] = await Promise.all([
     db.query(`SELECT f.*, (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
               FROM funders f WHERE f.ein = $1`, [ein]),
+    // The grant list and states come from its newest return (the one "Paid out" and the grant count describe).
     db.query(`SELECT id, recipient_name, recipient_ein, recipient_city, recipient_state, amount, purpose FROM grants
-              WHERE funder_ein = $1 ORDER BY amount DESC NULLS LAST, id LIMIT 400`, [ein]),
+              WHERE funder_ein = $1 AND object_id = (SELECT object_id FROM funders WHERE ein = $1) ORDER BY amount DESC NULLS LAST, id LIMIT 400`, [ein]),
     db.query(`SELECT recipient_state AS state, count(*)::int AS count, coalesce(sum(amount), 0)::bigint AS amount FROM grants
-              WHERE funder_ein = $1 AND recipient_state IS NOT NULL GROUP BY 1 ORDER BY 3 DESC LIMIT 8`, [ein]),
-    grantMixes(),
+              WHERE funder_ein = $1 AND object_id = (SELECT object_id FROM funders WHERE ein = $1) AND recipient_state IS NOT NULL GROUP BY 1 ORDER BY 3 DESC LIMIT 8`, [ein]),
+    grantMixes([ein]),
   ]);
   if (!f) return null;
   const n = (v: unknown) => (v == null ? null : Number(v));

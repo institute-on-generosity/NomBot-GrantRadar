@@ -10,7 +10,8 @@ export const LOADED_STATES: [string, string][] = [["WV", "West Virginia"], ["KY"
 export const BUDGETS = [100_000, 250_000, 500_000, 1_000_000, 5_000_000];
 export const CAUSES = ["A", "B", "C", "D", "E", "F", "I", "J", "K", "L", "N", "O", "P", "S", "T", "X"];
 
-export const money = (n: number) => (n >= 1e6 ? `$${+(n / 1e6).toFixed(1)}M` : `$${Math.round(n / 1e3)}K`);
+// Short dollars: $2.5M, $15K, and exact under $1K (a $350 typical grant isn't "$0K").
+export const money = (n: number) => (n >= 999_500 ? `$${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${Math.round(n)}`);
 export const reqSlug = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 export const causeLabel = (code: string) => nteeLabel(code) ?? code;
 const stateName = (code: string) => LOADED_STATES.find(([c]) => c === code)?.[1] ?? code;

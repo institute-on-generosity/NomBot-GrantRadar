@@ -98,8 +98,8 @@ GrantRadar is NomBot plus a grants table.
 | Change | Why |
 |---|---|
 | **Built Oct 7** (planned Nov 23–Dec 6) | NomBot finished early; GrantRadar reuses its app, data and Research Buddy |
-| **How to apply + "Invitation only"** from Part XV 2a–d | 5,582 of 8,030 foundations only give to preselected charities; applicants need to know before writing |
-| **Matcher favors precision**: 51% linked, below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
+| **How to apply + "Invitation only"** from Part XV 2a–d | 95,947 of 135,407 US foundations (71%) only give to preselected charities; applicants need to know before writing |
+| **Matcher favors precision**: 56% linked (was 51%), below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
 | **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
 | **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
@@ -107,6 +107,7 @@ GrantRadar is NomBot plus a grants table.
 | **Research Buddy on `/grants`** (NomBot's panel, made configurable) | Oct 7 feedback ("for this one, especially"). Same rules and look; own conversation history |
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 | **Standalone app** on the `GrantRadar` branch (no NomBot toggle; `/` → `/grants`) | Oct 7 feedback: different audiences. NomBot's org pages stay, since funder sheets link to grantees |
+| **National 990-PFs, 3 IRS years, built early** (planned Dec 7–13): 135,407 foundations, 4.84M grants (tax years mostly 2022–2024) | Only 43% of linked grants into the 5 states come from a same-state foundation: out-of-state funders were missing. Several years show **repeat funding** ("· 2 years" beside a grantee). Funder sheets list the newest return's grants. AmazonSmile-style pass-throughs (50,000+ grants on one return) are skipped |
 | **Circles** tab: giving circles in your state (or where groups like yours are), with grants paid and a link to each | Oct 12 feedback (Keith): nonprofits should know about pooled giving near them. Only circles that are their own nonprofit show; the big directory (Grapevine / Philanthropy Together) blocks bots, so wider coverage needs a data partnership |
 | **"How funders will see you"** (`/grants/check`): look up your nonprofit by name or EIN, see the diligence a foundation runs on your newest 990 and what to prepare | Oct 8 GSB philanthropy class: funders vet finances, board and pay before reading a proposal. Same fixed rules as NomBot's org page (`lib/flag.ts`) |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month; pick a month to list them), **Peers** (groups like yours with the most funders; click one to list the funders that paid it) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
@@ -115,7 +116,7 @@ GrantRadar is NomBot plus a grants table.
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
 - ≥70% of matches rated relevant
-- ≥70% of grants linked to a recipient (**51%** so far, in-state recipients)
+- ≥70% of grants linked to a recipient (**56%** so far, recipients in the 5 states)
 - Results <3s (**~0.5s** cached, ~2–5s new mission); every explanation cited
 - Adds <$50/mo
 
@@ -169,10 +170,10 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 - [x] `grants` + `funders` migration (generosity-data `007`)
 - [x] Part XV extractor (`etl/load_grants.py`): grants paid + how to apply + invitation-only flag
 - [x] 990-PF financials: assets and grants paid, read from the 990-PF itself
-- [x] 5-state grants loaded: **8,030 foundations, 102,725 grants**
+- [x] Grants loaded: **every US foundation, 2023–2025 IRS years: 135,407 foundations, 4.84M grants** (was 5 states, one year: 8,030 / 102,725)
 
 **Nov 30–Dec 6: Local proof of concept**
-- [ ] Recipient matcher (≥70% linked): **51%** of grants to recipients in the 5 states (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere)
+- [ ] Recipient matcher (≥70% linked): **56%** of grants to recipients in the 5 states (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere)
 - [x] Funder ranking
 - [x] `/grants` match page
 - [x] "Why this funder?" (streams, cites each grant)
@@ -183,7 +184,7 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 - [x] **Demo works locally**
 
 **Dec 7–13: Cloud**
-- [ ] National 990-PF load
+- [x] National 990-PF load (done Oct 13, locally)
 - [ ] GrantRadar live (own deploy, or `/grants` on NomBot's)
 - [ ] Logins + saved matches (in-browser **Starred funders** and **Recent missions** already work; logins will sync them)
 
