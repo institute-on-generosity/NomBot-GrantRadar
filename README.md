@@ -84,6 +84,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | IRS SOI extract | Revenue, expenses, assets (~300K orgs) | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | Census SAIPE + population estimates | County poverty, income, population (3,144 counties) | [census.gov](https://www.census.gov/programs-surveys/saipe.html) |
 | IRS 990 e-file XML | Mission + program text (embeddings); website (28,843 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS 990-PF e-file XML | Who funds these orgs (Funders tab): every US foundation, 2023–2025 IRS years (135,407 foundations, 4.84M grants; shared with GrantRadar) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | NCCS NTEE | Cause categories | [nccs](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
 | ProPublica API | Per-org detail, on demand | [propublica](https://projects.propublica.org/nonprofits/api) |
 

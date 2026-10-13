@@ -174,7 +174,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v15", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v17", 200, 3600_000);
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }
