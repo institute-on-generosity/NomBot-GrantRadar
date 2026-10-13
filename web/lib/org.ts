@@ -12,6 +12,7 @@ export async function getOrg(einParam: string) {
   if (!o) return null;
   const { rows: [t] } = await db.query(
     "SELECT object_id, tax_year, form, mission, programs, employees, volunteers FROM filing_text WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
+  const { rows: [w] } = await db.query("SELECT website FROM filing_text WHERE ein = $1 AND website IS NOT NULL ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
   const { rows: fin } = await db.query(
     "SELECT tax_year, form, revenue, expenses, assets, raw FROM financials WHERE ein = $1 ORDER BY tax_year DESC", [ein]);
   const { rows: [flagRow] } = await db.query("SELECT * FROM filing_flag WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
@@ -44,6 +45,8 @@ export async function getOrg(einParam: string) {
     subsection: o.subsection as string | null,
     ruling: o.ruling ? String(o.ruling).slice(0, 4) : null,
     ntee: o.ntee_cd ? { code: o.ntee_cd as string, label: nteeLabel(o.ntee_cd) } : null,
+    // The organization's own site as it lists it on its 990 header, so donors can look for themselves.
+    website: w?.website as string | null ?? null,
     mission: t?.mission as string | null ?? null,
     programs: t?.programs as string | null ?? null,
     filing: t ? { year: t.tax_year as number, form: t.form as string, url: src[0]?.url } : null,

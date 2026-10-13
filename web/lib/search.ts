@@ -8,7 +8,7 @@ import { sources, type Source } from "./sources";
 export type Requirement = { label: string; pattern: string }; // pattern: Postgres/JS regex alternation
 export type Sort = "match" | "largest" | "smallest";
 export type SearchInput = {
-  q: string; semantic?: string; states?: string[]; cities?: string[]; appalachia?: boolean; maxRevenue?: number; ntee?: string; nteeHint?: string;
+  q: string; semantic?: string; states?: string[]; cities?: string[]; appalachia?: boolean; maxRevenue?: number; minRevenue?: number; ntee?: string; nteeHint?: string;
   requirements?: Requirement[]; includeInactive?: boolean; sort?: Sort; limit?: number; offset?: number;
 };
 
@@ -47,7 +47,7 @@ export function orgHealth(r: any): Health | null {
   return { trend, margin: rev > 0 ? (rev - exp) / rev : null, year: r.fin_year, revenue: rev, expenses: exp, reserveMonths: exp > 0 && net != null ? net / (exp / 12) : null, reserveBasis: "net assets" };
 }
 
-export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
@@ -91,6 +91,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
                    ELSE NOT EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(raw_mission, '') || ' ' || coalesce(programs, '') !~* p) END AS exact
        FROM v
        WHERE ($5::bigint IS NULL OR rev <= $5)
+         AND ($15::bigint IS NULL OR rev >= $15)
          AND ($9 OR rev IS NULL OR rev > 0))   -- hide $0 / inactive orgs unless asked
      SELECT *, coalesce(sim, 0) + least(kw * 5, 0.5)
               + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END AS score,  -- guessed cause: a nudge, not a filter
@@ -101,7 +102,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null],
   );
   return {
     total: Number(rows[0]?.total ?? 0),

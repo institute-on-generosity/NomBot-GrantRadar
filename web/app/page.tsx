@@ -16,10 +16,11 @@ import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { EXAMPLES } from "@/lib/examples";
-import { applyOverrides, BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
+import { applyOverrides, BUDGETS, MIN_BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
+import { PrintButton, PrintStamp } from "@/components/PrintButton";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string } & Overrides;
 type SearchParams = Promise<Params>;
@@ -59,7 +60,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, cause: p.cause, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, drop: p.drop };
   const filters = applyOverrides(await parseQuestion(question), overrides);
   // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
   const res = await searchCandidates(filters, { includeInactive, limit: n });
@@ -76,7 +77,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
       <div className="serp-head">
         <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
-        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", cause: "", drop: "", n: "" }) : undefined} />
+        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", min: "", cause: "", drop: "", n: "" }) : undefined} />
       </div>
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
@@ -103,12 +104,14 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <div className="more">
         {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
+        <PrintButton label="Print summary" />
         <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
         <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
       </div>
       <Footer />
       </div>
       </div>
+      <PrintStamp />
     </>
   );
 }
@@ -184,11 +187,13 @@ function filterChips(f: Filters, p: Params): Chip[] {
         ...LOADED_STATES.map(([code, name]) => ({ label: name, href: go({ st: code }), on: !f.cities.length && !f.appalachia && f.states.length === 1 && f.states[0] === code }))],
     },
     {
-      key: "budget", kind: f.maxRevenue ? "set" : "unset",
-      label: f.maxRevenue ? `Under ${money(f.maxRevenue)}` : "Any size",
-      removeHref: f.maxRevenue ? go({ max: "none" }) : undefined,
-      options: [{ label: "Any size", href: go({ max: "none" }), on: !f.maxRevenue },
-        ...BUDGETS.map((b) => ({ label: `Under ${money(b)}`, href: go({ max: String(b) }), on: f.maxRevenue === b }))],
+      key: "budget", kind: f.maxRevenue || f.minRevenue ? "set" : "unset",
+      label: f.maxRevenue ? `Under ${money(f.maxRevenue)}` : f.minRevenue ? `${money(f.minRevenue)} or more` : "Any size",
+      removeHref: f.maxRevenue || f.minRevenue ? go({ max: "none", min: "none" }) : undefined,
+      options: [{ label: "Any size", href: go({ max: "none", min: "none" }), on: !f.maxRevenue && !f.minRevenue },
+        ...BUDGETS.map((b) => ({ label: `Under ${money(b)}`, href: go({ max: String(b), min: "" }), on: f.maxRevenue === b })),
+        // Larger, established organizations: for a small gift, less to check before giving.
+        ...MIN_BUDGETS.map((b, i) => ({ label: `${money(b)} or more`, href: go({ min: String(b), max: "" }), on: f.minRevenue === b, note: i === 0 ? "Established. Good for a small gift" : undefined }))],
     },
     {
       key: "cause", kind: f.ntee ? "set" : "unset",

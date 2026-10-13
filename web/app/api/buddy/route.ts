@@ -11,7 +11,7 @@ import { claude, LLM_MODEL } from "@/lib/llm";
 const body = z.object({
   question: z.string().trim().min(1).max(300),
   ask: z.string().trim().min(1).max(1000),
-  overrides: z.object({ st: z.string(), city: z.string(), region: z.string(), max: z.string(), cause: z.string(), drop: z.string() }).partial().optional(),
+  overrides: z.object({ st: z.string(), city: z.string(), region: z.string(), max: z.string(), min: z.string(), cause: z.string(), drop: z.string() }).partial().optional(),
   all: z.boolean().optional(),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(8000) })).max(12).optional(),
 });

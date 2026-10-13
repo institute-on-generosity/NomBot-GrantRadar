@@ -8,6 +8,7 @@ import { BackLink } from "@/components/BackLink";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
+import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase } from "@/components/text";
 import { getOrg, type Income } from "@/lib/org";
 import { prettyTitle, type Diligence } from "@/lib/flag";
@@ -51,10 +52,11 @@ async function Org({ params, searchParams, modal }: Props) {
         : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
         : <BackLink fallback="/">← Back</BackLink>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
-      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /></div>
+      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} />{!modal && <PrintButton />}</div>
       <p className="sub">
         {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
+        {o.website && <> · <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title="Their website, as listed on their Form 990">{o.website.replace(/^www\./, "").replace(/\/.*$/, "")} ↗</a></>}
       </p>
       {o.team && <Team {...o.team} />}
 
@@ -76,7 +78,7 @@ async function Org({ params, searchParams, modal }: Props) {
         <h2>Finances</h2>
         {o.years.length ? (
           <table>
-            <thead><tr><th>Year</th><th className="n">Revenue</th><th className="n">Expenses</th><th className="n">Assets</th><th>Source</th></tr></thead>
+            <thead><tr><th>Year</th><th className="n">Income</th><th className="n">Spending</th><th className="n">Assets</th><th>Source</th></tr></thead>
             <tbody>
               {o.years.map((y) => (
                 <tr key={`${y.year}-${y.source}`}>
@@ -114,6 +116,7 @@ async function Org({ params, searchParams, modal }: Props) {
           {o.sources.map((s) => <li key={s.url}>{s.internal ? <NavLink href={modal ? previewWithSource(o.ein, s.url) : s.url} replace={modal} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a>}<span>{s.detail}</span></li>)}
         </ul>
       </section>
+      <PrintStamp />
     </article>
   );
 }
@@ -150,7 +153,7 @@ function IncomeMix({ i }: { i: Income }) {
       </ul>
       {i.gifts >= 0.7 && (() => {
         const gov = i.parts.find((p) => p.key === "gov")?.amount ?? 0;
-        return <p className="income-note">Relies on grants and gifts: {Math.round(i.gifts * 100)}% of revenue{gov > 0 && <>, {pct(gov)} from government</>}. Ask how many funders give most of it.</p>;
+        return <p className="income-note">Relies on grants and gifts: {Math.round(i.gifts * 100)}% of income{gov > 0 && <>, {pct(gov)} from government</>}. Ask how many funders give most of it.</p>;
       })()}
     </div>
   );
@@ -160,13 +163,14 @@ const change = (now: number, before: number | null) => (before && before > 0 ? (
 const pctText = (x: number) => `${x > 0 ? "+" : "−"}${Math.abs(Math.round(x * 100))}%`;
 
 // This year vs last year from the same 990 (Part I), then three plain liquidity and spending figures.
+// The spending split isn't colored: a low program share often means fair pay and good systems, not waste.
 function YearOverYear({ d }: { d: Diligence }) {
   const rows = d.compare.filter((c) => c.before != null);
   const facts = [
-    d.cashMonths != null && { k: "Cash on hand", v: d.cashMonths >= 12 ? `${(d.cashMonths / 12).toFixed(1)} years of spending` : `${Math.max(0, Math.round(d.cashMonths))} ${Math.round(d.cashMonths) === 1 ? "month" : "months"} of spending`, bad: d.cashMonths < 3 },
-    d.spending ? { k: "Spending", v: `${Math.round(d.spending.program * 100)}% programs · ${Math.round(d.spending.admin * 100)}% admin · ${Math.round(d.spending.fundraising * 100)}% fundraising`, bad: d.spending.program < 0.65 }
-      : d.programShare != null && { k: "Spent on programs", v: `${Math.round(d.programShare * 100)}% of expenses`, bad: d.programShare < 0.65 },
-    d.debtShare != null && { k: "Liabilities", v: `${Math.round(d.debtShare * 100)}% of assets`, bad: d.debtShare > 0.5 },
+    d.cashMonths != null && { k: "Cash", v: d.cashMonths >= 12 ? `${(d.cashMonths / 12).toFixed(1)} years of spending` : `${Math.max(0, Math.round(d.cashMonths))} ${Math.round(d.cashMonths) === 1 ? "month" : "months"} of spending`, bad: d.cashMonths < 3 },
+    d.spending ? { k: "Spending", v: `${Math.round(d.spending.program * 100)}% programs · ${Math.round(d.spending.admin * 100)}% admin · ${Math.round(d.spending.fundraising * 100)}% fundraising`, bad: false }
+      : d.programShare != null && { k: "Spent on programs", v: `${Math.round(d.programShare * 100)}% of expenses`, bad: false },
+    d.debtShare != null && { k: "Debts", v: `owes ${Math.round(d.debtShare * 100)}% of what it owns`, bad: d.debtShare > 0.5 },
   ].filter((x): x is { k: string; v: string; bad: boolean } => Boolean(x));
   if (!rows.length && !facts.length) return null;
   return (
@@ -215,7 +219,7 @@ function Leadership({ d }: { d: Diligence }) {
       </p>
       {checks.length > 0 && (
         <ul className="checks">
-          {checks.map((c) => <li key={c.label} className={c.ok ? "ok" : c.minor ? "minor" : "bad"}>{c.ok ? "✓" : "!"} {c.ok ? c.label : c.label.replace(/^No /, "Reports ").replace("Financial statements audited", "Financial statements not audited").replace(/ policy$/, " policy missing")}</li>)}
+          {checks.map((c) => <li key={c.key} className={c.ok ? "ok" : c.minor ? "minor" : "bad"}>{c.ok ? "✓" : "!"} {c.label}</li>)}
         </ul>
       )}
       <p className="note-small">Form {d.form === "990EZ" ? "990-EZ" : "990"}, tax year {d.year}, Parts IV, VI and VII{d.url && <> · <a href={d.url} target="_blank" rel="noreferrer">filing ↗</a></>}</p>
@@ -224,16 +228,24 @@ function Leadership({ d }: { d: Diligence }) {
 }
 
 // Financial health from the newest 990: each signal with its figure, problems first (red, then amber),
-// colored by fixed rules (lib/org RULES).
+// colored by fixed rules (lib/flag RULES), then a question to ask for each one that needs context.
 function HealthRating({ d }: { d: Diligence }) {
   const order = { weak: 0, watch: 1, ok: 2 } as const;
   const signals = [...d.rating.signals].sort((a, b) => order[a.level] - order[b.level]);
+  const asks = signals.filter((x) => x.ask && x.level !== "ok");
   return (
     <section className={`rating ${d.rating.level.toLowerCase()}`}>
       <h2>Financial health <small>Form {d.form === "990EZ" ? "990-EZ" : "990"}, {d.year}</small></h2>
       <ul>
-        {signals.map((x) => <li key={x.label} className={x.level}><b>{x.label}</b>{x.note}</li>)}
+        {signals.map((x) => <li key={x.key} className={x.level}><b>{x.label}</b>{x.note}</li>)}
       </ul>
+      {asks.length > 0 && (
+        <div className="asks">
+          <h3>Questions to ask</h3>
+          <ul>{asks.map((x) => <li key={x.key}>{x.ask}</li>)}</ul>
+          <p>Amber and red mean &ldquo;ask about this,&rdquo; not &ldquo;don&apos;t give.&rdquo;</p>
+        </div>
+      )}
     </section>
   );
 }

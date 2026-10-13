@@ -8,7 +8,7 @@ import type { Requirement } from "./search";
 import { z } from "zod";
 
 export type Filters = {
-  q: string; semantic: string; states: string[]; cities: string[]; maxRevenue?: number;
+  q: string; semantic: string; states: string[]; cities: string[]; maxRevenue?: number; minRevenue?: number;
   ntee?: string;      // cause the user picked: a hard filter
   nteeHint?: string;  // cause NomBot guessed from the question: a ranking boost only (orgs are often coded elsewhere)
   requirements: Requirement[]; parser: "llm" | "rules";
@@ -41,6 +41,7 @@ const schema = z.object({
   placeLabel: z.string().nullable(),
   appalachia: z.boolean(),
   maxRevenue: z.number().nullable().describe("Upper revenue/budget limit in dollars, or null"),
+  minRevenue: z.number().nullable().describe("Lower revenue/budget limit in dollars (\"over $1M\", \"large\" orgs), or null"),
   ntee: z.string().nullable(),
   requirements: z.array(z.object({ label: z.string(), synonyms: z.array(z.string()) })),
 });
@@ -50,7 +51,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse:v4", 1000, 24 * 3600_000); // bump the name when Filters changes shape
+const cached = memo<Filters>("parse:v5", 1000, 24 * 3600_000); // bump the name when Filters changes shape
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }
@@ -73,7 +74,7 @@ async function parseFresh(question: string): Promise<Filters> {
         const states = o.states.map((s) => s.toUpperCase()).filter((s) => /^[A-Z]{2}$/.test(s));
         const requirements = o.requirements.filter((r) => r.label.trim()).map((r) => toReq(r.label, r.synonyms));
         const cities = o.cities.map((c) => c.trim().toUpperCase()).filter(Boolean);
-        return { q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
+        return { q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, minRevenue: o.minRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
       }
     } catch (err) {
       console.error("Claude parse failed; using rule-based parser", err);
@@ -95,11 +96,17 @@ async function parseFresh(question: string): Promise<Filters> {
     maxRevenue = parseFloat(m[1].replace(/,/g, "")) * ({ k: 1e3, thousand: 1e3, m: 1e6, million: 1e6 }[m[2] as "k"] ?? 1);
     rest = rest.replace(m[0], " "); topic = topic.replace(m[0], " ");
   }
+  let minRevenue: number | undefined;
+  const mn = rest.match(/(?:over|above|more than|at least|>)\s*\$?\s*([\d.,]+)\s*(k|m|thousand|million)?/);
+  if (mn) {
+    minRevenue = parseFloat(mn[1].replace(/,/g, "")) * ({ k: 1e3, thousand: 1e3, m: 1e6, million: 1e6 }[mn[2] as "k"] ?? 1);
+    rest = rest.replace(mn[0], " "); topic = topic.replace(mn[0], " ");
+  }
   const requirements: Requirement[] = [];
   for (const [re, label, terms] of REQS) if (re.test(rest)) requirements.push(toReq(label, terms));
   const stop = new Set("a an and also are budget do does for in of on or rural that the their them they to with who which".split(" "));
   const words = (t: string) => t.replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((w) => w && !stop.has(w)).join(" ");
   const q = words(rest);
   const semantic = words(topic);
-  return { q, semantic, states: [...states], cities: [], maxRevenue, nteeHint: ntee, requirements, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
+  return { q, semantic, states: [...states], cities: [], maxRevenue, minRevenue, nteeHint: ntee, requirements, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
 }

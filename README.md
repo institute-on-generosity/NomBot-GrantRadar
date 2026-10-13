@@ -19,11 +19,11 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | Area | Feature |
 |---|---|
 | **Ranking** | **Relevance score** 0–100 per result, with Claude's one-line reason on hover · strong matches first, weaker ones folded under "Show N weaker matches" |
-| **Filters** | **Editable chips** read from the question: state, city, **Appalachia region**, budget, cause, "must mention" · results update in ~0.4s |
-| **Search** | **Suggestions** under the search box · **exact-mention** badges · compact rows: name, one grey line of facts (place, cause, spending, staff, volunteers), **one mission line**, **finance tags** (Growing/Shrinking, Surplus/Deficit, from the newest e-filed 990 when there is one; hover for the figures) · include tiny/inactive orgs · **CSV export** |
-| **Org detail** | **Staff and volunteers** (990 Part I), All-volunteer badge · **where the money comes from** (Part VIII, government grants split out) · **this year vs last year** (Part I) · cash on hand, spending split (programs / admin / fundraising), liabilities · **leadership and governance**: paid leaders, board independence, audit and policy checklist (Parts IV, VI, VII) · IRS status · **financial health rating** (Strong / Medium / Weak) from fixed, visible rules |
+| **Filters** | **Editable chips** read from the question: state, city, **Appalachia region**, budget (under $X, or **$1M / $10M or more**: established orgs for a small gift), cause, "must mention" · results update in ~0.4s |
+| **Search** | **Suggestions** under the search box · **exact-mention** badges · compact rows: name, one grey line of facts (place, cause, spending, staff, volunteers), **one mission line**, **finance tags** (Growing/Shrinking, Surplus/Deficit (amber, not red), from the newest e-filed 990 when there is one; hover for the figures) · include tiny/inactive orgs · **CSV export** · **Print summary** |
+| **Org detail** | **Website** (from the 990 header) · **Staff and volunteers** (990 Part I), All-volunteer badge · **where the money comes from** (Part VIII, government grants split out) · **this year vs last year** (Part I) · cash on hand, spending split (programs / admin / fundraising), liabilities · **leadership and governance**: paid leaders, board independence, audit and policy checklist (Parts IV, VI, VII) · IRS status · **financial health rating** (Strong / Medium / Weak) from fixed, visible rules, in plain words (Income, Bottom line, Debts, Donations), with **questions to ask** · **Print** as a 2-page memo |
 | **Sources** | **IRS master file** and **SOI financial** viewers: every number links to its exact row · open beside the org in a popover · one side panel with a **tab per source** that pushes the page aside (doesn't cover it), closed in one step |
-| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded; click a county to list its orgs; switch to **Gaps**: high-poverty counties (the poorest quarter of the map's counties, up to 20%; Census) with none of these orgs, listed beside the map; hovering a county on the map or in the list highlights it in both, hover its rate for a plain-language explanation), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants; click one for the orgs here it paid and its profile; plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, thin reserves, donor-reliant; pick one to list the orgs) |
+| **Analysis panel** | Results on the left (~60%); a sticky panel on the right (~40%) with tabs: **Overview** (AI summary, cited patterns, related searches), **Breakdown** (size, places, causes, team), **Map** (counties, Appalachia shaded; click a county to list its orgs; switch to **Gaps**: high-poverty counties (the poorest quarter of the map's counties, up to 20%; Census) with none of these orgs, listed beside the map; hovering a county on the map or in the list highlights it in both, hover its rate for a plain-language explanation), **Themes** (kinds of work, by Claude), **Funders** (foundations that fund these orgs, from 990-PF grants; click one for the orgs here it paid and its profile; plus strong matches no foundation funds yet), **Finances** (growing, shrinking, deficit, low cash, mostly gifts; pick one to list the orgs) |
 | **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
@@ -73,7 +73,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 - **AI overview:** the scored strong matches (up to 40) + computed figures (sizes, places, causes, team sizes) → Claude → summary, patterns [n], related searches.
 - **Regions:** ZIP → county lookup (`zip_regions`) powers the Appalachia filter (ARC's 420 counties).
 - **Finances:** one rule set (`orgHealth`) for row tags, the Finances tab and the AI overview: the newest e-filed 990 (this year vs its prior-year column, cash on hand), else SOI + master file.
-- **FLAG diligence (org page):** the newest 990's `filing_flag` row → fixed rules in `lib/flag.ts` (revenue, result, cash, liabilities, funding, board, insiders) → red / amber / green signals. Shared with GrantRadar. No AI verdict.
+- **FLAG diligence (org page):** the newest 990's `filing_flag` row → fixed rules in `lib/flag.ts` (income, bottom line, cash, debts, donations, board, insiders) → red / amber / green signals, plus a question to ask for each concern. One deficit year is amber; red only when it repeats. Shared with GrantRadar. No AI verdict.
 - **Gaps (Map):** `county_need` (Census poverty, 3,144 counties) vs. where the 200 closest orgs are based → high-poverty counties (the poorest quarter of the map's counties, capped at 20%) with none, limited to loaded states.
 
 ## Data
@@ -83,7 +83,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | IRS EO BMF | 1.8M orgs: name, EIN, address, NTEE | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI extract | Revenue, expenses, assets (~300K orgs) | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | Census SAIPE + population estimates | County poverty, income, population (3,144 counties) | [census.gov](https://www.census.gov/programs-surveys/saipe.html) |
-| IRS 990 e-file XML | Mission + program text (embeddings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS 990 e-file XML | Mission + program text (embeddings); website (28,843 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | NCCS NTEE | Cause categories | [nccs](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
 | ProPublica API | Per-org detail, on demand | [propublica](https://projects.propublica.org/nonprofits/api) |
 
@@ -162,8 +162,20 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 |---|---|
 | Diligence questions funders ask (FLAG: Financial, Legal and Governance) | ✅ **Org page:** health signals, this year vs last year, cash, spending split, government grants, leadership, board, audit and policy checklist |
 | Ratings depend on definitions | ✅ Fixed, visible rules (`lib/flag.ts`); Claude only summarizes |
-| "Questions to ask" an organization | Next: Claude, from the signals |
+| "Questions to ask" an organization | ✅ One per amber or red signal, from fixed rules (Oct 12) |
 | Pay vs. industry standard, big-donor concentration, revocation check | Not yet (benchmark, Schedule A, IRS revocation list) |
+
+### Oct 12, 2026: IoG fellows meeting (Keith, Helen, Tyler, Muneeb)
+**Design for the everyday donor** ("curb cut effect"; about a 6th-grade reading level): if it works for them, it works for program officers. Guidance also from IoG's Giving Guides (Initial Assessment, Due Diligence).
+
+| Feedback | Plan |
+|---|---|
+| A deficit can mean an org spent savings on a crisis; red/green can steer donors away from the groups doing the most | ✅ One deficit year is **amber**, with context (spending rose, surplus last year) and a question to ask; red only for deficits two years running. Spending split no longer colored |
+| **Print** a clean one- or two-pager | ✅ Print button on org pages and searches; 2-page memo with source and date |
+| Link to the **org's website** (trust) | ✅ From the 990 header, on the org page |
+| Small gifts may fit **larger, established** orgs | ✅ "$1M or more" and "$10M or more" size filters |
+| Plain language | ✅ Plain labels and checklist; AI overview and Buddy asked for a 6th-grade level |
+| "What do you care about and why" before searching | Later: values-first start (IoG guides: Clarifying Your Giving Criteria, Meaningful Generosity) |
 
 ## Progress
 > ✅ **Oct 8, 2026: Search, Research Buddy, the analysis panel and FLAG diligence built** on the local proof of concept, 5–6 weeks ahead of plan. Still to do: cloud, national data, user testing and launch.

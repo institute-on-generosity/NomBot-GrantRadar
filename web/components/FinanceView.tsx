@@ -7,12 +7,12 @@ import type { Signal } from "@/lib/landscape";
 // Finances across the closest organizations, as four plain statements ("82 of 178 ran a deficit"),
 // each with a one-color bar for its share. Pick one to list the organizations behind it, with the
 // figure that put them there, closest matches first. Same rules as the Growing/Shrinking and Deficit tags on each result.
-const TEXT: Record<Signal["key"], { label: string; says: string; tone: "good" | "bad" }> = {
-  growing: { label: "Growing", says: "grew revenue 10% or more", tone: "good" },
-  shrinking: { label: "Shrinking", says: "lost 10% or more of revenue", tone: "bad" },
-  deficit: { label: "Deficit", says: "spent more than they took in", tone: "bad" },
-  thin: { label: "Thin reserves", says: "have under 3 months of spending in cash (or reserves, without an e-filed 990)", tone: "bad" },
-  reliant: { label: "Donor-reliant", says: "get 90%+ of revenue from gifts and grants", tone: "bad" },
+const TEXT: Record<Signal["key"], { label: string; says: string; tone: "good" | "bad" | "watch" }> = {
+  growing: { label: "Growing", says: "grew their income 10% or more", tone: "good" },
+  shrinking: { label: "Shrinking", says: "lost 10% or more of their income", tone: "bad" },
+  deficit: { label: "Deficit", says: "spent more than they took in (often planned; ask why)", tone: "watch" },
+  thin: { label: "Low cash", says: "have cash for under 3 months of spending", tone: "bad" },
+  reliant: { label: "Mostly gifts", says: "get 90%+ of their income from gifts and grants", tone: "bad" },
 };
 const show = (k: Signal["key"], v: number) =>
   k === "growing" || k === "shrinking" ? `${v > 0 ? "+" : "−"}${Math.round(Math.abs(v) * 100)}%`

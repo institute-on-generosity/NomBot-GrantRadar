@@ -19,7 +19,8 @@ Help the user zoom out: what does this landscape look like?
 - summary: 1-2 sentences, at most 38 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
 - patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text, and need where the figures give it (high-poverty counties with none of these organizations).
 - explore: 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle: a nearby cause, another place, or a narrower activity. Don't repeat the question.
-Cite organizations only by their number in square brackets. Plain language, no hype, no advice.`;
+Cite organizations only by their number in square brackets. Plain language, no hype, no advice.
+Write for an everyday donor, at about a 6th-grade reading level: short sentences, common words ("income", not "revenue"; "spent more than it took in", not "deficit"; "cash to cover N months", not "reserves"). No jargon or acronyms.`;
 
 const schema = z.object({ summary: z.string(), patterns: z.array(z.string()), explore: z.array(z.string()) });
 
@@ -81,7 +82,7 @@ async function fresh(question: string, strong: Ranked[], need?: string): Promise
   return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v7", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<Overview | null>("overview:v8", 200, 24 * 3600_000); // bump when the prompt changes
 // need: an optional figures line about county poverty vs. where these organizations are (lib/landscape).
 export function overview(question: string, results: Ranked[], need?: string) {
   const strong = results.filter((r) => r.relevance && isStrong(r));

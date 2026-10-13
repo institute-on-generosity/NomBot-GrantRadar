@@ -16,10 +16,10 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 | `app/api/v1/search/route.ts` | `GET /api/v1/search?q=&state=WV,KY&max_revenue=&ntee=&limit=` (read-only, 60 req/min) |
 | `lib/` | Shared: `db` (Postgres pool), `llm` (provider setup), `embedder`, `parse`, `search`, `rerank` (relevance 0–100), `buddy` (Research Buddy prompt + sources), `soi` |
 | `app/api/feedback/route.ts` | `POST` 👍/👎 on a result → `feedback` table (generosity-data migration 004) |
-| `lib/filters.ts` | Filter edits from the chips (`?st=&city=&region=&max=&cause=&drop=`), shared by results, history, CSV export and Buddy |
+| `lib/filters.ts` | Filter edits from the chips (`?st=&city=&region=&max=&min=&cause=&drop=`), shared by results, history, CSV export and Buddy |
 | `app/api/buddy/route.ts` | `POST` Research Buddy: streams sources, reasoning and the cited answer (NDJSON) |
 | `app/source/`, `components/viewers/` | IRS master file (BMF) and SOI financial viewers; open in a side panel or beside an org popover |
-| `components/` | Shared UI: `SearchBox`, `FilterChips`, `ResultRow`, `Vote`, `Sidebar`, `ResearchBuddy`, `Modal`, `SidePanel` |
+| `components/` | Shared UI: `SearchBox`, `FilterChips`, `ResultRow`, `Vote`, `Sidebar`, `ResearchBuddy`, `Modal`, `SidePanel`, `PrintButton` (print memo + stamp) |
 | `lib/landscape.ts`, `lib/themes.ts`, `components/Landscape*.tsx`, `components/CountyMap.tsx` | Landscape panel: breakdown, county map (`lib/geo/counties.json`, rebuilt by `npm run build:counties`), themes, funders |
 | `app/compare/`, `components/Compare*.tsx` | Compare 2–4 organizations side by side |
 | `eval/` | `npm run eval` (search, 50 questions, goal ≥90% relevant) and `npm run eval:buddy` (Research Buddy, 30 questions, goal 0 unsupported claims) |

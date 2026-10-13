@@ -61,7 +61,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
             </span>
           </button>
         )}
-        {r.revenue && <div className="rev"><b>{money(r.revenue.amount)}</b><span>revenue{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>}
+        {r.revenue && <div className="rev"><b>{money(r.revenue.amount)}</b><span>income{r.revenue.year ? ` · ${r.revenue.year}` : ""}</span></div>}
         {/* Compare shows on hover (or once picked), so the column reads score → revenue */}
         <div className="row-actions">
           <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />

@@ -146,6 +146,7 @@ button.fchip-main { cursor: pointer; }
 .fmenu-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 9px; font-size: 13.5px; color: var(--ink); text-decoration: none; white-space: nowrap; }
 .fmenu-item:hover { background: var(--fill); }
 .fmenu-item.on { color: var(--g-dark); font-weight: 600; }
+.fmenu-note { display: block; font-size: 12px; font-weight: 400; color: var(--mute); }
 .freset { font-size: 13px; color: var(--mute); text-decoration: none; margin-left: 4px; }
 .freset:hover { color: var(--g); }
 
@@ -686,6 +687,8 @@ main:has(.serp) { max-width: 1400px; }
 .fin { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 1px 8px; cursor: help; }
 .fin.up, .fin.ok { color: var(--g-dark); background: var(--g-tint); }
 .fin.down, .fin.bad { color: #b4232a; background: rgba(229,72,77,.1); }
+.fin.watch { color: #8a5a00; background: rgba(245,165,36,.16); }
+@media (prefers-color-scheme: dark) { .fin.watch { color: #ffc56b; background: rgba(245,165,36,.18); } }
 @media (prefers-color-scheme: dark) { .fin.down, .fin.bad { color: #ff8a8e; background: rgba(229,72,77,.18); } }
 .fin { position: relative; outline: none; }
 .fin-tip { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: max-content; max-width: 300px; padding: 7px 10px; border-radius: 9px; background: var(--bg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 12px; font-weight: 400; color: var(--ink-2); white-space: normal; animation: drop .15s var(--spring) both; }
@@ -698,7 +701,7 @@ main:has(.serp) { max-width: 1400px; }
 .fin-rows button.on { background: var(--fill); color: var(--ink); font-weight: 600; }
 .fr-bar { height: 6px; border-radius: 3px; background: var(--fill-2); overflow: hidden; }
 .fr-bar i { display: block; height: 100%; border-radius: 3px; transform-origin: left; animation: grow .7s var(--spring) both; }
-.fr-bar .good { background: var(--g); } .fr-bar .bad { background: #e5484d; }
+.fr-bar .good { background: var(--g); } .fr-bar .bad { background: #e5484d; } .fr-bar .watch { background: #f5a524; }
 .fin-rows button:not(.on) .fr-bar i { opacity: .45; }
 .fr-n { text-align: right; white-space: nowrap; font-weight: 400; color: var(--mute); font-variant-numeric: tabular-nums; }
 .fr-n b { font-weight: 600; color: var(--ink); }
@@ -716,6 +719,8 @@ main:has(.serp) { max-width: 1400px; }
 .fin-list li b { flex: none; min-width: 4.4em; text-align: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; border-radius: 999px; padding: 2px 8px; }
 .fin-list li b.good { color: var(--g-dark); background: var(--g-tint); } .fin-list li b.bad { color: #b4232a; background: rgba(229,72,77,.1); }
 @media (prefers-color-scheme: dark) { .fin-list li b.bad { color: #ff8a8e; } }
+.fin-list li b.watch { color: #8a5a00; background: rgba(245,165,36,.16); }
+@media (prefers-color-scheme: dark) { .fin-list li b.watch { color: #ffc56b; } }
 /* Org page: where the money comes from (Part VIII) */
 .income { margin-top: 16px; }
 .income h3 { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
@@ -741,7 +746,7 @@ main:has(.serp) { max-width: 1400px; }
 .row-foot .src a:hover { color: var(--g); }
 .row-foot .fin { margin: 0; padding: 0; background: none; font-size: 12px; }
 .row-foot .fin.up, .row-foot .fin.ok { background: none; }
-.row-foot .fin.down, .row-foot .fin.bad { background: none; }
+.row-foot .fin.down, .row-foot .fin.bad, .row-foot .fin.watch { background: none; }
 .row-foot .fin::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; background: currentColor; opacity: .8; }
 .row-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; opacity: 0; transition: opacity .15s; }
 .row:hover .row-actions, .row:focus-within .row-actions, .row-actions:has([aria-pressed="true"]) { opacity: 1; }
@@ -818,6 +823,12 @@ main:has(.serp) { max-width: 1400px; }
 .rating details li { display: list-item; list-style: disc; margin-left: 18px; color: var(--mute); }
 .rating details li::before { display: none; }
 @media (max-width: 640px) { .rating ul { grid-template-columns: 1fr; } }
+.rating .asks { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--fill); }
+.rating .asks h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.rating .asks ul { display: block; list-style: disc; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); }
+.rating .asks li { display: list-item; margin: 2px 0; }
+.rating .asks li::before { display: none; }
+.rating .asks p { margin: 6px 0 0; font-size: 12.5px; color: var(--mute); }
 /* Organizations listed in the panel (Themes, Not yet funded) link to their pages */
 .ls-org { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 2px 6px; margin: 0 -6px; border-radius: 6px; color: inherit; text-decoration: none; }
 .ls-org:hover { background: var(--bg); }
@@ -898,3 +909,47 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 .vc-legend .dot { margin-left: -12px; }
 /* Icons in flex rows: the text's cap middle sits ~0.8px below the line's middle, so icons come down to it */
 .side-new > svg, .panel-close > svg, .team > svg { translate: 0 .75px; }
+
+/* Print: a button on org pages and searches; on paper the app around the page drops away, leaving a
+   short memo (title, health and questions, finances, leaders, sources) with where it came from. */
+.print-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 6px 14px 6px 11px; cursor: pointer; transition: background-color .15s, color .15s; }
+.print-btn:hover { background: var(--fill-2); color: var(--ink); }
+.print-btn > svg { translate: 0 .75px; }
+.title-line .print-btn { margin-left: auto; }
+.more .print-btn { padding: 0; background: none; color: var(--g); font-weight: 500; }
+.more .print-btn:hover { background: none; text-decoration: underline; }
+.more .print-btn > svg { display: none; }
+.print-stamp { display: none; }
+@media print {
+  @page { margin: 14mm 14mm 16mm; }
+  :root { color-scheme: light; }
+  body { background: #fff; color: #000; font-size: 10.5pt; }
+  .side, .mobilebar, .scrim, .side-panel, .buddy-fab, .buddy-panel, [aria-label="Compare"], .back, .star, .folder-pick, .print-btn,
+  .more, .serp-head .filters, .seg, .row-actions, .score .tip, .fin-tip, footer, .serp-rail .landscape header .seg { display: none !important; }
+  .shell, .content { display: block; }
+  main { max-width: none; padding: 0; zoom: .84; }
+  .serp { display: block; }
+  .serp-rail { position: static; max-height: none; overflow: visible; margin-bottom: 16pt; }
+  .serp-head { position: static; }
+  .serp-head .search { border: 0; box-shadow: none; padding: 0; }
+  .serp-head input { font-size: 15pt; font-weight: 600; border: 0; padding: 0; }
+  .serp-head .search button, .serp-head .search > svg { display: none; }
+  .row, .rating, .income, .yoy table, .people li, .sources li { break-inside: avoid; }
+  .org h2 { break-after: avoid; }
+  .org h1 { font-size: 20pt; }
+  .org section { margin-top: 14pt; }
+  .rating .asks { background: none; border: 1px solid #ccc; }
+  a { color: inherit; text-decoration: none; }
+  body { font-size: 9.5pt; line-height: 1.38; }
+  .org section, .org .income, .org .yoy { margin-top: 9pt; }
+  .org h2 { font-size: 12pt; margin-bottom: 3pt; }
+  .org h1 { font-size: 18pt; }
+  .org > .sub, .team { font-size: 9.5pt; margin-top: 2pt; }
+  .org td, .org th { padding-top: 3pt; padding-bottom: 3pt; }
+  .income li { padding: 0; }
+  .income-note, .yoy-facts > div { background: none; padding: 0; }
+  .org dl.yoy-facts { margin-top: 6pt; gap: 4pt 16pt; }
+  .people li { padding: 3pt 0; }
+  .rating .asks { margin-top: 8pt; padding: 7pt 10pt; }
+  main .print-stamp { display: block; margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #ccc; font-size: 8.5pt; color: #555; }
+}

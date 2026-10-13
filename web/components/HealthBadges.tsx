@@ -5,6 +5,7 @@ const pct = (x: number) => `${x > 0 ? "+" : "−"}${Math.round(Math.abs(x) * 100
 
 // Up to two small tags from the organization's own IRS filings: revenue trend (only when it moved
 // 10% or more) and the newest filed year's result (surplus of 5%+ or a deficit). Hover a tag for the figures.
+// A deficit is amber, not red: one year in the red is often planned spending, worth a question.
 export function HealthBadges({ h }: { h: Health | null }) {
   if (!h) return null;
   const t = h.trend;
@@ -18,7 +19,7 @@ export function HealthBadges({ h }: { h: Health | null }) {
         </span>
       )}
       {h.margin != null && (h.margin < 0 || h.margin >= 0.05) && (
-        <span className={`fin ${h.margin < 0 ? "bad" : "ok"}`} tabIndex={0}>
+        <span className={`fin ${h.margin < 0 ? "watch" : "ok"}`} tabIndex={0}>
           {h.margin < 0 ? "Deficit" : "Surplus"} {h.year}
           <span className="fin-tip" role="tooltip">{h.year}: revenue {money(h.revenue)}, spending {money(h.expenses)}{reserves}</span>
         </span>
