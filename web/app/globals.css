@@ -147,6 +147,9 @@ button.fchip-main { cursor: pointer; }
 .fmenu-item:hover { background: var(--fill); }
 .fmenu-item.on { color: var(--g-dark); font-weight: 600; }
 .fmenu-note { display: block; font-size: 12px; font-weight: 400; color: var(--mute); }
+/* With a note the item is two lines: keep the check on the first (the label) */
+.fmenu-item:has(.fmenu-note) { align-items: flex-start; }
+.fmenu-item:has(.fmenu-note) > svg { margin-top: calc((1lh - 14px) / 2); }
 .freset { font-size: 13px; color: var(--mute); text-decoration: none; margin-left: 4px; }
 .freset:hover { color: var(--g); }
 
@@ -809,7 +812,8 @@ main:has(.serp) { max-width: 1400px; }
 .rating ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; font-size: 13.5px; }
 .rating li { display: flex; gap: 8px; align-items: baseline; color: var(--ink-2); }
 .rating li b { flex: none; width: 5.6em; font-weight: 500; color: var(--mute); }
-.rating li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; align-self: center; background: var(--g); opacity: .8; }
+/* Dot on the first line's cap height, so a note that wraps doesn't pull it down between lines */
+.rating li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; align-self: flex-start; margin-top: calc((1lh - 7px) / 2); background: var(--g); opacity: .8; }
 .rating li.watch::before { background: #f5a524; } .rating li.weak::before { background: #e5484d; }
 .rating li.weak { color: #b4232a; }
 .rating-level { font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: var(--g-dark); background: var(--g-tint); }
@@ -895,7 +899,7 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 /* Panel titles flush with the content under them; the sparkle's padding hangs into the gutter */
 .serp-rail .landscape h2, .landscape h2 { padding-left: 0; }
 .landscape .overview { padding-left: 0; padding-right: 0; }
-.landscape h2 > svg:first-child { margin-left: -2.5px; }
+.landscape h2 > svg:first-child { margin-left: -2.5px; translate: 0 .5px; }
 /* Org tables: numbers end on the column's right edge; a gap where right-aligned numbers meet left-aligned text */
 .org th:last-child, .org td:last-child { padding-right: 0; }
 .org th.n + th:not(.n), .org td.n + td:not(.n) { padding-left: 16px; }
@@ -912,11 +916,11 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 
 /* Print: a button on org pages and searches; on paper the app around the page drops away, leaving a
    short memo (title, health and questions, finances, leaders, sources) with where it came from. */
-.print-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 6px 14px 6px 11px; cursor: pointer; transition: background-color .15s, color .15s; }
+.print-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; line-height: 1; font-weight: 500; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 5.25px 14px 6.75px 11px; cursor: pointer; transition: background-color .15s, color .15s; }
 .print-btn:hover { background: var(--fill-2); color: var(--ink); }
 .print-btn > svg { translate: 0 .75px; }
 .title-line .print-btn { margin-left: auto; }
-.more .print-btn { padding: 0; background: none; color: var(--g); font-weight: 500; }
+.more .print-btn { padding: 0; line-height: inherit; background: none; color: var(--g); font-weight: 500; }
 .more .print-btn:hover { background: none; text-decoration: underline; }
 .more .print-btn > svg { display: none; }
 .print-stamp { display: none; }
@@ -953,3 +957,6 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
   .rating .asks { margin-top: 8pt; padding: 7pt 10pt; }
   main .print-stamp { display: block; margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #ccc; font-size: 8.5pt; color: #555; }
 }
+/* Oct 13 optical pass: Finances rows get a fill when picked, so center their text like the pills */
+.fin-rows button { padding-top: 5.25px; padding-bottom: 6.75px; }
+.greet .logo { padding-bottom: 0; } /* the 1.5px nudge is for the small sidebar logo */
