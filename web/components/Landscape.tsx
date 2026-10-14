@@ -28,10 +28,10 @@ export async function Landscape({ question, filters, includeInactive, map, overv
       first,
       { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
-          <Bars title="Size" bars={l.sizes} />
-          <Bars title="Places" bars={l.cities} />
-          <Bars title="Causes" bars={l.causes} />
-          <Bars title="Team" bars={l.team} note={`${l.teamReported} report staff`} />
+          <Bars title="Size" bars={l.sizes} orgs={l.orgs} />
+          <Bars title="Places" bars={l.cities} orgs={l.orgs} />
+          <Bars title="Causes" bars={l.causes} orgs={l.orgs} />
+          <Bars title="Team" bars={l.team} orgs={l.orgs} note={`${l.teamReported} report staff`} />
         </div>
       ) },
       { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
@@ -67,19 +67,27 @@ export async function Landscape({ question, filters, includeInactive, map, overv
   );
 }
 
-function Bars({ title, bars, note }: { title: string; bars: Bar[]; note?: string }) {
+// Each bar opens to the organizations behind it, closest first (same list as Themes).
+function Bars({ title, bars, orgs, note }: { title: string; bars: Bar[]; orgs: Awaited<ReturnType<typeof landscape>>["orgs"]; note?: string }) {
   const max = Math.max(1, ...bars.map((b) => b.count));
   return (
     <div className="ls-bars">
       <h3>{title}{note && <small>{note}</small>}</h3>
       <ul>
         {bars.map((b) => {
-          // Hover only for now: no filtering from the bars.
+          const row = <><span className="ls-label">{b.label}</span><span className="ls-track"><i style={{ width: `${(100 * b.count) / max}%` }} /></span><span className="ls-n">{b.count}</span></>;
           return (
             <li key={b.key || b.label}>
-              <span className="ls-row" title={`${b.label}: ${b.count} of these organizations`}>
-                <span className="ls-label">{b.label}</span><span className="ls-track"><i style={{ width: `${(100 * b.count) / max}%` }} /></span><span className="ls-n">{b.count}</span>
-              </span>
+              {b.orgs?.length ? (
+                <details className="ls-open">
+                  <summary className="ls-row" title={`Show the ${b.count} ${b.count === 1 ? "organization" : "organizations"}: ${b.label}`}>{row}</summary>
+                  <ul className="ls-orgs">
+                    {b.orgs.map((i) => orgs[i]).map((o) => (
+                      <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" title={`${o.name} · ${[o.city, o.state].filter(Boolean).join(", ")}`} label="Opening the organization…"><b>{o.name}</b><span>{[o.city, o.state].filter(Boolean).join(", ")}</span></NavLink></li>
+                    ))}
+                  </ul>
+                </details>
+              ) : <span className="ls-row">{row}</span>}
             </li>
           );
         })}

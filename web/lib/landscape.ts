@@ -13,7 +13,7 @@ import { orgHealth, type Health as OrgHealth } from "./search";
 
 export const LANDSCAPE = 200;
 
-export type Bar = { key: string; label: string; count: number };
+export type Bar = { key: string; label: string; count: number; orgs?: number[] }; // orgs: indexes into Landscape.orgs, closest first (Breakdown bars)
 export type Underserved = { fips: string; name: string; state: string; poverty: number; low: number | null; high: number | null; poor: number | null; population: number | null };
 export type Funder = { ein: string; name: string; city: string | null; state: string | null; orgs: number; amount: number; inviteOnly: boolean; grantees: { ein: string; name: string }[] };
 export type Landscape = {
@@ -83,10 +83,11 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
       [mapStates, Boolean(filters.appalachia)]),
   ]);
 
-  const revs = results.map((r) => r.revenue?.amount).filter((x): x is number => x != null);
   const t = team.filter((r) => r.employees != null);
   const teamBand = (staff: number, vols: number | null) => staff === 0 ? ((vols ?? 0) > 0 ? "vol" : null) : staff <= 10 ? "s" : staff <= 50 ? "m" : "l";
-  const teamCounts = tally(t, (r) => teamBand(r.employees, r.volunteers));
+  const bandOf = new Map(t.map((r) => [r.ein, teamBand(r.employees, r.volunteers)]));
+  // Indexes of the results in one bar, closest first, so a bar opens to the organizations behind it.
+  const pick = (test: (r: (typeof results)[number]) => boolean) => results.flatMap((r, i) => (test(r) ? [i] : []));
   const TEAM: [string, string][] = [["vol", "All-volunteer"], ["s", "1–10 staff"], ["m", "11–50 staff"], ["l", "51+ staff"]];
 
   // "High poverty" relative to this map: the poorest quarter of its counties (75th percentile), capped
@@ -103,11 +104,18 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   return {
     health,
     size: results.length,
-    sizes: BANDS.map(([key, label, lo, hi]) => ({ key, label, count: revs.filter((x) => x >= lo && x < hi).length })),
+    sizes: BANDS.map(([key, label, lo, hi]) => {
+      const orgs = pick((r) => r.revenue?.amount != null && r.revenue.amount >= lo && r.revenue.amount < hi);
+      return { key, label, count: orgs.length, orgs };
+    }),
     cities: tally(results, (r) => (r.city ? `${r.city.toUpperCase()}|${r.state ?? ""}` : null)).filter(([, n]) => n >= 2).slice(0, 6)
-      .map(([k, count]) => { const [c, st] = k.split("|"); return { key: c, label: `${title(c)}, ${st}`, count }; }),
-    causes: tally(results, (r) => (r.ntee?.code?.[0] && r.ntee.code[0] !== "Z" ? r.ntee.code[0] : null)).filter(([, n]) => n >= 2).slice(0, 6).map(([k, count]) => ({ key: k, label: nteeLabel(k) ?? k, count })),
-    team: TEAM.map(([key, label]) => ({ key, label, count: teamCounts.find(([k]) => k === key)?.[1] ?? 0 })),
+      .map(([k, count]) => { const [c, st] = k.split("|"); return { key: c, label: `${title(c)}, ${st}`, count, orgs: pick((r) => r.city?.toUpperCase() === c && (r.state ?? "") === st) }; }),
+    causes: tally(results, (r) => (r.ntee?.code?.[0] && r.ntee.code[0] !== "Z" ? r.ntee.code[0] : null)).filter(([, n]) => n >= 2).slice(0, 6)
+      .map(([k, count]) => ({ key: k, label: nteeLabel(k) ?? k, count, orgs: pick((r) => r.ntee?.code?.[0] === k) })),
+    team: TEAM.map(([key, label]) => {
+      const orgs = pick((r) => bandOf.get(r.ein.replace("-", "")) === key);
+      return { key, label, count: orgs.length, orgs };
+    }),
     teamReported: t.length,
     counties: Object.fromEntries(Object.entries(countyOrgs).map(([f, os]) => [f, os.length])),
     countyOrgs,
@@ -174,7 +182,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v17", 200, 3600_000);
+const cached = memo<Landscape>("landscape:v18", 200, 3600_000); // v18: bars carry their organizations
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

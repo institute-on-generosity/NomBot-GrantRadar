@@ -526,7 +526,7 @@ button.fchip-main { cursor: pointer; }
 .seg button.on { color: var(--ink); }
 .seg-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n)); border-radius: 8px; background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); transform: translateX(calc(100% * var(--i))); transition: transform .4s var(--spring); }
 .ls-view { animation: drop .25s var(--spring) both; }
-.ls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 26px; }
+.ls-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 26px; }
 .ls-bars h3 { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 4px; display: flex; justify-content: space-between; }
 .ls-bars h3 small { font-weight: 400; color: var(--faint); }
 .ls-bars ul { list-style: none; display: grid; gap: 1px; }
@@ -537,6 +537,16 @@ button.fchip-main { cursor: pointer; }
 .ls-track i { display: block; height: 100%; border-radius: 4px; background: var(--g); opacity: .7; transform-origin: left; animation: grow .7s var(--spring) both; }
 .ls-row.link:hover .ls-track i { opacity: 1; }
 .ls-n { text-align: right; font-variant-numeric: tabular-nums; color: var(--mute); }
+.ls-open > summary { list-style: none; cursor: pointer; }
+.ls-open > summary::-webkit-details-marker { display: none; }
+.ls-open > summary:focus-visible { outline: 2px solid var(--g); outline-offset: 1px; }
+.ls-open[open] > summary { background: var(--fill); color: var(--ink); }
+.ls-open[open] > summary .ls-track i { opacity: 1; }
+.ls-bars, .ls-open, .ls-bars li, .ls-orgs li, .ls-orgs .ls-org { min-width: 0; }
+.ls-orgs { list-style: none; display: grid; gap: 1px; margin: 4px 0 8px; padding: 6px 8px; border-radius: 9px; background: var(--fill); max-height: 240px; overflow-y: auto; font-size: 12.5px; }
+.ls-orgs .ls-org { margin: 0; display: grid; gap: 0; padding: 3px 6px; line-height: 1.3; }  /* name, then place: the column is narrow */
+.ls-orgs .ls-org b { font-weight: 400; color: var(--ink); white-space: normal; overflow: visible; text-overflow: clip; }
+.ls-orgs .ls-org span { color: var(--faint); font-size: 11.5px; }
 .ls-note, .ls-wait { font-size: 13px; color: var(--mute); }
 .ls-wait { display: flex; align-items: center; gap: 8px; }
 .ls-funders { list-style: none; display: grid; gap: 2px; margin-top: 8px; }
@@ -606,14 +616,14 @@ main:has(.serp) { max-width: 1400px; }
 .serp-main > .results:first-child .bar, .serp-main .bar:first-child { margin-top: 0; }
 .serp-rail { grid-area: rail; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; overscroll-behavior: contain; border-radius: 18px; scrollbar-width: thin; }
 .serp-rail .landscape { margin: 0; }
-.serp-rail .ls-grid { grid-template-columns: 1fr 1fr; }
+.serp-rail .ls-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .serp-rail .overview { padding: 0; }
 @media (max-width: 1150px) { .serp-rail .ls-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) {
   main:has(.serp) { max-width: 860px; }
   .serp { grid-template-columns: 1fr; grid-template-areas: "rail" "main"; }
   .serp-rail { position: static; max-height: none; overflow: visible; margin-bottom: 8px; }
-  .serp-rail .ls-grid { grid-template-columns: 1fr 1fr; }
+  .serp-rail .ls-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
 /* Analysis panel is hover-only for now */
