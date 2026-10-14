@@ -83,8 +83,8 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | IRS EO BMF | 1.8M orgs: name, EIN, address, NTEE | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI extract | Revenue, expenses, assets (~300K orgs) | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | Census SAIPE + population estimates | County poverty, income, population (3,144 counties) | [census.gov](https://www.census.gov/programs-surveys/saipe.html) |
-| IRS 990 e-file XML | Mission + program text (embeddings); website (299,314 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (513,813 filings, every state) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
-| IRS 990-PF e-file XML | Who funds these orgs (Funders tab): every US foundation, 2023–2025 IRS years (135,407 foundations, 4.84M grants; shared with GrantRadar) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS 990 e-file XML | Mission + program text (embeddings); website (452,462 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (785,772 filings, every state) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS 990-PF e-file XML | Who funds these orgs (Funders tab): every US foundation, 2023–2026 IRS years (138,734 foundations, 5.35M grants; shared with GrantRadar) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | NCCS NTEE | Cause categories | [nccs](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
 | ProPublica API | Per-org detail, on demand | [propublica](https://projects.propublica.org/nonprofits/api) |
 
@@ -192,7 +192,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [x] Postgres + pgvector, schema
 - [x] BMF: 204,564 orgs (5 states) → **1,972,852 (all US, Oct 13)**
 - [x] SOI financials: 54,590 rows → **538,346**
-- [x] 990 text: 50,971 filings → **513,813**, all embedded
+- [x] 990 text: 50,971 filings → **785,772** (with IRS 2026 batches, Oct 14), all embedded
 - [x] Embeddings + index (local nomic, free)
 - [x] ZIP → county + Appalachia (ARC) lookup: 34,236 ZIPs
 - [x] Claude query parser (verified on 3 questions; ~2–5s)
@@ -206,7 +206,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [x] IRS financial (SOI) viewer; sources open beside the org in a popover
 - [x] Analysis panel: AI overview, breakdown, finances, map with Gaps, themes, funders (feedback, Oct 7)
 - [x] Compare 2–4 orgs; starred folders; staff + volunteer counts (feedback, Oct 7)
-- [x] FLAG diligence from 990 XML: 513,813 filings (prior year, balance sheet, spending, board, policies, officers)
+- [x] FLAG diligence from 990 XML: 785,772 filings (prior year, balance sheet, spending, board, policies, officers)
 - [x] Finance tags on results; Finances tab
 - [x] County need (Census SAIPE): 3,144 counties; Gaps view
 - [x] **National load (Oct 13):** every state, DC and Puerto Rico; US county map; search rebuilt to draw candidates from indexes (see Changes from the plan)
