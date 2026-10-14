@@ -55,11 +55,11 @@ async function Results({ searchParams }: { searchParams: Promise<Params> }) {
   const chips: Chip[] = [
     {
       key: "st", kind: state ? "set" : "unset", label: state ? `Gives in ${state}` : "Anywhere",
-      // Loaded states first (similar grantees can be found there), then every other state these foundations give to.
+      // Every state (nonprofits loaded nationally), then territories and other places these foundations give to.
       options: [
         { label: "Anywhere", href: url(p, { st: "any", n: "" }), on: !state },
-        ...LOADED_STATES.map(([c]) => stateOption(c, "Full data")),
-        ...states.filter((x) => !loaded.has(x.state)).map((x) => stateOption(x.state, "Other states")),
+        ...LOADED_STATES.map(([c]) => stateOption(c, "States")),
+        ...states.filter((x) => !loaded.has(x.state)).map((x) => stateOption(x.state, "Territories and abroad")),
       ],
       removeHref: state ? url(p, { st: "any", n: "" }) : undefined,
     },

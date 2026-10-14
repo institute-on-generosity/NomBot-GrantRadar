@@ -3,7 +3,7 @@
 // over the similar grantees it paid, of how alike each grantee is to your mission.
 // Tables (generosity-data migration 007): funders, grants (recipient_ein = matched org).
 import { db } from "./db";
-import { embedQuery, toSql } from "./embedder";
+import { embedQuery, MODEL_ID, toSql } from "./embedder";
 import { peerFit } from "./grantPeers";
 import { classifyPurpose, grantMixes, type GrantMix, type GrantType } from "./grantTypes";
 import { memo } from "./memo";
@@ -27,25 +27,24 @@ export type FunderMatch = {
 
 type Row = { funder_ein: string; grant_id: number; recipient_ein: string; recipient_name: string; recipient_city: string | null; recipient_state: string | null; amount: string | null; purpose: string | null; tax_year: number | null; sim: number };
 
-// Grants paid to the PEERS grantees most like the mission (brute force over grantees with filings: ~10K vectors).
+// Grants paid to the PEERS grantees most like the mission: nearest filings by meaning (HNSW over each
+// org's newest filing, generosity-data's filing_latest), kept to orgs some foundation has paid.
 async function peerGrants(mission: string): Promise<Row[]> {
   const v = toSql(await embedQuery(mission));
   const { rows } = await db.query(
-    `WITH peers AS (
-       SELECT ein, sim FROM (
-         SELECT DISTINCT ON (f.ein) f.ein, 1 - (f.embedding <=> $1::vector) AS sim
-         FROM filing_text f WHERE f.embedding IS NOT NULL
-           AND f.ein IN (SELECT recipient_ein FROM grants WHERE recipient_ein IS NOT NULL)
-         ORDER BY f.ein, f.tax_year DESC) p
-       WHERE sim >= $3 ORDER BY sim DESC LIMIT $2)
+    `WITH near AS (
+       SELECT f.ein, 1 - (f.embedding <=> $1::vector) AS sim FROM filing_latest f
+       WHERE f.embedding_model = $4 AND EXISTS (SELECT 1 FROM grants g WHERE g.recipient_ein = f.ein)
+       ORDER BY f.embedding <=> $1::vector LIMIT $2),
+     peers AS (SELECT ein, sim FROM near WHERE sim >= $3)
      SELECT g.funder_ein, g.id AS grant_id, g.recipient_ein, g.recipient_name, g.recipient_city, g.recipient_state,
             g.amount, g.purpose, g.tax_year, p.sim
      FROM grants g JOIN peers p ON p.ein = g.recipient_ein`,
-    [v, PEERS, FLOOR],
+    [v, PEERS, FLOOR, MODEL_ID],
   );
   return rows;
 }
-const cachedPeers = memo<Row[]>("grants:peers:v2", 200, 24 * 3600_000); // v2: every US foundation, several years
+const cachedPeers = memo<Row[]>("grants:peers:v3", 200, 24 * 3600_000); // v3: every US nonprofit and foundation, full-precision vectors
 
 export async function matchFunders(mission: string, f: MatchFilters = {}, limit = 20): Promise<{ funders: FunderMatch[]; total: number; peers: number }> {
   const candidates = await cachedPeers(mission.toLowerCase().replace(/\s+/g, " ").trim(), () => peerGrants(mission));

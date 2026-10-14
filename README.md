@@ -23,7 +23,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant: the 150 closest are candidates.
 2. Claude scores each candidate's **work** 0–100 against your mission, ignoring location (embeddings over-weight place words: "rural West Virginia" pulled health clinics into an animal-rescue match). Only **≥70** counts as a group "like yours".
 3. Each foundation scores the sum of ((score − 50) / 50)² over the groups like yours it paid: a few near-identical grantees beat many loose ones. Rows show ● same kind of work (≥85) and ○ closely related (70–84).
-4. Filters: **gives in** a state (any of the 53 states these foundations give to; similar grantees come from the 5 loaded states), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size, **grant type** (mostly unrestricted / mostly project grants).
+4. Filters: **gives in** a state (every state; similar grantees come from all 473,474 nonprofits with an e-filed 990), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size, **grant type** (mostly unrestricted / mostly project grants).
 
 ### Grant types
 - Each grant's purpose is sorted by **keyword rules** (`web/lib/grantTypes.ts`, no Claude): **unrestricted** ("general operating", "charitable purposes", "unrestricted"), **project** (a program, scholarship, building, event), **policy** (public policy, advocacy, civic engagement; victim/child advocates count as services), or **unclear** ("donation", "support", a bare cause like "education").
@@ -81,7 +81,7 @@ GrantRadar is NomBot plus a grants table.
 | IRS EO BMF | Orgs + funders (already loaded) | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI 990-PF | Foundation assets + giving | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | IRS 990 e-file XML (applicants' own 990) | "How funders will see you": prior year, cash, spending, board, policies, officers (`filing_flag`, 50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
-| IRS EO BMF + SOI (giving circles) | 15 giving circles in the 5 states, found by name (Impact 100, 100 Who Care, women's funds, "giving circle"), grants paid (Part IX line 1); `giving_circles` view | generosity-data migration 013 |
+| IRS EO BMF + SOI (giving circles) | 145 giving circles in 38 states, found by name (Impact 100, 100 Who Care, women's funds, "giving circle"), grants paid (Part IX line 1); `giving_circles` view | generosity-data migration 013 |
 | Foundation sites | Contacts, deadlines (top ~500) | Public web |
 
 ## Roadmap
@@ -99,7 +99,7 @@ GrantRadar is NomBot plus a grants table.
 |---|---|
 | **Built Oct 7** (planned Nov 23–Dec 6) | NomBot finished early; GrantRadar reuses its app, data and Research Buddy |
 | **How to apply + "Invitation only"** from Part XV 2a–d | 95,947 of 135,407 US foundations (71%) only give to preselected charities; applicants need to know before writing |
-| **Matcher favors precision**: 56% linked (was 51%), below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies, churches and out-of-state groups |
+| **Matcher favors precision**: 57% linked nationally (was 56% in 5 states), below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies and churches |
 | **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
 | **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
@@ -108,6 +108,7 @@ GrantRadar is NomBot plus a grants table.
 | **Grant types** (unrestricted / project / policy) from purpose keywords | Oct 7 feedback. Keywords are instant and repeatable; 72% coverage made Claude classification unnecessary for now |
 | **Standalone app** on the `GrantRadar` branch (no NomBot toggle; `/` → `/grants`) | Oct 7 feedback: different audiences. NomBot's org pages stay, since funder sheets link to grantees |
 | **National 990-PFs, 3 IRS years, built early** (planned Dec 7–13): 135,407 foundations, 4.84M grants (tax years mostly 2022–2024) | Only 43% of linked grants into the 5 states come from a same-state foundation: out-of-state funders were missing. Several years show **repeat funding** ("· 2 years" beside a grantee). Funder sheets list the newest return's grants. AmazonSmile-style pass-throughs (50,000+ grants on one return) are skipped |
+| **National nonprofits** (built early): 1.97M orgs, 473,474 with an e-filed 990 as similar-grantee candidates (was 5 states); full-precision embeddings | Grants into any state can now find "groups like yours". Only 48% of linked grants come from a same-state foundation. Embedding all 514K filings ran on the Mac's GPU (~2 h; the CPU would take ~17 h). The 8-bit model scored only 0.975 against full precision, so queries and documents both moved to full precision |
 | **Circles** tab: giving circles in your state (or where groups like yours are), with grants paid and a link to each | Oct 12 feedback (Keith): nonprofits should know about pooled giving near them. Only circles that are their own nonprofit show; the big directory (Grapevine / Philanthropy Together) blocks bots, so wider coverage needs a data partnership |
 | **"How funders will see you"** (`/grants/check`): look up your nonprofit by name or EIN, see the diligence a foundation runs on your newest 990 and what to prepare | Oct 8 GSB philanthropy class: funders vet finances, board and pay before reading a proposal. Same fixed rules as NomBot's org page (`lib/flag.ts`) |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month; pick a month to list them), **Peers** (groups like yours with the most funders; click one to list the funders that paid it) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
@@ -116,7 +117,7 @@ GrantRadar is NomBot plus a grants table.
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
 - ≥70% of matches rated relevant
-- ≥70% of grants linked to a recipient (**56%** so far, recipients in the 5 states)
+- ≥70% of grants linked to a recipient (**57%** so far: 2.74M of 4.84M, every state)
 - Results <3s (**~0.5s** cached, ~2–5s new mission); every explanation cited
 - Adds <$50/mo
 
@@ -147,7 +148,7 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 ### Oct 12, 2026: IoG fellows meeting (Keith, Helen, Tyler, Muneeb)
 | Feedback | Plan |
 |---|---|
-| **Giving circles** (people pooling gifts, e.g. Latino Community Foundation's) aren't in 990-PF data | ✅ **Circles** tab from IRS records (15 in 5 states); next: ask Philanthropy Together and the 100 Who Care Alliance for their directories |
+| **Giving circles** (people pooling gifts, e.g. Latino Community Foundation's) aren't in 990-PF data | ✅ **Circles** tab from IRS records (145 in 38 states); next: ask Philanthropy Together and the 100 Who Care Alliance for their directories |
 | A deficit can be planned (crisis spending), not mismanagement | ✅ "How funders will see you": one deficit year is amber; the prep card asks what it paid for and whether it was planned |
 | Plain language for everyday readers | ✅ Plain labels (Income, Bottom line, Debts, Donations) and checklist sentences |
 
@@ -173,7 +174,7 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 - [x] Grants loaded: **every US foundation, 2023–2025 IRS years: 135,407 foundations, 4.84M grants** (was 5 states, one year: 8,030 / 102,725)
 
 **Nov 30–Dec 6: Local proof of concept**
-- [ ] Recipient matcher (≥70% linked): **56%** of grants to recipients in the 5 states (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere)
+- [ ] Recipient matcher (≥70% linked): **57%** of grants, every state (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere; 8 parallel workers, ~1.5 h)
 - [x] Funder ranking
 - [x] `/grants` match page
 - [x] "Why this funder?" (streams, cites each grant)

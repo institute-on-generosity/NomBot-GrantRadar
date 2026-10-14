@@ -58,8 +58,7 @@ const types = new Map<string, GrantType>();
 export async function grantMixes(eins: string[]): Promise<Map<string, GrantMix>> {
   {
     const { rows } = await db.query(
-      `SELECT funder_ein, purpose, count(*)::int AS n, coalesce(sum(amount) FILTER (WHERE amount > 0), 0)::float8 AS amount
-       FROM grants WHERE funder_ein = ANY($1) GROUP BY 1, 2`, [eins]);
+      `SELECT funder_ein, purpose, n, amount FROM funder_purposes WHERE funder_ein = ANY($1)`, [eins]); // generosity-data migration 017
     const acc = new Map<string, Omit<GrantMix, "lean">>();
     if (types.size > 200_000) types.clear();
     for (const r of rows) {
