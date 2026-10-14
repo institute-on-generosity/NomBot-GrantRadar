@@ -65,7 +65,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
 
-> Diagram out of date: the **AI overview**, **analysis panel** (incl. funders from GrantRadar's `grants` table), **Compare**, **FLAG diligence** (`filing_flag`) and **county need** (`county_need`, Census SAIPE) aren't drawn yet.
+> Diagram out of date: the **AI overview**, **analysis panel** (incl. funders from GrantRadar's `grants` table), **Compare**, **FLAG diligence** (`filing_flag`), **county need** (`county_need`, Census SAIPE) and **people** (`board_members`, person pages) aren't drawn yet.
 
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
@@ -126,6 +126,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **FLAG diligence** on the org page (Financial, Legal and Governance, from 990 XML) | Oct 8 GSB philanthropy class (Nancy Lue, Valhalla): funders vet liquidity, reserves, growth, concentration, board and pay. Fixed, visible rules; no single AI verdict |
 | **Underserved areas** (Census SAIPE poverty + population by county) | Zoom-out feedback: show where need is high but matching groups are missing. Census file downloads, no API key; general poverty, not cause-specific need |
 | **National load, built early** (planned for the cloud move): every state, DC and Puerto Rico (1.97M orgs, 513,813 filings); search draws candidates from indexes, then joins newest-record views (`filing_latest`, `financials_latest`, `flag_latest`) | Lifts the 5-state limit. The old query sorted every org nationally (12–16s); now ~0.5s with a state, 3–6s nationwide. Embeddings moved to full precision (8-bit scored 0.975 against it) and were rebuilt on the Mac's GPU |
+| **People: philanthropic leaders**, from IRS board lists (generosity-data migration 018: 4.86M seats at 679K orgs) | Asked for Oct 14: look up a foundation CEO and see every board they serve on. Names match on first + last name, so one page can merge two people with the same name (warned when seats span states); nicknames don't match ("Bill" vs "William") |
 
 ## Success metrics
 - ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~7s median)
@@ -205,6 +206,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [x] Editable filter chips (place, city, Appalachia, size, cause); results update in ~0.4s
 - [x] IRS financial (SOI) viewer; sources open beside the org in a popover
 - [x] Analysis panel: AI overview, breakdown, finances, map with Gaps, themes, funders (feedback, Oct 7)
+- [x] **People (Oct 14):** search a name for every board a person sits on; person pages (seats, pay, hours, their foundations' grants, grants between their boards, who they serve with); Board connections and clickable leadership on org pages; home page flips between nonprofits, philanthropic leaders and foundations
 - [x] Compare 2–4 orgs; starred folders; staff + volunteer counts (feedback, Oct 7)
 - [x] FLAG diligence from 990 XML: 785,772 filings (prior year, balance sheet, spending, board, policies, officers)
 - [x] Finance tags on results; Finances tab

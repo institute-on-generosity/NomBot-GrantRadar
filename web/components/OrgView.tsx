@@ -12,6 +12,7 @@ import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase } from "@/components/text";
 import { getOrg, type Income } from "@/lib/org";
 import { prettyTitle, type Diligence } from "@/lib/flag";
+import type { BoardLink } from "@/lib/people";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -98,6 +99,8 @@ async function Org({ params, searchParams, modal }: Props) {
       </section>
 
       {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} />}
+
+      {o.links.length > 0 && <BoardConnections links={o.links} />}
 
       <section>
         <h2>Details</h2>
@@ -210,19 +213,43 @@ function Leadership({ d }: { d: Diligence }) {
       <h2>Leadership and governance</h2>
       {paid.length > 0 && (
         <ul className="people">
-          {paid.map((p) => <li key={p.name + p.title}><span><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></span><span>{money(p.pay + p.other)}</span></li>)}
+          {paid.map((p) => <li key={p.name + p.title}><NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…" className="person-link"><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></NavLink><span>{money(p.pay + p.other)}</span></li>)}
         </ul>
       )}
       <p className="board-line">
         {d.board ? <><b>{d.board.members}</b> board members, <b>{d.board.independent}</b> independent</> : unpaid.length ? <><b>{unpaid.length}</b> unpaid officers and directors</> : null}
         {d.board && unpaid.length > 0 && <> · {unpaid.length} serve unpaid</>}
       </p>
+      {unpaid.length > 0 && (
+        <p className="board-names">
+          {unpaid.slice(0, 30).map((p, i) => <span key={p.name + i}>{i > 0 && ", "}<NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…">{titleCase(p.name)}</NavLink></span>)}
+          {unpaid.length > 30 && <> and {unpaid.length - 30} more</>}
+        </p>
+      )}
       {checks.length > 0 && (
         <ul className="checks">
           {checks.map((c) => <li key={c.key} className={c.ok ? "ok" : c.minor ? "minor" : "bad"}>{c.ok ? "✓" : "!"} {c.label}</li>)}
         </ul>
       )}
       <p className="note-small">Form {d.form === "990EZ" ? "990-EZ" : "990"}, tax year {d.year}, Parts IV, VI and VII{d.url && <> · <a href={d.url} target="_blank" rel="noreferrer">filing ↗</a></>}</p>
+    </section>
+  );
+}
+
+// Board members who also sit on other boards in this state: who this organization is connected to.
+function BoardConnections({ links }: { links: BoardLink[] }) {
+  return (
+    <section>
+      <h2>Board connections</h2>
+      <ul className="links">
+        {links.map((p) => (
+          <li key={p.name}>
+            <NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…" className="link-person"><b>{titleCase(p.name)}</b>{p.title && <small>{prettyTitle(p.title)}</small>}</NavLink>
+            <span>Also on {p.others.map((x, i) => <span key={x.ein}>{i > 0 && ", "}<NavLink href={`/org/${x.ein}`} label="Opening the organization…">{titleCase(x.org)}</NavLink>{x.foundation && <i className="person-tag">Foundation</i>}</span>)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="note-small">Same first and last name on another board in this state, from IRS 990 and 990-PF board lists. Common names are left out.</p>
     </section>
   );
 }

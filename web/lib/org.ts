@@ -4,6 +4,7 @@ import { nteeLabel } from "./ntee";
 import { soiViewerUrl } from "./soi";
 import { diligence } from "./flag";
 import { propublicaOrg, sources, type Source } from "./sources";
+import { boardLinks } from "./people";
 
 export async function getOrg(einParam: string) {
   const ein = einParam.replace(/\D/g, "");
@@ -16,6 +17,7 @@ export async function getOrg(einParam: string) {
   const { rows: fin } = await db.query(
     "SELECT tax_year, form, revenue, expenses, assets, raw FROM financials WHERE ein = $1 ORDER BY tax_year DESC", [ein]);
   const { rows: [flagRow] } = await db.query("SELECT * FROM filing_flag WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
+  const links = await boardLinks(ein).catch(() => []); // needs generosity-data migration 018
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
@@ -58,6 +60,8 @@ export async function getOrg(einParam: string) {
     flag: flagRow ? diligence(flagRow, t?.object_id ? `https://projects.propublica.org/nonprofits/organizations/${ein}/${flagRow.object_id}/full` : null) : null,
     bmfUrl,
     sources: allSources,
+    // Board members who also sit on other boards in this state (board_members, by first + last name)
+    links,
   };
 }
 

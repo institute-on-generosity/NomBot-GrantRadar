@@ -22,6 +22,8 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 | `components/` | Shared UI: `SearchBox`, `FilterChips`, `ResultRow`, `Vote`, `Sidebar`, `ResearchBuddy`, `Modal`, `SidePanel`, `PrintButton` (print memo + stamp) |
 | `lib/landscape.ts`, `lib/themes.ts`, `components/Landscape*.tsx`, `components/CountyMap.tsx` | Landscape panel: breakdown, county map (`lib/geo/counties.json`, rebuilt by `npm run build:counties`), themes, funders |
 | `app/compare/`, `components/Compare*.tsx` | Compare 2–4 organizations side by side |
+| `lib/people.ts`, `components/PersonView.tsx`, `app/person/` | People: a name typed in search (`looksLikeName`) or `/person?name=` shows their board seats and profile; `boardLinks` feeds Board connections on org pages (generosity-data migration 018) |
+| `components/HeroFlip.tsx`, `lib/examples.ts` (`PROMPT_SETS`) | Home page: "Look up nonprofits / philanthropic leaders / foundations" flips, with example prompts for each |
 | `eval/` | `npm run eval` (search, 50 questions, goal ≥90% relevant) and `npm run eval:buddy` (Research Buddy, 30 questions, goal 0 unsupported claims) |
 
 ## Search eval

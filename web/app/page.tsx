@@ -15,18 +15,20 @@ import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
-import { EXAMPLES } from "@/lib/examples";
+import { PROMPT_SETS } from "@/lib/examples";
+import { HeroFlip } from "@/components/HeroFlip";
 import { applyOverrides, BUDGETS, MIN_BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
+import { PersonView } from "@/components/PersonView";
+import { looksLikeName, personProfile } from "@/lib/people";
 
-type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string } & Overrides;
+type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string } & Overrides;
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
-const ASK = "Which nonprofits are you looking for?";
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
@@ -52,12 +54,25 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const question = (p.question ?? "").trim().slice(0, 300);
   if (!question) {
     return (
-      <Hero>
-        <div className="chips suggest">{EXAMPLES.slice(0, 5).map((e) => <NavLink key={e} href={url({}, { question: e })} className="chip link" label="Reading your question…" search>{e}</NavLink>)}</div>
-      </Hero>
+      <Hero />
     );
   }
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
+  // A person's name ("Darren Walker"): their board seats, straight from the IRS board lists (no Claude
+  // calls). "as=topic" searches organizations for the same words instead.
+  if (p.as !== "topic" && looksLikeName(question)) {
+    const profile = await personProfile(question);
+    if (profile.seats.length) {
+      return (
+        <>
+          <div className="serp-head"><SearchBox key={question} value={question} placeholder={PLACEHOLDER} /></div>
+          <RecordSearch question={question} href={url(p, {})} total={profile.seats.length} />
+          <PersonView name={question} profile={profile} topicHref={url(p, { as: "topic" })} />
+          <Footer />
+        </>
+      );
+    }
+  }
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
   const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, drop: p.drop };
@@ -221,12 +236,10 @@ function ResultsSkeleton() {
 }
 
 // Empty home page: greeting and composer centered on screen, like Claude's new chat.
-function Hero({ children }: { children?: React.ReactNode }) {
+function Hero() {
   return (
     <div className="hero">
-      <h1 className="greet"><span className="logo">N</span>{ASK}</h1>
-      <SearchBox value="" placeholder={PLACEHOLDER} big />
-      {children}
+      <HeroFlip sets={PROMPT_SETS} />
       <Footer />
     </div>
   );
