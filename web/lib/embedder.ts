@@ -4,7 +4,7 @@
 import { memo } from "./memo";
 
 const DIMS = 512;
-export const MODEL_ID = "local:nomic-embed-text-v1.5@512";
+export const MODEL_ID = "local:nomic-embed-text-v1.5-fp32@512";
 
 type Extractor = (t: string[], o: { pooling: "mean" }) => Promise<{ tolist(): number[][] }>;
 let extractor: Promise<Extractor> | undefined;
@@ -16,7 +16,7 @@ export function embedQuery(text: string): Promise<number[]> {
 
 async function embedFresh(text: string): Promise<number[]> {
   extractor ??= import("@huggingface/transformers").then(
-    ({ pipeline }) => pipeline("feature-extraction", "nomic-ai/nomic-embed-text-v1.5", { dtype: "q8" }) as unknown as Extractor,
+    ({ pipeline }) => pipeline("feature-extraction", "nomic-ai/nomic-embed-text-v1.5", { dtype: "fp32" }) as unknown as Extractor,
   );
   const [v] = (await (await extractor)(["search_query: " + text], { pooling: "mean" })).tolist();
   const mean = v.reduce((a, b) => a + b, 0) / v.length;

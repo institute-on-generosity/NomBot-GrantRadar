@@ -83,7 +83,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | IRS EO BMF | 1.8M orgs: name, EIN, address, NTEE | [irs.gov](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) |
 | IRS SOI extract | Revenue, expenses, assets (~300K orgs) | [irs.gov](https://www.irs.gov/statistics/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data) |
 | Census SAIPE + population estimates | County poverty, income, population (3,144 counties) | [census.gov](https://www.census.gov/programs-surveys/saipe.html) |
-| IRS 990 e-file XML | Mission + program text (embeddings); website (28,843 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (50,971 filings) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
+| IRS 990 e-file XML | Mission + program text (embeddings); website (299,314 filings); FLAG diligence fields: prior year, balance sheet, functional expenses, board, policies, officers (513,813 filings, every state) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | IRS 990-PF e-file XML | Who funds these orgs (Funders tab): every US foundation, 2023–2025 IRS years (135,407 foundations, 4.84M grants; shared with GrantRadar) | [irs.gov](https://www.irs.gov/charities-non-profits/form-990-series-downloads) |
 | NCCS NTEE | Cause categories | [nccs](https://urbaninstitute.github.io/nccs-legacy/ntee/ntee.html) |
 | ProPublica API | Per-org detail, on demand | [propublica](https://projects.propublica.org/nonprofits/api) |
@@ -93,11 +93,11 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | | Local (now) | Cloud (from Oct 19) |
 |---|---|---|
 | Database | Postgres 17 + pgvector (Homebrew) | Supabase Pro, shared with GrantRadar |
-| Data | 5 states (WV, KY, TN, VA, OH) | All US |
+| Data | All US (since Oct 13; was WV, KY, TN, VA, OH) | All US |
 | ETL | Python, run by hand | GitHub Actions, monthly |
 | App | Next.js, `localhost` | Vercel |
 | LLM | Claude API (`@anthropic-ai/sdk`): parse and Research Buddy on Opus 5.5 (`LLM_MODEL`); relevance scoring and the AI overview on Sonnet 5.5 (`FAST_MODEL`) | Same |
-| Embeddings | nomic-embed-text (local, free) | Decide at cloud move: nomic or Voyage AI |
+| Embeddings | nomic-embed-text, full precision (local, free; 514K filings embedded on the Mac's GPU in ~2h) | Decide at cloud move: nomic or Voyage AI |
 
 No LangChain: switching Claude models is one env var. Pipeline: [`generosity-data`](https://github.com/institute-on-generosity/generosity-data).
 
@@ -125,6 +125,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Financial health** from SOI + the master file (trend = newer master-file revenue vs. newest SOI year) | Zoom-out feedback; only ~3K orgs have two SOI years, but 53K have a newer master-file revenue |
 | **FLAG diligence** on the org page (Financial, Legal and Governance, from 990 XML) | Oct 8 GSB philanthropy class (Nancy Lue, Valhalla): funders vet liquidity, reserves, growth, concentration, board and pay. Fixed, visible rules; no single AI verdict |
 | **Underserved areas** (Census SAIPE poverty + population by county) | Zoom-out feedback: show where need is high but matching groups are missing. Census file downloads, no API key; general poverty, not cause-specific need |
+| **National load, built early** (planned for the cloud move): every state, DC and Puerto Rico (1.97M orgs, 513,813 filings); search draws candidates from indexes, then joins newest-record views (`filing_latest`, `financials_latest`, `flag_latest`) | Lifts the 5-state limit. The old query sorted every org nationally (12–16s); now ~0.5s with a state, 3–6s nationwide. Embeddings moved to full precision (8-bit scored 0.975 against it) and were rebuilt on the Mac's GPU |
 
 ## Success metrics
 - ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~7s median)
@@ -189,9 +190,9 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 
 **Oct 5–18: Local proof of concept**
 - [x] Postgres + pgvector, schema
-- [x] BMF: 204,564 orgs
-- [x] SOI financials: 54,590 rows
-- [x] 990 text: 50,971 filings, all embedded
+- [x] BMF: 204,564 orgs (5 states) → **1,972,852 (all US, Oct 13)**
+- [x] SOI financials: 54,590 rows → **538,346**
+- [x] 990 text: 50,971 filings → **513,813**, all embedded
 - [x] Embeddings + index (local nomic, free)
 - [x] ZIP → county + Appalachia (ARC) lookup: 34,236 ZIPs
 - [x] Claude query parser (verified on 3 questions; ~2–5s)
@@ -205,9 +206,10 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [x] IRS financial (SOI) viewer; sources open beside the org in a popover
 - [x] Analysis panel: AI overview, breakdown, finances, map with Gaps, themes, funders (feedback, Oct 7)
 - [x] Compare 2–4 orgs; starred folders; staff + volunteer counts (feedback, Oct 7)
-- [x] FLAG diligence from 990 XML: 50,971 filings (prior year, balance sheet, spending, board, policies, officers)
+- [x] FLAG diligence from 990 XML: 513,813 filings (prior year, balance sheet, spending, board, policies, officers)
 - [x] Finance tags on results; Finances tab
 - [x] County need (Census SAIPE): 3,144 counties; Gaps view
+- [x] **National load (Oct 13):** every state, DC and Puerto Rico; US county map; search rebuilt to draw candidates from indexes (see Changes from the plan)
 
 **Oct 19–25: Cloud**
 - [ ] Supabase + data migrated

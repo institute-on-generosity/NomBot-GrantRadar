@@ -5,8 +5,17 @@ import type { Filters } from "./parse";
 
 export type Overrides = { st?: string; city?: string; region?: string; max?: string; min?: string; cause?: string; drop?: string };
 
-// Only these states are loaded for now.
-export const LOADED_STATES: [string, string][] = [["WV", "West Virginia"], ["KY", "Kentucky"], ["TN", "Tennessee"], ["VA", "Virginia"], ["OH", "Ohio"]];
+// Every state is loaded (plus DC and Puerto Rico), A–Z by name for the place chip.
+export const LOADED_STATES: [string, string][] = [
+  ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"], ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"],
+  ["DE", "Delaware"], ["DC", "District of Columbia"], ["FL", "Florida"], ["GA", "Georgia"], ["HI", "Hawaii"], ["ID", "Idaho"], ["IL", "Illinois"],
+  ["IN", "Indiana"], ["IA", "Iowa"], ["KS", "Kansas"], ["KY", "Kentucky"], ["LA", "Louisiana"], ["ME", "Maine"], ["MD", "Maryland"],
+  ["MA", "Massachusetts"], ["MI", "Michigan"], ["MN", "Minnesota"], ["MS", "Mississippi"], ["MO", "Missouri"], ["MT", "Montana"], ["NE", "Nebraska"],
+  ["NV", "Nevada"], ["NH", "New Hampshire"], ["NJ", "New Jersey"], ["NM", "New Mexico"], ["NY", "New York"], ["NC", "North Carolina"],
+  ["ND", "North Dakota"], ["OH", "Ohio"], ["OK", "Oklahoma"], ["OR", "Oregon"], ["PA", "Pennsylvania"], ["PR", "Puerto Rico"], ["RI", "Rhode Island"],
+  ["SC", "South Carolina"], ["SD", "South Dakota"], ["TN", "Tennessee"], ["TX", "Texas"], ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"],
+  ["WA", "Washington"], ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
+];
 export const BUDGETS = [100_000, 250_000, 500_000, 1_000_000, 5_000_000];
 // "Or more" sizes: for a small gift, a larger, established organization usually needs less checking first.
 export const MIN_BUDGETS = [1_000_000, 10_000_000];

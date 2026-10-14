@@ -1,4 +1,4 @@
-// Example questions, all within the loaded states (WV, KY, TN, VA, OH).
+// Example questions (every state is loaded; the first five, the home-page pills, stay in Appalachia, IoG's focus).
 // The first five are the home-page pills; all of them feed the search-bar suggestions.
 export const EXAMPLES = [
   "food banks in rural Appalachia that do workforce training, under $500K",
@@ -10,6 +10,8 @@ export const EXAMPLES = [
   "free health clinics in Virginia",
   "adult literacy programs in Ohio under $250K",
   "domestic violence shelters in Kentucky",
+  "food banks in Texas that run mobile pantries",
+  "climate education nonprofits in California under $1M",
   "after-school STEM programs in Virginia",
   "river and watershed conservation groups in Tennessee",
   "community foundations in Ohio",

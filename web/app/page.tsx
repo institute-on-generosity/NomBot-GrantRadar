@@ -233,5 +233,5 @@ function Hero({ children }: { children?: React.ReactNode }) {
 }
 
 function Footer() {
-  return <p className="note">Test version · covers WV, KY, TN, VA, OH · All figures come from public IRS filings; each result links to its sources.</p>;
+  return <p className="note">Test version · covers every US state · All figures come from public IRS filings; each result links to its sources.</p>;
 }

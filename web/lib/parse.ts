@@ -5,6 +5,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { claude, LLM_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Requirement } from "./search";
+import { LOADED_STATES } from "./filters";
 import { z } from "zod";
 
 export type Filters = {
@@ -17,8 +18,11 @@ export type Filters = {
   appalachia?: boolean; // only orgs in the ARC region (by ZIP -> county), not whole states
 };
 
-const STATES: Record<string, string> = { "west virginia": "WV", kentucky: "KY", tennessee: "TN", virginia: "VA", ohio: "OH" };
-const REGIONS: Record<string, string[]> = { appalachia: ["WV", "KY", "TN", "VA", "OH"], appalachian: ["WV", "KY", "TN", "VA", "OH"] };
+// State names, longest first so "west virginia" is read before "virginia".
+const STATES: Record<string, string> = Object.fromEntries(LOADED_STATES.map(([code, name]) => [name.toLowerCase(), code]).sort((a, b) => b[0].length - a[0].length));
+// The Appalachian Regional Commission's 13 states (the search then keeps only ARC counties, by ZIP).
+const ARC = ["AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV"];
+const REGIONS: Record<string, string[]> = { appalachia: ARC, appalachian: ARC };
 const NTEE: [RegExp, string, string][] = [[/\bfood (banks?|pantr(y|ies))\b|\bpantr(y|ies)\b|\bsoup kitchens?\b/i, "K3", "Food banks"]];
 const REQS: [RegExp, string, string[]][] = [
   [/\b(workforce|job (training|skills|readiness)|employment training|vocational)\b/i, "workforce training",
@@ -51,7 +55,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse:v5", 1000, 24 * 3600_000); // bump the name when Filters changes shape
+const cached = memo<Filters>("parse:v6", 1000, 24 * 3600_000); // bump the name when Filters changes shape
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }

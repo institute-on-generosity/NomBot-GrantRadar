@@ -47,6 +47,13 @@ export function orgHealth(r: any): Health | null {
   return { trend, margin: rev > 0 ? (rev - exp) / rev : null, year: r.fin_year, revenue: rev, expenses: exp, reserveMonths: exp > 0 && net != null ? net / (exp / 12) : null, reserveBasis: "net assets" };
 }
 
+// Place and cause filters, applied inside every candidate source (o = orgs).
+const PLACE = `(cardinality($4::text[]) = 0 OR o.state = ANY($4))
+         AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
+         AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))
+         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))`;
+const NEAREST = 2000; // closest filings by meaning per search
+
 export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
@@ -56,14 +63,29 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
     if (rows.length) vec = toSql(await embedQuery(semantic || q));
   }
   const { rows } = await db.query(
-    `WITH t AS (
-       SELECT DISTINCT ON (ein) ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
-       FROM filing_text ORDER BY ein, tax_year DESC NULLS LAST),
-     f AS (SELECT DISTINCT ON (ein) ein, tax_year, form, revenue, expenses, assets,
-                  coalesce(raw->>'totnetassetend', raw->>'totnetassetsend')::numeric AS net_assets
-           FROM financials ORDER BY ein, tax_year DESC),
-     x AS (SELECT DISTINCT ON (ein) ein, tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash
-           FROM filing_flag ORDER BY ein, tax_year DESC NULLS LAST),
+    // Candidates first, from indexes, so a search never scores every US nonprofit: the closest filings by
+    // meaning (HNSW, filtered to the place as it scans), keyword hits on names and filing text, and filings
+    // that state a required activity. Without a topic, everything in the place. Newest rows per org come
+    // from generosity-data's *_latest views (migration 015).
+    `WITH cand AS (
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
+        WHERE $2::vector IS NOT NULL AND t.embedding_model = $3 AND ${PLACE}
+        ORDER BY t.embedding <=> $2::vector LIMIT ${NEAREST})
+       UNION
+       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND o.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       UNION
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND t.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       UNION
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
+        WHERE cardinality($8::text[]) > 0 AND ${PLACE}
+          AND EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(t.mission, '') || ' ' || coalesce(t.programs, '') ~* p))
+       UNION
+       (SELECT o.ein FROM orgs o WHERE $1 = '' AND ${PLACE})),
+     t AS (SELECT t.ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
+           FROM filing_latest t JOIN cand USING (ein)),
+     f AS (SELECT f.* FROM financials_latest f JOIN cand USING (ein)),
+     x AS (SELECT x.ein, tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash
+           FROM flag_latest x JOIN cand USING (ein)),
      base AS (
        SELECT o.ein, o.name, o.city, o.state, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period,
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
@@ -73,11 +95,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
-       FROM orgs o LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein)
-       WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
-         AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
-         AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))  -- headquarters city
-         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))),  -- ARC region
+       FROM cand JOIN orgs o USING (ein) LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein)),
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
