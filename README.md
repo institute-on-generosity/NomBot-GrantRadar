@@ -23,7 +23,7 @@ Every foundation grant is public (990-PF, Part XV), but small nonprofits can't u
 1. Your mission is embedded (same local model as NomBot) and compared with the filed missions of every nonprofit that received a foundation grant: the 150 closest are candidates.
 2. Claude scores each candidate's **work** 0–100 against your mission, ignoring location (embeddings over-weight place words: "rural West Virginia" pulled health clinics into an animal-rescue match). Only **≥70** counts as a group "like yours".
 3. Each foundation scores the sum of ((score − 50) / 50)² over the groups like yours it paid: a few near-identical grantees beat many loose ones. Rows show ● same kind of work (≥85) and ○ closely related (70–84).
-4. Filters: **gives in** a state (every state; similar grantees come from all 473,474 nonprofits with an e-filed 990), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size, **grant type** (mostly unrestricted / mostly project grants).
+4. Filters: **gives in** a state (every state; similar grantees come from all 541,879 nonprofits with an e-filed 990), **open to applications** (drops foundations that only give to preselected charities), **typical grant** size, **grant type** (mostly unrestricted / mostly project grants).
 
 ### Grant types
 - Each grant's purpose is sorted by **keyword rules** (`web/lib/grantTypes.ts`, no Claude): **unrestricted** ("general operating", "charitable purposes", "unrestricted"), **project** (a program, scholarship, building, event), **policy** (public policy, advocacy, civic engagement; victim/child advocates count as services), or **unclear** ("donation", "support", a bare cause like "education").
@@ -99,7 +99,7 @@ GrantRadar is NomBot plus a grants table.
 |---|---|
 | **Built Oct 7** (planned Nov 23–Dec 6) | NomBot finished early; GrantRadar reuses its app, data and Research Buddy |
 | **How to apply + "Invitation only"** from Part XV 2a–d | 95,947 of 135,407 US foundations (71%) only give to preselected charities; applicants need to know before writing |
-| **Matcher favors precision**: 57% linked nationally (was 56% in 5 states), below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies and churches |
+| **Matcher favors precision**: 56% linked nationally (2.99M of 5.35M grants), below the 70% goal | A wrong link credits the wrong charity. Unlinked recipients include individuals, government bodies and churches |
 | **Assets and giving from the 990-PF XML**, not the SOI 990-PF file | Same numbers, one source per foundation |
 | **Funder sheet** opens over the matches (morphs from the row) | Keeps the ranked list in place while you compare funders |
 | **Claude checks "groups like yours"** (0–100 work match, ≥70 counts) | Embedding similarity alone matched on place words, ranking a health foundation third for animal rescue |
@@ -117,7 +117,7 @@ GrantRadar is NomBot plus a grants table.
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
 - ≥70% of matches rated relevant
-- ≥70% of grants linked to a recipient (**57%** so far: 2.74M of 4.84M, every state)
+- ≥70% of grants linked to a recipient (**56%** so far: 2.99M of 5.35M, every state)
 - Results <3s (**~0.5s** cached, ~2–5s new mission); every explanation cited
 - Adds <$50/mo
 
@@ -171,10 +171,10 @@ Funders read your 990 before your proposal: liquidity, reserves, growth, funding
 - [x] `grants` + `funders` migration (generosity-data `007`)
 - [x] Part XV extractor (`etl/load_grants.py`): grants paid + how to apply + invitation-only flag
 - [x] 990-PF financials: assets and grants paid, read from the 990-PF itself
-- [x] Grants loaded: **every US foundation, 2023–2025 IRS years: 135,407 foundations, 4.84M grants** (was 5 states, one year: 8,030 / 102,725)
+- [x] Grants loaded: **every US foundation, 2023–2026 IRS years: 138,734 foundations, 5.35M grants, $392B** (tax years mostly 2022–2025; was 5 states, one year: 8,030 / 102,725)
 
 **Nov 30–Dec 6: Local proof of concept**
-- [ ] Recipient matcher (≥70% linked): **57%** of grants, every state (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere; 8 parallel workers, ~1.5 h)
+- [ ] Recipient matcher (≥70% linked): **56%** of grants, every state (exact name, then trigram ≥0.7 same city / ≥0.9 elsewhere; 8 parallel workers, ~1.5 h)
 - [x] Funder ranking
 - [x] `/grants` match page
 - [x] "Why this funder?" (streams, cites each grant)
