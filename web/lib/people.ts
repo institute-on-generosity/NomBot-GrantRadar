@@ -43,7 +43,7 @@ export async function personSeats(name: string): Promise<{ key: string | null; s
 
 export type Profile = {
   key: string | null; seats: Seat[];
-  giving: { ein: string; org: string; total: number; grants: number; years: string; top: { ein: string | null; name: string; amount: number; grants: number }[] }[];
+  giving: { ein: string; org: string; total: number; grants: number; years: string; top: { ein: string | null; name: string; city: string | null; state: string | null; amount: number; grants: number }[] }[];
   peers: { name: string; shared: { ein: string; org: string }[] }[];   // people on 2+ of the same boards
   between: { from: string; fromOrg: string; to: string; toOrg: string; amount: number; grants: number }[]; // grants between their boards
 };
@@ -57,13 +57,13 @@ export async function personProfile(name: string): Promise<Profile> {
   const orgName = new Map(seats.map((s) => [s.ein, s.org]));
   const [giving, peers, between] = await Promise.all([
     funders.length ? db.query(
-      `WITH g AS (SELECT funder_ein, recipient_ein, max(recipient_name) AS name, sum(amount)::float8 AS amount, count(*)::int AS grants
+      `WITH g AS (SELECT funder_ein, recipient_ein, max(recipient_name) AS name, max(recipient_city) AS city, max(recipient_state) AS state, sum(amount)::float8 AS amount, count(*)::int AS grants
                   FROM grants WHERE funder_ein = ANY($1) GROUP BY funder_ein, recipient_ein, CASE WHEN recipient_ein IS NULL THEN recipient_name END),
             t AS (SELECT funder_ein, sum(amount)::float8 AS total, sum(grants)::int AS grants FROM g GROUP BY 1),
             y AS (SELECT funder_ein, min(tax_year) || '–' || max(tax_year) AS years FROM grants WHERE funder_ein = ANY($1) GROUP BY 1),
             r AS (SELECT g.*, row_number() OVER (PARTITION BY funder_ein ORDER BY amount DESC NULLS LAST) AS n FROM g)
        SELECT t.funder_ein, t.total, t.grants, y.years,
-              json_agg(json_build_object('ein', r.recipient_ein, 'name', coalesce(o.name, r.name), 'amount', r.amount, 'grants', r.grants) ORDER BY r.amount DESC NULLS LAST) AS top
+              json_agg(json_build_object('ein', r.recipient_ein, 'name', coalesce(o.name, r.name), 'city', r.city, 'state', r.state, 'amount', r.amount, 'grants', r.grants) ORDER BY r.amount DESC NULLS LAST) AS top
        FROM t JOIN y USING (funder_ein) JOIN r USING (funder_ein) LEFT JOIN orgs o ON o.ein = r.recipient_ein
        WHERE r.n <= 5 GROUP BY t.funder_ein, t.total, t.grants, y.years ORDER BY t.total DESC NULLS LAST`, [funders]) : { rows: [] },
     db.query(
