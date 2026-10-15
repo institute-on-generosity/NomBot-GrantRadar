@@ -59,7 +59,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
         {o.website && <> · <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title="Their website, as listed on their Form 990">{o.website.replace(/^www\./, "").replace(/\/.*$/, "")} ↗</a></>}
       </p>
-      {o.team && <Team {...o.team} />}
+      {(o.team || o.age != null) && <Team team={o.team} age={o.age} since={o.ruling} />}
 
       <section>
         <h2>Mission</h2>
@@ -108,7 +108,7 @@ async function Org({ params, searchParams, modal }: Props) {
           {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
           <dt>IRS status</dt><dd>{o.status.standing}</dd>
-          {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}</dd></>}
+          {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}{o.age != null && ` (${o.age} ${o.age === 1 ? "year" : "years"})`}</dd></>}
           <dt>Address</dt><dd>{[o.careOf, o.street && titleCase(o.street), [o.city && titleCase(o.city), o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</dd>
         </dl>
       </section>
@@ -125,16 +125,27 @@ async function Org({ params, searchParams, modal }: Props) {
 }
 
 // Staff and volunteers (Form 990 Part I lines 5-6): how the work gets done, e.g. entirely by volunteers.
-function Team({ staff, volunteers, year }: { staff: number | null; volunteers: number | null; year: number }) {
+// Then the track record: years since the IRS ruling.
+function Team({ team, age, since }: { team: { staff: number | null; volunteers: number | null; year: number } | null; age: number | null; since: string | null }) {
   const n = (v: number) => v.toLocaleString("en-US");
-  const allVolunteer = staff === 0 && (volunteers ?? 0) > 0;
+  const allVolunteer = team?.staff === 0 && (team.volunteers ?? 0) > 0;
   return (
-    <p className="team" title={`Form 990 (${year}), Part I lines 5–6`}>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.5" cy="9.5" r="2.4" /><path d="M15.5 14.2A4.6 4.6 0 0 1 20.5 19" /></svg>
-      {staff != null && <span><b>{n(staff)}</b> staff</span>}
-      {volunteers != null && <span><b>{n(volunteers)}</b> volunteers</span>}
-      {allVolunteer && <span className="badge">All-volunteer</span>}
-    </p>
+    <div className="team">
+      {team && (
+        <p title={`Form 990 (${team.year}), Part I lines 5–6`}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.5" cy="9.5" r="2.4" /><path d="M15.5 14.2A4.6 4.6 0 0 1 20.5 19" /></svg>
+          {team.staff != null && <span><b>{n(team.staff)}</b> staff</span>}
+          {team.volunteers != null && <span><b>{n(team.volunteers)}</b> volunteers</span>}
+          {allVolunteer && <span className="badge">All-volunteer</span>}
+        </p>
+      )}
+      {age != null && (
+        <p title={`Tax-exempt since ${since} (IRS ruling date)`}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="4" y="5.5" width="16" height="14.5" rx="2.5" /><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" /></svg>
+          <span>{age < 1 ? <><b>Under 1</b> year</> : <><b>{age}</b> {age === 1 ? "year" : "years"}</>} tax-exempt</span>
+        </p>
+      )}
+    </div>
   );
 }
 

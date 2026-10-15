@@ -480,8 +480,9 @@ button.fchip-main { cursor: pointer; }
   .loading, .skeleton { opacity: 1; }
 }
 
-/* Org team size (staff, volunteers) under the title */
-.team { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; font-size: 14px; color: var(--mute); }
+/* Org team size (staff, volunteers) and years tax-exempt under the title */
+.team { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; margin-top: 12px; font-size: 14px; color: var(--mute); }
+.team > p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
 .team svg { color: var(--g); flex: none; }
 .team b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .team .badge { font-size: 12px; font-weight: 600; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 9px; }
@@ -575,9 +576,20 @@ button.fchip-main { cursor: pointer; }
 .ls-fgrantees { grid-area: grantees; margin-top: 3px; font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ls-themes { display: grid; gap: 6px; }
 .ls-themes details { border-radius: 12px; background: var(--fill); padding: 9px 12px; }
-.ls-themes summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; font-size: 14px; }
+/* Theme card: name and $ per org on one line, a bar scaled to the best-funded theme, then the totals */
+.ls-themes summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name per" "bar bar" "meta meta"; align-items: baseline; gap: 5px 12px; cursor: pointer; list-style: none; font-size: 14px; }
 .ls-themes summary::-webkit-details-marker { display: none; }
-.ls-themes summary span { font-size: 12px; color: var(--mute); background: var(--bg); border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.ls-tname { grid-area: name; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; }
+.ls-tname b { font-weight: 600; }
+.ls-least { font-style: normal; font-size: 11px; font-weight: 600; color: #8a5a00; background: rgba(245,165,36,.16); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+@media (prefers-color-scheme: dark) { .ls-least { color: #ffc56b; background: rgba(245,165,36,.18); } }
+.ls-tper { grid-area: per; font-size: 12.5px; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ls-tper b { color: var(--ink); font-weight: 600; }
+.ls-themes summary .ls-track { grid-area: bar; align-self: center; background: var(--bg); }
+.ls-tmeta { grid-area: meta; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.ls-themes li:has(.ls-tamt) { align-items: baseline; }
+.ls-themes li .ls-tamt { flex: none; min-width: 3.2em; text-align: right; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ls-themes li .ls-tamt.none { color: var(--faint); }
 .ls-themes ul { list-style: none; margin-top: 6px; display: grid; gap: 3px; }
 .ls-themes li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
 .ls-themes li a { color: var(--ink); text-decoration: none; }
@@ -1032,7 +1044,7 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 .vc-list dt .dot { margin-left: -13px; }
 .vc-legend .dot { margin-left: -12px; }
 /* Icons in flex rows: the text's cap middle sits ~0.8px below the line's middle, so icons come down to it */
-.side-new > svg, .panel-close > svg, .team > svg { translate: 0 .75px; }
+.side-new > svg, .panel-close > svg, .team > p > svg { translate: 0 .75px; margin-right: -6px; }
 
 /* Print: a button on org pages and searches; on paper the app around the page drops away, leaving a
    short memo (title, health and questions, finances, leaders, sources) with where it came from. */
@@ -1080,3 +1092,118 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 /* Oct 13 optical pass: Finances rows get a fill when picked, so center their text like the pills */
 .fin-rows button { padding-top: 5.25px; padding-bottom: 6.75px; }
 .greet .logo { padding-bottom: 0; } /* the 1.5px nudge is for the small sidebar logo */
+
+/* Track record in the Overview tab: Breakdown-style rows (whole row is a button), list under the open one */
+.track { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.track h3 b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.track button.ls-row { width: calc(100% + 12px); font: inherit; font-size: 12.5px; text-align: left; background: none; border: 0; cursor: pointer; }
+.track button.ls-row:focus-visible { outline: 2px solid var(--g); outline-offset: 1px; }
+.track button.ls-row.on { background: var(--fill); color: var(--ink); }
+.track button.ls-row.on .ls-track i { opacity: 1; }
+.track button.ls-row:disabled { cursor: default; background: none; color: var(--faint); }
+.track-list { margin: 4px 0 8px; }
+.track-list > p { font-size: 11.5px; color: var(--faint); margin: 0 0 3px; }
+.track-list .ls-orgs { margin: 0; max-height: none; }
+.track-list .ls-org { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+.track-list .ls-org em { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-size: 11.5px; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.track-more { margin-top: 4px; font: inherit; font-size: 12px; color: var(--g); background: none; border: 0; padding: 2px 0; cursor: pointer; }
+.track-more:hover { text-decoration: underline; }
+
+/* Insights feed (home "Insights" tab and /insights): filter row, then one card per finding.
+   Card: kicker, headline, summary, chart, actions, then a quiet footer (method, sources, date). */
+.hero:has(.ins-feed) { justify-content: flex-start; min-height: 0; padding-top: 6vh; padding-bottom: 0; }
+.hero:has(.ins-feed) .greet { margin-bottom: 18px; }
+.hero:has(.ins-feed) .flip-tabs { margin-top: 0; }
+.hero .ins-feed { width: 100%; margin-top: 28px; text-align: left; }
+.ins-page { max-width: 760px; }
+.ins-page .hint { margin-bottom: 22px; }
+.ins-bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 10px 0; margin-bottom: 4px; background: var(--bg); box-shadow: 0 1px 0 var(--line); }
+.ins-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+.ins-chips button { flex: none; font: inherit; font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 5.25px 12px 6.75px; cursor: pointer; transition: background-color .15s, color .15s; }
+.ins-chips button:hover:not(:disabled) { background: var(--fill-2); color: var(--ink); }
+.ins-chips button.on { background: var(--g-tint); color: var(--g-dark); }
+.ins-chips button:disabled { color: var(--faint); cursor: default; opacity: .6; }
+.ins-tools { display: flex; align-items: center; gap: 6px; flex: none; }
+.ins-tools select { font: inherit; font-size: 13px; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 5.25px 10px 6.75px; cursor: pointer; }
+.ins-report-btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--ink-2); background: none; border: 0; border-radius: 999px; padding: 5.25px 8px 6.75px 12px; box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; }
+.ins-report-btn:hover, .ins-report-btn.on { background: var(--fill); color: var(--ink); }
+.ins-report-btn span { min-width: 18px; padding: 1px 5px; border-radius: 999px; background: var(--fill-2); font-size: 11.5px; font-variant-numeric: tabular-nums; text-align: center; }
+.ins-chips button:focus-visible, .ins-tools > *:focus-visible, .ins-btn:focus-visible { outline: 2px solid var(--g); outline-offset: 1px; }
+
+.ins-card { padding: 26px 0 22px; border-bottom: 1px solid var(--line); }
+.ins-kicker { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--g); text-transform: uppercase; }
+.ins-card h2 { margin-top: 6px; font-size: 21px; font-weight: 600; letter-spacing: -.022em; line-height: 1.25; text-wrap: balance; color: var(--ink); }
+.ins-summary { margin-top: 8px; font-size: 15px; color: var(--ink-2); max-width: 68ch; text-wrap: pretty; }
+.ins-chart { width: 100%; min-height: 180px; margin-top: 18px; }
+.ins-chart > .vega-embed { width: 100%; display: block; }
+.ins-chart .vega-embed summary { display: none; } /* vega-embed's own menu (actions are off) */
+.ins-chart-err { margin-top: 14px; font-size: 13px; color: var(--mute); }
+.ins-sk-chart { height: 200px; margin-top: 18px; border-radius: 12px; }
+.ins-card .sk-line.short { width: 22%; height: 10px; margin-top: 0; }
+.ins-card .sk-title { margin-top: 12px; width: 70%; height: 20px; }
+
+.ins-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 16px; }
+.ins-btn { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--ink-2); background: var(--fill); border: 0; border-radius: 999px; padding: 5.25px 12px 6.75px; text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s; }
+.ins-btn:hover:not(:disabled) { background: var(--fill-2); color: var(--ink); }
+.ins-btn:disabled { opacity: .45; cursor: default; }
+.ins-btn.primary { background: var(--g-fill); color: #fff; }
+.ins-btn.primary:hover { background: var(--g-fill-hover); color: #fff; }
+.ins-btn.save.on { background: var(--g-tint); color: var(--g-dark); }
+.ins-btn > svg { translate: 0 .75px; margin-left: -2px; }
+.ins-spark { color: var(--g); margin-left: -2px; }
+.ins-split { display: inline-flex; gap: 1px; }
+.ins-split .ins-btn:first-child { border-radius: 999px 0 0 999px; padding-right: 10px; }
+.ins-split .ins-btn:last-child { border-radius: 0 999px 999px 0; padding-left: 10px; }
+
+.ins-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-top: 14px; font-size: 12.5px; color: var(--mute); }
+.ins-method-btn { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-weight: 500; color: var(--ink-2); background: none; border: 0; padding: 0; cursor: pointer; }
+.ins-method-btn::before { content: "›"; display: inline-block; transition: transform .2s; }
+.ins-method-btn[aria-expanded="true"]::before { transform: rotate(90deg); }
+.ins-method-btn:hover { color: var(--ink); }
+.ins-method-btn:focus-visible { outline: 2px solid var(--g); outline-offset: 2px; }
+.ins-method { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--fill); color: var(--ink-2); font-size: 13px; line-height: 1.55; min-width: 0; }
+.ins-method > p + p { margin-top: 6px; }
+.ins-method b { font-weight: 600; color: var(--ink); }
+.ins-method pre { margin-top: 10px; max-height: 260px; overflow: auto; padding: 10px 12px; border-radius: 10px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.ins-method code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 11.5px; line-height: 1.5; color: var(--ink); white-space: pre; }
+.ins-sources { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; }
+.ins-sources a { text-decoration: none; }
+.ins-sources a:hover { text-decoration: underline; }
+.ins-date { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
+.ins-empty { padding: 40px 0; text-align: center; font-size: 14px; color: var(--mute); }
+.ins-feed > .note { text-align: center; }
+
+.ins-report { margin: 12px 0 4px; padding: 14px 16px; border-radius: 16px; background: var(--fill); }
+.ins-report header { display: flex; align-items: center; gap: 10px; }
+.ins-report header b { font-size: 15px; font-weight: 600; }
+.ins-report header .iconbtn { margin-left: auto; margin-right: -6px; }
+.ins-report-note { font-size: 12.5px; color: var(--mute); }
+.ins-report ol { list-style: none; margin-top: 8px; }
+.ins-report li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.ins-report li a { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ins-report li a:hover { color: var(--g); }
+.ins-report li small { flex: none; font-size: 12px; color: var(--faint); }
+.ins-report li .iconbtn { width: 24px; height: 24px; margin-right: -4px; }
+.ins-report-actions { display: flex; gap: 6px; margin: 10px 0 8px; }
+.ins-report > .ins-report-note:last-child { margin-top: 0; }
+
+.ins-orgs { list-style: none; margin-top: 12px; }
+.ins-orgs li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ins-orgs a { font-weight: 600; text-decoration: none; color: var(--ink); }
+.ins-orgs a:hover { color: var(--g); }
+.ins-orgs span { font-size: 13px; color: var(--mute); }
+
+/* vega-tooltip, in the app's colors */
+#vg-tooltip-element { font-family: var(--sans) !important; font-size: 12px !important; color: var(--ink) !important; background: var(--bg) !important; border: 0 !important; border-radius: 10px !important; box-shadow: 0 0 0 1px var(--line), var(--shadow) !important; padding: 8px 10px !important; }
+#vg-tooltip-element table tr td.key { color: var(--mute) !important; }
+
+@media (max-width: 640px) {
+  .ins-bar { flex-wrap: wrap; }
+  .ins-chips { flex-basis: 100%; }
+  .ins-card h2 { font-size: 19px; }
+  .ins-date { margin-left: 0; }
+}
+@media print {
+  .ins-bar, .ins-actions, .ins-report { display: none !important; }
+  .ins-card { break-inside: avoid; }
+}

@@ -18,12 +18,13 @@ const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3"
 // citing each organization as [n] (opens it in a popover), and shows a summary of its reasoning.
 // A floating button opens it as a chat panel docked on the right, beside the results.
 // Conversations are saved per search (convKey) in this browser; History lists them all.
-export function ResearchBuddy({ question, overrides, all, convKey, startOpen = false }: {
-  question: string; overrides: Record<string, string | undefined>; all: boolean; convKey: string; startOpen?: boolean;
+// startAsk: a question ready in the input (e.g. "Go deeper" on an insight), not sent until the viewer does.
+export function ResearchBuddy({ question, overrides, all, convKey, startOpen = false, startAsk = "" }: {
+  question: string; overrides: Record<string, string | undefined>; all: boolean; convKey: string; startOpen?: boolean; startAsk?: string;
 }) {
   // Restored from storage on the client; the panel (the only place turns render) starts closed or client-opened.
   const [turns, setTurns] = useState<Turn[]>(() => (typeof window === "undefined" ? [] : findConversation(convKey)?.turns.map((t) => ({ ...t, status: "done" as const })) ?? []));
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(startAsk);
   const [open, setOpen] = useState(startOpen);
   const [view, setView] = useState<"chat" | "history">("chat");
   const saved = useStoredList<Conversation>(BUDDY_KEY, "nombot-buddy");

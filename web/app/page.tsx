@@ -25,14 +25,14 @@ import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { PersonView } from "@/components/PersonView";
 import { looksLikeName, personProfile } from "@/lib/people";
 
-type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string } & Overrides;
+type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string; ask?: string; tab?: string } & Overrides;
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
 
 // Build a "/?..." URL from the current params plus changes.
 function url(p: Params, change: Partial<Params>) {
-  const merged = { ...p, focus: "", buddy: "", ...change };
+  const merged = { ...p, focus: "", buddy: "", ask: "", ...change };
   const qs = new URLSearchParams(Object.entries(merged).filter(([, v]) => v) as [string, string][]);
   return `/?${qs}`;
 }
@@ -54,7 +54,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const question = (p.question ?? "").trim().slice(0, 300);
   if (!question) {
     return (
-      <Hero />
+      <Hero insights={p.tab === "insights"} />
     );
   }
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)
@@ -97,7 +97,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
 
-      <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} question={question} overrides={overrides} all={includeInactive} />
+      <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} startAsk={(p.ask ?? "").slice(0, 1000)} question={question} overrides={overrides} all={includeInactive} />
 
 
       {/* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */}
@@ -236,10 +236,10 @@ function ResultsSkeleton() {
 }
 
 // Empty home page: greeting and composer centered on screen, like Claude's new chat.
-function Hero() {
+function Hero({ insights }: { insights: boolean }) {
   return (
     <div className="hero">
-      <HeroFlip sets={PROMPT_SETS} />
+      <HeroFlip key={insights ? "insights" : "search"} sets={PROMPT_SETS} startInsights={insights} />
       <Footer />
     </div>
   );

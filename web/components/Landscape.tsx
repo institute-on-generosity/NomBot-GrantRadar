@@ -5,7 +5,8 @@ import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
 import type { MapData } from "./LandscapeMap";
 import { NavLink } from "./NavLink";
-import { money } from "@/lib/filters";
+import { TrackRecord } from "./TrackRecord";
+import { LOADED_STATES, money } from "@/lib/filters";
 import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
 import { isStrong, type rank } from "@/lib/rerank";
@@ -23,22 +24,25 @@ export async function Landscape({ question, filters, includeInactive, map, overv
   const l = await landscape(filters, includeInactive);
   const first = { key: "overview", label: "Overview", title: "AI overview", node: overview };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
+  const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
+  const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
     <LandscapeTabs views={[
-      first,
+      { ...first, node: <>{overview}{track}</> },
       { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} orgs={l.orgs} />
           <Bars title="Places" bars={l.cities} orgs={l.orgs} />
           <Bars title="Causes" bars={l.causes} orgs={l.orgs} />
           <Bars title="Team" bars={l.team} orgs={l.orgs} note={`${l.teamReported} report staff`} />
+          <Bars title="Track record" bars={l.ages} orgs={l.orgs} note="Years tax-exempt" />
         </div>
       ) },
       { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
         <FinanceView signals={l.health.signals} orgs={Object.fromEntries(l.orgs.map((o, i) => [o.ein.replace("-", ""), { ein: o.ein, name: o.name, place: [o.city, o.state].filter(Boolean).join(", "), rank: i }]))} />
       ) },
       { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map({ counts: l.counties, countyOrgs: l.countyOrgs, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed, usPoverty: l.usPoverty, povertyCut: l.povertyCut }) },
-      { key: "themes", label: "Themes", title: "Kinds of work", sub: "Grouped by Claude", node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} /></Suspense> },
+      { key: "themes", label: "Themes", title: "Kinds of work", sub: `Grouped by Claude · grants ${l.grantYears[0]}–${l.grantYears[1]}`, node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} states={filters.states} /></Suspense> },
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (
           <>
@@ -96,15 +100,38 @@ function Bars({ title, bars, orgs, note }: { title: string; bars: Bar[]; orgs: A
   );
 }
 
-async function Themes({ question, l }: { question: string; l: Awaited<ReturnType<typeof landscape>> }) {
+// Each kind of work with the foundation money its organizations received in the newest grant years,
+// highest median per organization first (orgs with no grants count as $0, so one big grantee can't
+// make a theme look well funded), so the least funded approaches in a field stand out.
+async function Themes({ question, l, states }: { question: string; l: Awaited<ReturnType<typeof landscape>>; states: string[] }) {
   const ts = await themes(question, l);
   if (!ts.length) return <p className="ls-note">No clear themes in these results.</p>;
+  const byEin = new Map(l.orgs.map((o) => [o.ein, o]));
+  const rows = ts.map((t) => {
+    const os = t.orgs.map((o) => ({ ...o, grants: byEin.get(o.ein)?.grants ?? 0, local: byEin.get(o.ein)?.local ?? 0 }));
+    const total = os.reduce((a, o) => a + o.grants, 0);
+    const xs = os.map((o) => o.grants).sort((a, b) => a - b), mid = xs.length >> 1;
+    const median = xs.length % 2 ? xs[mid] : (xs[mid - 1] + xs[mid]) / 2;
+    return { ...t, orgs: os.sort((a, b) => b.grants - a.grants), total, local: os.reduce((a, o) => a + o.local, 0), funded: os.filter((o) => o.grants > 0).length, median };
+  }).sort((a, b) => b.median - a.median || b.total - a.total);
+  const max = Math.max(1, rows[0].median);
+  const least = rows.length > 1 && rows[rows.length - 1].median < rows[0].median ? rows[rows.length - 1] : null; // ties share the tag
+  // State searches: how much comes from foundations in the organizations' own state
+  const home = states.length === 1 ? `${LOADED_STATES.find(([c]) => c === states[0])?.[1] ?? states[0]} foundations` : "in-state foundations";
+  const years = `${l.grantYears[0]}–${l.grantYears[1]}`;
   return (
     <div className="ls-themes">
-      {ts.map((t) => (
+      {rows.map((t) => (
         <details key={t.label}>
-          <summary><b>{t.label}</b><span>{t.orgs.length}</span></summary>
-          <ul>{t.orgs.map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" title={`${o.name} · ${o.place}`} label="Opening the organization…"><b>{o.name}</b><span>{o.place}</span></NavLink></li>)}</ul>
+          <summary>
+            <span className="ls-tname"><b>{t.label}</b>{least && t.median <= least.median && <em className="ls-least">Least funded</em>}</span>
+            <span className="ls-tper" title={`The middle organization's foundation grants, ${years}. Organizations with no grants count as $0.`}><b>{money(t.median)}</b> median per org</span>
+            <span className="ls-track"><i style={{ width: `${(100 * t.median) / max}%` }} /></span>
+            <span className="ls-tmeta" title={`Linked 990-PF grants, ${years}. About a third of grants can't be matched to an organization, so totals run low.`}>
+              {money(t.total)} to {t.funded} of {t.orgs.length} orgs{states.length > 0 && t.total > 0 && <> · {Math.round((100 * t.local) / t.total)}% from {home}</>}
+            </span>
+          </summary>
+          <ul>{t.orgs.map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" title={`${o.name} · ${o.place}`} label="Opening the organization…"><b>{o.name}</b><span>{o.place}</span></NavLink><span className={o.grants > 0 ? "ls-tamt" : "ls-tamt none"}>{money(o.grants)}</span></li>)}</ul>
         </details>
       ))}
     </div>

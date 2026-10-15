@@ -1,7 +1,8 @@
 // The landscape behind a search: the 200 organizations closest to the question (same filters and
 // hybrid ranking as the results), summarized so users can zoom out: sizes, places, causes, team
 // sizes, counties (for the map), the foundations that fund this field (from 990-PF grants), and
-// financial health: revenue trend, surplus or deficit, reserves and where the money comes from.
+// financial health: revenue trend, surplus or deficit, reserves and where the money comes from; each
+// organization's age (track record) and its foundation grants in the newest years (funding by theme).
 import { titleCase } from "../components/text";
 import { db } from "./db";
 import { LOADED_STATES } from "./filters";
@@ -9,6 +10,7 @@ import { memo } from "./memo";
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 import { searchCandidates } from "./rerank";
+import { orgAge } from "./org";
 import { orgHealth, type Health as OrgHealth } from "./search";
 
 export const LANDSCAPE = 200;
@@ -23,6 +25,9 @@ export type Landscape = {
   causes: Bar[];     // key = NTEE major letter
   team: Bar[];       // all-volunteer, 1-10, 11-50, 51+ staff
   teamReported: number;
+  ages: Bar[];       // years since the IRS ruling: under 5, 5-15, 15-30, 30+
+  medianAge: number | null; // median years tax-exempt, for the Overview tab
+  grantYears: [number, number]; // tax years summed in orgs[].grants (the newest three loaded)
   counties: Record<string, number>;
   countyOrgs: Record<string, { ein: string; name: string; city: string | null }[]>; // per county, closest matches first
   appalachia: string[];
@@ -36,7 +41,9 @@ export type Landscape = {
   usPoverty: number | null; // national poverty rate, for comparison
   funders: Funder[];
   funded: number;    // organizations in the landscape that received at least one foundation grant
-  orgs: { ein: string; name: string; city: string | null; state: string | null; text: string }[];
+  // grants: linked 990-PF grants in grantYears; local: the part from foundations in the org's own state
+  // since: year of the IRS ruling (track record)
+  orgs: { ein: string; name: string; city: string | null; state: string | null; text: string; grants: number; local: number; since: number | null }[];
   health: Health;
 };
 // Financial health, from the newest SOI extract year (and the IRS master file for a newer revenue figure).
@@ -59,13 +66,21 @@ const tally = <T,>(xs: T[], key: (x: T) => string | null) => {
   return [...m].sort((a, b) => b[1] - a[1]);
 };
 
+// The newest three tax years of 990-PF grants loaded (the newest is partial while the IRS releases it).
+const newestYear = memo<number>("grant-year", 1, 24 * 3600_000);
+const grantYears = async (): Promise<[number, number]> => {
+  const to = await newestYear("", async () => Number((await db.query(`SELECT max(tax_year) AS y FROM funders`)).rows[0]?.y ?? new Date().getFullYear() - 1));
+  return [to - 2, to];
+};
+
 async function build(filters: Filters, includeInactive: boolean): Promise<Landscape> {
   const { results } = await searchCandidates(filters, { limit: LANDSCAPE, includeInactive });
   const eins = results.map((r) => r.ein.replace("-", ""));
   // Only states whose nonprofits are loaded: elsewhere every county would look like a gap.
   const loaded = new Set(LOADED_STATES.map(([c]) => c));
   const mapStates = (filters.states.length ? filters.states : [...new Set(results.map((r) => r.state).filter((x): x is string => Boolean(x)))]).filter((st) => loaded.has(st));
-  const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health, { rows: need }] = await Promise.all([
+  const years = await grantYears();
+  const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health, { rows: need }, { rows: track }] = await Promise.all([
     db.query(`SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [eins]),
     db.query(`SELECT z.county_fips, o.ein FROM orgs o JOIN zip_regions z ON z.zip5 = left(o.zip, 5) WHERE o.ein = ANY($1)`, [eins]),
     db.query(`SELECT DISTINCT county_fips FROM zip_regions WHERE appalachia`),
@@ -81,7 +96,15 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
                      (SELECT poverty_rate FROM county_need WHERE county_fips = '00000') AS us_rate FROM county_need c
               WHERE c.state = ANY($1) AND (NOT $2 OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.county_fips = c.county_fips AND z.appalachia))`,
       [mapStates, Boolean(filters.appalachia)]),
+    // Age and recent foundation money per org (grants_recipient_idx, ~0.1s for 200 orgs)
+    db.query(`SELECT o.ein, o.ruling, coalesce(g.amount, 0)::bigint AS grants, coalesce(g.local, 0)::bigint AS local FROM orgs o
+              LEFT JOIN LATERAL (SELECT sum(g.amount) AS amount, sum(g.amount) FILTER (WHERE f.state = o.state) AS local
+                                 FROM grants g JOIN funders f ON f.ein = g.funder_ein
+                                 WHERE g.recipient_ein = o.ein AND g.tax_year BETWEEN $2 AND $3) g ON true
+              WHERE o.ein = ANY($1)`, [eins, ...years]),
   ]);
+  const trackOf = new Map(track.map((r) => [r.ein as string, { age: orgAge(r.ruling), since: orgAge(r.ruling) == null ? null : Number(String(r.ruling).slice(0, 4)), grants: Number(r.grants), local: Number(r.local) }]));
+  const AGES: [string, string, number, number][] = [["0", "Under 5 years", 0, 5], ["5", "5–15 years", 5, 15], ["15", "15–30 years", 15, 30], ["30", "30+ years", 30, Infinity]];
 
   const t = team.filter((r) => r.employees != null);
   const teamBand = (staff: number, vols: number | null) => staff === 0 ? ((vols ?? 0) > 0 ? "vol" : null) : staff <= 10 ? "s" : staff <= 50 ? "m" : "l";
@@ -117,6 +140,15 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
       return { key, label, count: orgs.length, orgs };
     }),
     teamReported: t.length,
+    ages: AGES.map(([key, label, lo, hi]) => {
+      const orgs = pick((r) => { const a = trackOf.get(r.ein.replace("-", ""))?.age; return a != null && a >= lo && a < hi; });
+      return { key, label, count: orgs.length, orgs };
+    }),
+    grantYears: years,
+    medianAge: (() => {
+      const xs = [...trackOf.values()].map((t) => t.age).filter((a): a is number => a != null).sort((a, b) => a - b);
+      return xs.length ? xs[Math.floor(xs.length / 2)] : null;
+    })(),
     counties: Object.fromEntries(Object.entries(countyOrgs).map(([f, os]) => [f, os.length])),
     countyOrgs,
     mapStates,
@@ -131,7 +163,8 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
     appalachia: app.map((r) => r.county_fips),
     funders: funders.map((f) => ({ ein: f.ein, name: title(f.name), city: f.city ? title(f.city) : null, state: f.state, orgs: f.orgs, amount: Number(f.amount), inviteOnly: f.invite_only, grantees: ((f.grantees ?? []) as { ein: string; name: string }[]).map((g) => ({ ein: g.ein, name: title(g.name) })).sort((a, b) => a.name.localeCompare(b.name)) })),
     funded: funded?.n ?? 0,
-    orgs: results.map((r) => ({ ein: r.ein, name: title(r.name), city: r.city ? title(r.city) : null, state: r.state, text: [r.mission, r.programs].filter(Boolean).join(" ").slice(0, 220) })),
+    orgs: results.map((r) => ({ ein: r.ein, name: title(r.name), city: r.city ? title(r.city) : null, state: r.state, text: [r.mission, r.programs].filter(Boolean).join(" ").slice(0, 220),
+      grants: trackOf.get(r.ein.replace("-", ""))?.grants ?? 0, local: trackOf.get(r.ein.replace("-", ""))?.local ?? 0, since: trackOf.get(r.ein.replace("-", ""))?.since ?? null })),
   };
 }
 
@@ -182,7 +215,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v19", 200, 3600_000); // v19: hybrid ranking reweighted (keyword 0.1)
+const cached = memo<Landscape>("landscape:v23", 200, 3600_000); // v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

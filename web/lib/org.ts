@@ -45,7 +45,8 @@ export async function getOrg(einParam: string) {
     state: o.state as string | null,
     zip: o.zip as string | null,
     subsection: o.subsection as string | null,
-    ruling: o.ruling ? String(o.ruling).slice(0, 4) : null,
+    ruling: orgAge(o.ruling) != null ? String(o.ruling).slice(0, 4) : null,
+    age: orgAge(o.ruling), // track record: whole years since the IRS ruling
     ntee: o.ntee_cd ? { code: o.ntee_cd as string, label: nteeLabel(o.ntee_cd) } : null,
     // The organization's own site as it lists it on its 990 header, so donors can look for themselves.
     website: w?.website as string | null ?? null,
@@ -83,6 +84,15 @@ function income(f: { tax_year: number; form: string; revenue: string | null; raw
   const other = Math.max(0, total - known.reduce((a, p) => a + p.amount, 0));
   const parts = [...known, { key: "other", label: "Other", amount: other }].filter((p) => p.amount > 0);
   return { year: f.tax_year, form: f.form, total, parts, gifts: Math.min(1, known[0].amount / total) };
+}
+
+// Years since the IRS ruling date (YYYYMM), the closest public stand-in for an organization's age.
+// Null when the master file has no date ("000000").
+export function orgAge(ruling: string | null, now = new Date()) {
+  const m = /^(\d{4})(\d{2})$/.exec(ruling ?? "");
+  if (!m || Number(m[1]) < 1800 || Number(m[2]) < 1 || Number(m[2]) > 12) return null;
+  const months = (now.getFullYear() - Number(m[1])) * 12 + now.getMonth() + 1 - Number(m[2]);
+  return months < 0 ? null : Math.floor(months / 12);
 }
 
 // IRS master file codes in plain words (EO BMF documentation: status, foundation and subsection codes).
