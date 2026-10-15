@@ -11,6 +11,9 @@ import { money } from "@/lib/filters";
 import { filingUrl, getFunder } from "@/lib/grants";
 import { classified, share, TYPE_LABEL, type GrantMix } from "@/lib/grantTypes";
 
+// Recipients outside the IRS list (NCES school districts, IPEDS colleges)
+const ENTITY_LABEL = { school_district: "School district", college_public: "Public college", college_private: "College" } as const;
+
 const GRANTS_SHOWN = 40;
 
 // A foundation's page: the facts from its 990-PF, how to apply, where its money goes, every grant
@@ -98,8 +101,10 @@ export async function FunderView({ ein, mission, state, back, sheet = false }: {
               {f.grants.slice(0, GRANTS_SHOWN).map((g) => (
                 <tr key={g.id}>
                   <td>
-                    {g.ein ? <Link href={`/preview/org/${g.ein}`} scroll={false}>{titleCase(g.recipient)}</Link> : titleCase(g.recipient)}
-                    <small>{[g.city && titleCase(g.city), g.state].filter(Boolean).join(", ")}</small>
+                    {g.ein ? <Link href={`/preview/org/${g.ein}`} scroll={false}>{titleCase(g.recipient)}</Link>
+                      : g.entity?.website ? <a href={g.entity.website} target="_blank" rel="noreferrer">{titleCase(g.recipient)} ↗</a>
+                      : titleCase(g.recipient)}
+                    <small>{[g.entity && ENTITY_LABEL[g.entity.kind], [g.city && titleCase(g.city), g.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</small>
                   </td>
                   <td className="purpose">{g.purpose ? g.purpose.toLowerCase() : "—"}{g.type !== "unknown" && <small className={`gt ${g.type}`}>{TYPE_LABEL[g.type]}</small>}</td>
                   <td className="n amt">{g.amount != null ? money(g.amount) : "—"}</td>

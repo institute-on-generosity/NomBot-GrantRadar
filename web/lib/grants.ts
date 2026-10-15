@@ -103,7 +103,9 @@ export type FunderDetail = {
   ein: string; name: string; city: string | null; state: string | null; taxYear: number | null; objectId: string;
   assets: number | null; grantsPaid: number | null; grantCount: number; typical: number | null; inviteOnly: boolean; website: string | null;
   apply: { contact: string | null; form: string | null; deadlines: string | null; restrictions: string | null };
-  grants: { id: number; recipient: string; ein: string | null; city: string | null; state: string | null; amount: number | null; purpose: string | null; type: GrantType }[];
+  grants: { id: number; recipient: string; ein: string | null; city: string | null; state: string | null; amount: number | null; purpose: string | null; type: GrantType;
+            // school districts and colleges outside the IRS list (generosity-data public_entities)
+            entity: { kind: "school_district" | "college_public" | "college_private"; website: string | null } | null }[];
   mix: GrantMix | null;
   byState: { state: string; count: number; amount: number }[];
 };
@@ -115,8 +117,9 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
     db.query(`SELECT f.*, (SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY amount) FROM grants g WHERE g.funder_ein = f.ein AND g.amount > 0) AS median
               FROM funders f WHERE f.ein = $1`, [ein]),
     // The grant list and states come from its newest return (the one "Paid out" and the grant count describe).
-    db.query(`SELECT id, recipient_name, recipient_ein, recipient_city, recipient_state, amount, purpose FROM grants
-              WHERE funder_ein = $1 AND object_id = (SELECT object_id FROM funders WHERE ein = $1) ORDER BY amount DESC NULLS LAST, id LIMIT 400`, [ein]),
+    db.query(`SELECT g.id, g.recipient_name, g.recipient_ein, g.recipient_city, g.recipient_state, g.amount, g.purpose, e.kind AS entity_kind, e.website AS entity_website
+              FROM grants g LEFT JOIN public_entities e ON e.id = g.recipient_entity AND g.recipient_ein IS NULL
+              WHERE g.funder_ein = $1 AND g.object_id = (SELECT object_id FROM funders WHERE ein = $1) ORDER BY g.amount DESC NULLS LAST, g.id LIMIT 400`, [ein]),
     db.query(`SELECT recipient_state AS state, count(*)::int AS count, coalesce(sum(amount), 0)::bigint AS amount FROM grants
               WHERE funder_ein = $1 AND object_id = (SELECT object_id FROM funders WHERE ein = $1) AND recipient_state IS NOT NULL GROUP BY 1 ORDER BY 3 DESC LIMIT 8`, [ein]),
     grantMixes([ein]),
@@ -129,11 +132,15 @@ export async function getFunder(einParam: string): Promise<FunderDetail | null> 
     ein: f.ein, name: f.name, city: f.city, state: f.state, taxYear: f.tax_year, objectId: f.object_id,
     assets: n(f.assets), grantsPaid: n(f.grants_paid), grantCount: f.grant_count, typical: f.median == null ? null : Math.round(Number(f.median)), inviteOnly: f.invite_only, website: s(f.website),
     apply: { contact: s(f.apply_contact), form: s(f.apply_form), deadlines: s(f.apply_deadlines), restrictions: s(f.apply_restrictions) },
-    grants: gs.map((g) => ({ id: g.id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state, amount: n(g.amount), purpose: g.purpose, type: classifyPurpose(g.purpose) })),
+    grants: gs.map((g) => ({ id: g.id, recipient: g.recipient_name, ein: g.recipient_ein, city: g.recipient_city, state: g.recipient_state, amount: n(g.amount), purpose: g.purpose, type: classifyPurpose(g.purpose),
+                         entity: g.entity_kind ? { kind: g.entity_kind, website: webUrl(g.entity_website) } : null })),
     mix: mixes.get(ein) ?? null,
     byState: st.map((r) => ({ state: r.state, count: r.count, amount: Number(r.amount) })),
   };
 }
+
+// NCES and IPEDS list websites without a scheme, sometimes with a path.
+const webUrl = (w: string | null) => (w && w.trim() ? (/^https?:\/\//i.test(w.trim()) ? w.trim() : `https://${w.trim()}`) : null);
 
 // The funder's 990-PF, readable on ProPublica (same link style as NomBot's Form 990 sources).
 export const filingUrl = (ein: string, objectId: string) => `https://projects.propublica.org/nonprofits/organizations/${ein}/${objectId}/full`;
