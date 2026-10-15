@@ -10,7 +10,11 @@ export type Sort = "match" | "largest" | "smallest";
 export type SearchInput = {
   q: string; semantic?: string; states?: string[]; cities?: string[]; appalachia?: boolean; maxRevenue?: number; minRevenue?: number; ntee?: string; nteeHint?: string;
   requirements?: Requirement[]; includeInactive?: boolean; sort?: Sort; limit?: number; offset?: number;
+  mode?: SearchMode;
+  kwWeight?: number; // hybrid only: how much keyword matches add to meaning similarity (benchmark knob)
 };
+// hybrid: keyword + meaning (the app). keyword / vector: one method alone, for the search benchmark (eval/bench.mts).
+export type SearchMode = "hybrid" | "keyword" | "vector";
 
 export type Result = {
   ein: string; name: string; city: string | null; state: string | null;
@@ -53,12 +57,13 @@ const PLACE = `(cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))
          AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))`;
 const NEAREST = 2000; // closest filings by meaning per search
+const KW_WEIGHT = 0.1; // keyword boost in hybrid ranking: 0.1 beat 1 on the 50-question benchmark (68% vs 65% relevant, 67% vs 57% found; eval/bench.mts)
 
-export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0 }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
-  if (q.trim()) {
+  if (q.trim() && mode !== "keyword") {
     const { rows } = await db.query("SELECT 1 FROM filing_text WHERE embedding_model = $1 LIMIT 1", [MODEL_ID]);
     if (rows.length) vec = toSql(await embedQuery(semantic || q));
   }
@@ -72,9 +77,9 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
         WHERE $2::vector IS NOT NULL AND t.embedding_model = $3 AND ${PLACE}
         ORDER BY t.embedding <=> $2::vector LIMIT ${NEAREST})
        UNION
-       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND o.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND $16 <> 'vector' AND o.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
        UNION
-       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND t.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND $16 <> 'vector' AND t.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
        UNION
        (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
         WHERE cardinality($8::text[]) > 0 AND ${PLACE}
@@ -111,16 +116,17 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
        WHERE ($5::bigint IS NULL OR rev <= $5)
          AND ($15::bigint IS NULL OR rev >= $15)
          AND ($9 OR rev IS NULL OR rev > 0))   -- hide $0 / inactive orgs unless asked
-     SELECT *, coalesce(sim, 0) + least(kw * 5, 0.5)
-              + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END AS score,  -- guessed cause: a nudge, not a filter
+     SELECT *, CASE $16 WHEN 'keyword' THEN kw WHEN 'vector' THEN coalesce(sim, 0)
+                 ELSE coalesce(sim, 0) + least(kw * 5, 0.5) * $17
+                      + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END END AS score,  -- guessed cause: a nudge, not a filter
             count(*) OVER () AS total, count(*) FILTER (WHERE exact) OVER () AS exact_total
-     FROM scored WHERE $1 = '' OR kw > 0 OR sim IS NOT NULL OR exact
+     FROM scored WHERE $1 = '' OR (kw > 0 AND $16 <> 'vector') OR sim IS NOT NULL OR exact
      ORDER BY exact DESC NULLS LAST,
               CASE WHEN $10 = 'largest' THEN rev END DESC NULLS LAST,
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight],
   );
   return {
     total: Number(rows[0]?.total ?? 0),

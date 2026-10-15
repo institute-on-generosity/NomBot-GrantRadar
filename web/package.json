@@ -9,7 +9,8 @@
     "lint": "eslint",
     "eval": "tsx eval/run.mts",
     "eval:buddy": "tsx eval/buddy.mts",
-    "build:counties": "node scripts/build-counties.mjs"
+    "build:counties": "node scripts/build-counties.mjs",
+    "bench": "tsx eval/bench.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

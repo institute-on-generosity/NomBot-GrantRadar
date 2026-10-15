@@ -182,7 +182,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v18", 200, 3600_000); // v18: bars carry their organizations
+const cached = memo<Landscape>("landscape:v19", 200, 3600_000); // v19: hybrid ranking reweighted (keyword 0.1)
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

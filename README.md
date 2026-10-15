@@ -27,7 +27,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Compare** | Pick 2–4 results (button in each row's right column) → side-by-side finances, staff, volunteers, mission |
 | **Research Buddy** | Docked chat panel · **reasoning steps** shown · citations open the org · **chat history** per search |
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
-| **Quality** | 👍/👎 votes (stored; hidden from rows for now) · **search eval** (50 questions, 91%) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
+| **Quality** | 👍/👎 votes (stored; hidden from rows for now) · **search eval** (50 questions, 91%) · **search benchmark** (`npm run bench`: keyword vs meaning vs hybrid vs OpenSearch BM25, before Claude scoring) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
 | **Design** | Apple-style UI, **dark mode**, centered loading card with steps |
 
 ## Users
@@ -127,6 +127,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Underserved areas** (Census SAIPE poverty + population by county) | Zoom-out feedback: show where need is high but matching groups are missing. Census file downloads, no API key; general poverty, not cause-specific need |
 | **National load, built early** (planned for the cloud move): every state, DC and Puerto Rico (1.97M orgs, 513,813 filings); search draws candidates from indexes, then joins newest-record views (`filing_latest`, `financials_latest`, `flag_latest`) | Lifts the 5-state limit. The old query sorted every org nationally (12–16s); now ~0.5s with a state, 3–6s nationwide. Embeddings moved to full precision (8-bit scored 0.975 against it) and were rebuilt on the Mac's GPU |
 | **People: philanthropic leaders**, from IRS board lists (generosity-data migration 018: 4.86M seats at 679K orgs) | Asked for Oct 14: look up a foundation CEO and see every board they serve on. Names match on first + last name, so one page can merge two people with the same name (warned when seats span states); nicknames don't match ("Bill" vs "William") |
+| **Search benchmark; hybrid reweighted** (Oct 14): keyword weight in hybrid ranking 1 → 0.1 | Expert advice (OpenAI researcher) to test plain keyword search against vectors. On the 50 eval questions, before Claude scoring: meaning search 68% relevant, Postgres keyword 57%, OpenSearch BM25 54% (but 25 ms vs ~1–2 s, 0.51 GB vs 1.46 GB). Old hybrid let keyword matches outweigh meaning (65%); at 0.1 it is 69% and finds the most relevant orgs. Vectors stay |
 
 ## Success metrics
 - ≥90% relevant results (**91%** ✅), <2s (results show in ~0.5s; scores ~7s median)

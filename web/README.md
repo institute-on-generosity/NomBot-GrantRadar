@@ -24,7 +24,7 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 | `app/compare/`, `components/Compare*.tsx` | Compare 2–4 organizations side by side |
 | `lib/people.ts`, `components/PersonView.tsx`, `app/person/` | People: a name typed in search (`looksLikeName`) or `/person?name=` shows their board seats and profile; `boardLinks` feeds Board connections on org pages (generosity-data migration 018) |
 | `components/HeroFlip.tsx`, `lib/examples.ts` (`PROMPT_SETS`) | Home page: "Look up nonprofits / philanthropic leaders / foundations" flips, with example prompts for each |
-| `eval/` | `npm run eval` (search, 50 questions, goal ≥90% relevant) and `npm run eval:buddy` (Research Buddy, 30 questions, goal 0 unsupported claims) |
+| `eval/` | `npm run eval` (search, 50 questions, goal ≥90% relevant), `npm run bench` (same questions through keyword, vector, hybrid and `--bm25` OpenSearch retrieval, no Claude scoring; `--kw=0.1,0.25` tries hybrid weights) and `npm run eval:buddy` (Research Buddy, 30 questions, goal 0 unsupported claims) |
 
 ## Search eval
 
