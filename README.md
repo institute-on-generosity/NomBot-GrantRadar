@@ -31,12 +31,13 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 | **Personal** | **History** and **starred (★)** organizations, sorted into **folders**, in a Claude-style sidebar |
 | **Quality** | 👍/👎 votes (stored; hidden from rows for now) · **search eval** (50 questions, 91%) · **search benchmark** (`npm run bench`: keyword vs meaning vs hybrid vs OpenSearch BM25, before Claude scoring) · **Buddy eval** (30 questions, 1 unsupported claim of 401) |
 | **Design** | Apple-style UI, **dark mode**, centered loading card with steps |
+| **Partner API + MCP** | **API keys** (`npm run api-key`, shown once, sha256 stored, per-key rate limit) · `GET /api/v1/search`, `/org/<ein>`, `/research`, `/research/<slug>` · **remote MCP server** at `/mcp` (4 read-only tools) for Claude, ChatGPT and other AI tools · public docs at **`/api/docs`** + `/api/openapi.json` · no LLM calls |
 
 ## Users
 
 | Who | Gets |
 |---|---|
-| **Developers** | Raw, structured data via the read-only API |
+| **Developers** | Raw, structured data via the keyed read-only API and MCP server (`/api/docs`) |
 | **IoG research team** (+ donors, program officers) | A research buddy: patterns, comparisons, recommendations |
 
 ## Experience
@@ -45,6 +46,7 @@ IRS data on ~1.8M nonprofits is public but buried in raw files. Paid tools don't
 **Developer**
 ```http
 GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
+Authorization: Bearer nb_live_…
 ```
 → JSON records: `ein`, `name`, `city`, `state`, `ntee`, `financials`, `mission`, `score`.
 
@@ -67,7 +69,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 
 [Interactive diagram](docs/architecture.html) · Cloud target; the proof of concept runs the same parts locally.
 
-> Diagram out of date: the **AI overview**, **analysis panel** (incl. funders from GrantRadar's `grants` table), **Compare**, **FLAG diligence** (`filing_flag`), **county need** (`county_need`, Census SAIPE) and **people** (`board_members`, person pages) and **Research** (`insights` table, finding pages and their chat) aren't drawn yet.
+> Diagram out of date: the **AI overview**, **analysis panel** (incl. funders from GrantRadar's `grants` table), **Compare**, **FLAG diligence** (`filing_flag`), **county need** (`county_need`, Census SAIPE) and **people** (`board_members`, person pages) and **Research** (`insights` table, finding pages and their chat) and the **partner API + MCP** (`api_keys`, `/mcp`) aren't drawn yet.
 
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query (top 40) → Claude scores each 0–100 with a reason → strong matches first, weaker ones folded.
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
@@ -77,8 +79,9 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 - **Finances:** one rule set (`orgHealth`) for row tags, the Finances tab and the AI overview: the newest e-filed 990 (this year vs its prior-year column, cash on hand), else SOI + master file.
 - **FLAG diligence (org page):** the newest 990's `filing_flag` row → fixed rules in `lib/flag.ts` (income, bottom line, cash, debts, donations, board, insiders) → red / amber / green signals, plus a question to ask for each concern. One deficit year is amber; red only when it repeats. Shared with GrantRadar. No AI verdict.
 - **Research (Insights) feed:** a separate job writes findings to `insights` (chart spec, data rows, SQL, sources); the app shows only `verified` rows, best score first (`/api/insights`). Charts render in the browser with vega-embed, loaded only when a chart scrolls into view. **Finding page:** one cached row (`use cache`, hours) → stats, chart, table; orgs and related findings stream in. **Ask about this finding:** question → that finding's headline, summary, key points, method, caveats, key numbers, data rows (CSV, up to 60K characters) and orgs → Claude (Sonnet 5.5) → answer from the data, general knowledge marked.
+- **Partner API + MCP (Oct 16):** partner or AI tool → `Authorization: Bearer nb_live_…` → route handler checks `api_keys` (sha256, 10 s cache), scope and per-key rate (in memory, per process) → the same data functions (`lib/api.ts`) serve REST (`/api/v1/*`) and MCP tools (`/mcp`, Streamable HTTP, stateless JSON) → daily counts in `api_usage`. Read-only, **no Claude calls** (search uses the local embedding model). No direct database access for partners.
 - **Gaps (Map):** `county_need` (Census poverty, 3,144 counties) vs. where the 200 closest orgs are based → high-poverty counties (the poorest quarter of the map's counties, capped at 20%) with none, limited to loaded states.
-- **Hosting (Oct 16):** runs on the MacBook for now, not the cloud (Supabase Large would be ≈$129/month). Production builds start at login as launchd services (`~/iog-host/run-app.sh`, NomBot :4000, GrantRadar :4001, localhost only), reached through Cloudflare quick tunnels (`*.trycloudflare.com`, the link changes when a tunnel restarts). `web/proxy.ts` asks for `SITE_PASSWORD` (HTTP Basic) on every page and API when set, so a public link can't run Claude searches on our key. Nightly `pg_dump` to `~/Backups/nombot` (newest 3). A fixed address and staff email login need a domain on Cloudflare.
+- **Hosting (Oct 16):** runs on the MacBook for now, not the cloud (Supabase Large would be ≈$129/month). Production builds start at login as launchd services (`~/iog-host/run-app.sh`, NomBot :4000, GrantRadar :4001, localhost only), reached through Cloudflare quick tunnels (`*.trycloudflare.com`, the link changes when a tunnel restarts). `web/proxy.ts` asks for `SITE_PASSWORD` (HTTP Basic) on every page and API when set, so a public link can't run Claude searches on our key. `/api/v1/*` and `/mcp` skip it (they need an API key), and `/api/docs` is public. Nightly `pg_dump` to `~/Backups/nombot` (newest 3). A fixed address and staff email login need a domain on Cloudflare.
 
 ## Data
 
@@ -101,6 +104,7 @@ GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&max_revenue=500000
 | ETL | Python, run by hand | GitHub Actions, monthly |
 | App | Next.js, `localhost` | Vercel |
 | LLM | Claude API (`@anthropic-ai/sdk`): parse and Research Buddy on Opus 5.5 (`LLM_MODEL`); relevance scoring, the AI overview and Ask about this finding on Sonnet 5.5 (`FAST_MODEL`) | Same |
+| Partner API | Bearer API keys (Postgres `api_keys`), remote MCP via `@modelcontextprotocol/sdk` 1.30.1 (Streamable HTTP) | Same |
 | Charts | Vega-Lite (vega 6.4.0, vega-lite 6.4.3, vega-embed 7.3.0), Research feed only, lazy-loaded | Same |
 | Embeddings | nomic-embed-text, full precision (local, free; 514K filings embedded on the Mac's GPU in ~2h) | Decide at cloud move: nomic or Voyage AI |
 
@@ -138,6 +142,7 @@ No LangChain: switching Claude models is one env var. Pipeline: [`generosity-dat
 | **Key points instead of a summary paragraph** (Oct 16): short claim headlines (≤ ~12 words) and 2–3 bullets per finding, numbers in bold, the last one "Why it matters" | Feedback: headlines and paragraphs were too wordy to scan. Bullets come from the miner (`points`, generosity-data migration 030) built from the same computed numbers; the app renders only `**bold**`, never HTML |
 | **Insights renamed Research** (Oct 16) | The audience (researchers and advisors) thinks of it as research; the tab, page, sidebar and exports say Research, `/insights` redirects. The table, API and code keep the name `insights` |
 | **Funding by theme and track record** (Oct 15): foundation grants per Themes group (newest three tax years, median $ per org, least funded flagged); years tax-exempt on org pages, in Overview and as a Breakdown bar | Oct 15 meeting with a former philanthropy advisor: show which sub-causes get the least foundation money, and how long each org has been around. Median, not mean, so one big grantee can't make a theme look well funded. Only linked grants count (~64%), so totals run low; the age is from the IRS ruling date, not the founding date |
+| **Partner API keys and a remote MCP server** (Oct 16; keys and docs were planned for Nov 9–15, MCP wasn't planned) | Partners and AI tools need the data without database access or the site password. Keys are per partner and revocable; MCP follows the Oct 14 expert advice (skills/MCP). Every endpoint stays LLM-free so a key can't run up Claude costs |
 | **Self-hosted on the MacBook** (Oct 16) | Cloud plan priced at ≈$129/month (Supabase Pro + Large compute + disk); the MacBook (M4, 24 GB) already runs everything. Always-on services, Cloudflare tunnel, password gate, nightly backup. Offline when the laptop sleeps or travels; a Linux box or the cloud comes next |
 
 ## Success metrics
@@ -240,7 +245,8 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [ ] Search page, filters; IoG using it
 
 **Nov 9–15: Phase 1 launch**
-- [ ] API docs + keys; monthly refresh
+- [x] API docs + keys (Oct 16, early): `/api/docs`, `npm run api-key`, remote MCP at `/mcp`
+- [ ] Monthly refresh
 - [ ] Test with IoG + 5 external users
 - [ ] **Launch**
 

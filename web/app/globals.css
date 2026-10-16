@@ -1344,3 +1344,35 @@ p.rd-points { font-size: 16px; line-height: 1.55; color: var(--ink-2); }
   .rd-back, .rd-actions, .rd-figbar, .rd-related { display: none !important; }
   .rd-table { max-height: none; overflow: visible; }
 }
+
+/* API docs (/api/docs) */
+.apidoc section { margin-top: 44px; scroll-margin-top: 20px; }
+.apidoc h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 10px; }
+.apidoc code { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: .88em; }
+.apidoc p code, .apidoc li code, .apidoc td code { padding: 1px 5px; border-radius: 5px; background: var(--fill); }
+.apidoc-kicker { font-size: 13px; font-weight: 600; color: var(--g-dark); text-transform: uppercase; letter-spacing: .04em; margin-top: 8px; }
+.apidoc-lede { font-size: 17px; line-height: 1.5; color: var(--ink-2); margin-top: 10px; max-width: 64ch; }
+.apidoc-toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.apidoc-toc a { font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 999px; color: var(--ink-2); background: var(--fill); text-decoration: none; transition: background-color .15s; }
+.apidoc-toc a:hover { background: var(--fill-2); color: var(--ink); }
+.apidoc-p { color: var(--ink-2); margin: 8px 0 12px; max-width: 70ch; }
+.apidoc-steps, .apidoc-list { padding-left: 20px; color: var(--ink-2); display: grid; gap: 6px; margin-bottom: 14px; max-width: 72ch; }
+.apidoc-list b, .apidoc-steps b { color: var(--ink); font-weight: 600; }
+.apidoc-route { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 6px; }
+.apidoc-route > code { font-size: 15px; font-weight: 600; }
+.apidoc-method { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; color: var(--g-dark); background: var(--g-tint); border-radius: 6px; padding: 2px 8px; }
+.apidoc-mcp { font-size: 12.5px; color: var(--mute); margin-left: auto; }
+.apidoc-req { font-size: 11.5px; color: var(--g-dark); }
+.apidoc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 10px 0 14px; }
+.apidoc-table th { text-align: left; font-weight: 600; font-size: 12px; color: var(--mute); padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); }
+.apidoc-table td { vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+.apidoc-table td:first-child { white-space: nowrap; }
+.apidoc-code { margin: 12px 0; }
+.apidoc-code figcaption { font-size: 12px; font-weight: 600; color: var(--mute); margin-bottom: 6px; }
+.apidoc pre { overflow-x: auto; padding: 14px 16px; border-radius: 12px; background: var(--fill); font-size: 13px; line-height: 1.55; color: var(--ink); }
+.apidoc pre code { padding: 0; background: none; font-size: inherit; }
+.apidoc-example { margin-top: 8px; }
+.apidoc-example summary { font-size: 13.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+.apidoc-example pre { margin-top: 8px; max-height: 460px; }
+.apidoc-note { font-size: 13.5px; color: var(--mute); margin-top: 12px; max-width: 70ch; }
+@media (max-width: 640px) { .apidoc-mcp { margin-left: 0; } .apidoc-table td:first-child { white-space: normal; } }

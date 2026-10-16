@@ -12,9 +12,12 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 
 | Path | What |
 |---|---|
-| `proxy.ts` | Optional sign-in gate: HTTP Basic auth on every page and API when `SITE_PASSWORD` is set (public tunnel). Off in development |
+| `proxy.ts` | Optional sign-in gate: HTTP Basic auth on every page and API when `SITE_PASSWORD` is set (public tunnel). Off in development. `/api/v1/*` and `/mcp` skip it (API key instead), `/api/docs` and `/api/openapi.json` are public |
 | `app/page.tsx` | Search page: plain-language question → filters → hybrid search |
-| `app/api/v1/search/route.ts` | `GET /api/v1/search?q=&state=WV,KY&max_revenue=&ntee=&limit=` (read-only, 60 req/min) |
+| `lib/apiAuth.ts`, `scripts/api-key.mts` | Partner API keys (generosity-data migration 031): Bearer `nb_live_…` checked in each route (`keyed()`), sha256 lookup cached 10 s, per-key rate limit in memory per process, daily usage counts. `npm run api-key -- create "<partner>" [--rate=60] \| list \| usage \| revoke <id> \| delete <id>` (secret printed once) |
+| `lib/api.ts`, `app/api/v1/` | Read-only JSON API, needs a key: `search` (`q, state, city, max_revenue, ntee, limit`), `org/[ein]` (profile, financials, health signals, leaders, grants received and given), `research`, `research/[slug]`. No Claude calls |
+| `app/mcp/route.ts` | Remote MCP server (`@modelcontextprotocol/sdk`, Streamable HTTP, stateless JSON, same key): `search_nonprofits`, `get_organization`, `list_research`, `get_research` |
+| `lib/apiDocs.ts`, `app/api/docs/`, `app/api/openapi.json/` | Public API docs page and OpenAPI 3.1, built from one endpoint list |
 | `lib/` | Shared: `db` (Postgres pool), `llm` (provider setup), `embedder`, `parse`, `search`, `rerank` (relevance 0–100), `buddy` (Research Buddy prompt + sources), `soi` |
 | `app/api/feedback/route.ts` | `POST` 👍/👎 on a result → `feedback` table (generosity-data migration 004) |
 | `lib/filters.ts` | Filter edits from the chips (`?st=&city=&region=&max=&min=&cause=&drop=`), shared by results, history, CSV export and Buddy |

@@ -1,27 +1,12 @@
-// Read-only JSON search API.
+// Read-only JSON search. Needs an API key (Authorization: Bearer nb_live_...); docs at /api/docs.
 // GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&city=Huntington&max_revenue=500000&ntee=K3&limit=10
+// No Claude calls: meaning search runs on the local embedding model, so a partner can't run up LLM costs.
 import type { NextRequest } from "next/server";
-import { search } from "@/lib/search";
+import { keyed, baseUrl } from "@/lib/apiAuth";
+import { apiSearch } from "@/lib/api";
 
-const hits = new Map<string, { n: number; reset: number }>();
-const LIMIT = 60; // requests per minute per client
-
-export async function GET(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "local";
-  const now = Date.now();
-  const h = hits.get(ip);
-  if (!h || h.reset < now) hits.set(ip, { n: 1, reset: now + 60_000 });
-  else if (++h.n > LIMIT) return Response.json({ error: "rate limit: 60 requests/minute" }, { status: 429 });
-
+export const GET = keyed("/api/v1/search", async (request: NextRequest) => {
   const p = request.nextUrl.searchParams;
-  const q = (p.get("q") ?? "").slice(0, 300);
-  const state = (p.get("state") ?? "").toUpperCase().split(",").map((s) => s.trim()).filter((s) => /^[A-Z]{2}$/.test(s));
-  const city = (p.get("city") ?? "").split(",").map((c) => c.trim()).filter(Boolean).slice(0, 10);
-  const maxRaw = p.get("max_revenue");
-  const max_revenue = maxRaw && /^\d+$/.test(maxRaw) ? Number(maxRaw) : undefined;
-  const ntee = /^[A-Z][0-9A-Z]{0,4}$/.test(p.get("ntee") ?? "") ? p.get("ntee")! : undefined;
-  const limit = Math.min(Math.max(Number(p.get("limit")) || 10, 1), 50);
-
-  const res = await search({ q, states: state, cities: city, maxRevenue: max_revenue, ntee, limit });
-  return Response.json({ query: { q, state, city, max_revenue: max_revenue ?? null, ntee: ntee ?? null }, ...res });
-}
+  const params = Object.fromEntries(["q", "state", "city", "max_revenue", "ntee", "limit"].map((k) => [k, p.get(k) ?? undefined]));
+  return Response.json(await apiSearch(params, baseUrl(request)));
+});
