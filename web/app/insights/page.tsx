@@ -1,13 +1,6 @@
-import { InsightsFeed } from "@/components/InsightsFeed";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Insights · NomBot" };
-
-export default function InsightsPage() {
-  return (
-    <main className="ins-page">
-      <h1 className="pagetitle">Insights</h1>
-      <p className="hint">Patterns across US nonprofits and foundations, from public IRS filings, each with its method and sources.</p>
-      <InsightsFeed />
-    </main>
-  );
+// Renamed to Research (Oct 16); old links keep working.
+export default function OldInsights() {
+  redirect("/research");
 }

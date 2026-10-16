@@ -20,7 +20,7 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
   const [insights, setShowInsights] = useState(startInsights);
   const setInsights = (on: boolean) => {
     setShowInsights(on);
-    window.history.replaceState(null, "", on ? "/?tab=insights" : "/");
+    window.history.replaceState(null, "", on ? "/?tab=research" : "/");
   };
   useEffect(() => {
     if (paused || insights || chosen) return;
@@ -28,7 +28,7 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
     return () => clearInterval(t);
   }, [paused, insights, chosen, sets.length]);
   const set = sets[i];
-  const word = insights ? "insights" : set.word;
+  const word = insights ? "research" : set.word;
   const hold = { onMouseEnter: () => setPaused(true), onMouseLeave: () => setPaused(false), onFocus: () => setPaused(true), onBlur: () => setPaused(false) };
   return (
     <>
@@ -50,7 +50,7 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
           </button>
         ))}
         <button type="button" role="tab" aria-selected={insights} className={insights ? "on" : undefined} onClick={() => setInsights(true)}>
-          Insights
+          Research
         </button>
       </div>
       {insights ? <InsightsFeed /> : <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>

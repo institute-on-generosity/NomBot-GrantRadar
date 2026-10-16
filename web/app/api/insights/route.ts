@@ -9,6 +9,6 @@ export async function GET() {
     return Response.json(await listInsights(), { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("insights failed", err);
-    return Response.json({ error: "Insights are unavailable right now." }, { status: 500 });
+    return Response.json({ error: "Research is unavailable right now." }, { status: 500 });
   }
 }

@@ -54,7 +54,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const question = (p.question ?? "").trim().slice(0, 300);
   if (!question) {
     return (
-      <Hero insights={p.tab === "insights"} />
+      <Hero insights={p.tab === "research" || p.tab === "insights"} />
     );
   }
   await connection(); // per-request work below (Claude SDK uses Math.random; DB queries)

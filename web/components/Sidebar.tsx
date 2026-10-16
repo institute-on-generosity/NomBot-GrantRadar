@@ -57,7 +57,7 @@ export function Sidebar() {
           <button className="iconbtn side-toggle" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}><PanelIcon /></button>
         </div>
         <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">New search</span></NavLink>
-        <NavLink href="/insights" className={`side-new${here.path === "/insights" ? " on" : ""}`} title="Insights" current={here.path === "/insights"} label="Loading insights…"><ChartIcon /><span className="side-label">Insights</span></NavLink>
+        <NavLink href="/research" className={`side-new${here.path.startsWith("/research") ? " on" : ""}`} title="Research" current={here.path === "/research"} label="Loading research…"><ChartIcon /><span className="side-label">Research</span></NavLink>
 
         <nav className="side-scroll">
           <Section title="Starred" all="/saved" active={here.path === "/saved"}

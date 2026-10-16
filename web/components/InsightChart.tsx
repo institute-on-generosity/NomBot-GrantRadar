@@ -47,7 +47,8 @@ const darkQuery = () => window.matchMedia("(prefers-color-scheme: dark)");
 const onScheme = (cb: () => void) => { const q = darkQuery(); q.addEventListener("change", cb); return () => q.removeEventListener("change", cb); };
 let lib: Promise<typeof import("vega-embed")> | null = null;
 
-export function InsightChart({ spec, label, onView }: { spec: Record<string, unknown>; label: string; onView?: (v: View | null) => void }) {
+// tall: the research detail page draws the same spec about 40% taller.
+export function InsightChart({ spec, label, onView, tall = false }: { spec: Record<string, unknown>; label: string; onView?: (v: View | null) => void; tall?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
   const dark = useSyncExternalStore(onScheme, () => darkQuery().matches, () => false);
@@ -70,16 +71,17 @@ export function InsightChart({ spec, label, onView }: { spec: Record<string, unk
       if (gone) return;
       // Our vega-lite reads v5 specs; drop the $schema so it doesn't warn about the version.
       const { $schema: _s, ...rest } = spec; // eslint-disable-line @typescript-eslint/no-unused-vars
+      if (tall && typeof rest.height === "number") rest.height = Math.round(rest.height * 1.4);
       const res = await embed(el, rest as never, { actions: false, renderer: "svg", config: theme(dark) as never, tooltip: { theme: dark ? "dark" : "light" } });
       if (gone) { res.finalize(); return; }
       view = res.view;
       onView?.(view);
     }).catch((e) => { console.error("chart failed", e); if (!gone) setError(true); });
     return () => { gone = true; view?.finalize(); onView?.(null); };
-  }, [near, dark, spec, onView]);
+  }, [near, dark, spec, onView, tall]);
 
   if (error) return <p className="ins-chart-err">This chart could not be drawn. The data is in the CSV.</p>;
-  return <div ref={box} className="ins-chart" role="img" aria-label={label} />;
+  return <div ref={box} className={`ins-chart${tall ? " tall" : ""}`} role="img" aria-label={label} />;
 }
 
 // Export: PNG (2x) or SVG, on the page's background so it reads in slides and documents.

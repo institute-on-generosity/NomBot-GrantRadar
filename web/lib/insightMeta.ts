@@ -15,6 +15,7 @@ export const sectionLabel = (k: string) => SECTIONS.find((s) => s.key === k)?.la
 
 export type Source = { label: string; url: string };
 export type Row = Record<string, string | number | boolean | null>;
+export type Stat = { label: string; value: string };
 
 export type Insight = {
   id: number;
@@ -33,6 +34,7 @@ export type Insight = {
   cause: string | null;
   state: string | null;
   score: number | null;
+  stats: Stat[] | null; // key numbers for the detail page (same as the headline's); null until the miner fills them
   refreshed_at: string | null;
   created_at: string | null;
 };
@@ -55,14 +57,42 @@ export function toCsv(rows: Row[]): string {
 // Where "Explore" goes: the saved search, else the list of the organizations behind the insight.
 export function exploreHref(i: Pick<Insight, "explore_query" | "org_eins">): string | null {
   if (i.explore_query) return `/?${new URLSearchParams({ question: i.explore_query })}`;
-  if (i.org_eins?.length) return `/insights/orgs?${new URLSearchParams({ ein: i.org_eins.join(",") })}`;
+  if (i.org_eins?.length) return `/research/orgs?${new URLSearchParams({ ein: i.org_eins.join(",") })}`;
   return null;
 }
 
-// "Go deeper": Research Buddy opens over the insight's search, with the headline ready to ask.
-export function deeperHref(i: Pick<Insight, "explore_query" | "headline" | "cause">): string {
-  return `/?${new URLSearchParams({ question: i.explore_query || i.cause || i.headline, buddy: "1", ask: `Go deeper on this finding: ${i.headline}` })}`;
+// The organizations behind a finding: its org_eins, else any EINs in its data rows (funders and recipients), max 60.
+export function findingEins(i: Pick<Insight, "org_eins" | "data">): string[] {
+  if (i.org_eins?.length) return i.org_eins;
+  const out = new Set<string>();
+  for (const r of i.data ?? []) for (const k of ["ein", "recipient_ein", "funder_ein"]) {
+    const v = r[k];
+    if (typeof v === "string" && /^\d{9}$/.test(v.trim())) out.add(v.trim());
+  }
+  return [...out].slice(0, 60);
 }
+
+// The finding's own research page.
+export const researchHref = (slug: string) => `/research/${slug}`;
+
+// A citation to paste into a memo: title, publisher, date, link, data sources.
+export function citation(i: Pick<Insight, "headline" | "sources" | "refreshed_at" | "created_at" | "slug">, origin: string): string {
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const src = [...new Set((i.sources ?? []).map((s) => s.label))];
+  return [`"${i.headline}." NomBot Research${updated(i) ? `, updated ${updated(i)}` : ""}.`, `${origin}${researchHref(i.slug)} (accessed ${today}).`,
+    src.length ? `Data: ${src.join(". ")}.` : ""].filter(Boolean).join(" ");
+}
+
+// Starter questions for "Ask about this finding", by section.
+const ASK: Record<string, string[]> = {
+  "funding-gaps": ["Where is the gap largest, and by how much?", "What besides need could explain this gap?"],
+  "rising-fading": ["Which rows changed the most?", "Is this a lasting trend or a one-time jump?"],
+  "money-flows": ["Where does most of the money end up?", "Which rows are outliers?"],
+  "track-record": ["How do big and small funders differ here?", "What should an advisor ask a funder about this?"],
+  "affiliations": ["Which groups stand out most?", "When is a board tie a concern, and when is it normal?"],
+  "financial-stress": ["Which groups are most exposed?", "What would help these organizations most?"],
+};
+export const askSuggestions = (section: string) => [...(ASK[section] ?? ["Which rows stand out most?"]), "What can this data not tell me?"];
 
 // The saved report as one Markdown file: each card's headline, summary, method, caveats, sources and data.
 export function reportMarkdown(items: Insight[], origin: string): string {
@@ -75,11 +105,12 @@ export function reportMarkdown(items: Insight[], origin: string): string {
   };
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   return [
-    `# NomBot insights report`, ``, `${items.length} ${items.length === 1 ? "insight" : "insights"} · exported ${today} · ${origin}/insights`, ``,
+    `# NomBot research report`, ``, `${items.length} ${items.length === 1 ? "finding" : "findings"} · exported ${today} · ${origin}/research`, ``,
     ...items.flatMap((i, n) => [
       `## ${n + 1}. ${i.headline}`, ``,
       `*${sectionLabel(i.section)}${i.state ? ` · ${i.state}` : ""}${updated(i) ? ` · updated ${updated(i)}` : ""}*`, ``,
       i.summary, ``,
+      ...(i.stats?.length ? [i.stats.map((s) => `**${s.value}** ${s.label}`).join(" · "), ``] : []),
       ...(i.method ? [`**Method.** ${i.method}`, ``] : []),
       ...(i.caveats ? [`**Caveats.** ${i.caveats}`, ``] : []),
       ...(i.sources?.length ? [`**Sources**`, ``, ...i.sources.map((s) => `- [${s.label}](${s.url})`), ``] : []),
