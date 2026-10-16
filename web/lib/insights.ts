@@ -5,7 +5,7 @@ import { db } from "./db";
 import type { Insight } from "./insightMeta";
 
 const COLS = `id, slug, section, headline, summary, chart, method, caveats, coalesce(sources, '[]'::jsonb) as sources, query,
-  coalesce(data, '[]'::jsonb) as data, coalesce(org_eins, '{}') as org_eins, explore_query, cause, state, score, stats,
+  coalesce(data, '[]'::jsonb) as data, coalesce(org_eins, '{}') as org_eins, explore_query, cause, state, score, stats, points,
   refreshed_at, created_at`;
 const missing = (e: unknown) => ["42P01", "42703"].includes((e as { code?: string }).code ?? ""); // table or column not created yet
 

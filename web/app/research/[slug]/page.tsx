@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { InsightPoints } from "@/components/InsightPoints";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { titleCase } from "@/components/text";
@@ -65,7 +66,7 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
 
       <section className="rd-sec">
         <h2>What it means</h2>
-        <p className="rd-lede">{i.summary}</p>
+        <InsightPoints i={i} className="rd-points" />
       </section>
 
       {i.data?.length > 0 && (
@@ -86,9 +87,7 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
         </section>
       )}
 
-      <section className="rd-sec">
-        <AskFinding slug={i.slug} section={i.section} />
-      </section>
+      <AskFinding slug={i.slug} section={i.section} />
 
       <section className="rd-sec rd-method">
         <h2>Method and sources</h2>

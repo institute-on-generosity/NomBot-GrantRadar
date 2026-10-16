@@ -1155,6 +1155,14 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 .ins-btn:hover .ins-arrow { translate: 2px 0; }
 .ins-card h2 { margin-top: 8px; font-size: 20px; font-weight: 650; letter-spacing: -.022em; line-height: 1.25; text-wrap: balance; color: var(--ink); max-width: 30em; }
 .ins-summary { margin-top: 8px; font-size: 14.5px; line-height: 1.5; color: var(--mute); max-width: 64ch; text-wrap: pretty; }
+/* Key points: small dots on the first line's x-height, text indented 16px; bold numbers in ink, the "Why it matters" line quieter. */
+.ins-points { display: grid; gap: 5px; margin: 10px 0 0; padding: 0; list-style: none; max-width: 64ch; }
+.ins-points li { position: relative; padding-left: 16px; font-size: 14.5px; line-height: 1.55; color: var(--ink-2); text-wrap: pretty; }
+.ins-points li::before { content: ""; position: absolute; left: 1px; top: calc(.775em - 2px); width: 5px; height: 5px; border-radius: 50%; background: var(--dot, var(--g)); opacity: .75; }
+.ins-points b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.ins-points li.ins-why { color: var(--mute); }
+.ins-points li.ins-why::before { background: var(--faint); opacity: .6; }
+.ins-points li.ins-why b { color: var(--ink-2); }
 .ins-figure { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 .ins-chart { width: 100%; min-height: 180px; }
 .ins-chart > .vega-embed { width: 100%; display: block; }
@@ -1265,11 +1273,12 @@ a.ins-link { text-decoration: none; display: inline-block; }
 .ins-chart.tall { min-height: 280px; }
 .rd-figbar { display: flex; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--faint); }
 .rd-sec { margin-top: 40px; }
-.rd-sec h2, .rd-ask h2 { font-size: 18px; font-weight: 650; letter-spacing: -.02em; color: var(--ink); }
+.rd-sec h2 { font-size: 18px; font-weight: 650; letter-spacing: -.02em; color: var(--ink); }
 .rd-sec-head { display: flex; align-items: baseline; gap: 12px; }
 .rd-sec-head > :last-child:not(:first-child) { margin-left: auto; margin-right: -8px; }
 .rd-count { margin-left: 6px; font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--faint); font-variant-numeric: tabular-nums; }
-.rd-lede { margin-top: 8px; font-size: 16.5px; line-height: 1.55; color: var(--ink-2); max-width: 64ch; text-wrap: pretty; }
+.rd-points { margin-top: 12px; gap: 7px; }
+p.rd-points { font-size: 16px; line-height: 1.55; color: var(--ink-2); }
 .rd-note { margin-top: 8px; font-size: 12.5px; color: var(--faint); }
 .rd-error { font-size: 14px; color: var(--mute); }
 .rd-table { margin-top: 10px; max-height: 460px; overflow: auto; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); overscroll-behavior: contain; }
@@ -1299,14 +1308,6 @@ a.ins-link { text-decoration: none; display: inline-block; }
 .rd-more[open] summary { display: none; }
 .rd-more .rd-orgs { margin-top: 0; }
 .rd-more .rd-orgs li:first-child { border-top: 1px solid var(--line); }
-.rd-ask { padding: 20px 22px 18px; border-radius: 18px; background: var(--fill); }
-.rd-ask .ins-spark { margin-left: 0; }
-.rd-ask > .rd-note { margin: 4px 0 14px; }
-.rd-ask .buddy-ask { background: var(--bg); }
-.rd-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.rd-suggest .chip { font: inherit; font-size: 13px; border: 0; cursor: pointer; text-align: left; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
-.rd-suggest .chip:hover { color: var(--ink); box-shadow: inset 0 0 0 1px var(--faint); }
-.rd-ask-form { margin: 0; }
 .rd-method p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--ink-2); max-width: 70ch; }
 .rd-caveat b { font-weight: 600; color: var(--ink); margin-right: 4px; }
 .rd-sql { margin-top: 12px; }
@@ -1337,10 +1338,9 @@ a.ins-link { text-decoration: none; display: inline-block; }
   .rd-stats > :last-child:nth-child(odd) { grid-column: span 2; }
   .rd-stat b { font-size: 23px; }
   .rd-figure { padding: 12px 12px 8px; margin-left: -4px; margin-right: -4px; }
-  .rd-ask { padding: 16px 14px 14px; }
   .rd-sec { margin-top: 32px; }
 }
 @media print {
-  .rd-back, .rd-actions, .rd-ask, .rd-figbar, .rd-related { display: none !important; }
+  .rd-back, .rd-actions, .rd-figbar, .rd-related { display: none !important; }
   .rd-table { max-height: none; overflow: visible; }
 }

@@ -42,6 +42,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
   const context = [
     `Headline: ${i.headline}`,
     `Summary: ${i.summary}`,
+    i.points?.length ? `Key points:\n${i.points.map((p) => `- ${p.replace(/\*\*/g, "")}`).join("\n")}` : null,
     i.stats?.length ? `Key numbers: ${i.stats.map((s) => `${s.label}: ${s.value}`).join(" | ")}` : null,
     i.method ? `Method: ${i.method}` : null,
     i.caveats ? `Caveats: ${i.caveats}` : null,

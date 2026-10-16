@@ -35,6 +35,7 @@ export type Insight = {
   state: string | null;
   score: number | null;
   stats: Stat[] | null; // key numbers for the detail page (same as the headline's); null until the miner fills them
+  points: string[] | null; // 2-3 short bullets, key numbers in **bold**, last one "Why it matters"; null until filled (then show summary)
   refreshed_at: string | null;
   created_at: string | null;
 };
@@ -94,7 +95,7 @@ const ASK: Record<string, string[]> = {
 };
 export const askSuggestions = (section: string) => [...(ASK[section] ?? ["Which rows stand out most?"]), "What can this data not tell me?"];
 
-// The saved report as one Markdown file: each card's headline, summary, method, caveats, sources and data.
+// The saved report as one Markdown file: each card's headline, points (else summary), method, caveats, sources and data.
 export function reportMarkdown(items: Insight[], origin: string): string {
   const md = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
   const table = (rows: Row[]) => {
@@ -109,7 +110,7 @@ export function reportMarkdown(items: Insight[], origin: string): string {
     ...items.flatMap((i, n) => [
       `## ${n + 1}. ${i.headline}`, ``,
       `*${sectionLabel(i.section)}${i.state ? ` · ${i.state}` : ""}${updated(i) ? ` · updated ${updated(i)}` : ""}*`, ``,
-      i.summary, ``,
+      ...(i.points?.length ? [...i.points.map((p) => `- ${p}`), ``] : [i.summary, ``]),
       ...(i.stats?.length ? [i.stats.map((s) => `**${s.value}** ${s.label}`).join(" · "), ``] : []),
       ...(i.method ? [`**Method.** ${i.method}`, ``] : []),
       ...(i.caveats ? [`**Caveats.** ${i.caveats}`, ``] : []),

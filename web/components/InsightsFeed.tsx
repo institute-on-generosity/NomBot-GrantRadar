@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { View } from "vega";
 import { NavLink } from "./NavLink";
 import { InsightChart, exportChart } from "./InsightChart";
+import { InsightPoints } from "./InsightPoints";
 import { useStoredList } from "./useStored";
 import { download, reportMarkdown, researchHref, sectionLabel, SECTIONS, toCsv, updated, type Insight } from "@/lib/insightMeta";
 import { clearReport, removeFromReport, REPORT_EVENT, REPORT_KEY, toggleReport } from "@/lib/report";
@@ -101,7 +102,7 @@ function InsightCard({ i, saved, lead = false }: { i: Insight; saved: boolean; l
         {place && <span className="ins-place">{place}</span>}
       </p>
       <h2><NavLink href={href} className="ins-title" label="Opening the finding…">{i.headline}</NavLink></h2>
-      <p className="ins-summary">{i.summary}</p>
+      <InsightPoints i={i} />
       {i.chart && <div className="ins-figure"><InsightChart spec={i.chart} label={i.headline} onView={setView} /></div>}
 
       <div className="ins-actions">
@@ -172,7 +173,7 @@ function ReportView({ items, onClose }: { items: Insight[]; onClose: () => void 
             <button type="button" className="ins-btn primary" onClick={exportAll}>Export report (Markdown)</button>
             <button type="button" className="ins-btn" onClick={() => { if (confirm("Remove every saved insight?")) clearReport(); }}>Clear</button>
           </div>
-          <p className="ins-report-note">Includes each card&apos;s summary, method, caveats, sources and data as tables.</p>
+          <p className="ins-report-note">Includes each card&apos;s key points, method, caveats, sources and data as tables.</p>
         </>
       )}
     </div>
