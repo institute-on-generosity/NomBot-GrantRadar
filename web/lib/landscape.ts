@@ -82,7 +82,7 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
   const years = await grantYears();
   const [{ rows: team }, { rows: geo }, { rows: app }, { rows: funders }, { rows: [funded] }, health, { rows: need }, { rows: track }] = await Promise.all([
     db.query(`SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [eins]),
-    db.query(`SELECT z.county_fips, o.ein FROM orgs o JOIN zip_regions z ON z.zip5 = left(o.zip, 5) WHERE o.ein = ANY($1)`, [eins]),
+    db.query(`SELECT z.county_fips, o.ein FROM orgs o JOIN zip_regions z ON z.zip5 = left(o.zip, 5)::char(5) WHERE o.ein = ANY($1)`, [eins]),
     db.query(`SELECT DISTINCT county_fips FROM zip_regions WHERE appalachia`),
     db.query(`SELECT g.funder_ein AS ein, f.name, f.city, f.state, f.invite_only,
                      count(DISTINCT g.recipient_ein)::int AS orgs, coalesce(sum(g.amount), 0)::bigint AS amount,

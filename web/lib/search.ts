@@ -55,7 +55,7 @@ export function orgHealth(r: any): Health | null {
 const PLACE = `(cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
          AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))
-         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))`;
+         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5)::char(5) AND z.appalachia))`; // char(5): zip5 is char(5), and comparing it as text skips its index (15s searches)
 const NEAREST = 2000; // closest filings by meaning per search
 const KW_WEIGHT = 0.1; // keyword boost in hybrid ranking: 0.1 beat 1 on the 50-question benchmark (68% vs 65% relevant, 67% vs 57% found; eval/bench.mts)
 

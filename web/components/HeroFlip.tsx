@@ -14,16 +14,19 @@ export type PromptSet = { word: string; placeholder: string; prompts: string[] }
 export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; startInsights?: boolean }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Set once a prompt or search starts: the loading veil moves the pointer off the chips (un-pausing), and a
+  // flip would remount the clicked chip and drop its loading state while the search still runs.
+  const [chosen, setChosen] = useState(false);
   const [insights, setShowInsights] = useState(startInsights);
   const setInsights = (on: boolean) => {
     setShowInsights(on);
     window.history.replaceState(null, "", on ? "/?tab=insights" : "/");
   };
   useEffect(() => {
-    if (paused || insights) return;
+    if (paused || insights || chosen) return;
     const t = setInterval(() => setI((x) => (x + 1) % sets.length), 3600);
     return () => clearInterval(t);
-  }, [paused, insights, sets.length]);
+  }, [paused, insights, chosen, sets.length]);
   const set = sets[i];
   const word = insights ? "insights" : set.word;
   const hold = { onMouseEnter: () => setPaused(true), onMouseLeave: () => setPaused(false), onFocus: () => setPaused(true), onBlur: () => setPaused(false) };
@@ -39,7 +42,7 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
           </span>
         </span>
       </h1>
-      {!insights && <SearchBox value="" placeholder={set.placeholder} big />}
+      {!insights && <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={set.placeholder} big /></div>}
       <div className="flip-tabs" role="tablist" aria-label="Example searches" {...hold}>
         {sets.map((s, k) => (
           <button key={s.word} type="button" role="tab" aria-selected={!insights && k === i} className={!insights && k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); setInsights(false); }}>
@@ -50,7 +53,7 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
           Insights
         </button>
       </div>
-      {insights ? <InsightsFeed /> : <div key={set.word} className="chips suggest flip-chips" {...hold}>
+      {insights ? <InsightsFeed /> : <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>
         {set.prompts.map((e) => (
           <NavLink key={e} href={`/?${new URLSearchParams({ question: e })}`} className="chip link" label="Reading your question…" search>
             {e}
