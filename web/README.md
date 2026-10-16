@@ -12,6 +12,7 @@ Needs the local `nombot` database loaded by [generosity-data](https://github.com
 
 | Path | What |
 |---|---|
+| `proxy.ts` | Optional sign-in gate: HTTP Basic auth on every page and API when `SITE_PASSWORD` is set (public tunnel). Off in development |
 | `app/page.tsx` | Search page: plain-language question → filters → hybrid search |
 | `app/api/v1/search/route.ts` | `GET /api/v1/search?q=&state=WV,KY&max_revenue=&ntee=&limit=` (read-only, 60 req/min) |
 | `lib/` | Shared: `db` (Postgres pool), `llm` (provider setup), `embedder`, `parse`, `search`, `rerank` (relevance 0–100), `buddy` (Research Buddy prompt + sources), `soi` |

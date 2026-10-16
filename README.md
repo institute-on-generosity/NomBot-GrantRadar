@@ -72,6 +72,7 @@ GrantRadar is NomBot plus a grants table.
 | AI overview + landscape tabs | Funder figures + Claude overview over the top 15 matched funders (`web/lib/grantLandscape.ts`) |
 | FLAG diligence rules (`lib/flag.ts`) | "How funders will see you" (`/grants/check`) |
 | App, UI, API, Vercel, GitHub Actions | `/grants` pages, Supabase Auth, digest |
+- **Hosting (Oct 16):** runs on the MacBook for now, not the cloud (Supabase Large would be ≈$129/month). Production builds start at login as launchd services (`~/iog-host/run-app.sh`, NomBot :4000, GrantRadar :4001, localhost only), reached through Cloudflare quick tunnels (`*.trycloudflare.com`, the link changes when a tunnel restarts). `web/proxy.ts` asks for `SITE_PASSWORD` (HTTP Basic) on every page and API when set, so a public link can't run Claude searches on our key. Nightly `pg_dump` to `~/Backups/nombot` (newest 3). A fixed address and staff email login need a domain on Cloudflare.
 
 ## Data
 
@@ -114,6 +115,7 @@ GrantRadar is NomBot plus a grants table.
 | **"How funders will see you"** (`/grants/check`): look up your nonprofit by name or EIN, see the diligence a foundation runs on your newest 990 and what to prepare | Oct 8 GSB philanthropy class: funders vet finances, board and pay before reading a proposal. Same fixed rules as NomBot's org page (`lib/flag.ts`) |
 | **Landscape panel** beside the matches: **AI overview** (summary, patterns, "Where to start"), **Breakdown** (typical grant, applications, grant type, home state), **Ask** (grant ranges by grantee budget), **Calendar** (open funders by deadline month; pick a month to list them), **Peers** (groups like yours with the most funders; click one to list the funders that paid it) | Oct 7 feedback: zoom out to patterns, not only details. Same panel as NomBot's results page |
 | **Deadlines read by rules**, not Claude (months, "12/31", "none" → any time) | 79% of filed deadline answers parse; instant and repeatable. Can't yet tell a scholarship deadline from a grant deadline |
+| **Self-hosted on the MacBook** (Oct 16) | Cloud plan priced at ≈$129/month (Supabase Pro + Large compute + disk); the MacBook (M4, 24 GB) already runs everything. Always-on services, Cloudflare tunnel, password gate, nightly backup. Offline when the laptop sleeps or travels; a Linux box or the cloud comes next |
 
 ## Success metrics
 - ≥10 nonprofits test by Dec 20
