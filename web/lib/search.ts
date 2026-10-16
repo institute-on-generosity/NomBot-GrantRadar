@@ -46,7 +46,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
        WHERE (cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
          AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))  -- headquarters city
-         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5) AND z.appalachia))),  -- ARC region
+         AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5)::char(5) AND z.appalachia))),  -- ARC region
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
