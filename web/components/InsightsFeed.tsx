@@ -34,16 +34,18 @@ export function InsightsFeed() {
   const counts = useMemo(() => Object.fromEntries(SECTIONS.map((s) => [s.key, all.filter((i) => i.section === s.key && (!state || i.state === state)).length])), [all, state]);
   const shown = all.filter((i) => (section === "all" || i.section === section) && (!state || i.state === state));
   const saved = new Set(report.map((i) => i.slug));
+  const total = all.filter((i) => !state || i.state === state).length;
+  const latest = all.map((i) => updated(i)).find(Boolean);
 
   return (
     <section className="ins-feed" aria-label="Insights">
       <div className="ins-bar">
         <div className="ins-chips" role="toolbar" aria-label="Sections">
-          <button type="button" className={section === "all" ? "on" : undefined} aria-pressed={section === "all"} onClick={() => setSection("all")}>All</button>
+          <button type="button" className={section === "all" ? "on" : undefined} aria-pressed={section === "all"} onClick={() => setSection("all")}>All{load.status === "ok" && <span>{total}</span>}</button>
           {SECTIONS.map((s) => (
             <button key={s.key} type="button" className={section === s.key ? "on" : undefined} aria-pressed={section === s.key}
               disabled={load.status === "ok" && !counts[s.key] && section !== s.key} onClick={() => setSection(s.key)}>
-              {s.label}
+              {s.label}{load.status === "ok" && counts[s.key] > 0 && <span>{counts[s.key]}</span>}
             </button>
           ))}
         </div>
@@ -68,13 +70,16 @@ export function InsightsFeed() {
         <p className="ins-empty">{load.ready ? "No verified insights yet. Check back soon." : "Insights are being prepared. Check back soon."}</p>
       )}
       {load.status === "ok" && all.length > 0 && !shown.length && <p className="ins-empty">No insights match these filters.</p>}
-      {shown.map((i) => <InsightCard key={i.slug} i={i} saved={saved.has(i.slug)} />)}
+      {load.status === "ok" && shown.length > 0 && latest && <p className="ins-meta">{shown.length} {shown.length === 1 ? "finding" : "findings"} · updated {latest}</p>}
+      <div className="ins-list">
+        {shown.map((i, k) => <InsightCard key={i.slug} i={i} saved={saved.has(i.slug)} lead={k === 0 && section === "all" && !state} />)}
+      </div>
       {load.status === "ok" && all.length > 0 && <p className="note">Findings computed from public IRS filings and checked before they appear. Each card shows its method, SQL and sources.</p>}
     </section>
   );
 }
 
-function InsightCard({ i, saved }: { i: Insight; saved: boolean }) {
+function InsightCard({ i, saved, lead = false }: { i: Insight; saved: boolean; lead?: boolean }) {
   const [view, setView] = useState<View | null>(null);
   const [method, setMethod] = useState(false);
   const hasMethod = Boolean(i.method || i.caveats || i.query);
@@ -88,41 +93,45 @@ function InsightCard({ i, saved }: { i: Insight; saved: boolean }) {
     a.download = `${i.slug}.${kind}`;
     a.click();
   };
+  const place = i.state ? LOADED_STATES.find(([c]) => c === i.state)?.[1] ?? i.state : null;
   return (
-    <article className="ins-card" id={`insight-${i.slug}`}>
-      <p className="ins-kicker">{sectionLabel(i.section)}{i.state ? ` · ${LOADED_STATES.find(([c]) => c === i.state)?.[1] ?? i.state}` : ""}</p>
+    <article className={`ins-card${lead ? " lead" : ""}`} id={`insight-${i.slug}`} data-section={i.section}>
+      <p className="ins-kicker">
+        <span className="ins-sec">{lead ? "Top finding · " : ""}{sectionLabel(i.section)}</span>
+        {place && <span className="ins-place">{place}</span>}
+      </p>
       <h2>{i.headline}</h2>
       <p className="ins-summary">{i.summary}</p>
-      {i.chart && <InsightChart spec={i.chart} label={i.headline} onView={setView} />}
+      {i.chart && <div className="ins-figure"><InsightChart spec={i.chart} label={i.headline} onView={setView} /></div>}
 
       <div className="ins-actions">
         {explore && <NavLink href={explore} className="ins-btn primary" label="Opening the organizations…" search={Boolean(i.explore_query)}>Explore</NavLink>}
         <NavLink href={deeperHref(i)} className="ins-btn" label="Opening Research Buddy…" search>
           <span aria-hidden className="ins-spark">✦</span>Go deeper
         </NavLink>
-        {i.data?.length > 0 && <button type="button" className="ins-btn" onClick={() => download(`${i.slug}.csv`, toCsv(i.data), "text/csv")}>Download CSV</button>}
-        {i.chart && (
-          <span className="ins-split" role="group" aria-label="Export chart">
-            <button type="button" className="ins-btn" disabled={!view} onClick={() => chartFile("png")}>Export PNG</button>
-            <button type="button" className="ins-btn" disabled={!view} onClick={() => chartFile("svg")}>SVG</button>
-          </span>
-        )}
-        <button type="button" className={`ins-btn save${saved ? " on" : ""}`} aria-pressed={saved} onClick={() => toggleReport(i)}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden><path d="M6 3h12v18l-6-4.5L6 21Z" /></svg>
-          {saved ? "Saved" : "Save"}
-        </button>
+        <span className="ins-quiet">
+          {i.data?.length > 0 && <button type="button" className="ins-link" onClick={() => download(`${i.slug}.csv`, toCsv(i.data), "text/csv")}>CSV</button>}
+          {i.chart && <>
+            <button type="button" className="ins-link" disabled={!view} onClick={() => chartFile("png")}>PNG</button>
+            <button type="button" className="ins-link" disabled={!view} onClick={() => chartFile("svg")}>SVG</button>
+          </>}
+          <button type="button" className={`ins-btn save${saved ? " on" : ""}`} aria-pressed={saved} onClick={() => toggleReport(i)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden><path d="M6 3h12v18l-6-4.5L6 21Z" /></svg>
+            {saved ? "Saved" : "Save"}
+          </button>
+        </span>
       </div>
 
       <footer className="ins-foot">
         {hasMethod && (
-          <button type="button" className="ins-method-btn" aria-expanded={method} aria-controls={`method-${i.slug}`} onClick={() => setMethod(!method)}>Method</button>
+          <button type="button" className="ins-method-btn" aria-expanded={method} aria-controls={`method-${i.slug}`} onClick={() => setMethod(!method)}>Method and SQL</button>
         )}
         {i.sources?.length > 0 && (
           <span className="ins-sources">
             {i.sources.map((s) => <a key={s.url + s.label} href={s.url} target="_blank" rel="noreferrer">{s.label}</a>)}
           </span>
         )}
-        {date && <span className="ins-date">Updated {date}</span>}
+        {date && <span className="ins-date">{date}</span>}
       </footer>
       {hasMethod && method && (
         <div className="ins-method" id={`method-${i.slug}`}>

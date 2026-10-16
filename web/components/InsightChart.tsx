@@ -26,7 +26,7 @@ function theme(dark: boolean) {
     view: { stroke: null },
     scale: { bandPaddingInner: 0.28, bandPaddingOuter: 0.1 },
     title: { color: ink, font, fontSize: 13, fontWeight: 600 as const, anchor: "start" as const, subtitleColor: mute },
-    axis: { ...label, domainColor: line, tickColor: line, gridColor: line, gridDash: [], labelPadding: 6, titlePadding: 8, tickSize: 4 },
+    axis: { ...label, domainColor: line, tickColor: line, gridColor: line, gridDash: [], labelPadding: 6, titlePadding: 8, tickSize: 4, labelOverlap: "greedy" as const, labelFlush: true, tickCount: 6 },
     axisX: { grid: false },
     axisY: { domain: false, ticks: false },
     legend: { ...label, labelFontSize: 12, symbolType: "circle", orient: "bottom" as const, direction: "horizontal" as const },
