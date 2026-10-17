@@ -156,7 +156,7 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&s
         <h2>About the data</h2>
         <ul className="apidoc-list">
           <li><b>Sources:</b> IRS Exempt Organizations Business Master File, IRS SOI financial extracts, IRS Form 990, 990-EZ and 990-PF e-file returns, NCCS cause codes. Every record links to its source.</li>
-          <li><b>Grants</b> come from private foundations&apos; 990-PF filings, IRS release years 2023 to 2026. About 64% of grant dollars are linked to a recipient EIN, so totals per organization run low.</li>
+          <li><b>Grants</b> come from private foundations&apos; 990-PF filings, IRS release years 2023 to 2026. About 66% of grants (58% of grant dollars) are linked to a recipient EIN, so totals per organization run low. Schedule I grants from public charities and federal awards (USAspending) are separate fields with their own notes.</li>
           <li><b>Health signals</b> follow fixed, published rules (Income, Bottom line, Cash, Debts, Donations, Board, Insiders). They are prompts for questions, not verdicts.</li>
           <li><b>Research findings</b> are computed by SQL over the same tables, checked before they are published, and refreshed nightly. Each one carries its method, caveats and SQL.</li>
           <li><b>Freshness:</b> loaded from the newest IRS releases. A monthly refresh is planned.</li>

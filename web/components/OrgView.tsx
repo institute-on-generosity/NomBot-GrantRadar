@@ -13,6 +13,7 @@ import { readable, titleCase } from "@/components/text";
 import { getOrg, type Income } from "@/lib/org";
 import { prettyTitle, type Diligence } from "@/lib/flag";
 import type { BoardLink } from "@/lib/people";
+import { OrgFunding } from "@/components/OrgFunding";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -97,6 +98,9 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
         {o.flag && <YearOverYear d={o.flag} />}
       </section>
+
+      {/* Grants received (foundations, charities, federal) and given; streams in after the profile */}
+      <Suspense fallback={<p className="hint">Loading grants…</p>}><OrgFunding ein={o.ein} /></Suspense>
 
       {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} />}
 

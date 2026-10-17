@@ -37,7 +37,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, and private-foundation grants received and given. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls), each with label, name, tier (primary or partial) and why.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls), each with label, name, tier (primary or partial) and why.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -65,9 +65,23 @@ export const ENDPOINTS: Endpoint[] = [
         grants_received: {
           count: 5, total: 20200, funders: 3, first_year: 2022, latest_year: 2024,
           top_funders: [{ ein: "341623986", name: "RICHARD & ARLINE LANDERS FOUNDATION", grants: 3, total: 15000, latest_year: 2024 }],
-          note: "Only grants from private foundations' 990-PF filings that we linked to this EIN (about 64% of grant dollars are linked).",
+          note: "Only grants from private foundations' 990-PF filings that we linked to this EIN (about 66% of grants and 58% of grant dollars are linked).",
         },
         grants_given: { count: 0, total: 0, first_year: null, latest_year: null, top_recipients: [] },
+        charity_grants_received: {
+          count: 13, total: 346274,
+          by_year: [{ tax_year: 2024, count: 3, total: 104330 }, { tax_year: 2023, count: 5, total: 140844 }],
+          by_funder_type: [{ type: "united_way", label: "United Way", funders: 2, count: 7, total: 268000 }, { type: "daf_sponsor", label: "Donor-advised fund sponsor", funders: 1, count: 1, total: 10894 }],
+          top_funders: [{ ein: "340714455", name: "UNITED WAY OF RICHLAND COUNTY", type: "united_way", grants: 4, total: 188000, latest_year: 2024 }],
+          note: "Grants public charities list on Form 990 Schedule I (over $5,000 per recipient), linked to this EIN. Tax years. ...",
+        },
+        // e.g. University of Pennsylvania (23-1352685): { awards: 3653, total: 3253705102, by_fiscal_year: [{ fiscal_year: 2025, award_years: 1956, total: 837436182 }],
+        //   by_agency: [{ agency: "Department of Health and Human Services", awards: 2928, total: 2730316350 }],
+        //   top_programs: [{ assistance_listing: "93.866", title: "AGING RESEARCH", agency: "...", awards: 264, total: 356384694 }], place_of_performance: [{ place: "PA", total: 3226858723 }], note: "..." }
+        federal_awards: null,
+        // e.g. University of Pennsylvania: { count: 283, total: 49688062, by_year: [{ tax_year: 2024, count: 127, total: 18114947, part_ix_line1: 18845690 }], top_recipients: [...], note: "..." }
+        charity_grants_given: null,
+        funding_overlap_note: "The sources overlap. A donor-advised fund grant can start as a foundation grant to the sponsor, ...",
         foundation: null,
         sources: [{ label: "Form 990 (2024)", detail: "Mission and programs, from the organization's IRS e-filed return", url: "https://projects.propublica.org/..." }],
         url: "https://<host>/org/341877332",

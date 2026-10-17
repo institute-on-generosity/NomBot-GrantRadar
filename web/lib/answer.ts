@@ -668,7 +668,7 @@ const PF_CAVEATS = (lr: { grants: number; dollars: number }) => [
 ];
 
 const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null) => [
-  "Schedule I grants: what public charities filing Form 990 report giving to US organizations and governments, usually grants over $5,000. Private foundations are a separate source.",
+  "Schedule I grants: what public charities filing Form 990 report giving to US organizations and governments, usually grants over $5,000. Private foundations are a separate source. Some filers list only part of their grants by recipient (2022–24: 93% of the grants they report in total; Silicon Valley Community Foundation 2022: $2.06B of $3.63B), so totals run low.",
   ...(cls === "daf_sponsor" ? ["DAF sponsor = a charity that holds donor-advised funds and whose DAF grants (Schedule D) are at least half of its Schedule I grants. Community foundations and United Ways are counted separately."] : []),
   ...(cls === "community_foundation" ? ["Community foundation = \"Community Foundation\", \"Community Fund\" or \"Community Trust\" in the name, or NTEE code T31 when DAF grants aren't most of its giving."] : []),
   ...(cls == null || cls === "daf_sponsor" || cls === "community_foundation" ? ["Schedule I doesn't say which grants a donor advised. DAF sponsors' grants are mostly DAF grants, and community foundations' mix DAF and their own grants."] : []),

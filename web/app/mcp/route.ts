@@ -60,7 +60,7 @@ function server(auth: Auth, base: string) {
 
   s.registerTool("get_organization", {
     title: "Get organization",
-    description: "Everything NomBot has on one organization by EIN: address, cause, graded cause labels (climate, women_girls) with tier and why, status, years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), and sources.",
+    description: "Everything NomBot has on one organization by EIN: address, cause, graded cause labels (climate, women_girls) with tier and why, status, years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), grants received from public charities and given on Form 990 Schedule I (by year, funder type such as donor-advised fund sponsor or community foundation, top funders and recipients), direct federal awards (by fiscal year, agency, program, place of performance), and sources. The grant sources overlap: do not add them.",
     inputSchema: { ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'") },
     annotations: { title: "Get organization", ...READ_ONLY },
   }, ({ ein }) => run("get_organization", async () => {

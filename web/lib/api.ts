@@ -4,6 +4,7 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg } from "./org";
+import { orgFunding, FUNDING_NOTES } from "./orgFunding";
 import { isLabel } from "./labels";
 import { getInsight } from "./insights";
 import { sectionLabel, SECTIONS } from "./insightMeta";
@@ -50,7 +51,7 @@ export async function apiOrg(einRaw: string, base: string) {
   const o = await getOrg(ein);
   if (!o) return { error: "not_found" as const };
 
-  const [{ rows: leaders }, { rows: [rec] }, { rows: topFunders }, { rows: [given] }, { rows: topRecipients }, { rows: [fdn] }] = await Promise.all([
+  const [{ rows: leaders }, { rows: [rec] }, { rows: topFunders }, { rows: [given] }, { rows: topRecipients }, { rows: [fdn] }, fund] = await Promise.all([
     // Leaders from the newest filing that lists any (990 Part VII / 990-PF officers)
     db.query(
       `SELECT name, title, role, hours, pay, tax_year FROM board_members
@@ -76,7 +77,10 @@ export async function apiOrg(einRaw: string, base: string) {
     db.query(
       `SELECT tax_year, assets, grants_paid, grant_count, invite_only, website, apply_contact, apply_form, apply_deadlines, apply_restrictions
          FROM funders WHERE ein = $1`, [ein]),
+    // Schedule I grants received and given, federal awards (lib/orgFunding)
+    orgFunding(ein),
   ]);
+  const top10 = <T,>(xs: T[]) => xs.slice(0, 10);
 
   const latest = o.years[0] ?? null;
   const num = (v: unknown) => (v == null ? null : Number(v));
@@ -114,12 +118,43 @@ export async function apiOrg(einRaw: string, base: string) {
       grants_received: {
         count: rec.n, total: Number(rec.total), funders: rec.funders, first_year: rec.first, latest_year: rec.latest,
         top_funders: topFunders.map((f) => ({ ein: f.ein as string, name: f.name as string, grants: f.grants as number, total: Number(f.total), latest_year: f.latest as number })),
-        note: "Only grants from private foundations' 990-PF filings that we linked to this EIN (about 64% of grant dollars are linked).",
+        note: "Only grants from private foundations' 990-PF filings that we linked to this EIN (about 66% of grants and 58% of grant dollars are linked).",
       },
       grants_given: {
         count: given.n, total: Number(given.total), first_year: given.first, latest_year: given.latest,
         top_recipients: topRecipients.map((r) => ({ ein: r.ein as string | null, name: r.name as string, city: r.city as string | null, state: r.state as string | null, grants: r.grants as number, total: Number(r.total), latest_year: r.latest as number })),
       },
+      // Grants public charities (DAF sponsors, community foundations, United Ways, others) list on Form 990 Schedule I
+      charity_grants_received: fund.charities
+        ? {
+            count: fund.charities.n, total: fund.charities.total,
+            by_year: fund.charities.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total })),
+            by_funder_type: fund.charities.byKind.map((k) => ({ type: k.kind, label: k.label, funders: k.funders, count: k.n, total: k.total })),
+            top_funders: top10(fund.charities.top).map((f) => ({ ein: f.ein, name: f.name, type: f.kind, grants: f.n, total: f.total, latest_year: f.latest })),
+            note: FUNDING_NOTES.charities,
+          }
+        : null,
+      // Direct federal grants and cooperative agreements (USAspending), by federal fiscal year
+      federal_awards: fund.federal
+        ? {
+            awards: fund.federal.awards, total: fund.federal.total,
+            by_fiscal_year: fund.federal.years.map((y) => ({ fiscal_year: y.year, award_years: y.n, total: y.total })),
+            by_agency: fund.federal.agencies.map((a) => ({ agency: a.name, awards: a.n, total: a.total })),
+            top_programs: top10(fund.federal.programs).map((p) => ({ assistance_listing: p.cfda, title: p.title, agency: p.agency, awards: p.n, total: p.total })),
+            place_of_performance: fund.federal.places.map((p) => ({ place: p.place, total: p.total })),
+            note: FUNDING_NOTES.federal,
+          }
+        : null,
+      // Grants this organization listed on its own Schedule I, with its Part IX line 1 total per year
+      charity_grants_given: fund.given.scheduleI
+        ? {
+            count: fund.given.scheduleI.n, total: fund.given.scheduleI.total,
+            by_year: fund.given.scheduleI.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total, part_ix_line1: y.line1 })),
+            top_recipients: top10(fund.given.scheduleI.top).map((r) => ({ ein: r.ein, name: r.name, city: r.city, state: r.state, grants: r.n, total: r.total, latest_year: r.latest })),
+            note: FUNDING_NOTES.given,
+          }
+        : null,
+      funding_overlap_note: FUNDING_NOTES.overlap,
       foundation: fdn
         ? { tax_year: fdn.tax_year, assets: num(fdn.assets), grants_paid: num(fdn.grants_paid), grant_count: fdn.grant_count, invite_only: fdn.invite_only,
             website: fdn.website, apply: { contact: fdn.apply_contact, form: fdn.apply_form, deadlines: fdn.apply_deadlines, restrictions: fdn.apply_restrictions } }
