@@ -1474,3 +1474,17 @@ p.rd-points { font-size: 16px; line-height: 1.55; color: var(--ink-2); }
 /* /research/ask */
 .ask-page .ask-box { margin: 10px 0 16px; }
 .ask-page .answer { margin-bottom: 12px; }
+/* Research thread (/research/ask): one turn per question, follow-up box under the latest answer */
+.thread { display: grid; gap: 22px; }
+.turn { scroll-margin-top: 24px; }
+.turn-q { margin: 0 0 8px 2px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
+.turn-q span { font-weight: 400; color: var(--faint); font-size: 13px; }
+.turn .answer { margin-bottom: 8px; }
+.answer.compact { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 18px; }
+.answer.compact .answer-head { font-size: 15px; margin: 0; }
+.fu-text .buddy-answer, .fu-text p, .fu-text li { font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+.fu { position: sticky; bottom: 0; z-index: 5; margin: 18px -8px 0; padding: 10px 8px 14px; background: var(--bg); box-shadow: 0 -10px 16px -12px rgba(0,0,0,.12); }
+.fu-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px 2px; }
+.fu-form { margin: 0; }
+.fu-pending { margin-bottom: 12px; }
+.fu-note { margin: 18px 2px; font-size: 13px; color: var(--mute); }

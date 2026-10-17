@@ -6,7 +6,8 @@ const SlideIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="no
 
 // "Export slide": a small menu (PNG or PowerPoint) that builds one 16:9 slide (lib/slide, loaded on
 // click with Vega and pptxgenjs, so pages don't carry them). quiet: a text link for feed cards.
-export function SlideButton({ data, quiet = false, label = "Export slide" }: { data: () => SlideData; quiet?: boolean; label?: string }) {
+// more: a "⋯" icon button (the search page's analysis panel header), the menu items say what they export.
+export function SlideButton({ data, quiet = false, more = false, label = "Export slide" }: { data: () => SlideData; quiet?: boolean; more?: boolean; label?: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<"png" | "pptx" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,14 +33,20 @@ export function SlideButton({ data, quiet = false, label = "Export slide" }: { d
   };
   return (
     <span className="slide-x" ref={box}>
-      <button type="button" className={quiet ? "ins-link" : `ins-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}
-        title="One 16:9 slide: headline, key numbers, the chart and a source line">
-        {!quiet && <SlideIcon />}{label}
-      </button>
+      {more ? (
+        <button type="button" className={`more-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" aria-label="More options" title="More options" onClick={() => setOpen(!open)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+        </button>
+      ) : (
+        <button type="button" className={quiet ? "ins-link" : `ins-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}
+          title="One 16:9 slide: headline, key numbers, the chart and a source line">
+          {!quiet && <SlideIcon />}{label}
+        </button>
+      )}
       {open && (
         <span className="slide-menu" role="menu">
-          <button type="button" role="menuitem" disabled={busy != null} onClick={() => go("png")}>{busy === "png" ? <span className="spinner" /> : null}PNG image<small>1920 × 1080</small></button>
-          <button type="button" role="menuitem" disabled={busy != null} onClick={() => go("pptx")}>{busy === "pptx" ? <span className="spinner" /> : null}PowerPoint<small>Editable text</small></button>
+          <button type="button" role="menuitem" disabled={busy != null} onClick={() => go("png")}>{busy === "png" ? <span className="spinner" /> : more ? <SlideIcon /> : null}{more ? "Export slide as PNG" : "PNG image"}<small>1920 × 1080</small></button>
+          <button type="button" role="menuitem" disabled={busy != null} onClick={() => go("pptx")}>{busy === "pptx" ? <span className="spinner" /> : more ? <SlideIcon /> : null}{more ? "Export slide as PowerPoint" : "PowerPoint"}<small>Editable text</small></button>
           {error && <span className="slide-err" role="alert">{error}</span>}
         </span>
       )}

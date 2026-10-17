@@ -21,7 +21,7 @@ const SCREEN = new RegExp([
 
 export const looksLikeResearch = (q: string) => SCREEN.test(q);
 
-const SYSTEM = `You route questions for NomBot, a research tool over US IRS nonprofit data for philanthropy researchers.
+export const ROUTER_SYSTEM = `You route questions for NomBot, a research tool over US IRS nonprofit data for philanthropy researchers.
 Decide if the question asks for an aggregate answer (a number, share, ranking, trend or count across many organizations) = research true, or asks to find/list specific organizations to look at = research false ("food banks in Ohio", "best climate nonprofits", "largest hospitals in Texas" are org searches; "how much foundation money goes to food banks in Ohio" is research).
 Then fill the spec. Our data:
 - foundation_grants: every private-foundation 990-PF grant, tax years 2022-2025 (2025 partial), recipient state/county, funder, purpose text. Default source.
@@ -59,7 +59,7 @@ async function routeFresh(question: string): Promise<Routed> {
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       output_config: { effort: "low", format: betaZodOutputFormat(routerSchema) },
-      system: SYSTEM,
+      system: ROUTER_SYSTEM,
       messages: [{ role: "user", content: question }],
     });
     const o = res.stop_reason === "refusal" ? null : res.parsed_output;

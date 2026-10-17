@@ -5,7 +5,7 @@ import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
 import type { MapData } from "./LandscapeMap";
 import { NavLink } from "./NavLink";
-import { OverviewVisual } from "./OverviewVisual";
+import { OverviewMenu, OverviewVisual, Related } from "./OverviewVisual";
 import { TrackRecord } from "./TrackRecord";
 import { LOADED_STATES, money } from "@/lib/filters";
 import { db } from "@/lib/db";
@@ -19,9 +19,10 @@ import { themes } from "@/lib/themes";
 
 // Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it
 // (plus strong matches no foundation funds yet). Finances: growing, shrinking, deficits, thin reserves.
-// Overview tab: headline, key-number tiles and one chart from the landscape (no Claude, so they show
-// first), then the AI overview's bullets (overview(), told it sits under the visual and given the
-// chart's takeaway as its story), then Track record. total: every organization the search matched.
+// Overview tab, a knowledge panel of section cards: AI overview (headline + the AI bullets from
+// overview(), told it sits with the visual and given the chart's takeaway as its story), Key facts and
+// one chart from the landscape (no Claude, so they show first), Track record, then related searches.
+// Export slide sits in the panel header's "⋯" menu. total: every organization the search matched.
 export async function Landscape({ question, filters, includeInactive, total, map, overview, gems }: {
   question: string; filters: Filters; includeInactive: boolean; total: number; gems?: React.ReactNode;
   overview: (o: { visual: boolean; story?: string }) => React.ReactNode;
@@ -35,7 +36,13 @@ export async function Landscape({ question, filters, includeInactive, total, map
   const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
     <LandscapeTabs views={[
-      { ...first, node: <><OverviewVisual facts={facts} question={question} />{overview({ visual: true, story: facts.chart?.takeaway })}{track}</> },
+      { ...first, menu: <OverviewMenu facts={facts} question={question} />, node: (
+        <>
+          <OverviewVisual facts={facts} question={question}>{overview({ visual: true, story: facts.chart?.takeaway })}</OverviewVisual>
+          {track}
+          <Related question={question} />
+        </>
+      ) },
       { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} orgs={l.orgs} />

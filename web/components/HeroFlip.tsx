@@ -2,33 +2,25 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { SearchBox } from "@/components/SearchBox";
-import { InsightsFeed } from "@/components/InsightsFeed";
 
 export type PromptSet = { word: string; placeholder: string; prompts: string[] };
 
 // Home heading "Look up <word>": the word flips between what NomBot can find (nonprofits, people,
-// foundations) and the example prompts below the search box flip with it. Pauses while the pointer
-// or keyboard is on it; with reduced motion it still changes, without the flip.
-// The last tab, Insights, isn't a prompt set: it stops the flipping and swaps the search box for the feed.
-// ?tab=insights opens on it (kept in the URL, so Back from an insight returns to the feed).
-export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; startInsights?: boolean }) {
-  const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
+// foundations, research answers) and the example prompts below the search box flip with it. Pauses while
+// the pointer or keyboard is on it; with reduced motion it still changes, without the flip.
+// ?tab=research opens on the research prompts (research questions go on to /research/ask).
+export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: number }) {
+  const [i, setI] = useState(start);
+  const [paused, setPaused] = useState(start !== 0);
   // Set once a prompt or search starts: the loading veil moves the pointer off the chips (un-pausing), and a
   // flip would remount the clicked chip and drop its loading state while the search still runs.
   const [chosen, setChosen] = useState(false);
-  const [insights, setShowInsights] = useState(startInsights);
-  const setInsights = (on: boolean) => {
-    setShowInsights(on);
-    window.history.replaceState(null, "", on ? "/?tab=research" : "/");
-  };
   useEffect(() => {
-    if (paused || insights || chosen) return;
+    if (paused || chosen) return;
     const t = setInterval(() => setI((x) => (x + 1) % sets.length), 3600);
     return () => clearInterval(t);
-  }, [paused, insights, chosen, sets.length]);
+  }, [paused, chosen, sets.length]);
   const set = sets[i];
-  const word = insights ? "research" : set.word;
   const hold = { onMouseEnter: () => setPaused(true), onMouseLeave: () => setPaused(false), onFocus: () => setPaused(true), onBlur: () => setPaused(false) };
   return (
     <>
@@ -38,28 +30,25 @@ export function HeroFlip({ sets, startInsights = false }: { sets: PromptSet[]; s
           Look up{" "}
           <span className="flip" aria-live="polite">
             {/* key: a new word mounts and plays the flip-in */}
-            <span key={word} className="flip-word">{word}</span>
+            <span key={set.word} className="flip-word">{set.word}</span>
           </span>
         </span>
       </h1>
-      {!insights && <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={set.placeholder} big /></div>}
+      <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={set.placeholder} big /></div>
       <div className="flip-tabs" role="tablist" aria-label="Example searches" {...hold}>
         {sets.map((s, k) => (
-          <button key={s.word} type="button" role="tab" aria-selected={!insights && k === i} className={!insights && k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); setInsights(false); }}>
+          <button key={s.word} type="button" role="tab" aria-selected={k === i} className={k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); }}>
             {s.word[0].toUpperCase() + s.word.slice(1)}
           </button>
         ))}
-        <button type="button" role="tab" aria-selected={insights} className={insights ? "on" : undefined} onClick={() => setInsights(true)}>
-          Research
-        </button>
       </div>
-      {insights ? <InsightsFeed /> : <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>
+      <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>
         {set.prompts.map((e) => (
           <NavLink key={e} href={`/?${new URLSearchParams({ question: e })}`} className="chip link" label="Reading your question…" search>
             {e}
           </NavLink>
         ))}
-      </div>}
+      </div>
     </>
   );
 }

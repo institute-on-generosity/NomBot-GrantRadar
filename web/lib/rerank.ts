@@ -13,7 +13,7 @@ import { search, type Result } from "./search";
 export const POOL = 40;  // candidates Claude scores per question
 export const STRONG = 50; // scores below this are near-misses: shown only on request (rubric: 40-69 = missing a key part)
 export const isStrong = (r: { relevance?: Relevance | null }) => !r.relevance || r.relevance.score >= STRONG;
-const BATCH = 10;        // scored in parallel batches: time is dominated by writing the reasons
+const BATCH = 5;         // scored in parallel batches: time is dominated by writing the reasons, so smaller batches finish sooner (40 results: ~3.3s at 5, ~4.5s at 10)
 
 export type Relevance = { score: number; why: string };
 export type Ranked = Result & { relevance: Relevance | null };
@@ -76,8 +76,14 @@ function score(question: string, results: Result[]) {
 type Found = Awaited<ReturnType<typeof search>>;
 
 // Step 1: search candidates (fast, ~0.5s): enough for the page to show results right away.
-export function searchCandidates(filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }) {
-  return search({ ...filters, includeInactive, limit: Math.max(limit, POOL) });
+// One search serves the results, "Show more" and the landscape (its 200 closest): fetched once at SHARED
+// rows and cached briefly, instead of the same candidate query running twice per page.
+const SHARED = 200; // = LANDSCAPE (lib/landscape.ts)
+const found = memo<Found>("candidates:v1", 200, 10 * 60_000);
+export async function searchCandidates(filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }): Promise<Found> {
+  const want = Math.max(limit, POOL), size = Math.max(want, SHARED);
+  const res = await found(JSON.stringify([filters, includeInactive, size]), () => search({ ...filters, includeInactive, limit: size }));
+  return { ...res, results: res.results.slice(0, want) };
 }
 
 // Step 2: score the top POOL candidates and order by score (ties and unscored keep search order).

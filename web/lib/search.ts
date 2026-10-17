@@ -56,34 +56,68 @@ const PLACE = `(cardinality($4::text[]) = 0 OR o.state = ANY($4))
          AND ($6::text IS NULL OR o.ntee_cd LIKE $6 || '%')
          AND (cardinality($12::text[]) = 0 OR upper(o.city) = ANY($12))
          AND (NOT $14::boolean OR EXISTS (SELECT 1 FROM zip_regions z WHERE z.zip5 = left(o.zip, 5)::char(5) AND z.appalachia))`; // char(5): zip5 is char(5), and comparing it as text skips its index (15s searches)
-const NEAREST = 2000; // closest filings by meaning per search
+const NEAREST = 2000; // closest filings by meaning per search (1000 halves the HNSW reads but changed 4% of the top 40)
+const KW_CAP = 1000;  // keyword candidates per source (names, filing text), so a broad word can't pull in 200K rows
+const REQ_CAP = 300;  // filings that state a required activity, closest by meaning first
+const REQ_SCAN = 5000; // filings a requirement's regex checks at most, twice: any that mention it (all of them for most
+                       // requirements) and those that also mention a topic word (the likely close matches when it's broad:
+                       // "students" or "tutoring" would otherwise scan 100K+ filings)
 const KW_WEIGHT = 0.1; // keyword boost in hybrid ranking: 0.1 beat 1 on the 50-question benchmark (68% vs 65% relevant, 67% vs 57% found; eval/bench.mts)
+
+// A requirement's regex alternation ("workforce|job training") as a full-text prefilter ("workforc:* | job:* & train:*"),
+// so the regex runs only on filings the GIN index finds instead of on every filing. Prefix matching on stems keeps
+// it a superset of the regex in practice ("mentor" finds "mentorship"); the regex still decides.
+export function reqTsquery(patterns: string[]) {
+  const terms = patterns.flatMap((p) => p.split(/(?<!\\)\|/)).map((t) => t.replace(/\\(.)/g, "$1").toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  return [...new Set(terms.filter((w) => w.length).map((w) => w.map((x) => `${x}:*`).join(" & ")))].join(" | ");
+}
+
+// Postgres can't cache a plan across embeddings, and the check below never changes while the server runs.
+let hasVectors: Promise<boolean> | undefined;
 
 export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
   if (q.trim() && mode !== "keyword") {
-    const { rows } = await db.query("SELECT 1 FROM filing_text WHERE embedding_model = $1 LIMIT 1", [MODEL_ID]);
-    if (rows.length) vec = toSql(await embedQuery(semantic || q));
+    hasVectors ??= db.query("SELECT 1 FROM filing_latest WHERE embedding_model = $1 LIMIT 1", [MODEL_ID]).then((r) => r.rows.length > 0);
+    hasVectors.catch(() => { hasVectors = undefined; });
+    const [ok, v] = await Promise.all([hasVectors, embedQuery(semantic || q)]); // in parallel: the check is a round trip
+    if (ok) vec = toSql(v);
   }
+  // Keyword candidates. Hybrid: filings and names with EVERY topic word (the OR query below still scores the
+  // boost), up to KW_CAP; meaning similarity ranks them, so which ones a broad word returns matters little.
+  // Keyword-only (benchmark): any word, best ts_rank first, since there's nothing else to rank by.
+  const kwOnly = mode === "keyword";
+  const kwq = "websearch_to_tsquery('english', $18::text)"; // $18: the AND words (hybrid) or the OR query (keyword-only)
+  const kwCap = (col: string) => (kwOnly ? `ORDER BY ts_rank(${col}, ${kwq}) DESC ` : "") + `LIMIT ${KW_CAP}`;
+  const reqq = reqTsquery(requirements.map((r) => r.pattern));
   const { rows } = await db.query(
     // Candidates first, from indexes, so a search never scores every US nonprofit: the closest filings by
-    // meaning (HNSW, filtered to the place as it scans), keyword hits on names and filing text, and filings
-    // that state a required activity. Without a topic, everything in the place. Newest rows per org come
-    // from generosity-data's *_latest views (migration 015).
+    // meaning (HNSW over half-precision vectors, generosity-data migration 036: half the size of the full
+    // index, so it stays in memory; filtered to the place as it scans; similarity below is full precision),
+    // capped keyword hits on names and filing text, and filings that state a required activity (GIN prefilter,
+    // capped, then the regex). Without a topic, everything in the place. A few thousand candidates at most,
+    // so the joins below are index lookups, not table scans.
+    // Newest rows per org come from generosity-data's *_latest views (migration 015).
     `WITH cand AS (
        (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
         WHERE $2::vector IS NOT NULL AND t.embedding_model = $3 AND ${PLACE}
-        ORDER BY t.embedding <=> $2::vector LIMIT ${NEAREST})
+        ORDER BY t.embedding::halfvec(512) <=> $2::halfvec(512) LIMIT ${NEAREST})
        UNION
-       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND $16 <> 'vector' AND o.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND $16 <> 'vector' AND o.search @@ ${kwq} AND ${PLACE} ${kwCap("o.search")})
        UNION
-       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND $16 <> 'vector' AND t.search @@ websearch_to_tsquery('english', $1) AND ${PLACE})
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND $16 <> 'vector' AND t.search @@ ${kwq} AND ${PLACE} ${kwCap("t.search")})
        UNION
-       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
-        WHERE cardinality($8::text[]) > 0 AND ${PLACE}
-          AND EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(t.mission, '') || ' ' || coalesce(t.programs, '') ~* p))
+       (SELECT t.ein FROM ((SELECT ein, mission, programs, embedding FROM filing_latest
+                             WHERE $19::text <> '' AND search @@ to_tsquery('english', $19) LIMIT ${REQ_SCAN})
+                            UNION ALL
+                            (SELECT ein, mission, programs, embedding FROM filing_latest
+                             WHERE $19 <> '' AND $1 <> '' AND search @@ (to_tsquery('english', $19) && websearch_to_tsquery('english', $1)) LIMIT ${REQ_SCAN})) t
+        JOIN orgs o USING (ein)
+        WHERE ${PLACE}
+          AND EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(t.mission, '') || ' ' || coalesce(t.programs, '') ~* p)
+        ${vec ? "ORDER BY t.embedding <=> $2::vector " : ""}LIMIT ${REQ_CAP})
        UNION
        (SELECT o.ein FROM orgs o WHERE $1 = '' AND ${PLACE})),
      t AS (SELECT t.ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
@@ -126,7 +160,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight, kwOnly ? tsq : words.join(" "), reqq],
   );
   return {
     total: Number(rows[0]?.total ?? 0),

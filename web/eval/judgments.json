@@ -514,6 +514,11 @@
   "why": "Virginia PTO after-school programs include science and engineering.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|205071956": {
+  "relevant": false,
+  "why": "School PTO funding supplies, not after-school STEM.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|205517073": {
   "relevant": false,
   "why": "General after-school program; no STEM specified.",
@@ -619,6 +624,11 @@
   "why": "Digital skills programs for girls in India, not Virginia after-school STEM.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|474933093": {
+  "relevant": false,
+  "why": "General out-of-school-time coordinator, no STEM focus stated.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|521133845": {
   "relevant": true,
   "why": "Virginia-based STEM student organization with school-based clubs and competitions.",
@@ -627,6 +637,11 @@
  "after-school stem programs in virginia|521288879": {
   "relevant": true,
   "why": "After school enrichment with STEM/coding classes in Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|522347666": {
+  "relevant": true,
+  "why": "After-school space science enrichment in Chantilly, VA.",
   "model": "claude-opus-5-5"
  },
  "after-school stem programs in virginia|526055229": {
@@ -674,9 +689,19 @@
   "why": "Schooner race and bay heritage, not after-school STEM.",
   "model": "claude-opus-5-5"
  },
+ "after-school stem programs in virginia|541705642": {
+  "relevant": true,
+  "why": "Virginia afterschool program with makerspace and STEM opportunities.",
+  "model": "claude-opus-5-5"
+ },
  "after-school stem programs in virginia|541758356": {
   "relevant": false,
   "why": "School foundation funding vocational programs, not after-school STEM.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|541845328": {
+  "relevant": false,
+  "why": "Business-school partnership; after-school jobs, not STEM programs.",
   "model": "claude-opus-5-5"
  },
  "after-school stem programs in virginia|541855451": {
@@ -787,6 +812,11 @@
  "after-school stem programs in virginia|900439807": {
   "relevant": false,
   "why": "After-school tutoring in reading/math, not STEM-focused.",
+  "model": "claude-opus-5-5"
+ },
+ "after-school stem programs in virginia|901945242": {
+  "relevant": false,
+  "why": "PTA support with after-school mention; STEM focus marginal.",
   "model": "claude-opus-5-5"
  },
  "after-school stem programs in virginia|921526057": {
@@ -1564,6 +1594,11 @@
   "why": "WV arts education and dance outreach organization.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|200815517": {
+  "relevant": false,
+  "why": "Heritage and conservation coordination, not primarily arts.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|205132843": {
   "relevant": true,
   "why": "Community arts theater in Huntington, WV.",
@@ -1609,14 +1644,29 @@
   "why": "Arts and revitalization group in Bluefield, WV.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|550329724": {
+  "relevant": false,
+  "why": "Nursing home, not arts.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|550359760": {
   "relevant": true,
   "why": "WV institute with performing and visual arts programming.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|550483256": {
+  "relevant": false,
+  "why": "Public library, not an arts organization.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|550484580": {
   "relevant": true,
   "why": "Professional theatre in Lewisburg, WV.",
+  "model": "claude-opus-5-5"
+ },
+ "arts organizations in west virginia|550485799": {
+  "relevant": false,
+  "why": "Women's club volunteer services, not arts.",
   "model": "claude-opus-5-5"
  },
  "arts organizations in west virginia|550536295": {
@@ -1639,9 +1689,19 @@
   "why": "Supports arts groups in Kanawha Valley, WV.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|550631259": {
+  "relevant": false,
+  "why": "Youth leadership program, not arts.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|550639668": {
   "relevant": true,
   "why": "Lewisburg, WV arts venue presenting performances, exhibits, classes.",
+  "model": "claude-opus-5-5"
+ },
+ "arts organizations in west virginia|550664923": {
+  "relevant": true,
+  "why": "WV cultural center hosting heritage events, arts/culture cause.",
   "model": "claude-opus-5-5"
  },
  "arts organizations in west virginia|550702401": {
@@ -1664,6 +1724,11 @@
   "why": "Arts organization in Morgantown, WV.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|550775351": {
+  "relevant": false,
+  "why": "Women's employment training, not arts.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|550783423": {
   "relevant": true,
   "why": "Provides art programs in WV schools.",
@@ -1672,6 +1737,11 @@
  "arts organizations in west virginia|550783904": {
   "relevant": true,
   "why": "Presents concerts and arts events in WV.",
+  "model": "claude-opus-5-5"
+ },
+ "arts organizations in west virginia|556017181": {
+  "relevant": false,
+  "why": "University fundraising foundation, not arts organization.",
   "model": "claude-opus-5-5"
  },
  "arts organizations in west virginia|556028450": {
@@ -1714,6 +1784,11 @@
   "why": "Arts presenter and educator in Huntington, WV.",
   "model": "claude-opus-5-5"
  },
+ "arts organizations in west virginia|931351145": {
+  "relevant": false,
+  "why": "General community foundation, no arts focus.",
+  "model": "claude-opus-5-5"
+ },
  "arts organizations in west virginia|990632487": {
   "relevant": true,
   "why": "Arts-focused nonprofit in Beaver, WV.",
@@ -1722,6 +1797,16 @@
  "arts organizations in west virginia|994556350": {
   "relevant": true,
   "why": "Arts organization located in Charleston, WV.",
+  "model": "claude-opus-5-5"
+ },
+ "arts organizations in west virginia|994599985": {
+  "relevant": true,
+  "why": "WV ministry doing music and arts outreach, arts cause.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|205767918": {
+  "relevant": true,
+  "why": "Boys and Girls Club in Oneida, Tennessee.",
   "model": "claude-opus-5-5"
  },
  "boys and girls clubs in tennessee|237122048": {
@@ -1749,6 +1834,11 @@
   "why": "Operates a Boys & Girls Club unit in Polk County, TN.",
   "model": "claude-opus-5-5"
  },
+ "boys and girls clubs in tennessee|522441482": {
+  "relevant": true,
+  "why": "Boys & Girls Club in Union City, Tennessee.",
+  "model": "claude-opus-5-5"
+ },
  "boys and girls clubs in tennessee|591743795": {
   "relevant": false,
   "why": "Girls Inc, not a Boys & Girls Club.",
@@ -1762,6 +1852,11 @@
  "boys and girls clubs in tennessee|620476819": {
   "relevant": false,
   "why": "Boy Scouts council, not a Boys & Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|620481461": {
+  "relevant": false,
+  "why": "United Way funder, not a Boys and Girls Club itself.",
   "model": "claude-opus-5-5"
  },
  "boys and girls clubs in tennessee|620502737": {
@@ -1894,6 +1989,31 @@
   "why": "STEM outreach nonprofit, not a Boys & Girls Club.",
   "model": "claude-opus-5-5"
  },
+ "boys and girls clubs in tennessee|852499892": {
+  "relevant": false,
+  "why": "Volleyball club, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|873877793": {
+  "relevant": false,
+  "why": "Sports league academy, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|874773146": {
+  "relevant": false,
+  "why": "Youth football league, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "boys and girls clubs in tennessee|990711828": {
+  "relevant": false,
+  "why": "Independent mentorship program, not a Boys and Girls Club.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|061640635": {
+  "relevant": false,
+  "why": "Community center pantry, not described as church.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|203065115": {
   "relevant": true,
   "why": "Nashville faith-based center doing food distribution.",
@@ -1912,6 +2032,11 @@
  "churches that run food pantries in tennessee|237196359": {
   "relevant": false,
   "why": "Fraternal group donating food, not a church running a pantry.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|237545915": {
+  "relevant": false,
+  "why": "Grants to charities; not a church food pantry.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|263369094": {
@@ -1934,6 +2059,11 @@
   "why": "Kidney foundation, not a church.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|270849015": {
+  "relevant": false,
+  "why": "Thrift store pantry, no church affiliation stated.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|271699146": {
   "relevant": true,
   "why": "Christian ministry in Tennessee distributing food boxes and meals.",
@@ -1949,6 +2079,11 @@
   "why": "Christian preschool, not food pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|320107542": {
+  "relevant": false,
+  "why": "Thrift store with pantry, not a church.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|320258525": {
   "relevant": true,
   "why": "Faith-based Tennessee food assistance ministry supported by churches.",
@@ -1957,6 +2092,11 @@
  "churches that run food pantries in tennessee|320696336": {
   "relevant": false,
   "why": "Church with no food pantry mentioned.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|333816900": {
+  "relevant": true,
+  "why": "Faith-oriented food pantry with spiritual mission in Tennessee.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|342009561": {
@@ -1972,6 +2112,11 @@
  "churches that run food pantries in tennessee|452424130": {
   "relevant": false,
   "why": "Rescue mission shelter, not a church food pantry.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|461228892": {
+  "relevant": false,
+  "why": "Food pantry but no church affiliation indicated.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|461484460": {
@@ -2034,9 +2179,19 @@
   "why": "Homeless shelter mission, not a church food pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|621049447": {
+  "relevant": false,
+  "why": "Large food bank, not a church.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|621181398": {
   "relevant": true,
   "why": "Faith-based TN ministry operating a food pantry.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|621303822": {
+  "relevant": false,
+  "why": "Regional food bank, not a church.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|621341004": {
@@ -2094,6 +2249,11 @@
   "why": "Hospital, not a church food pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|742916246": {
+  "relevant": false,
+  "why": "Funds a school in Kenya, not a Tennessee food pantry.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|743224960": {
   "relevant": true,
   "why": "Tennessee ministerial (church) association running a food pantry.",
@@ -2114,6 +2274,11 @@
   "why": "Ministry center with child meals, not a food pantry.",
   "model": "claude-opus-5-5"
  },
+ "churches that run food pantries in tennessee|820739259": {
+  "relevant": true,
+  "why": "Christian outreach ministry delivering emergency food in Chattanooga.",
+  "model": "claude-opus-5-5"
+ },
  "churches that run food pantries in tennessee|823111452": {
   "relevant": false,
   "why": "Church resourcing, no food pantry.",
@@ -2127,6 +2292,11 @@
  "churches that run food pantries in tennessee|832762480": {
   "relevant": false,
   "why": "Gleaning redistribution ministry, not a church food pantry.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|842152889": {
+  "relevant": false,
+  "why": "Food pantry, no church affiliation indicated.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|843239885": {
@@ -2147,6 +2317,11 @@
  "churches that run food pantries in tennessee|860983324": {
   "relevant": false,
   "why": "International church planting.",
+  "model": "claude-opus-5-5"
+ },
+ "churches that run food pantries in tennessee|872083797": {
+  "relevant": false,
+  "why": "Older adult ministry training, no food pantry.",
   "model": "claude-opus-5-5"
  },
  "churches that run food pantries in tennessee|873140486": {
@@ -2249,6 +2424,16 @@
   "why": "No description; name gives no indication of water work.",
   "model": "claude-opus-5-5"
  },
+ "clean water access projects in rural west virginia|454696610": {
+  "relevant": false,
+  "why": "Water filtration kits shipped elsewhere; local work is housing and training.",
+  "model": "claude-opus-5-5"
+ },
+ "clean water access projects in rural west virginia|474472399": {
+  "relevant": false,
+  "why": "Water projects are in Africa, not West Virginia.",
+  "model": "claude-opus-5-5"
+ },
  "clean water access projects in rural west virginia|510172533": {
   "relevant": false,
   "why": "Generic grant pass-through; no water access work stated.",
@@ -2279,6 +2464,11 @@
   "why": "Rural WV water utility providing water to households.",
   "model": "claude-opus-5-5"
  },
+ "clean water access projects in rural west virginia|550598714": {
+  "relevant": false,
+  "why": "Developmental disability services, not water access.",
+  "model": "claude-opus-5-5"
+ },
  "clean water access projects in rural west virginia|550601592": {
   "relevant": true,
   "why": "RCAP helps small rural WV communities develop water and wastewater facilities.",
@@ -2299,6 +2489,11 @@
   "why": "Land conservation easements, not clean water access projects.",
   "model": "claude-opus-5-5"
  },
+ "clean water access projects in rural west virginia|550708567": {
+  "relevant": false,
+  "why": "University research and development, no water access focus.",
+  "model": "claude-opus-5-5"
+ },
  "clean water access projects in rural west virginia|550715066": {
   "relevant": false,
   "why": "Free medical clinic, unrelated to water access.",
@@ -2317,6 +2512,11 @@
  "clean water access projects in rural west virginia|550739158": {
   "relevant": false,
   "why": "Acid mine drainage stream restoration, not water access.",
+  "model": "claude-opus-5-5"
+ },
+ "clean water access projects in rural west virginia|550744558": {
+  "relevant": false,
+  "why": "Children's mental health network, unrelated to water.",
   "model": "claude-opus-5-5"
  },
  "clean water access projects in rural west virginia|550747132": {
@@ -2389,9 +2589,19 @@
   "why": "General rural health and infrastructure, no water focus.",
   "model": "claude-opus-5-5"
  },
+ "clean water access projects in rural west virginia|922445634": {
+  "relevant": false,
+  "why": "Clean water wells are overseas, not in West Virginia.",
+  "model": "claude-opus-5-5"
+ },
  "coal miner black lung advocacy groups|010728178": {
   "relevant": true,
   "why": "Screens coal miners and provides black lung benefits assistance.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|010743018": {
+  "relevant": false,
+  "why": "Wilderness protection against mining, not miner health advocacy.",
   "model": "claude-opus-5-5"
  },
  "coal miner black lung advocacy groups|020222170": {
@@ -2492,6 +2702,11 @@
  "coal miner black lung advocacy groups|521609875": {
   "relevant": false,
   "why": "General medical research advocacy, not black lung.",
+  "model": "claude-opus-5-5"
+ },
+ "coal miner black lung advocacy groups|521916480": {
+  "relevant": false,
+  "why": "Industry trade group, not black lung miner advocacy.",
   "model": "claude-opus-5-5"
  },
  "coal miner black lung advocacy groups|521926679": {
@@ -2724,6 +2939,11 @@
   "why": "Community foundation for Oxford, Ohio area.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|311572960": {
+  "relevant": false,
+  "why": "Library support foundation, not a community foundation.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|311620483": {
   "relevant": true,
   "why": "Regional community foundation for Appalachian Ohio.",
@@ -2824,6 +3044,11 @@
   "why": "Hudson, Ohio community foundation with donor advised funds.",
   "model": "claude-opus-5-5"
  },
+ "community foundations in ohio|346539139": {
+  "relevant": true,
+  "why": "Ohio county community foundation providing programs and scholarships.",
+  "model": "claude-opus-5-5"
+ },
  "community foundations in ohio|346565428": {
   "relevant": false,
   "why": "Library support foundation, not a community foundation.",
@@ -2919,6 +3144,11 @@
   "why": "Pike County relief program for 2022 flood victims.",
   "model": "claude-opus-5-5"
  },
+ "disaster relief after floods in eastern kentucky|311106795": {
+  "relevant": true,
+  "why": "Statewide Kentucky United Way including disaster recovery services.",
+  "model": "claude-opus-5-5"
+ },
  "disaster relief after floods in eastern kentucky|382008076": {
   "relevant": true,
   "why": "Martin County ministry including disaster relief services.",
@@ -2932,6 +3162,11 @@
  "disaster relief after floods in eastern kentucky|453736701": {
   "relevant": false,
   "why": "International disaster risk research for developing countries.",
+  "model": "claude-opus-5-5"
+ },
+ "disaster relief after floods in eastern kentucky|473332326": {
+  "relevant": false,
+  "why": "International ministry; disaster relief incidental, no eastern Kentucky flood focus.",
   "model": "claude-opus-5-5"
  },
  "disaster relief after floods in eastern kentucky|611076227": {
@@ -3042,6 +3277,11 @@
  "disaster relief after floods in eastern kentucky|882368658": {
   "relevant": true,
   "why": "Provides housing and essential-needs relief to eastern Kentucky disaster victims.",
+  "model": "claude-opus-5-5"
+ },
+ "disaster relief after floods in eastern kentucky|920313672": {
+  "relevant": false,
+  "why": "Frankfort is central Kentucky, not eastern; flood relief is a minor activity",
   "model": "claude-opus-5-5"
  },
  "disaster relief after floods in eastern kentucky|920572841": {
@@ -3484,6 +3724,11 @@
   "why": "Rural Appalachian food bank but no workforce training described.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|262149674": {
+  "relevant": false,
+  "why": "Soup kitchens abroad in South Africa; SC location, not food bank.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|271372669": {
   "relevant": false,
   "why": "School foundation and library, not food bank.",
@@ -3559,6 +3804,11 @@
   "why": "Suburban Pittsburgh pantry; no workforce training.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|541882137": {
+  "relevant": false,
+  "why": "Appalachian community development center, but not a food bank.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|550716785": {
   "relevant": false,
   "why": "Appalachian food bank but no workforce training mentioned.",
@@ -3612,6 +3862,11 @@
  "food banks in rural appalachia that do workforce training, under $500k|640474466": {
   "relevant": false,
   "why": "Mississippi farm advocacy, not food bank.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|640917300": {
+  "relevant": false,
+  "why": "Mississippi ministry teaching job skills, not an Appalachian food bank.",
   "model": "claude-opus-5-5"
  },
  "food banks in rural appalachia that do workforce training, under $500k|743224321": {
@@ -3674,6 +3929,11 @@
   "why": "Food programs but no workforce training described.",
   "model": "claude-opus-5-5"
  },
+ "food banks in rural appalachia that do workforce training, under $500k|861512634": {
+  "relevant": false,
+  "why": "Veteran farming education, not a food bank.",
+  "model": "claude-opus-5-5"
+ },
  "food banks in rural appalachia that do workforce training, under $500k|873125323": {
   "relevant": true,
   "why": "Middlesboro KY provides food and employment help, under $500K.",
@@ -3722,6 +3982,11 @@
  "food banks in rural appalachia that do workforce training, under $500k|991027322": {
   "relevant": false,
   "why": "Middle Tennessee pantry, no workforce training.",
+  "model": "claude-opus-5-5"
+ },
+ "food banks in rural appalachia that do workforce training, under $500k|992140419": {
+  "relevant": false,
+  "why": "Suburban Atlanta charity, barely operating; not rural Appalachian food bank.",
   "model": "claude-opus-5-5"
  },
  "food banks in rural appalachia that do workforce training, under $500k|993200645": {
@@ -5194,6 +5459,11 @@
   "why": "STEAM camp for middle school girls in Ohio, likely includes tech.",
   "model": "claude-opus-5-5"
  },
+ "groups that teach coding to girls in ohio|208334578": {
+  "relevant": false,
+  "why": "Haiti child slavery work, unrelated to coding.",
+  "model": "claude-opus-5-5"
+ },
  "groups that teach coding to girls in ohio|223315596": {
   "relevant": false,
   "why": "Computing professional chapter; no evidence of girls coding.",
@@ -5292,6 +5562,11 @@
  "groups that teach coding to girls in ohio|341695277": {
   "relevant": false,
   "why": "Athletic boosters, no coding.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|344428265": {
+  "relevant": false,
+  "why": "Child care referrals, not coding education for girls.",
   "model": "claude-opus-5-5"
  },
  "groups that teach coding to girls in ohio|352222723": {
@@ -5427,6 +5702,11 @@
  "groups that teach coding to girls in ohio|862068724": {
   "relevant": false,
   "why": "Emotional healing for fatherless girls.",
+  "model": "claude-opus-5-5"
+ },
+ "groups that teach coding to girls in ohio|863351946": {
+  "relevant": false,
+  "why": "Supports adult women's tech careers, not teaching girls coding.",
   "model": "claude-opus-5-5"
  },
  "groups that teach coding to girls in ohio|872553916": {
@@ -5567,6 +5847,11 @@
  "habitat for humanity affiliates in virginia|541640558": {
   "relevant": true,
   "why": "Fluvanna County Habitat affiliate in Virginia.",
+  "model": "claude-opus-5-5"
+ },
+ "habitat for humanity affiliates in virginia|541648901": {
+  "relevant": true,
+  "why": "Habitat affiliate based in Staunton, Virginia.",
   "model": "claude-opus-5-5"
  },
  "habitat for humanity affiliates in virginia|541666448": {
@@ -5774,6 +6059,11 @@
   "why": "PREA resource center for corrections staff, not reentry help.",
   "model": "claude-opus-5-5"
  },
+ "help for people getting out of prison|475124192": {
+  "relevant": true,
+  "why": "Provides reentry services to formerly incarcerated individuals.",
+  "model": "claude-opus-5-5"
+ },
  "help for people getting out of prison|475350218": {
   "relevant": true,
   "why": "Comprehensive reentry services: housing, jobs, healthcare.",
@@ -5889,6 +6179,11 @@
   "why": "Reentry case management and group homes.",
   "model": "claude-opus-5-5"
  },
+ "help for people getting out of prison|850521509": {
+  "relevant": true,
+  "why": "Reentry support before and after release from incarceration.",
+  "model": "claude-opus-5-5"
+ },
  "help for people getting out of prison|850624450": {
   "relevant": true,
   "why": "Supports justice-impacted people with reentry barriers and services.",
@@ -5937,6 +6232,11 @@
  "help for people getting out of prison|932573659": {
   "relevant": true,
   "why": "Reentry transition services and work program for formerly incarcerated.",
+  "model": "claude-opus-5-5"
+ },
+ "help for people getting out of prison|943080408": {
+  "relevant": true,
+  "why": "Supports incarcerated and formerly incarcerated people, advocates release and reunification.",
   "model": "claude-opus-5-5"
  },
  "help for people getting out of prison|992731257": {
@@ -6954,6 +7254,11 @@
   "why": "Conservation advocacy network, not a farmland land trust.",
   "model": "claude-opus-5-5"
  },
+ "land trusts protecting farmland in virginia|510228197": {
+  "relevant": false,
+  "why": "General community conservation; no farmland protection or land trust work described.",
+  "model": "claude-opus-5-5"
+ },
  "land trusts protecting farmland in virginia|521388917": {
   "relevant": false,
   "why": "National land conservation broadly, not specifically Virginia farmland land trust.",
@@ -6984,6 +7289,11 @@
   "why": "Virginia land conservancy preserving lands in eastern watersheds.",
   "model": "claude-opus-5-5"
  },
+ "land trusts protecting farmland in virginia|541565794": {
+  "relevant": true,
+  "why": "Virginia group acquiring land and securing conservation easements, land-trust work.",
+  "model": "claude-opus-5-5"
+ },
  "land trusts protecting farmland in virginia|541601471": {
   "relevant": true,
   "why": "Virginia land trust holding conservation easements on land.",
@@ -7002,6 +7312,11 @@
  "land trusts protecting farmland in virginia|541808745": {
   "relevant": false,
   "why": "Wildlife and military readiness programs, not farmland trust.",
+  "model": "claude-opus-5-5"
+ },
+ "land trusts protecting farmland in virginia|541868546": {
+  "relevant": false,
+  "why": "Native plant nursery and restoration, not a farmland land trust.",
   "model": "claude-opus-5-5"
  },
  "land trusts protecting farmland in virginia|541897302": {
@@ -7744,14 +8059,34 @@
   "why": "Museum in Brownsburg, not Richmond.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|022946660": {
+  "relevant": true,
+  "why": "Serves free weekday meals to fight local hunger.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|042931195": {
+  "relevant": true,
+  "why": "Fights hunger in MA via direct service and policy.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|061066743": {
   "relevant": true,
   "why": "Name indicates hunger relief work, international focus.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|112524512": {
+  "relevant": true,
+  "why": "Long Island food bank feeding the hungry.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|113136350": {
   "relevant": true,
   "why": "Food bank working to end hunger on Long Island.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|200175197": {
+  "relevant": true,
+  "why": "Volunteer meal packaging for hunger relief.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|200862587": {
@@ -7804,6 +8139,11 @@
   "why": "Food pantry working to eliminate local hunger.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|275301210": {
+  "relevant": true,
+  "why": "Food pantry serving food-insecure Dallas households.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|300507718": {
   "relevant": true,
   "why": "Advocacy coalition working toward a hunger-free San Diego.",
@@ -7822,6 +8162,11 @@
  "nonprofits fighting hunger|330864870": {
   "relevant": true,
   "why": "Runs a hunger prevention food pantry alongside housing aid.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|333190141": {
+  "relevant": true,
+  "why": "Food pantry and kitchen feeding the hungry.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|341292848": {
@@ -7862,6 +8207,11 @@
  "nonprofits fighting hunger|364664596": {
   "relevant": true,
   "why": "Name indicates international hunger relief.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|384172500": {
+  "relevant": true,
+  "why": "Teen-run food drives reducing food insecurity.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|384370895": {
@@ -7937,6 +8287,11 @@
  "nonprofits fighting hunger|561341658": {
   "relevant": true,
   "why": "Food bank fighting hunger in northeastern North Carolina.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|581376648": {
+  "relevant": true,
+  "why": "Food bank fighting hunger in metro Atlanta.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|621049447": {
@@ -8019,6 +8374,11 @@
   "why": "Gleans produce for emergency hunger relief agencies.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|813384665": {
+  "relevant": true,
+  "why": "Mission is alleviating food insecurity via produce and food access.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|814823977": {
   "relevant": true,
   "why": "Community food coalition providing food to end hunger.",
@@ -8037,6 +8397,11 @@
  "nonprofits fighting hunger|832689649": {
   "relevant": true,
   "why": "Food assistance ministry feeding the hungry.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|832859601": {
+  "relevant": true,
+  "why": "Weekend food bags for hungry schoolchildren.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|840772672": {
@@ -8069,6 +8434,16 @@
   "why": "Food bank distributing food for hunger relief.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|853730343": {
+  "relevant": true,
+  "why": "Food pantry fighting food insecurity.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|853767548": {
+  "relevant": true,
+  "why": "Combats food insecurity with healthy food access.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|861082880": {
   "relevant": true,
   "why": "Food bank working to eliminate hunger in Dayton area.",
@@ -8077,6 +8452,26 @@
  "nonprofits fighting hunger|863836141": {
   "relevant": true,
   "why": "Weekly food distribution and emergency relief to alleviate hunger.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|870927614": {
+  "relevant": true,
+  "why": "Mission includes fighting food insecurity, though minimal detail.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|874065042": {
+  "relevant": true,
+  "why": "Collects food for area pantries to combat food insecurity.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|882501290": {
+  "relevant": true,
+  "why": "Provides nutritious food to combat child hunger.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|900788707": {
+  "relevant": true,
+  "why": "Food bank distributing food in Palm Beach County.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|900801730": {
@@ -8099,9 +8494,19 @@
   "why": "Mission to end hunger; food security programs in Zimbabwe.",
   "model": "claude-opus-5-5"
  },
+ "nonprofits fighting hunger|923781693": {
+  "relevant": true,
+  "why": "Community food pantry reducing hunger.",
+  "model": "claude-opus-5-5"
+ },
  "nonprofits fighting hunger|932618006": {
   "relevant": true,
   "why": "Soup kitchen providing daily hot meals to hungry.",
+  "model": "claude-opus-5-5"
+ },
+ "nonprofits fighting hunger|934899105": {
+  "relevant": true,
+  "why": "Distributes surplus food to reduce hunger.",
   "model": "claude-opus-5-5"
  },
  "nonprofits fighting hunger|941740316": {
@@ -8374,6 +8779,11 @@
   "why": "Grantmaker for legal aid; refugee support is one grant, not resettlement.",
   "model": "claude-opus-5-5"
  },
+ "organizations that help refugees resettle in kentucky|331118626": {
+  "relevant": false,
+  "why": "Aids displaced people in Ukraine, not resettlement in Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "organizations that help refugees resettle in kentucky|333204064": {
   "relevant": true,
   "why": "Kentucky organization serving immigrants and refugees, likely resettlement support.",
@@ -8442,6 +8852,11 @@
  "organizations that help refugees resettle in kentucky|611229842": {
   "relevant": true,
   "why": "Kentucky refugee resettlement agency providing housing, employment, cash aid.",
+  "model": "claude-opus-5-5"
+ },
+ "organizations that help refugees resettle in kentucky|611231355": {
+  "relevant": false,
+  "why": "HIV/AIDS housing services, unrelated to refugees.",
   "model": "claude-opus-5-5"
  },
  "organizations that help refugees resettle in kentucky|611239600": {
@@ -8514,6 +8929,11 @@
   "why": "Serves refugee and immigrant communities in Bowling Green.",
   "model": "claude-opus-5-5"
  },
+ "organizations that help refugees resettle in kentucky|872499673": {
+  "relevant": false,
+  "why": "Global church-planting ministry, not refugee resettlement in Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "organizations that help refugees resettle in kentucky|882368658": {
   "relevant": false,
   "why": "General housing hardship relief, not refugees.",
@@ -8542,6 +8962,11 @@
  "places where kids can learn music after school in ohio|161641489": {
   "relevant": false,
   "why": "After-prom party group, not music education for kids.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|201125494": {
+  "relevant": true,
+  "why": "Ohio music training program for young people.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|260355795": {
@@ -8597,6 +9022,11 @@
  "places where kids can learn music after school in ohio|311123932": {
   "relevant": false,
   "why": "General after-school child care, no music focus.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|311209362": {
+  "relevant": false,
+  "why": "STEM programs, not music.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|311235273": {
@@ -8699,6 +9129,11 @@
   "why": "Description focuses on early childhood preschool, not after-school music.",
   "model": "claude-opus-5-5"
  },
+ "places where kids can learn music after school in ohio|340898549": {
+  "relevant": false,
+  "why": "Religious after-school clubs, no music instruction mentioned.",
+  "model": "claude-opus-5-5"
+ },
  "places where kids can learn music after school in ohio|341127919": {
   "relevant": false,
   "why": "Mental health education, not music.",
@@ -8742,6 +9177,11 @@
  "places where kids can learn music after school in ohio|341888282": {
   "relevant": true,
   "why": "Cleveland music education programs for school children in Ohio.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|341926856": {
+  "relevant": false,
+  "why": "Visual arts classes, not music.",
   "model": "claude-opus-5-5"
  },
  "places where kids can learn music after school in ohio|421749949": {
@@ -8867,6 +9307,11 @@
  "places where kids can learn music after school in ohio|991775596": {
   "relevant": true,
   "why": "Free string lessons for Cincinnati youth at schools weekly.",
+  "model": "claude-opus-5-5"
+ },
+ "places where kids can learn music after school in ohio|993769366": {
+  "relevant": false,
+  "why": "After-school enrichment in Ohio but no music listed.",
   "model": "claude-opus-5-5"
  },
  "river and watershed conservation groups in tennessee|201065856": {
@@ -9794,6 +10239,16 @@
   "why": "Mainly grant support and assistance, not a rescue itself.",
   "model": "claude-opus-5-5"
  },
+ "small animal rescues in virginia under $100k|260021466": {
+  "relevant": true,
+  "why": "Virginia animal welfare group fostering and rehoming pets, under $100K.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|262521115": {
+  "relevant": false,
+  "why": "Faith-based African economic development, not animal rescue.",
+  "model": "claude-opus-5-5"
+ },
  "small animal rescues in virginia under $100k|270395219": {
   "relevant": true,
   "why": "Tiny Virginia puppy rescue.",
@@ -9877,6 +10332,11 @@
  "small animal rescues in virginia under $100k|541866482": {
   "relevant": true,
   "why": "Small Virginia boxer dog rescue, well under $100K.",
+  "model": "claude-opus-5-5"
+ },
+ "small animal rescues in virginia under $100k|541961547": {
+  "relevant": true,
+  "why": "Virginia sheltie rescue with revenue under $100K.",
   "model": "claude-opus-5-5"
  },
  "small animal rescues in virginia under $100k|541976265": {
@@ -10014,6 +10474,11 @@
   "why": "Women's club focused on education and enrichment, not meals.",
   "model": "claude-opus-5-5"
  },
+ "soup kitchens in cincinnati|310538511": {
+  "relevant": false,
+  "why": "Blind employment services, not meal service.",
+  "model": "claude-opus-5-5"
+ },
  "soup kitchens in cincinnati|310538515": {
   "relevant": true,
   "why": "Cincinnati mission serving over 100,000 hot meals yearly.",
@@ -10059,9 +10524,19 @@
   "why": "Community kitchen food program in Cincinnati.",
   "model": "claude-opus-5-5"
  },
+ "soup kitchens in cincinnati|311261322": {
+  "relevant": false,
+  "why": "Food pantry, not a soup kitchen serving meals.",
+  "model": "claude-opus-5-5"
+ },
  "soup kitchens in cincinnati|311341556": {
   "relevant": true,
   "why": "Weekly community dinner plus pantry in Cincinnati.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|311346696": {
+  "relevant": false,
+  "why": "Haircuts and day shelter; no meal program described.",
   "model": "claude-opus-5-5"
  },
  "soup kitchens in cincinnati|311357231": {
@@ -10142,6 +10617,11 @@
  "soup kitchens in cincinnati|475233212": {
   "relevant": false,
   "why": "Dayton meals program, not Cincinnati.",
+  "model": "claude-opus-5-5"
+ },
+ "soup kitchens in cincinnati|550362615": {
+  "relevant": false,
+  "why": "Elder healthcare facility in West Virginia, not a soup kitchen.",
   "model": "claude-opus-5-5"
  },
  "soup kitchens in cincinnati|550795075": {
@@ -10624,6 +11104,11 @@
   "why": "Volunteer fire department in Cecilia, KY.",
   "model": "claude-opus-5-5"
  },
+ "volunteer fire departments in rural kentucky|311035279": {
+  "relevant": true,
+  "why": "Volunteer fire district in Greenup, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "volunteer fire departments in rural kentucky|311044777": {
   "relevant": true,
   "why": "Volunteer fire department serving underserved community near Corbin, KY.",
@@ -10632,6 +11117,11 @@
  "volunteer fire departments in rural kentucky|311074680": {
   "relevant": true,
   "why": "Rural volunteer fire department near Glasgow, KY.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|311147862": {
+  "relevant": true,
+  "why": "Volunteer fire department serving Warren County, Kentucky area.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|311513444": {
@@ -10679,6 +11169,11 @@
   "why": "Volunteer fire department serving rural Owen County, KY.",
   "model": "claude-opus-5-5"
  },
+ "volunteer fire departments in rural kentucky|611038912": {
+  "relevant": true,
+  "why": "Volunteer fire department in rural Keavy, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "volunteer fire departments in rural kentucky|611040291": {
   "relevant": true,
   "why": "Rural fire department in Olmstead, KY.",
@@ -10687,6 +11182,16 @@
  "volunteer fire departments in rural kentucky|611050038": {
   "relevant": true,
   "why": "Volunteer fire department serving rural Belfry, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611089247": {
+  "relevant": true,
+  "why": "Community volunteer fire department in Glasgow, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611098731": {
+  "relevant": true,
+  "why": "Volunteer fire department in East Bernstadt, Kentucky.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|611126613": {
@@ -10729,9 +11234,24 @@
   "why": "Community volunteer fire department in Bulan, KY.",
   "model": "claude-opus-5-5"
  },
+ "volunteer fire departments in rural kentucky|611206425": {
+  "relevant": true,
+  "why": "Volunteer fire department near Maysville, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
  "volunteer fire departments in rural kentucky|611212926": {
   "relevant": true,
   "why": "Volunteer fire department in rural Knottsville, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611222478": {
+  "relevant": true,
+  "why": "Volunteer fire department in Hardin County, Kentucky.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611224105": {
+  "relevant": true,
+  "why": "Volunteer fire department in small town Waco, Kentucky.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|611269513": {
@@ -10747,6 +11267,11 @@
  "volunteer fire departments in rural kentucky|611273309": {
   "relevant": true,
   "why": "Volunteer fire department in small Kentucky town.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|611292660": {
+  "relevant": true,
+  "why": "Volunteer fire department in rural Pike County, Kentucky.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|611296454": {
@@ -10772,6 +11297,11 @@
  "volunteer fire departments in rural kentucky|616037499": {
   "relevant": true,
   "why": "Volunteer fire department in small Kentucky community.",
+  "model": "claude-opus-5-5"
+ },
+ "volunteer fire departments in rural kentucky|616039297": {
+  "relevant": true,
+  "why": "Volunteer fire department covering 100+ square miles in Kentucky.",
   "model": "claude-opus-5-5"
  },
  "volunteer fire departments in rural kentucky|621337973": {

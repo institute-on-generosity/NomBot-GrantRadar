@@ -1,6 +1,6 @@
 import { readable } from "./text";
 
-const MAX = 150; // characters per bullet (CSS trims each to one line)
+const MAX = 260; // characters in the snippet (CSS trims it to two lines)
 
 // Cut at a word boundary, with an ellipsis when shortened.
 const clip = (t: string, n = MAX) => (t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`);
@@ -20,8 +20,8 @@ function Marked({ text, patterns }: { text: string; patterns: string[] }) {
   return <>{parts.map((p, i) => (re && i % 2 === 1 ? <mark key={i}>{p}</mark> : <span key={i}>{p}</span>))}</>;
 }
 
-// A result's preview: one line, the mission (searched terms highlighted). Programs only when there's
-// no mission on file. Size and team sit in the line above.
+// A result's snippet: up to two lines of the mission (searched terms highlighted), like a search
+// engine's. Programs only when there's no mission on file. Place, cause and income sit in the line above.
 export function Preview({ mission, programs, patterns }: { mission: string | null; programs: string | null; patterns: string[] }) {
   const find = patterns.length ? new RegExp(patterns.join("|"), "i") : null;
   const tidy = (t: string) => readable(t).replace(/\s+/g, " ").trim(); // filings wrap lines and double-space
@@ -29,5 +29,5 @@ export function Preview({ mission, programs, patterns }: { mission: string | nul
   const p = programs && programs !== mission ? tidy(programs) : null;
   const text = m ?? p;
   if (!text) return null;
-  return <p className="preview-line"><b>{m ? "Mission:" : "Programs:"}</b> <Marked text={excerpt(text, find)} patterns={patterns} /></p>;
+  return <p className="preview-line"><Marked text={excerpt(text, find)} patterns={patterns} /></p>;
 }

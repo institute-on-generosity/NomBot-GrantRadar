@@ -10,8 +10,10 @@ import { SlideButton } from "./SlideButton";
 
 const parts = (s: string) => s.split(/\*\*(.+?)\*\*/g).map((t, k) => (k % 2 ? <b key={k}>{t}</b> : t));
 
-export function AnswerCard({ a }: { a: Answer }) {
+// compact: an older turn in a research thread, shown as its headline until "Show" (charts stay out of the way).
+export function AnswerCard({ a, compact = false }: { a: Answer; compact?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(!compact);
   const slide = () => ({
     kicker: `${a.question} · NomBot research answer`,
     headline: a.headline,
@@ -26,6 +28,12 @@ export function AnswerCard({ a }: { a: Answer }) {
     download(`nombot-answer-${a.question.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40)}.csv`, toCsv(a.rows), "text/csv");
   };
   const none = a.status === "unanswerable";
+  if (!shown) return (
+    <section className="answer compact" aria-label="Research answer">
+      <h2 className="answer-head">{a.headline}</h2>
+      <button type="button" className="ins-link" onClick={() => setShown(true)}>Show</button>
+    </section>
+  );
   return (
     <section className={`answer${none ? " none" : ""}`} aria-label="Research answer">
       <p className="answer-kicker">{none ? "Not in our data" : a.status === "partial" ? "Research answer · partly answerable" : "Research answer"}</p>

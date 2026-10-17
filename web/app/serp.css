@@ -1,0 +1,137 @@
+/* Search results page, Google-style hierarchy (loaded after globals.css, so it wins ties).
+   Type on this page: 19px result names, 17px AI headline, 14px body, 12.5px meta and small titles.
+   Two weights: 400, and 600 for small section titles, the headline and key-fact values.
+   Whitespace over borders: no row dividers, thin lines only between list rows inside a card. */
+
+/* ---------- Results column (components/ResultRow) ---------- */
+.serp-main .bar { font-size: 12.5px; color: var(--mute); margin: 0 0 6px; }
+.serp-main .notice { font-size: 14px; }
+.serp-main .row { display: block; padding: 12px 0 6px; margin: 0; border-radius: 0; background: none; }
+.serp-main .row + .row::before { display: none; }
+.serp-main .row:hover { background: none; }
+.serp-main .row.focused { margin: 0 -12px; padding: 12px 12px 6px; border-radius: 12px; background: var(--g-tint); }
+.serp-main .name-line { gap: 10px; align-items: baseline; }
+.serp-main .name { font-size: 19px; font-weight: 400; line-height: 1.3; letter-spacing: -.01em; color: var(--g); text-decoration: none; }
+.serp-main .name:hover { color: var(--g); text-decoration: underline; text-underline-offset: 2px; }
+.serp-main .lastviewed { font-size: 12.5px; font-weight: 400; color: var(--g-dark); background: none; padding: 0; }
+.serp-main .row .sub { font-size: 12.5px; line-height: 1.45; color: var(--mute); margin-top: 3px; }
+.serp-main .preview-line { margin-top: 4px; max-width: 68ch; font-size: 14px; line-height: 1.5; color: var(--ink-2); white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.serp-main .preview-line mark { background: none; color: var(--g-dark); font-weight: 400; padding: 0; }
+
+/* Finance status inside the meta line: plain grey text after a tiny colored dot (hover for the figures) */
+.serp-main .sub .fin { margin: 0 0 0 10px; padding: 0; border-radius: 0; background: none; font-size: inherit; font-weight: 400; color: var(--mute); gap: 5px; }
+.serp-main .sub .fin::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+.serp-main .sub .fin.up::before, .serp-main .sub .fin.ok::before { background: var(--g); }
+.serp-main .sub .fin.down::before, .serp-main .sub .fin.bad::before { background: #e34948; }
+.serp-main .sub .fin.watch::before { background: #f5a524; }
+.serp-main .sub .fin:focus-visible { outline: 2px solid var(--g-line); outline-offset: 2px; border-radius: 4px; }
+.serp-main .fin-tip { font-size: 12.5px; }
+
+/* Quiet tools: Save, Compare, Why this result, sources. Shown on hover or focus; a saved or picked
+   control stays visible; always shown on touch screens. */
+.row-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; min-height: 22px; margin-top: 2px; font-size: 12.5px; color: var(--mute); }
+.row-tools > * { opacity: 0; transition: opacity .15s; }
+.row:hover .row-tools > *, .row:focus-within .row-tools > *, .row-tools > .star.on, .row-tools > [aria-pressed="true"] { opacity: 1; }
+@media (hover: none) { .row-tools > * { opacity: 1; } }
+.row-tools button { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12.5px; font-weight: 400; line-height: 20px; color: var(--mute); background: none; border: 0; box-shadow: none; padding: 0; border-radius: 4px; cursor: pointer; }
+.row-tools button:hover:not(:disabled) { color: var(--g); background: none; transform: none; }
+.row-tools button[aria-pressed="true"] { color: var(--g); background: none; box-shadow: none; }
+.row-tools .star { animation: none; }
+.row-tools .star span { font-size: 12.5px; font-weight: 400; margin-left: 0; }
+.row-tools .src { margin: 0; font-size: 12.5px; color: var(--faint); }
+.row-tools .src a { color: var(--mute); text-decoration: none; }
+.row-tools .src a:hover { color: var(--g); text-decoration: underline; }
+/* "Why this result": the relevance score and Claude's reason, on hover or keyboard focus */
+.why-btn { position: relative; cursor: help !important; }
+.why-btn .tip { display: none; top: calc(100% + 6px); left: 0; right: auto; width: 280px; max-width: calc(100vw - 48px); font-size: 14px; color: var(--ink); cursor: default; }
+.why-btn .tip-f { font-size: 12.5px; }
+.why-btn:hover .tip, .why-btn:focus-visible .tip { display: flex; opacity: 1; visibility: visible; transform: none; transition-delay: .12s, .12s, 0s; }
+.row:has(.why-btn:hover, .why-btn:focus-visible) { z-index: 20; }
+
+.serp-main .weaker summary { font-size: 14px; font-weight: 400; }
+.serp-main .weaker summary span { font-size: 12.5px; }
+.serp-main .more { font-size: 14px; font-weight: 400; }
+
+/* ---------- Analysis panel as a knowledge panel (LandscapeTabs, OverviewVisual, AiOverview, TrackRecord) ---------- */
+.serp-rail { min-width: 0; }
+.serp-rail .landscape { padding: 0; border-radius: 0; box-shadow: none; background: none; }
+.serp-rail .landscape .kp-head { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; border-bottom: 1px solid var(--line); }
+@media (min-width: 901px) { .serp-rail .landscape .kp-head { position: sticky; top: 0; z-index: 5; background: var(--bg); } }
+.kp-tabs { display: flex; gap: 14px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.kp-tabs::-webkit-scrollbar { display: none; }
+.kp-tabs button { position: relative; flex: none; font: inherit; font-size: 14px; font-weight: 400; color: var(--mute); background: none; border: 0; padding: 6px 0 10px; cursor: pointer; white-space: nowrap; transition: color .15s; }
+.kp-tabs button:hover { color: var(--ink); }
+.kp-tabs button.on { color: var(--ink); }
+.kp-tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--g); }
+.kp-tabs button:focus-visible { outline-offset: -2px; }
+@media (min-width: 901px) and (max-width: 1300px), (max-width: 480px) { .kp-tabs { gap: 10px; } .kp-tabs button { font-size: 12.5px; } }
+
+.more-btn { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 4px; border: 0; border-radius: 50%; background: none; color: var(--mute); cursor: pointer; transition: background-color .15s, color .15s; }
+.more-btn:hover, .more-btn.on { background: var(--fill); color: var(--ink); }
+.kp-head .slide-x { flex: none; }
+.kp-head .slide-menu { min-width: 280px; }
+.kp-head .slide-menu button { font-size: 14px; }
+.kp-head .slide-menu button small { font-size: 12.5px; }
+.kp-head .slide-menu button > svg { color: var(--mute); }
+
+.kp-stack { display: grid; gap: 12px; }
+.kp-stack[hidden] { display: none; }
+.kp-card { min-width: 0; padding: 14px 16px; border-radius: 16px; background: var(--fill); }
+.landscape .kp-h { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 8px; padding: 0; font-size: 12.5px; font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--mute); white-space: normal; animation: none; }
+.landscape .kp-h > span { margin-left: 2px; font-size: 12.5px; font-weight: 400; color: var(--faint); }
+.landscape .kp-h > span.kp-val { color: var(--ink-2); }
+.landscape .kp-h > svg:first-child { flex: none; margin: 0; color: var(--g); translate: 0 0; }
+
+/* AI overview card: one headline, up to 2 bullets, "Show more" */
+.kp-hero-chart { margin: 4px 0 0; min-width: 0; }
+.kp-hero-chart .ins-chart { min-height: 0; }
+.kp-hero-chart .kp-h { margin-bottom: 6px; }
+.kp-hero-chart .kp-h span { margin-left: 6px; font-weight: 400; color: var(--faint); }
+.kp-card .ovv-head { margin: 0 0 8px; font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: -.015em; color: var(--ink); text-wrap: pretty; }
+.kp-card .overview { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; animation: none; }
+.kp-card .overview .buddy-answer { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.kp-card .overview .buddy-answer ul { padding-left: 18px; display: grid; gap: 6px; }
+.kp-card .overview-foot { margin-top: 10px; font-size: 12.5px; color: var(--faint); }
+.kp-card .ov-wait { font-size: 14px; }
+.kp-more { display: block; margin-top: 6px; padding: 0; font: inherit; font-size: 14px; color: var(--g); background: none; border: 0; cursor: pointer; }
+.kp-more:hover { text-decoration: underline; }
+
+/* Key facts: label → value rows */
+.kp-facts { display: grid; margin: 0; }
+.kp-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 8px 0; border-top: 1px solid var(--line); }
+.kp-facts > div:first-child { padding-top: 0; border-top: 0; }
+.kp-facts dt { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
+.kp-facts dt small { display: block; font-size: 12.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-facts dd { flex: none; font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kp-foot { margin-top: 8px; font-size: 12.5px; color: var(--faint); }
+
+/* Collapsible cards (chart, track record): the title row is the toggle */
+.kp-fold > summary { list-style: none; cursor: pointer; margin-bottom: 0; }
+.kp-fold > summary::-webkit-details-marker { display: none; }
+.kp-fold[open] > summary { margin-bottom: 8px; }
+.kp-fold > summary:focus-visible { outline: 2px solid var(--g-line); outline-offset: 4px; border-radius: 6px; }
+.kp-fold > summary .kp-chev { flex: none; margin-left: auto; color: var(--mute); transition: transform .2s var(--spring); }
+.kp-fold[open] > summary .kp-chev { transform: rotate(180deg); }
+.kp-fold .ins-chart { min-height: 96px; }
+.kp-card.track { margin: 0; padding-top: 14px; border-top: 0; }
+
+/* People also search for: one row per search, each runs it */
+.kp-related .kp-h { margin-bottom: 2px; }
+.kp-related ul { list-style: none; display: grid; }
+.kp-related li + li { border-top: 1px solid var(--line); }
+.kp-q { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 14px; line-height: 1.4; color: var(--ink); text-decoration: none; }
+.kp-related li:last-child .kp-q { padding-bottom: 0; }
+.kp-q:hover { color: var(--g); }
+.kp-q .kp-chev { flex: none; color: var(--mute); }
+
+/* Inside a grey card, hover and track fills step one shade darker so they still show */
+.kp-card .ls-track { background: var(--fill-2); }
+.kp-card .ls-row:hover, .kp-card .ls-open[open] > summary, .kp-card .fin-rows button:hover, .kp-card .fin-rows button.on,
+.kp-card .track button.ls-row.on, .kp-card .ls-org:hover, .kp-card .ls-themes summary:hover { background: var(--fill-2); }
+.kp-card .unfunded { border-top-color: var(--line); }
+
+@media print {
+  .row-tools, .kp-tabs, .more-btn { display: none !important; }
+  .kp-card { background: none; padding: 0 0 8pt; }
+}
+@media (max-width: 640px) { .row-tools .src { display: none; } }

@@ -1,21 +1,22 @@
 "use client";
 import { useState } from "react";
 import { NavLink } from "./NavLink";
+import { Chevron } from "./OverviewVisual";
 
 type Org = { ein: string; name: string; place: string; since: number | null };
 const SHOW = 8;
 
-// Track record at a glance (Overview tab): the median years tax-exempt, then one row per age bracket
-// (years since the IRS ruling), drawn like the Breakdown bars. Pick a row to list its organizations,
-// closest first, each with the year it became tax-exempt.
+// Track record at a glance (Overview tab): one compact row with the median years tax-exempt; open it
+// for one bar per age bracket (years since the IRS ruling), drawn like the Breakdown bars. Pick a bar
+// to list its organizations, closest first, each with the year it became tax-exempt.
 export function TrackRecord({ median, brackets }: { median: number | null; brackets: { key: string; label: string; orgs: Org[] }[] }) {
   const [pick, setPick] = useState<string | null>(null);
   const [all, setAll] = useState(false);
   const max = Math.max(0, ...brackets.map((b) => b.orgs.length));
   if (!max) return null;
   return (
-    <div className="track ls-bars">
-      <h3>Track record{median != null && <small>Median <b>{median}</b> {median === 1 ? "year" : "years"}</small>}</h3>
+    <details className="kp-card kp-fold track ls-bars">
+      <summary className="kp-h">Track record<span className="kp-val">{median != null ? <>Median {median} {median === 1 ? "year" : "years"} tax-exempt</> : "Years tax-exempt"}</span><Chevron /></summary>
       <ul>
         {brackets.map((b) => {
           const open = pick === b.key;
@@ -47,6 +48,6 @@ export function TrackRecord({ median, brackets }: { median: number | null; brack
           );
         })}
       </ul>
-    </div>
+    </details>
   );
 }

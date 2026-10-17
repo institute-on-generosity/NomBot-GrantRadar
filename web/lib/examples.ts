@@ -23,4 +23,6 @@ export const PROMPT_SETS = [
   { word: "nonprofits", placeholder: "e.g. food banks in rural Appalachia that do workforce training, under $500K", prompts: EXAMPLES.slice(0, 5) },
   { word: "philanthropic leaders", placeholder: "e.g. Darren Walker: every board a person sits on", prompts: ["Laura Arrillaga-Andreessen", "Darren Walker", "Laurene Powell Jobs", "Ai-jen Poo", "Ursula Burns", "La June Montgomery Tabron"] },
   { word: "foundations", placeholder: "e.g. health foundations in Kentucky", prompts: ["community foundations in Ohio", "health foundations in Kentucky", "foundations that fund the arts in New York", "family foundations in Texas that fund literacy"] },
+  // Research questions get an answer card on /research/ask instead of a list (lib/answerSpec.ts)
+  { word: "research", placeholder: "e.g. How much foundation money goes to climate?", prompts: ["Is food bank funding growing?", "How much foundation money goes to climate?", "Climate vs women and girls funding", "Which states get the least foundation money per resident?", "How concentrated is climate funding?"] },
 ];

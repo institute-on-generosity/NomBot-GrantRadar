@@ -241,7 +241,7 @@ function ResultList({ rows, total, pending = false, scored = false, strongTotal,
         <p className="notice">
           {noMention && <>No organizations clearly mention <b>{must}</b> in their filings. </>}
           {strong.length === 0 && weak.length > 0
-            ? <>{noMention ? "None is a strong match either. " : "No strong matches for this question. "}These are the closest organizations: hover a score to see what each is missing.</>
+            ? <>{noMention ? "None is a strong match either. " : "No strong matches for this question. "}These are the closest organizations. Hover “Why this result” to see what each is missing.</>
             : "Showing the closest results."}
         </p>
       )}
@@ -313,7 +313,7 @@ function ResultsSkeleton() {
 function Hero({ insights }: { insights: boolean }) {
   return (
     <div className="hero">
-      <HeroFlip key={insights ? "insights" : "search"} sets={PROMPT_SETS} startInsights={insights} />
+      <HeroFlip key={insights ? "research" : "search"} sets={PROMPT_SETS} start={insights ? PROMPT_SETS.findIndex((s) => s.word === "research") : 0} />
       <Footer />
     </div>
   );

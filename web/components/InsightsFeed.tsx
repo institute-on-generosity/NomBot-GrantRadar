@@ -67,7 +67,8 @@ export function InsightsFeed() {
         </div>
       </div>
 
-      {showReport && <ReportView items={report} onClose={() => setShowReport(false)} />}
+      {/* Saved copies can be stale after a miner re-run: show and export the live version of each finding */}
+      {showReport && <ReportView items={report.map((r) => all.find((i) => i.slug === r.slug) ?? r)} onClose={() => setShowReport(false)} />}
 
       {load.status === "loading" && <FeedSkeleton />}
       {load.status === "error" && <p className="ins-empty">{load.message}</p>}

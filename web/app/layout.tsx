@@ -3,6 +3,7 @@ import { Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/Sidebar";
 import { CompareTray } from "@/components/CompareTray";
 import "./globals.css";
+import "./serp.css";
 
 // UI type is the system font (SF on Apple devices); mono only for raw IRS records.
 const geistMono = Geist_Mono({
