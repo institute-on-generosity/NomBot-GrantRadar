@@ -151,15 +151,17 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
       <h2>Grants given</h2>
       {si && (
         <div className="fund-block first">
-          <h3>Schedule I grants <small>{plural(si.n, "grant")}, {money(si.total)}, {span(si.years)}</small></h3>
+          <h3>Schedule I grants <small>{si.n > 0 ? <>{plural(si.n, "grant")}, {money(si.total)}{si.notItemized > 0 && <>, plus {money(si.notItemized)} not itemized</>}</> : <>{money(si.notItemized)} reported, none itemized by recipient</>}, {span(si.years)}</small></h3>
           <table className="fund-years">
-            <thead><tr><th>Tax year</th><th className="n">Grants listed</th><th className="n">Listed total</th><th className="n" title="Form 990 Part IX line 1, grants to domestic organizations">Return total (Part IX)</th></tr></thead>
+            <thead><tr><th>Tax year</th><th className="n">Grants listed</th><th className="n">Listed total</th>{si.notItemized > 0 && <th className="n" title="Reported but not listed by recipient: Part IX line 1 minus the grants listed by name, including lines such as SEE ATTACHED or VARIOUS">Not itemized</th>}<th className="n" title="Form 990 Part IX line 1, grants to domestic organizations">Return total (Part IX)</th></tr></thead>
             <tbody>
-              {si.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td><td className="n">{y.line1 == null ? "–" : money(y.line1)}</td></tr>)}
+              {si.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td>{si.notItemized > 0 && <td className="n">{y.notItemized > 0 ? money(y.notItemized) : "–"}</td>}<td className="n">{y.line1 == null ? "–" : money(y.line1)}</td></tr>)}
             </tbody>
           </table>
-          <h3 className="fund-sub">Top recipients</h3>
-          <More items={si.top} noun="recipients" extra={si.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
+          {si.top.length > 0 && <>
+            <h3 className="fund-sub">Top recipients</h3>
+            <More items={si.top} noun="recipients" extra={si.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
+          </>}
         </div>
       )}
       {pf && (

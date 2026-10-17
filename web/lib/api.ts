@@ -145,11 +145,13 @@ export async function apiOrg(einRaw: string, base: string) {
             note: FUNDING_NOTES.federal,
           }
         : null,
-      // Grants this organization listed on its own Schedule I, with its Part IX line 1 total per year
+      // Grants this organization listed on its own Schedule I by recipient, what it reported but didn't itemize
+      // (Part IX line 1 minus named lines, "SEE ATTACHED" lines inside it) and its Part IX line 1 total per year
       charity_grants_given: fund.given.scheduleI
         ? {
             count: fund.given.scheduleI.n, total: fund.given.scheduleI.total,
-            by_year: fund.given.scheduleI.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total, part_ix_line1: y.line1 })),
+            not_itemized: fund.given.scheduleI.notItemized,
+            by_year: fund.given.scheduleI.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total, not_itemized: y.notItemized, part_ix_line1: y.line1 })),
             top_recipients: top10(fund.given.scheduleI.top).map((r) => ({ ein: r.ein, name: r.name, city: r.city, state: r.state, grants: r.n, total: r.total, latest_year: r.latest })),
             note: FUNDING_NOTES.given,
           }

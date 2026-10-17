@@ -354,13 +354,25 @@ const grades = () => gradeMemo("all", async () => {
   }]));
 });
 
-const linkMemo = memo<{ grants: number; dollars: number }>("answer-link:v3", 4, 3600_000);
+const linkMemo = memo<{ grants: number; dollars: number }>("answer-link:v4", 4, 3600_000); // v4: placeholder lines out (generosity-data 050)
 const linkRate = (g: GSrc = PF) => linkMemo(g.kind, async () => {
   const r = await db.query(g.kind === "pf"
     ? `SELECT sum(linked_n)::float8 / sum(n) AS g, sum(linked_usd)::float8 / sum(usd) AS d FROM grant_totals WHERE tax_year BETWEEN 2022 AND 2024`
     : `SELECT (sum(n) FILTER (WHERE linked))::float8 / sum(n) AS g, (sum(usd) FILTER (WHERE linked))::float8 / sum(usd) AS d FROM charity_grant_cube WHERE tax_year BETWEEN 2022 AND 2024 AND NOT to_grantmaker`);
   return { grants: r.rows[0].g, dollars: r.rows[0].d };
 });
+// Schedule I money reported but not itemized (generosity-data 050, charity_not_itemized): Part IX line 1 minus
+// the lines that name a recipient, per tax year and funder group. "SEE ATTACHED" / "VARIOUS" lines sit inside it.
+// No recipient, place or cause, so answers never add it to a total: national totals show it next to theirs.
+type NotItemized = { usd: number; line1: number; returns: number };
+async function notItemized(ctx: Ctx | null, cls: string | null, y: { from: number; to: number }): Promise<NotItemized> {
+  const p = new P();
+  const sql = `SELECT coalesce(sum(not_itemized_usd), 0)::float8 AS usd, coalesce(sum(line1_usd), 0)::float8 AS line1, coalesce(sum(returns_not_itemized), 0)::int AS returns
+  FROM charity_not_itemized WHERE tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}${cls ? ` AND funder_class = ${p.add(cls)}` : ""}`;
+  if (ctx) return (await ctx.q<NotItemized>("Schedule I dollars reported but not itemized (Part IX line 1 minus named lines)", sql, p))[0];
+  return (await db.query(sql, p.vals)).rows[0];
+}
+const niMemo = memo<NotItemized>("answer-not-itemized:v1", 8, 3600_000);
 
 async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<string> {
   if (!c || cs.kind === "all") return c?.all ? `All causes, ${c.name}.` : "All causes.";
@@ -583,7 +595,9 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // awards count a graded label's primary tier only, follow-up chips for breakdowns and federal answers.
 // v16: grant-size medians and 90th percentiles from the size histograms (generosity-data 046).
 // v18: premise check (spec.premise), keyword causes ignore passing mentions, single-organization note in state rankings.
-const answerMemo = memo<Answer>("answer:v20", 500, 6 * 3600_000);
+// v21: Schedule I placeholder lines ("SEE ATTACHED", "VARIOUS") out of charity_grant_clean (generosity-data 050),
+// national charity_grants totals show what's reported but not itemized.
+const answerMemo = memo<Answer>("answer:v21", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -667,8 +681,9 @@ const PF_CAVEATS = (lr: { grants: number; dollars: number }) => [
   `Recipients are identified for ${pct(lr.grants)} of 2022–24 grants to US organizations (${pct(lr.dollars)} of those dollars; grants to individuals, foreign recipients and placeholder lines are left out first). Cause totals count only identified recipients, so they run low.`,
 ];
 
-const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null) => [
-  "Schedule I grants: what public charities filing Form 990 report giving to US organizations and governments, usually grants over $5,000. Private foundations are a separate source. Some filers list only part of their grants by recipient (2022–24: 93% of the grants they report in total; Silicon Valley Community Foundation 2022: $2.06B of $3.63B), so totals run low.",
+const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null, ni: NotItemized) => [
+  "Schedule I grants: what public charities filing Form 990 report giving to US organizations and governments, usually grants over $5,000. Private foundations are a separate source.",
+  `Some filers don't name their recipients ("SEE ATTACHED", "VARIOUS") or list only part of them. In 2022–24, ${money(ni.usd)} of the ${money(ni.line1)} these filers reported giving (${pct(ni.usd / Math.max(1, ni.line1))}) isn't itemized by recipient. With no recipient, place or cause, it's left out of every number here, and national totals show it alongside as reported but not itemized.`,
   ...(cls === "daf_sponsor" ? ["DAF sponsor = a charity that holds donor-advised funds and whose DAF grants (Schedule D) are at least half of its Schedule I grants. Community foundations and United Ways are counted separately."] : []),
   ...(cls === "community_foundation" ? ["Community foundation = \"Community Foundation\", \"Community Fund\" or \"Community Trust\" in the name, or NTEE code T31 when DAF grants aren't most of its giving."] : []),
   ...(cls == null || cls === "daf_sponsor" || cls === "community_foundation" ? ["Schedule I doesn't say which grants a donor advised. DAF sponsors' grants are mostly DAF grants, and community foundations' mix DAF and their own grants."] : []),
@@ -678,7 +693,9 @@ const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null)
 ];
 async function grantCaveats(pl: Place): Promise<string[]> {
   const lr = await linkRate(pl.g);
-  return pl.g.kind === "pf" ? PF_CAVEATS(lr) : SI_CAVEATS(lr, pl.g.cls);
+  if (pl.g.kind === "pf") return PF_CAVEATS(lr);
+  const ni = await niMemo(pl.g.cls ?? "all", () => notItemized(null, pl.g.cls, { from: 2022, to: 2024 }));
+  return SI_CAVEATS(lr, pl.g.cls, ni);
 }
 
 async function run(ctx: Ctx, s0: Spec): Promise<Out> {
@@ -793,6 +810,13 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const y = grantYears(s);
   const causes: (C | null)[] = s.causes.length ? s.causes.slice(0, s.metric === "compare" ? 2 : 1) : [hasFilt(pl.f) ? subjectOf(pl) : null];
   const [den, gcav, ...ms] = await Promise.all([fDenom(ctx, pl, y), grantCaveats(pl), ...causes.map((c) => c ? fMoney(ctx, c, pl, y, `${cap(pl.g.grants)} to ${c.name}, by tax year`) : null)]);
+  // Schedule I money with no named recipient: beside a national all-causes total, never inside any total.
+  const ni = pl.g.kind === "charity" ? await notItemized(ctx, pl.g.cls, y) : null;
+  const national = !pl.states.length && !pl.county && !pl.area;
+  const niShown = !!ni && ni.usd > 0 && national && !causes[0];
+  const niMethod = !ni || ni.usd <= 0 ? ""
+    : niShown ? ` Another ${money(ni.usd)} was reported on these returns (Part IX line 1) without naming recipients ("SEE ATTACHED", "VARIOUS" or left off the list). It's shown beside the total as reported but not itemized, not added to it.`
+    : ` Another ${money(ni.usd)} (all states, all causes) was reported in these years without naming recipients, so it can't be counted by ${causes[0] ? "cause or place" : "place"} and is left out.`;
   const caveats: string[] = [];
   const notes = await Promise.all(causes.map((c, i) => causeNote(c, ms[i]?.cs ?? causeSql(null, new P(), "", ""), caveats)));
   if (y.note) caveats.push(y.note);
@@ -818,15 +842,16 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     if (pl.states.includes("DC")) caveats.push(DC_NOTE);
     return {
       headline: `${pl.g.who} gave ${money(den.total.usd)} to organizations in ${where}, ${yr}${pop0 > 0 ? `: ${perRes(fullSum / fullYears / pop0)} per resident a year` : ""}`,
-      numbers: [{ value: money(den.total.usd), label: `${pl.g.grants}, ${yr}` }, ...(pop0 > 0 ? [{ value: perRes(fullSum / fullYears / pop0), label: "per resident a year", note: pl.states.includes("DC") ? DC_NOTE_SHORT : undefined }] : []), { value: money(fullSum / fullYears), label: "a year (full years)" },
+      numbers: [{ value: money(den.total.usd), label: `${pl.g.grants}, ${yr}`, note: niShown ? `plus ${money(ni!.usd)} reported but not itemized` : undefined }, ...(pop0 > 0 ? [{ value: perRes(fullSum / fullYears / pop0), label: "per resident a year", note: pl.states.includes("DC") ? DC_NOTE_SHORT : undefined }] : []), { value: money(fullSum / fullYears), label: "a year (full years)" },
         ...(growth != null ? [{ value: signed(growth), label: `${y.full[0]} to ${y.full.at(-1)}` }] : [])],
       bullets: [`${b(money(fullSum / fullYears))} a year in ${pl.g.kind === "pf" ? "private-foundation grants" : pl.g.grants} to ${where}`,
+        ...(niShown ? [`Plus ${b(money(ni!.usd))} reported but not itemized by recipient`] : []),
         `${b(int(den.total.n))} grants counted, all recipients, by recipient address`,
         ...(growth != null ? [`Grant dollars changed ${b(signed(growth))} from ${y.full[0]} to ${y.full.at(-1)}`] : [])],
       chart: { title: `${cap(pl.g.grants)} to ${where}, by tax year`, sub: u.title, spec: vbar(vals.map((v) => ({ year: v.year, amount: +(v.usd / u.div).toFixed(3) })), "year", "amount", "Tax year", u.title, u.fmt) },
       rows: den.years.map((r) => ({ tax_year: r.year, grants_usd: r.usd, grants: r.n, linked_usd: r.linked_usd })),
       causeNote: notes[0], coverage, caveats,
-      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.`,
+      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}`,
       sources: [pl.g.src], searchQuery: null,
       ...(growth != null ? { change: { subject: `${pl.g.money} to organizations in ${where}`, g: growth, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };
@@ -870,7 +895,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   };
   const denGrowth = (() => { const a = den.years.find((r) => r.year === y.full[0]), z = den.years.find((r) => r.year === y.full.at(-1)); return a && z && a !== z ? z.linked_usd / a.linked_usd - 1 : null; })();
   const upper = label[0] ? ` (up to ${money(m0.total.usd)} with partial)` : "";
-  const method = `Sum of ${pl.g.form} paid in tax years ${yr} to identified recipients in ${where} (by the recipient's address) whose organization is in the cause set. Share = over all identified-recipient grant dollars in the same place and years${pl.g.kind === "charity" ? ` from the same ${pl.g.givers}` : ""}. Grants to individuals, unitemized lines, foreign recipients and other private foundations are excluded${pl.g.kind === "charity" ? ", and so are grants to other DAF sponsors, community foundations and United Ways" : ""}.`;
+  const method = `Sum of ${pl.g.form} paid in tax years ${yr} to identified recipients in ${where} (by the recipient's address) whose organization is in the cause set. Share = over all identified-recipient grant dollars in the same place and years${pl.g.kind === "charity" ? ` from the same ${pl.g.givers}` : ""}. Grants to individuals, unitemized lines, foreign recipients and other private foundations are excluded${pl.g.kind === "charity" ? ", and so are grants to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}`;
   const chart = { title: `${cap(pl.g.grants)} to ${causes.map((c) => c!.name).join(" vs ")}${where !== "the US" ? ` in ${where}` : ""}, by tax year`, sub: u.title, spec: vbar(chartVals, "year", "amount", "Tax year", u.title, u.fmt, causes.length > 1 || label[0] ? "tier" : undefined) };
   const base = { chart, rows: rowsOut, causeNote: notes.join(" "), coverage, caveats, method, orgCount: m0.total.orgs, sources: [pl.g.src, ...(causes.some((c) => c?.label) ? [SRC.labels] : []), ...(causes.some((c) => c?.ntee.length) ? [SRC.ntee] : [])], searchQuery: searchFor(s, pl) };
 
