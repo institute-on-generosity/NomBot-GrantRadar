@@ -20,6 +20,14 @@ const one = async (sql: string, params: unknown[] = []) => Number(Object.values(
 // Independent checks: base tables, the miner's CLEAN filter written out again.
 const CLEAN = `FROM grants g LEFT JOIN orgs o ON o.ein = g.recipient_ein
   WHERE g.amount > 0 AND g.recipient_kind IS NULL AND coalesce(o.foundation, '') NOT IN ('02','03','04')`;
+// Schedule I grants (charity_grants), written out on the base table: US recipients, no foreign address,
+// no private-foundation recipients, no grants to other grantmakers (DAF sponsors, community foundations,
+// United Ways). charity_funder_profile only supplies each funder's class.
+const US_ST = `'^(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|PR|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])$'`;
+const CG = (cls: string | null) => `FROM charity_grants c ${cls ? `JOIN charity_funder_profile fp ON fp.ein = c.funder_ein AND fp.funder_class = '${cls}'` : ""} LEFT JOIN orgs o ON o.ein = c.recipient_ein
+  WHERE c.amount > 0 AND c.recipient_country IS NULL AND c.recipient_state ~ ${US_ST} AND coalesce(o.foundation, '') NOT IN ('02','03','04')
+    AND c.funder_ein IN (SELECT ein FROM charity_filers)
+    AND coalesce(c.recipient_ein, '') NOT IN (SELECT ein FROM charity_funder_profile WHERE funder_class IN ('daf_sponsor','community_foundation','united_way'))`;
 const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answer>>) => Promise<[number, number]> }[] = [
   { name: "climate $ 2022-24 (any tier)", s: spec({ causes: [climate] }),
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate')`)] },
@@ -49,6 +57,38 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "low cash, Cook County", s: spec({ metric: "count_orgs", county: "Cook County", states: ["IL"], condition: "low_cash" }) },
   { name: "gov grants top funders (partial)", s: spec({ metric: "top_funders", source: "government_grants", causes: [climate] }) },
   { name: "individual giving (none)", s: spec({ metric: "none", missing: ["individual_giving"] }) },
+  // Federal awards to nonprofits (USAspending, federal_awards), placed by place of performance
+  { name: "federal awards to nonprofits, US FY2022-25", s: spec({ source: "federal_awards" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025`)] },
+  { name: "federal awards to climate orgs (primary), trend", s: spec({ source: "federal_awards", metric: "trend", causes: [climate] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.primary_usd), 0)), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate' AND tier='primary')`)] },
+  { name: "federal $ per resident by state (top)", s: spec({ source: "federal_awards", metric: "by_state", perResident: true }),
+    check: async (a) => [Number(a.rows[0].value), await one(`SELECT sum(amount) / (SELECT sum(population) FROM county_need WHERE state=$1 AND county_fips<>'00000') / 4 FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND pop_state=$1`, [a.rows[0].key])] },
+  { name: "top federal agencies, Ohio", s: spec({ source: "federal_awards", metric: "top_funders", states: ["OH"] }),
+    check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND pop_state='OH' AND agency_name=$1`, [a.rows[0].key])] },
+  { name: "federal $ by county poverty", s: spec({ source: "federal_awards", metric: "breakdown", by: "county_poverty" }),
+    check: async (a) => [Number(a.rows.at(-1)!.usd), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND pop_county_fips IN (SELECT county_fips FROM county_acs WHERE level='county' AND poverty_rate >= 20)`)] },
+  { name: "federal top recipients, food banks", s: spec({ source: "federal_awards", metric: "top_recipients", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }) },
+  { name: "federal $ by program, Cook County", s: spec({ source: "federal_awards", metric: "breakdown", by: "program", county: "Cook County", states: ["IL"] }) },
+  // Census ACS 5-year (county_acs): per person in poverty and counties grouped by poverty rate
+  { name: "states most foundation $ per person in poverty", s: spec({ metric: "by_state", perPoverty: true }),
+    check: async (a) => [Number(a.rows[0].value), await one(`SELECT sum(t.usd) / (SELECT sum(people_in_poverty) FROM county_acs WHERE level='county' AND state=$1) / 3 FROM grant_totals t WHERE t.tax_year BETWEEN 2022 AND 2024 AND t.state=$1`, [a.rows[0].state])] },
+  { name: "foundation $ per resident by county poverty", s: spec({ metric: "breakdown", by: "county_poverty" }),
+    check: async (a) => [Number(a.rows.at(-1)!.usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND z.county_fips IN (SELECT county_fips FROM county_acs WHERE level='county' AND poverty_rate >= 20)`.replace("LEFT JOIN orgs o", "JOIN zip_regions z ON z.zip5 = left(g.recipient_zip, 5)::char(5) LEFT JOIN orgs o"))] },
+  { name: "DAF $ by county race/ethnicity, per person in poverty", s: spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "breakdown", by: "county_race", perPoverty: true }) },
+  // Schedule I: donor-advised fund sponsors, community foundations, United Ways
+  { name: "DAF sponsors to climate 2022-24 (any tier)", s: spec({ source: "charity_grants", charityFunder: "daf_sponsor", causes: [climate] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024 AND c.recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate')`)] },
+  { name: "community foundations, all US 2022-24", s: spec({ source: "charity_grants", charityFunder: "community_foundation" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.grants_usd), 0)), await one(`SELECT sum(c.amount) ${CG("community_foundation")} AND c.tax_year BETWEEN 2022 AND 2024`)] },
+  { name: "top DAF sponsors, all causes", s: spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "top_funders" }),
+    check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024 AND c.funder_ein=$1`, [a.rows[0].funder_ein])] },
+  { name: "United Ways to food banks, by state (top)", s: spec({ source: "charity_grants", charityFunder: "united_way", metric: "by_state", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(c.amount) ${CG("united_way")} AND c.tax_year BETWEEN 2022 AND 2024 AND c.recipient_state=$1 AND o.ntee_cd LIKE 'K31%'`, [a.rows[0].state])] },
+  { name: "charity grants by funder group", s: spec({ source: "charity_grants", metric: "breakdown", by: "charity_funder" }),
+    check: async (a) => [Number(a.rows.find((r) => r.key === "daf_sponsor")?.usd ?? 0), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024`)] },
+  { name: "DAF sponsors, top recipients in health", s: spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "top_recipients", causes: [{ name: "health", label: null, ntee: ["E"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024 AND c.recipient_ein=$1`, [a.rows[0].ein])] },
 ];
 
 let fail = 0;
@@ -69,7 +109,7 @@ for (const c of cases) {
 
 if (process.argv.includes("--route")) {
   const { routeQuestion } = await import("../lib/answerRoute");
-  const qs = ["how much government money has gone to climate change?", "how much foundation money goes to women and girls in New York",
+  const qs = ["How much do donor-advised funds give to climate?", "Which federal agencies give the most to nonprofits in Ohio?", "Do high-poverty counties get less foundation money per resident?", "Which states get the most foundation money per person in poverty?", "Do community foundations or DAF sponsors give more to education?", "how much government money has gone to climate change?", "how much foundation money goes to women and girls in New York",
     "which states give the least foundation money per resident", "how many animal shelters in Ohio run deficits", "how much do individuals give to churches each year?",
     "food banks in Ohio"];
   for (const q of qs) {

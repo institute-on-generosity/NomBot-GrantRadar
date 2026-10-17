@@ -67,6 +67,20 @@ const cases: [string, Spec][] = [
   ["breakdown by county per resident, OH arts", spec({ metric: "breakdown", by: "county", states: ["OH"], causes: [cause("arts", ["A"])], perResident: true })],
   ["breakdown by year, women & girls", spec({ metric: "breakdown", by: "year", causes: [women] })],
   ["taxonomy: veterans (no code from router)", spec({ causes: [cause("veterans", [], null, ["veterans"])] })],
+  ["by county poverty, all", spec({ metric: "breakdown", by: "county_poverty" })],
+  ["by county income, education OH", spec({ metric: "breakdown", by: "county_income", causes: [cause("education", ["B"])], states: ["OH"] })],
+  ["by state per person in poverty, arts", spec({ metric: "breakdown", by: "state", measure: null, perPoverty: true, causes: [cause("arts", ["A"])] })],
+  // Schedule I grants by charities (generosity-data 041-042): charity_grant_cube vs charity_grant_clean.
+  ["charity: all, US", spec({ source: "charity_grants" })],
+  ["charity: DAF sponsors to climate", spec({ source: "charity_grants", charityFunder: "daf_sponsor", causes: [climate] })],
+  ["charity: community foundations, arts OH", spec({ source: "charity_grants", charityFunder: "community_foundation", causes: [cause("arts", ["A"])], states: ["OH"] })],
+  ["charity: DAF trend, education", spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "trend", causes: [cause("education", ["B"])], yearFrom: 2022, yearTo: 2024 })],
+  ["charity: by funder group", spec({ source: "charity_grants", metric: "breakdown", by: "charity_funder" })],
+  ["charity: by cause, DAF", spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "breakdown", by: "cause" })],
+  ["charity: by state per resident, United Ways", spec({ source: "charity_grants", charityFunder: "united_way", metric: "by_state", perResident: true })],
+  ["charity: rurality, community foundations", spec({ source: "charity_grants", charityFunder: "community_foundation", metric: "by_rurality" })],
+  ["charity: general support, DAF", spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "general_support" })],
+  ["charity: fastest causes, DAF", spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "fastest_causes" })],
 ];
 
 const num = (v: unknown) => (typeof v === "number" ? v : typeof v === "string" && v !== "" && !isNaN(Number(v)) ? Number(v) : null);
@@ -88,7 +102,7 @@ for (const [name, s] of cases) {
   if (JSON.stringify(old.numbers) !== JSON.stringify(neu.numbers)) diffs.push(`numbers: ${JSON.stringify(old.numbers)} vs ${JSON.stringify(neu.numbers)}`);
   if (old.rows.length !== neu.rows.length) diffs.push(`rows: ${old.rows.length} vs ${neu.rows.length}`);
   else old.rows.forEach((r, i) => { for (const k of Object.keys(r)) if (!same(r[k], neu.rows[i][k])) diffs.push(`row ${i} ${k}: ${r[k]} vs ${neu.rows[i][k]}`); });
-  const usedCube = neu.queries.some((q) => /grant_cube|grant_recipient_year|grant_county_year/.test(q.sql));
+  const usedCube = neu.queries.some((q) => /grant_cube|grant_recipient_year|grant_county_year/.test(q.sql)); // charity_grant_cube too
   if (diffs.length) fail++;
   console.log(`${diffs.length ? "✗" : "✓"} ${String(t1 - t0).padStart(5)} ms -> ${String(t2 - t1).padStart(5)} ms ${usedCube ? "[layer]" : "[grant_clean]"} ${name}${diffs.length ? `\n    ${diffs.slice(0, 6).join("\n    ")}` : ""}`);
 }

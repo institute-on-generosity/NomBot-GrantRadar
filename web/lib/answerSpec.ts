@@ -21,12 +21,16 @@ export const METRICS = [
   "breakdown",        // foundation grants split by one dimension (by): cause, county, recipient size, funder size ...
   "none",             // nothing in our data answers it (see missing)
 ] as const;
-export const SOURCES = ["foundation_grants", "government_grants", "contributions", "revenue"] as const;
+export const SOURCES = ["foundation_grants", "charity_grants", "federal_awards", "government_grants", "contributions", "revenue"] as const;
+// Grantmaking charities on Form 990 Schedule I (generosity-data 041-042, charity_funder_profile.funder_class).
+export const CHARITY_FUNDERS = ["daf_sponsor", "community_foundation", "united_way", "other"] as const;
 export const CONDITIONS = ["deficit", "low_cash", "gov_reliant", "surplus"] as const;
 export const MISSING = ["individual_giving", "corporate_giving", "federal_awards", "daf_grants", "foreign_giving", "forecast", "volunteering", "other"] as const;
 export const LABELS = ["climate", "women_girls"] as const;
 // Breakdown dimensions (metric breakdown, foundation grants; research layer of generosity-data 038-040).
-export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year"] as const;
+// county_poverty / county_income / county_race / county_age: counties grouped by Census ACS 5-year bands (county_acs).
+// agency / program: federal_awards only (awarding agency, assistance listing).
+export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year", "charity_funder", "county_poverty", "county_income", "county_race", "county_age", "agency", "program"] as const;
 export const MEASURES = ["dollars", "grants", "average_grant"] as const;
 export const FUNDER_TYPES = ["family", "operating", "trust"] as const;
 export const RECIPIENT_KINDS = ["nonprofit", "school_district", "public_college", "private_college", "public_entity"] as const;
@@ -45,7 +49,7 @@ export const causeSchema = z.object({
 export const specSchema = z.object({
   metric: z.enum(METRICS),
   causes: z.array(causeSchema).describe("0 causes = all causes; 2 for compare / overlap_funders"),
-  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue)"),
+  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue)"),
   yearFrom: z.number().int().nullable(),
   yearTo: z.number().int().nullable(),
   states: z.array(z.string()).describe("Two-letter codes of the place asked about; empty = whole US"),
@@ -53,6 +57,7 @@ export const specSchema = z.object({
   area: z.enum(["rural", "urban"]).nullable(),
   condition: z.enum(CONDITIONS).nullable().describe("For count_orgs: deficit, low_cash (under 3 months of cash), gov_reliant (half or more of revenue from government grants), surplus"),
   perResident: z.boolean(),
+  perPoverty: z.boolean().describe("Per person in poverty (Census ACS) instead of per resident: \"per poor person\", \"relative to poverty\""),
   order: z.enum(["most", "least"]),
   missing: z.array(z.enum(MISSING)).describe("Parts of the question our IRS data can't answer"),
   missingNote: z.string().nullable().describe("For 'other': what is missing, in a few words"),
@@ -62,6 +67,7 @@ export const specSchema = z.object({
   funderSize: range("the foundation's assets").nullable().describe("Only foundations with assets in this range (\"foundations over $1B\")"),
   funderType: z.enum(FUNDER_TYPES).nullable().describe("family (foundations with Family in the name, a floor), operating (private operating foundations), trust (charitable trusts)"),
   recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (any of the three)"),
+  charityFunder: z.enum(CHARITY_FUNDERS).nullable().describe("charity_grants only: daf_sponsor (donor-advised fund sponsors), community_foundation, united_way, other (other grantmaking charities); null = all"),
 });
 
 export type Cause = z.infer<typeof causeSchema>;
@@ -71,8 +77,8 @@ export type Source = Spec["source"];
 
 export const DEFAULT_SPEC: Spec = {
   metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null,
-  area: null, condition: null, perResident: false, order: "most", missing: [], missingNote: null,
-  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null,
+  area: null, condition: null, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
+  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null,
 };
 
 // Canonical form: upper-case states, trimmed words, so equal questions share one cache entry. Specs from
@@ -95,11 +101,13 @@ export function normalizeSpec(s: Spec): Spec {
     states: [...new Set(s.states.map((x) => x.toUpperCase().trim()).filter((x) => /^[A-Z]{2}$/.test(x)))],
     county: s.county?.trim() || null,
     by: s.by ?? null,
+    perPoverty: !!s.perPoverty,
     measure: s.measure && s.measure !== "dollars" ? s.measure : null,
     recipientSize: rng(s.recipientSize),
     funderSize: rng(s.funderSize),
     funderType: s.funderType ?? null,
     recipientKind: s.recipientKind ?? null,
+    charityFunder: s.source === "charity_grants" ? s.charityFunder ?? null : null,
   };
 }
 

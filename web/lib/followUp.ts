@@ -22,10 +22,13 @@ export type Resolved =
 const STATE = Object.fromEntries(LOADED_STATES) as Record<string, string>;
 
 // A plain standalone question for a spec, used for chips' saved questions and as a fallback.
+const CHARITY_MONEY: Record<string, string> = { daf_sponsor: "donor-advised fund money", community_foundation: "community foundation money", united_way: "United Way money", other: "money from grantmaking charities" };
+const moneyOf = (s: Spec) => s.source === "government_grants" ? "government money" : s.source === "federal_awards" ? "federal money for nonprofits" : s.source === "contributions" ? "contributions" : s.source === "revenue" ? "revenue"
+  : s.source === "charity_grants" ? CHARITY_MONEY[s.charityFunder ?? ""] ?? "grant money from charities" : "foundation money";
 export function describeSpec(s: Spec): string {
   const cause = s.causes.map((c) => c.name).join(" and ") || "all causes";
   const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : s.states.length ? ` in ${s.states.join(", ")}` : "";
-  const money = s.source === "government_grants" ? "government money" : s.source === "contributions" ? "contributions" : s.source === "revenue" ? "revenue" : "foundation money";
+  const money = moneyOf(s);
   switch (s.metric) {
     case "trend": return `Is ${money} for ${cause}${place} growing?`;
     case "share": return `What share of ${money} goes to ${cause}${place}?`;
@@ -59,11 +62,11 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   };
   const c = s.causes[0];
   const one = s.causes.length <= 1;
-  const pf = s.source === "foundation_grants";
+  const pf = s.source === "foundation_grants" || s.source === "charity_grants"; // grant-level sources: funders, recipients, sizes
   const cause = c?.name ?? "";
   const of = cause ? ` ${cause}` : "";
   const forX = cause ? ` for ${cause}` : "";
-  const money = pf ? "foundation money" : s.source === "government_grants" ? "government money" : s.source === "contributions" ? "contributions" : "revenue";
+  const money = moneyOf(s);
   const next: Record<string, () => void> = {
     concentration: () => {
       add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
@@ -113,7 +116,8 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   // A thread that compares two causes keeps comparing them.
   if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare" })), { metric: "compare" });
   if (s.causes.length === 2 && s.metric === "compare") add(`Is money for ${s.causes[0].name} or ${s.causes[1].name} growing faster?`, { metric: "trend" });
-  if (!pf && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants" });
+  if (s.source !== "foundation_grants" && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants" });
+  if (s.source === "foundation_grants" && c && ["total", "trend"].includes(s.metric)) add(`What about donor-advised fund money${forX}?`, { source: "charity_grants", charityFunder: "daf_sponsor" });
   return out.filter((o) => onTopic(o.spec, history));
 }
 
