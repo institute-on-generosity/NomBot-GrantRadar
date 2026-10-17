@@ -24,6 +24,12 @@ import type { Result } from "@/lib/search";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { PersonView } from "@/components/PersonView";
 import { looksLikeName, personProfile } from "@/lib/people";
+import { looksLikeResearch, routeQuestion, type Routed } from "@/lib/answerRoute";
+import { contentPlan } from "@/lib/answerSpec";
+import { askHref } from "@/lib/researchQuestions";
+import { redirect } from "next/navigation";
+import { answer } from "@/lib/answer";
+import { AnswerCard, AnswerSkeleton } from "@/components/AnswerCard";
 
 type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string; ask?: string; tab?: string } & Overrides;
 type SearchParams = Promise<Params>;
@@ -76,6 +82,57 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
   const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, drop: p.drop };
+  // Content plan, per question (lib/answerSpec contentPlan):
+  //   research  ("how much…", "what share…", "which states…"): redirected to /research/ask, the answer
+  //             card only. No org search, landscape, AI overview or relevance scoring runs.
+  //   mixed     (a specific org set asked about, "how many animal shelters in Ohio run deficits"): the card,
+  //             then the matching organizations as its evidence, no landscape panel.
+  //   search    everything else, and whenever the router isn't sure: list + analysis panel, as before.
+  const routed = looksLikeResearch(question) ? routeQuestion(question) : null;
+  const viewProps = { question, p, n, includeInactive, overrides };
+  if (!routed) return <SearchView {...viewProps} />;
+  return (
+    <Suspense fallback={
+      <>
+        <div className="serp-head"><SearchBox key={question} value={question} placeholder={PLACEHOLDER} /></div>
+        <div className="serp research"><div className="serp-main"><AnswerSkeleton /></div></div>
+      </>
+    }>
+      <Planned routed={routed} {...viewProps} />
+    </Suspense>
+  );
+}
+
+type ViewProps = { question: string; p: Params; n: number; includeInactive: boolean; overrides: Overrides };
+
+async function Planned({ routed, ...v }: ViewProps & { routed: Promise<Routed> }) {
+  const r = await routed;
+  if (!r.research) return <SearchView {...v} />;
+  // Pure research questions live in the Research section (/research/ask); only mixed questions,
+  // whose organizations are the evidence, stay here.
+  if (contentPlan(r.spec, "ok") === "research") redirect(askHref(v.question));
+  const a = await answer(v.question, r.spec).catch((err) => {
+    console.error("research answer failed", err);
+    return null;
+  });
+  if (!a) return <SearchView {...v} />; // safe default: the organizations
+  const plan = contentPlan(r.spec, a.status);
+  if (plan === "search") return <SearchView {...v} />;
+  if (plan === "research") redirect(askHref(v.question));
+  // Mixed: the card shows at once; the organizations (parse + search) stream in under it.
+  return (
+    <Suspense fallback={
+      <>
+        <div className="serp-head"><SearchBox key={v.question} value={v.question} placeholder={PLACEHOLDER} /></div>
+        <div className="serp research"><div className="serp-main"><AnswerCard a={a} /><ResultsSkeleton /></div></div>
+      </>
+    }>
+      <SearchView {...v} card={<AnswerCard a={a} />} />
+    </Suspense>
+  );
+}
+
+async function SearchView({ question, p, n, includeInactive, overrides, card }: ViewProps & { card?: React.ReactNode }) {
   const filters = applyOverrides(await parseQuestion(question), overrides);
   // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
   const res = await searchCandidates(filters, { includeInactive, limit: n });
@@ -86,6 +143,21 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   const focus = p.focus ?? "";
   const must = filters.requirements.map((r) => r.label).join(" + ");
   const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0 };
+  // Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
+  // instead of React keeping the old list on screen until the new scores arrive.
+  const orgList = (
+    <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
+      <RankedList ranking={ranking} rankingAll={rankingAll} total={res.total} {...rowProps} />
+    </Suspense>
+  );
+  const more = (
+    <div className="more">
+      {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
+      <PrintButton label="Print summary" />
+      <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
+      <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
+    </div>
+  );
 
   return (
     <>
@@ -99,8 +171,19 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
 
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} startAsk={(p.ask ?? "").slice(0, 1000)} question={question} overrides={overrides} all={includeInactive} />
 
-
-      {/* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */}
+      {card ? (
+        // Mixed question: the answer card, then the organizations it counts (the evidence). No landscape panel.
+        <div className="serp research">
+          <div className="serp-main">
+            {card}
+            <h2 className="answer-list-head" id="org-results">The organizations</h2>
+            {orgList}
+            {more}
+            <Footer />
+          </div>
+        </div>
+      ) : (
+      /* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */
       <div className="serp">
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
@@ -111,21 +194,12 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
         </Suspense>
       </aside>
       <div className="serp-main">
-      {/* Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
-          instead of React keeping the old list on screen until the new scores arrive. */}
-      <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
-        <RankedList ranking={ranking} rankingAll={rankingAll} total={res.total} {...rowProps} />
-      </Suspense>
-
-      <div className="more">
-        {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
-        <PrintButton label="Print summary" />
-        <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
-        <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
-      </div>
+      {orgList}
+      {more}
       <Footer />
       </div>
       </div>
+      )}
       <PrintStamp />
     </>
   );

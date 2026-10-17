@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import type { View } from "vega";
 import { NavLink } from "./NavLink";
+import { AskedQuestions } from "./AskedQuestions";
 import { InsightChart, exportChart } from "./InsightChart";
 import { InsightPoints } from "./InsightPoints";
 import { SlideButton } from "./SlideButton";
@@ -41,6 +43,7 @@ export function InsightsFeed() {
 
   return (
     <section className="ins-feed" aria-label="Research">
+      <AskedQuestions />
       <div className="ins-bar">
         <div className="ins-chips" role="toolbar" aria-label="Sections">
           <button type="button" className={section === "all" ? "on" : undefined} aria-pressed={section === "all"} onClick={() => setSection("all")}>All{load.status === "ok" && <span>{total}</span>}</button>
@@ -144,41 +147,59 @@ function InsightCard({ i, saved, lead = false }: { i: Insight; saved: boolean; l
   );
 }
 
+const noop = () => () => {};
+
+// Saved findings, docked on the right like Research Buddy (portaled into .shell).
 function ReportView({ items, onClose }: { items: Insight[]; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const hydrated = useSyncExternalStore(noop, () => true, () => false);
+  const shell = hydrated ? document.querySelector(".shell") : null;
   const exportAll = () => {
     const stamp = new Date().toISOString().slice(0, 10);
     download(`nombot-research-${stamp}.md`, reportMarkdown(items, location.origin), "text/markdown");
   };
-  return (
-    <div className="ins-report" role="region" aria-label="Report">
-      <header>
-        <b>Report</b>
-        <span className="ins-report-note">{items.length ? `${items.length} saved in this browser` : "Save findings to collect them here"}</span>
-        <button type="button" className="iconbtn" onClick={onClose} aria-label="Close report" title="Close">
+  if (!shell) return null;
+  return createPortal(
+    <aside className="buddy-panel ins-report" aria-label="Report">
+      <header className="panel-head">
+        <span>Report <small className="ins-report-count">{items.length}</small></span>
+        <button type="button" className="iconbtn" onClick={onClose} aria-label="Close report" title="Close (Esc)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
       </header>
-      {items.length > 0 && (
-        <>
+      <div className="buddy-body">
+        {!items.length && <p className="ins-report-note">Save findings to collect them here. Saved in this browser.</p>}
+        {items.length > 0 && (
           <ol>
             {items.map((i) => (
               <li key={i.slug}>
-                <NavLink href={researchHref(i.slug)} label="Opening the finding…">{i.headline}</NavLink>
-                <small>{sectionLabel(i.section)}</small>
+                <span className="ins-report-item">
+                  <NavLink href={researchHref(i.slug)} label="Opening the finding…">{i.headline}</NavLink>
+                  <small>{sectionLabel(i.section)}</small>
+                </span>
                 <button type="button" className="iconbtn" onClick={() => removeFromReport(i.slug)} aria-label={`Remove ${i.headline}`} title="Remove">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
                 </button>
               </li>
             ))}
           </ol>
+        )}
+      </div>
+      {items.length > 0 && (
+        <footer className="ins-report-foot">
           <div className="ins-report-actions">
             <button type="button" className="ins-btn primary" onClick={exportAll}>Export report (Markdown)</button>
-            <button type="button" className="ins-btn" onClick={() => { if (confirm("Remove every saved insight?")) clearReport(); }}>Clear</button>
+            <button type="button" className="ins-btn" onClick={() => { if (confirm("Remove every saved finding?")) clearReport(); }}>Clear</button>
           </div>
-          <p className="ins-report-note">Includes each card&apos;s key points, method, caveats, sources and data as tables.</p>
-        </>
+          <p className="ins-report-note">Key points, method, caveats, sources and data tables for each saved finding.</p>
+        </footer>
       )}
-    </div>
+    </aside>,
+    shell,
   );
 }
 

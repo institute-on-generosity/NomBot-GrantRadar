@@ -9,7 +9,7 @@ import { ago } from "./HistoryList";
 import { useStoredList } from "./useStored";
 
 type Source = { n: number; ein: string; name: string; place: string; filing: string | null };
-type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string };
+type Turn = { ask: string; thinking: string; answer: string; sources: Source[]; status: "thinking" | "answering" | "done" | "error"; error?: string; tools?: string[] };
 
 const noop = () => () => {};
 const SUGGESTIONS = ["Which is the strongest fit, and why?", "Compare the top 3", "Which ones are small and community-run?"];
@@ -83,6 +83,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
           if (e.type === "sources") update(() => ({ sources: e.sources }));
           else if (e.type === "thinking") update((t) => ({ thinking: t.thinking + e.text }));
           else if (e.type === "text") update((t) => ({ answer: t.answer + e.text, status: "answering" }));
+          else if (e.type === "tool") update((t) => ({ tools: [...(t.tools ?? []), e.label], answer: t.answer && !t.answer.endsWith("\n") ? `${t.answer}\n\n` : t.answer }));
           else if (e.type === "error") update(() => ({ status: "error", error: e.message }));
         }
       }
@@ -157,6 +158,7 @@ export function ResearchBuddy({ question, overrides, all, convKey, startOpen = f
                   </details>
                 )}
                 {!t.thinking && t.status === "thinking" && <p className="buddy-wait"><span className="spinner" />Reading the filings…</p>}
+                {t.tools?.map((l) => <p key={l} className="buddy-tool" title="Computed with NomBot's research answer engine (fixed SQL over IRS data)"><span aria-hidden>∑</span> Computed: {l}</p>)}
                 {t.answer && <Answer text={t.answer} cite={(n) => { const x = t.sources.find((y) => y.n === n); return x && { title: `${x.name} · ${x.place}${x.filing ? ` · ${x.filing}` : ""}`, href: `/preview/org/${x.ein}` }; }} />}
                 {t.status === "error" && <p className="notice">{t.error}</p>}
                 {t.status === "done" && <Cited text={t.answer} sources={t.sources} />}

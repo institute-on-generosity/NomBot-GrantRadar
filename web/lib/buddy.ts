@@ -21,6 +21,12 @@ Rules:
 - Give numbers exactly as provided; don't compute ratios, percentages or rankings from them.
 - When comparing, name the trade-off (size, focus, evidence in the filing) instead of declaring one "best" without a reason.`;
 
+// Added to SYSTEM when Buddy has the research_answer tool (app/api/buddy/route.ts).
+export const ANSWER_RULES = `You also have the research_answer tool for aggregate questions across all US nonprofits and foundations (how much, what share, trends, by state, top funders, how many run deficits).
+- Use it for any follow-up that needs a total, share, ranking, trend or count. For "and for X?" or "by state?" follow-ups, reuse the spec of the research answer in context and change only what the user changed.
+- Quote its numbers exactly as returned, say what period and source they cover, and pass on the most important caveat in plain words. Don't cite tool numbers with [n]; [n] is only for the numbered organizations.
+- If it returns missing parts, say what our data can't answer and name the source it suggests.`;
+
 type Org = Awaited<ReturnType<typeof rankedSearch>>["results"][number];
 export type BuddySource = { n: number; ein: string; name: string; place: string; filing: string | null };
 

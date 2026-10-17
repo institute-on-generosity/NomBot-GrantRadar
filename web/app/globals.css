@@ -1213,19 +1213,17 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 .ins-empty { padding: 40px 0; text-align: center; font-size: 14px; color: var(--mute); }
 .ins-feed > .note { text-align: center; }
 
-.ins-report { margin: 12px 0 4px; padding: 14px 16px; border-radius: 16px; background: var(--fill); }
-.ins-report header { display: flex; align-items: center; gap: 10px; }
-.ins-report header b { font-size: 15px; font-weight: 600; }
-.ins-report header .iconbtn { margin-left: auto; margin-right: -6px; }
+.ins-report-count { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: var(--fill); font-size: 11.5px; font-weight: 500; color: var(--mute); font-variant-numeric: tabular-nums; }
+.ins-report ol { list-style: none; }
+.ins-report li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ins-report-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ins-report-item a { font-size: 14px; font-weight: 500; line-height: 1.35; color: var(--ink); text-decoration: none; }
+.ins-report-item a:hover { color: var(--g); }
+.ins-report-item small { font-size: 12px; color: var(--faint); }
+.ins-report li .iconbtn { flex: none; width: 24px; height: 24px; margin-top: -2px; }
+.ins-report-foot { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.ins-report-actions { display: flex; gap: 6px; margin-bottom: 8px; }
 .ins-report-note { font-size: 12.5px; color: var(--mute); }
-.ins-report ol { list-style: none; margin-top: 8px; }
-.ins-report li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.ins-report li a { flex: 1; min-width: 0; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ins-report li a:hover { color: var(--g); }
-.ins-report li small { flex: none; font-size: 12px; color: var(--faint); }
-.ins-report li .iconbtn { width: 24px; height: 24px; margin-right: -4px; }
-.ins-report-actions { display: flex; gap: 6px; margin: 10px 0 8px; }
-.ins-report > .ins-report-note:last-child { margin-top: 0; }
 
 .ins-orgs { list-style: none; margin-top: 12px; }
 .ins-orgs li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -1417,3 +1415,62 @@ p.rd-points { font-size: 16px; line-height: 1.55; color: var(--ink-2); }
 .serp-rail .landscape .seg button.on { background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .ovv-foot .ins-btn { padding-left: 10px; padding-right: 10px; }
 @media (max-width: 1360px) { .serp-rail .landscape .seg button { padding: 5px 4px; font-size: 11.5px; } }
+
+/* Research answer card (components/AnswerCard): top of the results for "how much / what share / how many" questions */
+.answer { margin: 0 0 18px; padding: 18px 20px 14px; border-radius: 18px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); animation: settle .45s var(--spring) both; }
+.answer.none { background: var(--fill); box-shadow: none; }
+.answer-kicker { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--g-dark); margin-bottom: 4px; }
+.answer.none .answer-kicker { color: var(--mute); }
+.answer-head { font-size: 20px; font-weight: 650; line-height: 1.28; letter-spacing: -.024em; color: var(--ink); text-wrap: balance; margin: 0 0 14px; }
+.answer-tiles { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.answer-chart { margin-top: 14px; }
+.answer .ins-points { margin-top: 12px; }
+.answer-missing { margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--fill); font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.answer.none .answer-missing { background: var(--bg); }
+.answer-missing > b { display: block; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.answer-missing ul { margin: 0; padding-left: 18px; }
+.answer-missing a { color: var(--g-dark); }
+.answer-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; }
+.answer-actions { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.answer-actions a.ins-link { text-decoration: none; }
+.answer-method ul { margin: 2px 0 6px; padding-left: 18px; }
+.answer-method a { color: var(--g-dark); }
+.answer-q { margin-top: 10px; font-weight: 600; color: var(--ink); }
+.answer-q + pre { margin-top: 4px; }
+.answer-ms { margin-top: 10px; font-size: 11.5px; color: var(--faint); }
+@media (max-width: 640px) { .answer { padding: 14px 14px 12px; } .answer-head { font-size: 18px; } }
+#org-results { scroll-margin-top: 140px; }
+.buddy-tool { display: flex; gap: 6px; align-items: baseline; margin: 6px 0; font-size: 12.5px; line-height: 1.4; color: var(--mute); }
+.buddy-tool span { color: var(--g-dark); font-weight: 600; }
+
+/* Research layout: one column, the answer card is the only hero (research questions); mixed questions list the organizations under it */
+.serp.research { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main"; }
+.serp.research .answer { padding: 22px 24px 16px; }
+.serp.research .answer-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 720px; }
+.serp.research .answer .ins-points, .serp.research .answer-missing { max-width: 820px; }
+.answer-orgs { margin: -6px 0 18px 4px; font-size: 14px; font-weight: 500; }
+.answer-orgs a { color: var(--g-dark); text-decoration: none; }
+.answer-orgs a:hover { text-decoration: underline; }
+.answer-list-head { font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); margin: 6px 0 2px; }
+@media (max-width: 640px) {
+  .serp.research .answer { padding: 16px 14px 12px; }
+  .serp.research .answer-tiles { gap: 6px; }
+  .serp.research .answer-tiles .ovv-tile { padding: 9px 10px 8px; }
+  .serp.research .answer-tiles .ovv-tile b { font-size: 17px; }
+  .serp.research .answer-tiles .ovv-tile span { font-size: 11px; }
+  .serp.research .answer-tiles .ovv-tile small { display: none; }
+}
+
+/* Asked questions (components/AskedQuestions): above the findings feed on /research and the home Research tab */
+.aq { margin: 4px 0 22px; padding: 14px 18px 12px; border-radius: 16px; background: var(--fill); }
+.aq h2 { font-size: 13px; font-weight: 600; letter-spacing: .01em; color: var(--ink-2); margin: 0 0 8px; }
+.aq-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 6px 28px; }
+.aq h3 { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--faint); margin: 2px 0 4px; }
+.aq ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.aq li { display: grid; gap: 1px; min-width: 0; }
+.aq li a { font-size: 14px; font-weight: 500; color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aq li a:hover { color: var(--g-dark); }
+.aq li span { font-size: 12.5px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* /research/ask */
+.ask-page .ask-box { margin: 10px 0 16px; }
+.ask-page .answer { margin-bottom: 12px; }

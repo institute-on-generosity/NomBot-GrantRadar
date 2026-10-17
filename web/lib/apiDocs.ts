@@ -117,6 +117,27 @@ export const ENDPOINTS: Endpoint[] = [
       },
     },
   },
+  {
+    id: "answer", method: "GET", path: "/api/v1/answer", title: "Answer a research question", mcpTool: "answer_research_question",
+    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
+    params: [
+      { name: "q", in: "query", type: "string", example: "how much foundation money goes to climate", desc: "The question in plain words, up to 300 characters." },
+      { name: "spec", in: "query", type: "string", example: '{"metric":"total","causes":[{"name":"climate","label":"climate","ntee":[],"keywords":[]}]}', desc: "Instead of q: the structured question as JSON (metric, causes, source, yearFrom, yearTo, states, county, area, condition, perResident, order). No Claude call." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" \\\n  "$NOMBOT/api/v1/answer?q=how+much+foundation+money+goes+to+climate"`,
+    example: {
+      research: true, question: "how much foundation money goes to climate", status: "ok",
+      headline: "Foundations gave $2.3B to climate, 2022–24: 1.3% of identified grant dollars",
+      numbers: [{ value: "$2.3B", label: "primary, 2022–24", note: "up to $4.2B with partial" }, { value: "1.3%", label: "of identified foundation grant $" }],
+      bullets: ["$759.7M a year to climate as a main purpose, $1.4B with partial"],
+      what_counts: "Climate label (org_labels): primary = the main stated purpose, partial = one program among others.",
+      method: "Sum of 990-PF grants paid in tax years 2022–24 to identified recipients ...", caveats: ["Only private-foundation grants (990-PF). ..."],
+      coverage: [{ label: "Grants counted", value: "4,575,000" }], missing: [],
+      data: [{ cause: "climate", tax_year: 2022, usd: 1348800000, primary_usd: 732700000 }],
+      sources: [{ label: "IRS Form 990-PF e-file (Part XV grants)", url: "https://www.irs.gov/charities-non-profits/form-990-series-downloads" }],
+      chart: null, queries: [{ title: "Foundation grants to climate, by tax year", sql: "SELECT ..." }], ms: 250,
+    },
+  },
 ];
 
 export const ERRORS = [

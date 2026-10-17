@@ -170,6 +170,9 @@ async function layout(d: SlideData): Promise<El[]> {
     // Numbers stacked, spread over the body height
     const avail = bottom - top;
     const blocks = nums.map((n, k) => ({ n, size: k === 0 ? 50 : 34, label: wrap(plain(n.label), 14, 400, colW, 2) }));
+    const height = (bs: typeof blocks) => bs.reduce((a, b) => a + b.size * 1.05 + 6 + b.label.length * 18, 0) + 14 * Math.max(0, bs.length - 1);
+    // A two-line headline plus bullets leaves less room: drop trailing numbers rather than overlap the bullets.
+    while (blocks.length > 1 && height(blocks) > avail) blocks.pop();
     const used = blocks.reduce((a, b) => a + b.size * 1.05 + 6 + b.label.length * 18, 0);
     const spacing = blocks.length > 1 ? Math.min(30, Math.max(14, (avail - used) / (blocks.length - 1))) : 0;
     let ny = top;

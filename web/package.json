@@ -11,7 +11,8 @@
     "eval:buddy": "tsx eval/buddy.mts",
     "build:counties": "node scripts/build-counties.mjs",
     "bench": "tsx eval/bench.mts",
-    "api-key": "tsx scripts/api-key.mts"
+    "api-key": "tsx scripts/api-key.mts",
+    "test:answer": "tsx eval/answer.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

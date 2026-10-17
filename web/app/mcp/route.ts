@@ -1,5 +1,5 @@
 // Remote MCP server (Streamable HTTP, JSON-RPC over POST) for AI tools: search_nonprofits, get_organization,
-// list_research, get_research. Same Bearer API key as /api/v1/*. Stateless: a fresh server and transport per
+// list_research, get_research, answer_research_question. Same Bearer API key as /api/v1/*. Stateless: a fresh server and transport per
 // request, plain JSON responses (no SSE stream, no sessions). Tools call the same functions as the REST API,
 // never the Claude API. Setup snippets at /api/docs.
 import { z } from "zod";
@@ -7,6 +7,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticate, record, baseUrl, type Auth } from "@/lib/apiAuth";
 import { apiSearch, apiOrg, apiResearchList, apiResearch, SECTION_KEYS } from "@/lib/api";
+import { answer, answerBrief } from "@/lib/answer";
+import { DEFAULT_SPEC, normalizeSpec, specSchema } from "@/lib/answerSpec";
+import { ANSWER_TOOL_DESCRIPTION } from "@/lib/answerTool";
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 type Result = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -84,6 +87,18 @@ function server(auth: Auth, base: string) {
     },
     annotations: { title: "Get research finding", ...READ_ONLY },
   }, ({ slug, max_rows }) => run("get_research", () => apiResearch(slug, base, max_rows ?? 200))());
+
+  // The calling AI fills the structured spec itself, so this stays LLM-free on our side.
+  s.registerTool("answer_research_question", {
+    title: "Answer a research question",
+    description: ANSWER_TOOL_DESCRIPTION,
+    inputSchema: specSchema.partial().shape,
+    annotations: { title: "Answer a research question", ...READ_ONLY },
+  }, (a) => run("answer_research_question", async () => {
+    const parsed = specSchema.safeParse({ ...DEFAULT_SPEC, ...a });
+    if (!parsed.success) throw new BadInput(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ").slice(0, 500));
+    return answerBrief(await answer("MCP research question", normalizeSpec(parsed.data)), 50);
+  })());
 
   return s;
 }
