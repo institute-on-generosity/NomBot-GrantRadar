@@ -4,6 +4,7 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg } from "./org";
+import { isLabel } from "./labels";
 import { getInsight } from "./insights";
 import { sectionLabel, SECTIONS } from "./insightMeta";
 
@@ -14,7 +15,7 @@ const abs = <T extends Link>(base: string, s: T): T => (s.url.startsWith("/") ? 
 const plainEin = (e: string) => e.replace(/\D/g, "");
 
 // ---------- search ----------
-export type SearchParams = { q?: string; state?: string | string[]; city?: string | string[]; max_revenue?: number | string; ntee?: string; limit?: number | string };
+export type SearchParams = { q?: string; state?: string | string[]; city?: string | string[]; max_revenue?: number | string; ntee?: string; label?: string; label_tier?: string; limit?: number | string };
 const list = (v: string | string[] | undefined) => (Array.isArray(v) ? v : (v ?? "").split(",")).map((s) => s.trim()).filter(Boolean);
 
 export function parseSearch(p: SearchParams) {
@@ -25,14 +26,18 @@ export function parseSearch(p: SearchParams) {
   const max_revenue = /^\d+$/.test(maxRaw) ? Number(maxRaw) : null;
   const ntee = p.ntee && /^[A-Z][0-9A-Z]{0,4}$/.test(p.ntee.toUpperCase()) ? p.ntee.toUpperCase() : null;
   const limit = Math.min(Math.max(Number(p.limit) || 10, 1), 50);
-  return { q, state, city, max_revenue, ntee, limit };
+  // Graded cause label (climate, women_girls): primary tier only unless label_tier=all.
+  const label = isLabel(p.label) ? p.label : null;
+  const label_tier = label ? (p.label_tier === "all" ? "all" : "primary") : null;
+  return { q, state, city, max_revenue, ntee, label, label_tier, limit };
 }
 
 export async function apiSearch(p: SearchParams, base: string) {
   const query = parseSearch(p);
-  const res = await search({ q: query.q, states: query.state, cities: query.city, maxRevenue: query.max_revenue ?? undefined, ntee: query.ntee ?? undefined, limit: query.limit });
+  const res = await search({ q: query.q, states: query.state, cities: query.city, maxRevenue: query.max_revenue ?? undefined, ntee: query.ntee ?? undefined,
+    label: query.label ?? undefined, labelPartial: query.label_tier === "all", limit: query.limit });
   return {
-    query: { q: query.q, state: query.state, city: query.city, max_revenue: query.max_revenue, ntee: query.ntee, limit: query.limit },
+    query,
     ...res,
     results: res.results.map((r) => ({ ...r, sources: r.sources.map((s) => abs(base, s)), url: `${base}/org/${plainEin(r.ein)}` })),
   };
@@ -81,6 +86,8 @@ export async function apiOrg(einRaw: string, base: string) {
       name: o.name,
       address: { street: o.street, city: o.city, state: o.state, zip: o.zip },
       ntee: o.ntee,
+      // Graded cause labels: primary (the cause is the main work) or partial (one named goal among others), with why
+      labels: o.labels.map((l) => ({ label: l.label, name: l.name, tier: l.tier, why: l.why })),
       status: o.status,
       subsection: o.subsection,
       ruling_year: o.ruling ? Number(o.ruling) : null,

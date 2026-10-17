@@ -13,11 +13,13 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "city", in: "query", type: "string", example: "Mansfield", desc: "City names, comma separated (up to 10)." },
       { name: "max_revenue", in: "query", type: "integer", example: "500000", desc: "Only organizations with revenue at or below this, in dollars." },
       { name: "ntee", in: "query", type: "string", example: "O", desc: "NTEE cause code prefix, e.g. K (food) or K31 (food banks)." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate or women_girls. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
+      { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) keeps organizations whose main work is the cause. all also adds partial ones, where it is one named goal or program among broader work." },
       { name: "limit", in: "query", type: "integer", example: "10", desc: "Results to return, 1 to 50. Default 10." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" \\\n  "$NOMBOT/api/v1/search?q=youth+mentoring&state=OH&limit=1"`,
     example: {
-      query: { q: "youth mentoring", state: ["OH"], city: [], max_revenue: null, ntee: null, limit: 1 },
+      query: { q: "youth mentoring", state: ["OH"], city: [], max_revenue: null, ntee: null, label: null, label_tier: null, limit: 1 },
       total: 3515, exact_total: null, semantic: true, model: "local:nomic-embed-text-v1.5-fp32@512",
       results: [{
         ein: "34-1877332", name: "MID-OHIO YOUTH MENTORING INC", city: "MANSFIELD", state: "OH",
@@ -27,7 +29,7 @@ export const ENDPOINTS: Endpoint[] = [
         health: { trend: { change: -0.079, from: { year: 2023, amount: 356039 }, to: { year: 2024, amount: 327923 } }, margin: 0.22, year: 2024, revenue: 327923, expenses: 255813, reserveMonths: 4.76, reserveBasis: "cash" },
         mission: "TO INSURE THAT ALL CHILDREN LIVING IN THE ORGANIZATION'S SERVICE AREA WILL HAVE THE OPPORTUNITY TO EXPERIENCE POSITIVE MENTORING RELATIONSHIPS.",
         programs: "MID-OHIO YOUTH MENTORING FACILITATES A ONE-TO-ONE MENTORING RELATIONSHIP FOR YOUTH...",
-        team: { staff: 3, volunteers: 300 }, filing: { year: 2024, form: "990" }, exact: null, score: 0.82, data_completeness: "full",
+        team: { staff: 3, volunteers: 300 }, filing: { year: 2024, form: "990" }, exact: null, score: 0.82, label: null, data_completeness: "full",
         sources: [{ label: "Form 990 (2024)", detail: "Mission and programs, from the organization's IRS e-filed return", url: "https://projects.propublica.org/nonprofits/organizations/341877332/202512999349300001/full" }],
         url: "https://<host>/org/341877332",
       }],
@@ -35,14 +37,16 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, and private-foundation grants received and given. Foundations also get assets and how to apply.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, and private-foundation grants received and given. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls), each with label, name, tier (primary or partial) and why.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
       org: {
         ein: "34-1877332", name: "MID-OHIO YOUTH MENTORING INC",
         address: { street: "...", city: "MANSFIELD", state: "OH", zip: "..." },
-        ntee: { code: "O31", label: "Youth Development" }, status: { standing: "Recognized as tax-exempt", kind: "Public charity, supported by the public" },
+        ntee: { code: "O31", label: "Youth Development" },
+        labels: [], // e.g. Climate Central: [{ label: "climate", name: "Climate", tier: "primary", why: "Climate science and communication is the whole mission." }]
+        status: { standing: "Recognized as tax-exempt", kind: "Public charity, supported by the public" },
         subsection: "03", ruling_year: 1999, years_tax_exempt: 27, website: null,
         mission: "TO INSURE THAT ALL CHILDREN ...", programs: "...",
         team: { staff: 3, volunteers: 300, year: 2024 },
@@ -152,7 +156,7 @@ export const ERRORS = [
 ];
 
 export const MCP_TOOLS = [
-  { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, limit." },
+  { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, label, label_tier, limit." },
   { name: "get_organization", desc: "Same as GET /api/v1/org/{ein}. Argument: ein." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },

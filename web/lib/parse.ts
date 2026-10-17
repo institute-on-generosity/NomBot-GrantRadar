@@ -6,6 +6,7 @@ import { claude, fallback, PARSE_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Requirement } from "./search";
 import { LOADED_STATES } from "./filters";
+import { LABEL_SLUGS, labelFromText, namesLabel, type LabelSlug } from "./labels";
 import { z } from "zod";
 
 export type Filters = {
@@ -16,6 +17,8 @@ export type Filters = {
   topic: string;        // what the organizations do, for display
   placeLabel?: string;  // the place as the user said it ("Appalachia"), for display
   appalachia?: boolean; // only orgs in the ARC region (by ZIP -> county), not whole states
+  label?: LabelSlug;     // graded cause label (climate, women_girls): a hard filter on org_labels
+  labelPartial?: boolean; // also orgs where the cause is one named goal among others (default: primary only)
 };
 
 // State names, longest first so "west virginia" is read before "virginia".
@@ -36,6 +39,7 @@ const SYSTEM = `You turn a plain-language US nonprofit search into database filt
 - placeLabel: the place as the user said it ("Appalachia", "Kentucky"), or null.
 - appalachia: true only when the user names Appalachia or Appalachian (the region), else false.
 - ntee: an NTEE prefix ONLY when the main cause clearly maps: food banks/pantries K3, animals D, arts A, education B, environment C, health E, mental health F, employment J, housing L, youth development O, human services P. Otherwise null.
+- label: "climate" when the user asks for organizations working on climate change or clean energy; "women_girls" when they ask for organizations serving women and/or girls (not co-ed groups like Boys & Girls Clubs). Only when the question clearly names that cause, else null.
 - requirements: specific activities the organization MUST do beyond its main cause (e.g. "that do workforce training"). Each gets 4-8 lowercase words or short phrases likely to appear in IRS mission text. Empty if none.`;
 
 const schema = z.object({
@@ -47,6 +51,7 @@ const schema = z.object({
   maxRevenue: z.number().nullable().describe("Upper revenue/budget limit in dollars, or null"),
   minRevenue: z.number().nullable().describe("Lower revenue/budget limit in dollars (\"over $1M\", \"large\" orgs), or null"),
   ntee: z.string().nullable(),
+  label: z.enum(LABEL_SLUGS as [LabelSlug, ...LabelSlug[]]).nullable(),
   requirements: z.array(z.object({ label: z.string(), synonyms: z.array(z.string()) })),
 });
 
@@ -55,7 +60,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse:v6", 1000, 24 * 3600_000); // bump the name when Filters changes shape
+const cached = memo<Filters>("parse:v7", 1000, 24 * 3600_000); // bump the name when Filters changes shape
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }
@@ -77,7 +82,8 @@ async function parseFresh(question: string): Promise<Filters> {
         const states = o.states.map((s) => s.toUpperCase()).filter((s) => /^[A-Z]{2}$/.test(s));
         const requirements = o.requirements.filter((r) => r.label.trim()).map((r) => toReq(r.label, r.synonyms));
         const cities = o.cities.map((c) => c.trim().toUpperCase()).filter(Boolean);
-        return { q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, minRevenue: o.minRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
+        const label = o.label && namesLabel(question, o.label) ? o.label : undefined; // the question must name it
+        return { label, q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, minRevenue: o.minRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
       }
     } catch (err) {
       console.error("Claude parse failed; using rule-based parser", err);
@@ -105,11 +111,12 @@ async function parseFresh(question: string): Promise<Filters> {
     minRevenue = parseFloat(mn[1].replace(/,/g, "")) * ({ k: 1e3, thousand: 1e3, m: 1e6, million: 1e6 }[mn[2] as "k"] ?? 1);
     rest = rest.replace(mn[0], " "); topic = topic.replace(mn[0], " ");
   }
+  const label = labelFromText(question);
   const requirements: Requirement[] = [];
-  for (const [re, label, terms] of REQS) if (re.test(rest)) requirements.push(toReq(label, terms));
+  for (const [re, name, terms] of REQS) if (re.test(rest)) requirements.push(toReq(name, terms));
   const stop = new Set("a an and also are budget do does for in of on or rural that the their them they to with who which".split(" "));
   const words = (t: string) => t.replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((w) => w && !stop.has(w)).join(" ");
   const q = words(rest);
   const semantic = words(topic);
-  return { q, semantic, states: [...states], cities: [], maxRevenue, minRevenue, nteeHint: ntee, requirements, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
+  return { q, semantic, states: [...states], cities: [], maxRevenue, minRevenue, nteeHint: ntee, requirements, label, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
 }

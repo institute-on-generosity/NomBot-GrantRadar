@@ -40,5 +40,12 @@
   { "q": "What share of foundation money goes to the largest 1% of nonprofits by revenue?", "metric": ["concentration"], "by": ["recipient_size"] },
   { "q": "How much government grant money goes to climate organizations?", "metric": ["total"], "source": "government_grants", "label": "climate" },
   { "q": "How much do individuals donate to food banks?", "missing": "individual_giving" },
-  { "q": "Why did foundation giving to education fall in 2024?", "metric": ["trend", "total"], "ntee": "B" }
+  { "q": "Why did foundation giving to education fall in 2024?", "metric": ["trend", "total"], "ntee": "B", "premise": "fall", "premiseHolds": false },
+  { "q": "Why did foundation funding for education fall?", "metric": ["trend"], "ntee": "B", "premise": "fall", "premiseHolds": false },
+  { "q": "Why did foundation funding for education grow?", "metric": ["trend"], "ntee": "B", "premise": "rise", "premiseHolds": true },
+  { "q": "Has foundation funding for education fallen?", "metric": ["trend"], "ntee": "B", "premise": null },
+  { "q": "Why did government grants to nonprofits drop?", "metric": ["trend"], "source": "government_grants", "premise": "fall", "premiseHolds": false },
+  { "q": "Why do animal shelters get less foundation money than food banks?", "metric": ["compare"], "ntee": "D20", "premise": "less", "premiseHolds": false },
+  { "q": "Why do food banks get less foundation money than animal shelters?", "metric": ["compare"], "ntee": "K31", "premise": "less", "premiseHolds": true },
+  { "q": "Where does opioid money go?", "metric": ["by_state", "top_recipients", "breakdown", "total"], "headlineNot": "Washington" }
 ]

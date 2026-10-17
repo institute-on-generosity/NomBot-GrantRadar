@@ -14,7 +14,8 @@
     "api-key": "tsx scripts/api-key.mts",
     "test:answer": "tsx eval/answer.mts",
     "test:followups": "tsx eval/followups.mts",
-    "eval:route": "tsx eval/route.mts"
+    "eval:route": "tsx eval/route.mts",
+    "test:labels": "tsx eval/labels.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

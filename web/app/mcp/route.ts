@@ -10,6 +10,7 @@ import { apiSearch, apiOrg, apiResearchList, apiResearch, SECTION_KEYS } from "@
 import { answer, answerBrief } from "@/lib/answer";
 import { DEFAULT_SPEC, normalizeSpec, specSchema } from "@/lib/answerSpec";
 import { ANSWER_TOOL_DESCRIPTION } from "@/lib/answerTool";
+import { LABEL_SLUGS, type LabelSlug } from "@/lib/labels";
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 type Result = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -43,13 +44,15 @@ function server(auth: Auth, base: string) {
 
   s.registerTool("search_nonprofits", {
     title: "Search nonprofits",
-    description: "Find US nonprofits by what they do, in plain language (meaning + keyword search over IRS 990 mission and program text). Returns ranked organizations with EIN, place, cause (NTEE), revenue, mission, staff and sources. Use filters for place and size; put only the topic in q.",
+    description: "Find US nonprofits by what they do, in plain language (meaning + keyword search over IRS 990 mission and program text). Returns ranked organizations with EIN, place, cause (NTEE), revenue, mission, staff and sources. Use filters for place, size and graded cause labels (climate, women_girls); put only the topic in q.",
     inputSchema: {
       q: z.string().max(300).describe("Topic in plain words, e.g. 'food bank workforce training'. Empty lists every org in the filters."),
       state: z.array(z.string().length(2)).max(60).optional().describe("Two-letter state codes, e.g. ['WV','KY']"),
       city: z.array(z.string()).max(10).optional().describe("City names, e.g. ['Huntington']"),
       max_revenue: z.number().int().nonnegative().optional().describe("Only orgs with revenue at or below this, in dollars"),
       ntee: z.string().max(5).optional().describe("NTEE cause code prefix, e.g. 'K' (food) or 'K31' (food banks)"),
+      label: z.enum(LABEL_SLUGS as [LabelSlug, ...LabelSlug[]]).optional().describe("Graded cause label no NTEE code captures: 'climate' or 'women_girls'. Only orgs with that label (each result's label shows its tier)"),
+      label_tier: z.enum(["primary", "all"]).optional().describe("With label: 'primary' (default) = the cause is the org's main work; 'all' also adds 'partial' orgs where it is one named goal among others"),
       limit: z.number().int().min(1).max(50).optional().describe("Results to return, 1-50 (default 10)"),
     },
     annotations: { title: "Search nonprofits", ...READ_ONLY },
@@ -57,7 +60,7 @@ function server(auth: Auth, base: string) {
 
   s.registerTool("get_organization", {
     title: "Get organization",
-    description: "Everything NomBot has on one organization by EIN: address, cause, status, years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), and sources.",
+    description: "Everything NomBot has on one organization by EIN: address, cause, graded cause labels (climate, women_girls) with tier and why, status, years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), and sources.",
     inputSchema: { ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'") },
     annotations: { title: "Get organization", ...READ_ONLY },
   }, ({ ein }) => run("get_organization", async () => {

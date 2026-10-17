@@ -106,6 +106,10 @@ async function Org({ params, searchParams, modal }: Props) {
         <h2>Details</h2>
         <dl>
           {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
+          {o.labels.length > 0 && <><dt>Cause labels</dt><dd className="org-labels">{o.labels.map((l) => (
+            <span key={l.label} title="Graded by NomBot from the organization's name and Form 990 text">
+              <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "partial focus"}{l.why && <small>{l.why}</small>}
+            </span>))}</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
           <dt>IRS status</dt><dd>{o.status.standing}</dd>
           {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}{o.age != null && ` (${o.age} ${o.age === 1 ? "year" : "years"})`}</dd></>}

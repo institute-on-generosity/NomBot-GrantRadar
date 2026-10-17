@@ -10,7 +10,7 @@ const { routeQuestion } = await import("../lib/answerRoute");
 const { answer } = await import("../lib/answer");
 const { candidateFollowUps, pickFollowUps } = await import("../lib/followUp");
 type Spec = import("../lib/answerSpec").Spec;
-type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; [k: string]: unknown };
+type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; premiseHolds?: boolean; [k: string]: unknown };
 const routeEval = "./route.mts"; // shared route checks (eval/route.mts); a variable path keeps tsc from resolving .mts
 const { check } = (await import(routeEval)) as { check: (e: Expect, research: boolean, s: Spec | null) => string[] };
 
@@ -28,6 +28,12 @@ const run = async (e: Expect) => {
   if (want === "answered" && a.status === "unanswerable") bad.push(`unanswerable: ${a.headline}`);
   if (/NaN|undefined|Infinity|null/.test(a.headline + a.numbers.map((n) => n.value).join(" "))) bad.push(`broken number: ${a.headline}`);
   if (e.headlineNot && new RegExp(e.headlineNot, "i").test(a.headline + " " + a.causeNote)) bad.push(`headline/cause note mentions "${e.headlineNot}"`);
+  // Premise check (spec.premise): holds or not as expected, and a false premise is corrected first thing.
+  if (e.premiseHolds !== undefined) {
+    if (a.premise?.holds !== e.premiseHolds) bad.push(`premise ${JSON.stringify(a.premise)}, want holds ${e.premiseHolds}`);
+    const corrected = /^[^.]* didn't (rise|fall|get more|get less)\b/.test(a.headline);
+    if (corrected !== !e.premiseHolds) bad.push(`headline ${corrected ? "corrects" : "doesn't correct"} the premise: ${a.headline}`);
+  }
   const history = [{ question: e.q, spec: r.spec }];
   const pool = candidateFollowUps(r.spec, history);
   const chips = a.status === "unanswerable" ? [] : await pickFollowUps(history);

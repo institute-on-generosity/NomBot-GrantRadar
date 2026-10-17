@@ -10,6 +10,7 @@ export type Sort = "match" | "largest" | "smallest";
 export type SearchInput = {
   q: string; semantic?: string; states?: string[]; cities?: string[]; appalachia?: boolean; maxRevenue?: number; minRevenue?: number; ntee?: string; nteeHint?: string;
   requirements?: Requirement[]; includeInactive?: boolean; sort?: Sort; limit?: number; offset?: number;
+  label?: string; labelPartial?: boolean; // graded cause label (org_labels): primary tier only, or primary + partial
   mode?: SearchMode;
   kwWeight?: number; // hybrid only: how much keyword matches add to meaning similarity (benchmark knob)
 };
@@ -24,6 +25,7 @@ export type Result = {
   health: Health | null;
   mission: string | null; programs: string | null; team: { staff: number | null; volunteers: number | null } | null; filing: { year: number | null; form: string | null } | null;
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
+  label: { label: string; tier: "primary" | "partial" } | null; // the cause label filter's tier for this org (null without one)
 };
 
 // One organization's financial signals, for the badges on its result row. Prefers the newest e-filed
@@ -75,7 +77,7 @@ export function reqTsquery(patterns: string[]) {
 // Postgres can't cache a plan across embeddings, and the check below never changes while the server runs.
 let hasVectors: Promise<boolean> | undefined;
 
-export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT, label, labelPartial = false }: SearchInput) {
   const words = q.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const tsq = words.join(" or ");
   let vec: string | null = null;
@@ -102,27 +104,33 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
     // Newest rows per org come from generosity-data's *_latest views (migration 015).
     `WITH cand AS (
        (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein)
-        WHERE $2::vector IS NOT NULL AND t.embedding_model = $3 AND ${PLACE}
+        WHERE $2::vector IS NOT NULL AND $20::text IS NULL AND t.embedding_model = $3 AND ${PLACE}
         ORDER BY t.embedding::halfvec(512) <=> $2::halfvec(512) LIMIT ${NEAREST})
        UNION
-       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND $16 <> 'vector' AND o.search @@ ${kwq} AND ${PLACE} ${kwCap("o.search")})
+       (SELECT o.ein FROM orgs o WHERE $1 <> '' AND $16 <> 'vector' AND $20::text IS NULL AND o.search @@ ${kwq} AND ${PLACE} ${kwCap("o.search")})
        UNION
-       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND $16 <> 'vector' AND t.search @@ ${kwq} AND ${PLACE} ${kwCap("t.search")})
+       (SELECT t.ein FROM filing_latest t JOIN orgs o USING (ein) WHERE $1 <> '' AND $16 <> 'vector' AND $20::text IS NULL AND t.search @@ ${kwq} AND ${PLACE} ${kwCap("t.search")})
        UNION
        (SELECT t.ein FROM ((SELECT ein, mission, programs, embedding FROM filing_latest
-                             WHERE $19::text <> '' AND search @@ to_tsquery('english', $19) LIMIT ${REQ_SCAN})
+                             WHERE $19::text <> '' AND $20::text IS NULL AND search @@ to_tsquery('english', $19) LIMIT ${REQ_SCAN})
                             UNION ALL
                             (SELECT ein, mission, programs, embedding FROM filing_latest
-                             WHERE $19 <> '' AND $1 <> '' AND search @@ (to_tsquery('english', $19) && websearch_to_tsquery('english', $1)) LIMIT ${REQ_SCAN})) t
+                             WHERE $19 <> '' AND $1 <> '' AND $20::text IS NULL AND search @@ (to_tsquery('english', $19) && websearch_to_tsquery('english', $1)) LIMIT ${REQ_SCAN})) t
         JOIN orgs o USING (ein)
         WHERE ${PLACE}
           AND EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(t.mission, '') || ' ' || coalesce(t.programs, '') ~* p)
         ${vec ? "ORDER BY t.embedding <=> $2::vector " : ""}LIMIT ${REQ_CAP})
        UNION
-       (SELECT o.ein FROM orgs o WHERE $1 = '' AND ${PLACE})),
+       (SELECT o.ein FROM orgs o WHERE $1 = '' AND $20::text IS NULL AND ${PLACE})
+       UNION
+       -- A cause label (climate, women and girls): every labeled org in the place is a candidate (a few
+       -- thousand at most, from org_labels_label_tier), ranked below by meaning like any other search.
+       (SELECT o.ein FROM org_labels l JOIN orgs o USING (ein)
+        WHERE $20::text IS NOT NULL AND l.label = $20 AND (l.tier = 'primary' OR $21) AND ${PLACE})),
      t AS (SELECT t.ein, object_id, tax_year, form, mission, programs, employees, volunteers, embedding, embedding_model, search
            FROM filing_latest t JOIN cand USING (ein)),
      f AS (SELECT f.* FROM financials_latest f JOIN cand USING (ein)),
+     lab AS (SELECT l.ein, l.tier AS label_tier FROM org_labels l JOIN cand USING (ein) WHERE l.label = $20),
      x AS (SELECT x.ein, tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash
            FROM flag_latest x JOIN cand USING (ein)),
      base AS (
@@ -130,11 +138,11 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
               t.mission AS raw_mission, t.programs, t.employees, t.volunteers, t.embedding, t.embedding_model, t.search AS tsearch,
               f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets, f.net_assets,
-              x.x_year, x.x_rev, x.x_prev, x.x_exp, x.x_cash,
+              x.x_year, x.x_rev, x.x_prev, x.x_exp, x.x_cash, lab.label_tier,
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
-       FROM cand JOIN orgs o USING (ein) LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein)),
+       FROM cand JOIN orgs o USING (ein) LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein) LEFT JOIN lab USING (ein)),
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
@@ -152,15 +160,16 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
          AND ($9 OR rev IS NULL OR rev > 0))   -- hide $0 / inactive orgs unless asked
      SELECT *, CASE $16 WHEN 'keyword' THEN kw WHEN 'vector' THEN coalesce(sim, 0)
                  ELSE coalesce(sim, 0) + least(kw * 5, 0.5) * $17
-                      + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END END AS score,  -- guessed cause: a nudge, not a filter
+                      + CASE WHEN $13::text IS NOT NULL AND ntee_cd LIKE $13 || '%' THEN 0.1 ELSE 0 END  -- guessed cause: a nudge, not a filter
+                      + CASE WHEN label_tier = 'primary' AND $21 THEN 0.05 ELSE 0 END END AS score,      -- with partial included, primary first on ties
             count(*) OVER () AS total, count(*) FILTER (WHERE exact) OVER () AS exact_total
-     FROM scored WHERE $1 = '' OR (kw > 0 AND $16 <> 'vector') OR sim IS NOT NULL OR exact
+     FROM scored WHERE $1 = '' OR $20::text IS NOT NULL OR (kw > 0 AND $16 <> 'vector') OR sim IS NOT NULL OR exact
      ORDER BY exact DESC NULLS LAST,
               CASE WHEN $10 = 'largest' THEN rev END DESC NULLS LAST,
               CASE WHEN $10 = 'smallest' THEN rev END ASC NULLS LAST,
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
-    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight, kwOnly ? tsq : words.join(" "), reqq],
+    [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => r.pattern), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight, kwOnly ? tsq : words.join(" "), reqq, label ?? null, labelPartial],
   );
   return {
     total: Number(rows[0]?.total ?? 0),
@@ -181,6 +190,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
       team: r.has_text ? { staff: r.employees ?? null, volunteers: r.volunteers ?? null } : null,
       filing: r.has_text ? { year: r.text_year, form: r.text_form } : null,
       exact: r.exact,
+      label: label && r.label_tier ? { label, tier: r.label_tier } : null,
       score: Math.round(Number(r.score) * 100) / 100,
       data_completeness: r.has_text && r.has_fin ? "full" : r.has_text || r.has_fin ? "partial" : "basic",
       sources: sources({ ein: r.ein, state: r.state, revSrc: r.rev_src, finForm: r.fin_form, finYear: r.fin_year, objectId: r.object_id, textYear: r.text_year, textForm: r.text_form }),

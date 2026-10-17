@@ -17,6 +17,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { PROMPT_SETS } from "@/lib/examples";
 import { HeroFlip } from "@/components/HeroFlip";
+import { LABEL_SLUGS, labelName } from "@/lib/labels";
 import { applyOverrides, BUDGETS, MIN_BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
@@ -81,7 +82,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   }
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, label: p.label, tier: p.tier, drop: p.drop };
   // Content plan, per question (lib/answerSpec contentPlan):
   //   research  ("how much…", "what share…", "which states…"): redirected to /research/ask, the answer
   //             card only. No org search, landscape, AI overview or relevance scoring runs.
@@ -164,7 +165,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
       <div className="serp-head">
         <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
-        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", min: "", cause: "", drop: "", n: "" }) : undefined} />
+        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", min: "", cause: "", label: "", tier: "", drop: "", n: "" }) : undefined} />
       </div>
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
@@ -291,8 +292,21 @@ function filterChips(f: Filters, p: Params): Chip[] {
       label: f.ntee ? causeLabel(f.ntee) : "Any cause",
       removeHref: f.ntee ? go({ cause: "any" }) : undefined,
       options: [{ label: "Any cause", href: go({ cause: "any" }), on: !f.ntee },
-        ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c }))],
+        ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c })),
+        ...LABEL_SLUGS.map((l) => ({ label: labelName(l), href: go({ label: l, tier: "" }), on: f.label === l, note: "Graded label, any IRS code" }))],
     },
+    // Graded cause labels (climate, women and girls): shown when the question names one or the user picks it.
+    // Primary: the cause is the org's main work. Partial adds orgs where it's one named goal among others.
+    ...(f.label ? [{
+      key: "label", kind: "set", label: `${labelName(f.label)}${f.labelPartial ? " (main or partial focus)" : " (main focus)"}`,
+      removeHref: go({ label: "none", tier: "" }),
+      options: [
+        { label: "Main focus only", href: go({ label: f.label, tier: "primary" }), on: !f.labelPartial, note: "The cause is most of their work" },
+        { label: "Include partial focus", href: go({ label: f.label, tier: "all" }), on: Boolean(f.labelPartial), note: "Also orgs with one named program for it" },
+        ...LABEL_SLUGS.filter((l) => l !== f.label).map((l) => ({ label: `Switch to ${labelName(l)}`, href: go({ label: l, tier: "" }), on: false })),
+        { label: "No cause label", href: go({ label: "none", tier: "" }), on: false },
+      ],
+    } as Chip] : []),
     ...f.requirements.map((r): Chip => ({
       key: `must-${reqSlug(r.label)}`, kind: "must", label: `Must mention: ${r.label}`,
       removeHref: go({ drop: [...dropped, reqSlug(r.label)].join(",") }),

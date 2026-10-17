@@ -5,6 +5,7 @@ import { soiViewerUrl } from "./soi";
 import { diligence } from "./flag";
 import { propublicaOrg, sources, type Source } from "./sources";
 import { boardLinks } from "./people";
+import { orgLabels } from "./orgLabels";
 
 export async function getOrg(einParam: string) {
   const ein = einParam.replace(/\D/g, "");
@@ -18,6 +19,7 @@ export async function getOrg(einParam: string) {
     "SELECT tax_year, form, revenue, expenses, assets, raw FROM financials WHERE ein = $1 ORDER BY tax_year DESC", [ein]);
   const { rows: [flagRow] } = await db.query("SELECT * FROM filing_flag WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
   const links = await boardLinks(ein).catch(() => []); // needs generosity-data migration 018
+  const labels = await orgLabels(ein).catch(() => []); // graded cause labels (generosity-data migration 032)
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
@@ -48,6 +50,7 @@ export async function getOrg(einParam: string) {
     ruling: orgAge(o.ruling) != null ? String(o.ruling).slice(0, 4) : null,
     age: orgAge(o.ruling), // track record: whole years since the IRS ruling
     ntee: o.ntee_cd ? { code: o.ntee_cd as string, label: nteeLabel(o.ntee_cd) } : null,
+    labels, // climate, women and girls: tier (primary or partial) and a short why
     // The organization's own site as it lists it on its 990 header, so donors can look for themselves.
     website: w?.website as string | null ?? null,
     mission: t?.mission as string | null ?? null,

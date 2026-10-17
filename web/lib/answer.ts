@@ -37,6 +37,7 @@ export type Answer = {
   sources: { label: string; url: string }[];
   searchQuery: string | null;      // an org search to drill down
   orgCount?: number;               // organizations behind the answer, for "See the N organizations" 
+  premise?: { claim: string; holds: boolean } | null; // a direction the question assumed (spec.premise), checked against the data
   ms: number;
 };
 
@@ -123,11 +124,18 @@ function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primar
   if (!c || c.all) return { join: "", where: [], tier: null, kind: "all" };
   if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
   if (c.ntee.length) return { join: "", where: [`${ntee} LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`], tier: null, kind: "ntee" };
-  const q = tsq(c.keywords.length ? c.keywords : [c.name.toLowerCase()]);
+  const kws = c.keywords.length ? c.keywords : [c.name.toLowerCase()];
+  const q = tsq(kws);
   const t = p.add(q || "nothing");
+  // A passing mention isn't the org's cause: 990 text counts only when a keyword is in the mission or the lead
+  // program (first 60 words of mission + programs) or comes up at least twice. One "opioid" line deep in PATH's
+  // global-health programs put $477M in Washington (Oct 17).
+  const kw = p.add(kws.join(" "));
   return {
     join: `JOIN (SELECT ein FROM orgs WHERE search @@ to_tsquery('english', ${t})
-         UNION SELECT ein FROM filing_latest WHERE search @@ to_tsquery('english', ${t})) k${sfx} ON k${sfx}.ein = ${ein}`,
+         UNION SELECT fl.ein FROM filing_latest fl WHERE fl.search @@ to_tsquery('english', ${t})
+           AND (SELECT count(*) >= 2 OR min(pos) <= 60 FROM unnest(fl.search) u, unnest(u.positions) pos
+                WHERE u.lexeme = ANY(tsvector_to_array(to_tsvector('english', ${kw}))))) k${sfx} ON k${sfx}.ein = ${ein}`,
     where: [], tier: null, kind: "keyword",
   };
 }
@@ -370,8 +378,8 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
     const names = (await taxonomy().catch(() => null))?.names;
     return `NTEE codes ${c.ntee.map((n) => { const l = names?.get(n) ?? NTEE_NAMES[n] ?? (n.length === 1 ? nteeLabel(n) : null); return l ? `${n} (${l})` : n; }).join(", ")}.${via}`;
   }
-  caveats.push(`Approximate set: "${c.name}" has no IRS code or graded label, so it means orgs whose name or 990 mission/program text mentions ${c.keywords.map((k) => `"${k}"`).join(", ") || `"${c.name}"`}. It can include orgs that only mention it and miss orgs without e-filed text.`);
-  return `Approximate keyword set (name or 990 mission text mentions ${c.keywords.join(", ") || c.name}).`;
+  caveats.push(`Approximate set: "${c.name}" has no IRS code or graded label, so it means orgs whose name, 990 mission or lead program mentions ${c.keywords.map((k) => `"${k}"`).join(", ") || `"${c.name}"`}, or whose program text mentions it more than once. A single passing mention doesn't count. It can still include orgs where it's a side program and miss orgs without e-filed text.`);
+  return `Approximate keyword set (name, 990 mission or lead program mentions ${c.keywords.join(", ") || c.name}, or program text mentions it twice or more).`;
 }
 
 // ------------------------------------------------------------------ charts (Vega-Lite, InsightChart theme)
@@ -562,7 +570,10 @@ WHERE ${and(where)}`, p);
 }
 
 // ------------------------------------------------------------------ the engine
-type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "status"> & { status?: Answer["status"] };
+// change / versus: what a premise is checked against (checkPremise), dropped before the answer is returned.
+type Change = { subject: string; g: number; from: string; to: string };
+type Versus = { first: string; second: string; a: number; z: number };
+type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "status"> & { status?: Answer["status"]; change?: Change; versus?: Versus };
 
 // v11: research layer (grant_cube, filters, breakdowns, cause taxonomy, DC note). v12: Schedule I charity grants,
 // federal awards (USAspending), Census ACS (per person in poverty, county groups). v13: IRS 05B batches loaded
@@ -570,7 +581,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v15: largest 1% by revenue (concentration), public_entity without private colleges, Form 990 lines and federal
 // awards count a graded label's primary tier only, follow-up chips for breakdowns and federal answers.
 // v16: grant-size medians and 90th percentiles from the size histograms (generosity-data 046).
-const answerMemo = memo<Answer>("answer:v17", 500, 6 * 3600_000);
+// v18: premise check (spec.premise), keyword causes ignore passing mentions, single-organization note in state rankings.
+const answerMemo = memo<Answer>("answer:v19", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -590,12 +602,45 @@ async function compute(question: string, s: Spec, cube: boolean): Promise<Answer
     out = { status: "unanswerable", headline: e.message, numbers: [], bullets: [], chart: null, rows: [], causeNote: "", method: "", caveats: [], coverage: [], sources: [], searchQuery: null };
     if (e.missing) missing.push(e.missing);
   }
+  const premise = out.status === "unanswerable" ? null : checkPremise(s, out);
+  delete out.change; delete out.versus;
   slim(out);
   const status: Answer["status"] = out.status ?? (missing.length ? "partial" : "ok");
   // Nothing answerable: lead with exactly what's missing, not a generic refusal.
   if (status === "unanswerable" && missing.length && s.metric === "none") out.headline = `${missing.map((m) => m.what).join(" and ")} ${missing.length > 1 || /s$/.test(missing[0].what) ? "aren't" : "isn't"} in our IRS data`;
   if (status === "unanswerable" && !missing.length) missing.push({ what: "This question", why: out.headline, source: "Not in our data", url: "" });
-  return { ...out, question, spec: s, status, missing, queries: ctx.queries, ms: Date.now() - t0 };
+  return { ...out, question, spec: s, status, missing, premise, queries: ctx.queries, ms: Date.now() - t0 };
+}
+
+// A direction the question took as given ("why did education funding fall") against the computed change or
+// comparison. When the data disagrees, the headline leads with a plain correction. Deterministic: the router
+// only extracts the premise, the check and the wording are here. Under 1% counts as flat.
+const FLAT = 0.01;
+function checkPremise(s: Spec, out: Out): Answer["premise"] {
+  const pm = s.premise;
+  if (!pm) return null;
+  if ((pm === "rise" || pm === "fall") && out.change) {
+    const { subject, g, from, to } = out.change;
+    const holds = pm === "rise" ? g >= FLAT : g <= -FLAT;
+    const claim = `${subject} ${pm === "rise" ? "rose" : "fell"}`;
+    if (holds) return { claim, holds };
+    const actual = Math.abs(g) < FLAT ? `The total stayed about flat (${signed(g)}) from ${from} to ${to}` : `The total ${g > 0 ? "grew" : "fell"} ${pct(Math.abs(g))} from ${from} to ${to}`;
+    const fix = `${cap(subject)} didn't ${pm}. ${actual}`;
+    // A trend headline only restated the change: the correction replaces it. Other headlines follow it.
+    out.headline = s.metric === "trend" ? fix : `${fix}. ${out.headline}`;
+    return { claim, holds };
+  }
+  if ((pm === "more" || pm === "less") && out.versus) {
+    const { first, second, a, z } = out.versus;
+    const near = Math.abs(a - z) / Math.max(1, Math.max(a, z)) < FLAT;
+    const holds = !near && (pm === "more" ? a > z : a < z);
+    const lc = (x: string) => (/^[A-Z][a-z]/.test(x) ? x[0].toLowerCase() + x.slice(1) : x); // "Food banks" mid-sentence
+    const claim = `${lc(first)} got ${pm} than ${lc(second)}`;
+    if (holds) return { claim, holds };
+    out.headline = `${cap(first)} didn't get ${pm} than ${lc(second)}${near ? ". They got about the same" : ""}. ${out.headline}`;
+    return { claim, holds };
+  }
+  return null; // nothing in this answer to check it against
 }
 
 // One hero: at most 3 tiles, and at most 2 bullets that add something the headline and tiles don't say.
@@ -779,6 +824,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       causeNote: notes[0], coverage, caveats,
       method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.`,
       sources: [pl.g.src], searchQuery: null,
+      ...(growth != null ? { change: { subject: `${pl.g.money} to organizations in ${where}`, g: growth, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };
   }
 
@@ -834,12 +880,13 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       ...base,
       headline: ratio >= 1.95
         ? `${cap(causes[big]!.name)} got ${ratio.toFixed(ratio >= 10 ? 0 : 1)}x the ${pl.g.adj} dollars of ${causes[1 - big]!.name}, ${yr}`
-        : `${cap(causes[big]!.name)} got ${pct(ratio - 1)} more ${pl.g.money} than ${causes[1 - big]!.name}, ${yr}`,
+        : `${cap(causes[big]!.name)} got ${pct(ratio - 1)} more ${pl.g.money} than ${causes[1 - big]!.name.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())}, ${yr}`,
       numbers: [{ value: money(a), label: `${causes[0]!.name}${label[0] ? " (primary)" : ""}` }, { value: money(z), label: `${causes[1]!.name}${label[1] ? " (primary)" : ""}` },
         { value: `${pct(a / baseUsd)} vs ${pct(z / baseUsd)}`, label: `share of ${ofWhat.replace(/^identified \S+( sponsor| foundation| Way)?/, "identified")} $` }],
       bullets: [`${b(money(a))} to ${causes[0]!.name}, ${b(pct(a / baseUsd))} of ${ofWhat.replace(/^identified \S+( sponsor| foundation| Way)?/, "identified")} dollars`,
         `${b(money(z))} to ${causes[1]!.name}, ${b(pct(z / baseUsd))}`,
         `${b(int(m0.total.funders))} and ${b(int(m1.total.funders))} ${pl.g.givers} funded each`],
+      versus: { first: causes[0]!.name, second: causes[1]!.name, a, z },
     };
   }
 
@@ -862,6 +909,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
         { value: int(m0.total.orgs), label: "recipient orgs" }],
       bullets: [denGrowth != null && g != null ? `All ${pl.g.grants} ${denGrowth >= 0 ? "grew" : "fell"} ${b(pct(Math.abs(denGrowth)))} over the same years` : "",
         `${b(int(m0.total.funders))} ${pl.g.givers} gave to ${c0.name}${upper ? `, ${b(money(fullYearSum(m0, false) / fullYears))} a year counting partial` : ""}`].filter(Boolean),
+      ...(g != null ? { change: { subject: `${pl.g.money} for ${c0.name}`, g, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };
   }
 
@@ -877,6 +925,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       `${b(pct(share0))} of ${ofWhat} dollars${where !== "the US" ? ` in ${where}` : ""}`,
       // School districts and public colleges are matched by name, mostly without an EIN: count funders only.
       entities ? `${b(int(m0.total.funders))} ${pl.g.givers} gave to them` : `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`],
+    ...((g0 => g0 != null ? { change: { subject: `${pl.g.money} for ${c0.name}`, g: g0, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {})(firstLast(m0, label[0]))),
   };
 }
 
@@ -1063,6 +1112,7 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
       coverage: [{ label: "Orgs in every year", value: int(a?.orgs ?? 0) }],
       method: `Each organization's ${fd.name} for tax years ${from}–${to}, newest return per year, summed over organizations that filed for every year.`,
       sources: [SRC.f990], searchQuery: searchFor(s, pl),
+      ...(g != null ? { change: { subject: `${fd.short} to ${c ? causeName(c, pl) : "nonprofits"}`, g, from: String(from), to: String(to) } } : {}),
     };
   }
 
@@ -1121,6 +1171,7 @@ SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name F
     coverage: [{ label: "Orgs in the set", value: int(universe) }, { label: `With a ${fy.year} e-filed return`, value: int(m0.orgs) }, { label: "Full Form 990", value: int(m0.full990) }, { label: `Report ${fd.short}`, value: int(m0.reporting) }],
     method: `Sum of ${fd.name}, tax year ${fy.year}, one return per organization (newest filing), for organizations in the cause set${where !== "the US" ? ` based in ${where}` : ""}. Share = over the same line for all nonprofits there (private foundations excluded).${s.source === "government_grants" ? " Blank line 1e counts as $0." : ""}`,
     sources: [SRC.f990, SRC.bmf, ...(isLabel ? [SRC.labels] : [])], searchQuery: searchFor(s, pl), orgCount: universe,
+    ...(s.metric === "compare" && causes[1] && ms[1] ? { versus: { first: c0.name, second: causes[1].name, a: floor0, z: causes[1].label ? ms[1].primary_usd : ms[1].usd } } : {}),
   };
 }
 
@@ -1264,14 +1315,18 @@ SELECT v.state, v.usd, v.primary_usd, pop.pop FROM v JOIN pop USING (state) WHER
   const subject = `${what}${c ? ` to ${c.name}` : ""}`;
   const dcTag = (r: { state: string }) => (dcOutlier && r.state === "DC" ? DC_NOTE_SHORT : undefined);
   const one = ranked.length === 1; // one named state: no ranking to speak of
+  // One organization behind the leading state's total (a big recipient in the cause set): say so.
+  const dom = foundation && c && s.order !== "least" && lo.usd > 0 ? await topOrgShare(ctx, c, pl, y, lo.state, lo.usd) : null;
+  const domText = dom ? `One organization, ${dom.name}, accounts for ${b(pct(dom.share))} of ${lo.name}'s total` : null;
+  if (dom) caveats.unshift(`${dom.name} received ${money(dom.usd)}, ${pct(dom.share)} of ${lo.name}'s ${subject}, so the ranking reflects one organization more than the state.`);
   return {
     headline: one
       ? `${lo.name} gets ${fmtV(lo.v)}${perX ? ` ${perWord}` : ""}${perX && foundation ? " a year" : ""} in ${subject}, ${period}`
       : `${lo.name} gets the ${s.order === "least" ? "least" : "most"} ${subject}${perX ? ` ${perWord}` : ""}: ${fmtV(lo.v)}${perX && foundation ? " a year" : ""}${dcOutlier && lo.state === "DC" && nextNonDc ? `, then ${nextNonDc.name} at ${fmtV(nextNonDc.v)}` : ""}`,
     numbers: one
       ? [{ value: fmtV(lo.v), label: `${lo.name}${perX ? `, ${perWord}` : ""}`, note: lo.state === "DC" ? DC_NOTE_SHORT : undefined }, ...(perX ? [{ value: money(lo.usd), label: `${what}, ${period}` }] : [])]
-      : [{ value: fmtV(lo.v), label: lo.name, note: dcTag(lo) }, { value: fmtV(median), label: "median state" }, { value: fmtV(hi.v), label: hi.name, note: dcTag(hi) }],
-    bullets: one ? [`${b(money(lo.usd))} in ${subject} to ${lo.name}, ${period}`, ...(lo.state === "DC" ? ["Many national groups are headquartered in DC, so this runs far above any state"] : [])] : [`${ranked.slice(0, 3).map((r) => `${r.name} ${b(fmtV(r.v))}`).join(", ")}`,
+      : [{ value: fmtV(lo.v), label: lo.name, note: dcTag(lo) ?? (dom ? `${pct(dom.share)} from one organization` : undefined) }, { value: fmtV(median), label: "median state" }, { value: fmtV(hi.v), label: hi.name, note: dcTag(hi) }],
+    bullets: one ? [`${b(money(lo.usd))} in ${subject} to ${lo.name}, ${period}`, ...(domText ? [domText] : []), ...(lo.state === "DC" ? ["Many national groups are headquartered in DC, so this runs far above any state"] : [])] : [...(domText ? [domText] : []), `${ranked.slice(0, 3).map((r) => `${r.name} ${b(fmtV(r.v))}`).join(", ")}`,
       ...(dcOutlier && lo.state === "DC" && nextNonDc ? [`Without DC, ${nextNonDc.name} leads with ${b(fmtV(nextNonDc.v))}`] : []),
       `The median state gets ${b(fmtV(median))}${perX ? ` ${perWord}` : ""}`,
       `${hi.name} is at the other end with ${b(fmtV(hi.v))}`],
@@ -1283,6 +1338,22 @@ SELECT v.state, v.usd, v.primary_usd, pop.pop FROM v JOIN pop USING (state) WHER
     method: `${foundation ? `${pl.g.form}, tax years ${period}, summed by the state of the recipient's address (where it's headquartered)${c ? " for identified recipients in the cause set" : " (all recipients, identified or not)"}` : `${FIELD[s.source].name}, tax year ${fy.year}, summed by the organization's state`}${perX ? `, divided by ${s.perPoverty ? "people in poverty (Census ACS 2020-24)" : "2024 Census population"}${foundation ? ` and ${nYears} years` : ""}` : ""}. Ranked ${s.order === "least" ? "lowest" : "highest"} first.`,
     sources: [foundation ? pl.g.src : SRC.f990, s.perPoverty ? SRC.acs : SRC.pop, ...(isLabel ? [SRC.labels] : [])], searchQuery: null,
   };
+}
+
+// The largest recipient in one state for the cause, when it holds at least half of that state's total (DOMINANT).
+// Same cause set, filters and years as the ranking; grant_clean, so a label counts its primary tier like the ranking.
+const DOMINANT = 0.5;
+async function topOrgShare(ctx: Ctx, c: C, pl: Place, y: Years, state: string, stateUsd: number) {
+  const p = new P();
+  const gw = grantWhere(c, p, { ...pl, states: [state], county: null, area: null }, y, true);
+  const [r] = await ctx.q<{ name: string; usd: number }>(`Largest recipient in ${stateName(state)} (single-organization check)`, `SELECT o.name, ${primarySum(gw.cs, "g.amount")} AS usd
+FROM ${pl.g.clean} g ${gw.cs.join} JOIN orgs o ON o.ein = g.recipient_ein
+WHERE ${and(gw.where)}
+GROUP BY o.ein, o.name ORDER BY 2 DESC LIMIT 1`, p);
+  if (!r || r.usd / stateUsd < DOMINANT) return null;
+  const t = r.name.replace(/\b\w+/g, (w) => w[0] + w.slice(1).toLowerCase());
+  const name = t.length <= 64 ? t : t.slice(0, 64).replace(/\s+\S*$/, ""); // whole words
+  return { name, usd: r.usd, share: Math.min(1, r.usd / stateUsd) };
 }
 
 // ---- counties grouped by Census ACS 5-year bands (poverty, income, race and ethnicity, age), per resident
@@ -1901,13 +1972,13 @@ FROM x JOIN flag_year f ON f.ein = x.recipient_ein AND f.tax_year = 2024 AND f.f
         return finish({ headline: `${cap(causes[0]!.name)}: ${money(v0)} vs ${causes[1]!.name}: ${money(v1)} in federal awards to nonprofits${inX}, FY${yr}`,
           numbers: [{ value: money(v0), label: causes[0]!.name }, { value: money(v1), label: causes[1]!.name }, { value: money(all.total.usd), label: "all federal awards to nonprofits" }],
           bullets: [`${b(pct(v0 / Math.max(1, all.total.usd)))} and ${b(pct(v1 / Math.max(1, all.total.usd)))} of all federal awards to nonprofits${inX}`],
-          chart, rows, coverage: [{ label: "Award-years", value: int(all.total.awards) }], method }, cs, cmpNote ? [cmpNote] : []);
+          chart, rows, coverage: [{ label: "Award-years", value: int(all.total.awards) }], method, versus: { first: causes[0]!.name, second: causes[1]!.name, a: v0, z: v1 } }, cs, cmpNote ? [cmpNote] : []);
       }
       if (metric === "trend") {
         return finish({ headline: growth == null ? `Federal awards to nonprofits${forX}${inX}: ${money(v0)}, FY${yr}` : `Federal awards to nonprofits${forX}${inX} ${growth >= 0 ? "grew" : "fell"} ${pct(Math.abs(growth))} from FY${y.from} to FY${y.to}`,
           numbers: [...(growth != null ? [{ value: signed(growth), label: `FY${y.from} to FY${y.to}` }] : []), { value: money(v0 / nYears), label: "a year" }, { value: int(m0.total.orgs), label: "recipients" }],
           bullets: [`${b(money(yv(m0, y.to, c)))} in FY${y.to}, ${b(money(yv(m0, y.from, c)))} in FY${y.from}`],
-          chart, rows, coverage: [{ label: "Award-years", value: int(m0.total.awards) }], method }, cs);
+          chart, rows, coverage: [{ label: "Award-years", value: int(m0.total.awards) }], method, ...(growth != null ? { change: { subject: `federal awards to nonprofits${forX}${inX}`, g: growth, from: `FY${y.from}`, to: `FY${y.to}` } } : {}) }, cs);
       }
       const share = v0 / Math.max(1, all.total.usd);
       return finish({
@@ -1915,6 +1986,7 @@ FROM x JOIN flag_year f ON f.ein = x.recipient_ein AND f.tax_year = 2024 AND f.f
         numbers: [{ value: money(v0), label: `federal awards, FY${yr}` }, ...(c ? [{ value: pct(share), label: "of federal awards to nonprofits" }] : []), { value: money(v0 / nYears), label: "a year" }, { value: int(m0.total.orgs), label: "recipients" }],
         bullets: [`${b(int(m0.total.awards))} award-years to ${b(int(m0.total.orgs))} recipients`, ...(growth != null ? [`Changed ${b(signed(growth))} from FY${y.from} to FY${y.to}`] : [])],
         chart, rows, coverage: [{ label: "Award-years", value: int(m0.total.awards) }, { label: "Recipients", value: int(m0.total.orgs) }], method, orgCount: c ? m0.total.orgs : undefined,
+        ...(growth != null ? { change: { subject: `federal awards to nonprofits${forX}${inX}`, g: growth, from: `FY${y.from}`, to: `FY${y.to}` } } : {}),
       }, cs, cmpNote ? [cmpNote] : []);
     }
     case "by_state": case "breakdown": case "top_funders": case "top_recipients": {

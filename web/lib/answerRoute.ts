@@ -33,9 +33,9 @@ const SCREEN = new RegExp([
 
 // Research-answers audit (eval/research.mts, Oct 17): open-ended phrasings the screen missed.
 const SCREEN_AUDIT = new RegExp([
-  String.raw`chang(e|ed|ing).*since`, String.raw`shift(s|ing|ed)?`, String.raw`favou?r`, String.raw`(biggest|largest|top|main|leading) \w+ (funders|foundations|donors|recipients|grantees)`,
-  String.raw`(bigger|smaller|larger) (grants|gifts)`, String.raw`where does.*(money|funding|giving).*go`, String.raw`why (did|does|do|is|are).*(fall|drop|rise|grow|so much|so little|more|less)`,
-  String.raw`(fall|drop|dropped|decrease[ds]?)`, String.raw`largest \d+ ?%`, String.raw`top \d+ ?%`,
+  String.raw`\bchang(e|ed|ing)\b.*\bsince\b`, String.raw`\bshift(s|ing|ed)?\b`, String.raw`\bfavou?r\b`, String.raw`\b(biggest|largest|top|main|leading) \w+ (funders|foundations|donors|recipients|grantees)\b`,
+  String.raw`\b(bigger|smaller|larger) (grants|gifts)\b`, String.raw`\bwhere does\b.*\b(money|funding|giving)\b.*\bgo\b`, String.raw`\bwhy (did|does|do|is|are)\b.*\b(fall|drop|rise|grow|so much|so little|more|less)\b`,
+  String.raw`\b(fall|drop|dropped|decrease[ds]?)\b`, String.raw`\blargest \d+ ?%`, String.raw`\btop \d+ ?%`,
 ].join("|"), "i");
 
 export const looksLikeResearch = (q: string) => SCREEN.test(q) || SCREEN_AUDIT.test(q);
@@ -62,7 +62,8 @@ Audit rules (Oct 17):
 - "Do DAFs (community foundations, United Ways) favor different causes" = breakdown by cause, source charity_grants, that charityFunder.
 - recipientKind public_entity = school districts and public colleges only, never private colleges. "School districts compared with private colleges" = breakdown by recipient_kind.
 - "Why did X fall" or "why does X get so much" = the metric that shows it (trend, by_state ...), research true.
-- Open-ended questions about money across many orgs are research true: "how has funding for X changed" / "are foundations shifting away from X" = trend; "who are the biggest funders of X" = top_funders; "where does money for X go" = by_state; "do big foundations make bigger grants" = breakdown by funder_size, measure average_grant.`;
+- premise = a direction the question takes as given: "why did X fall / drop / shrink", "given the decline in X" = fall; "why did X grow / rise / increase" = rise (metric trend); "why do X get less (more) than Y" = less (more), X first (compare). Null when the question asks rather than assumes ("did X fall?", "is X growing?", "how has X changed") or has no direction ("why does X get so much").
+- Open-ended questions about money across many orgs are research true: "how has funding for X changed" / "are foundations shifting away from X" = trend; "who are the biggest funders of X" = top_funders; "where does money for X go" / "where does X money go" = by_state; "do big foundations make bigger grants" = breakdown by funder_size, measure average_grant.`;
 
 const routerSchema = z.object({ research: z.boolean() }).extend(specSchema.shape);
 // Output format without the schema's prose descriptions: the prompt above carries every routing rule, and the
@@ -83,7 +84,7 @@ const routerFormat = { ...zodFormat, schema: leanSchema(zodFormat.schema) as typ
 
 export type Routed = { research: false } | { research: true; spec: Spec };
 
-const cached = memo<Routed>("answer-route:v7", 1000, 24 * 3600_000); // v2: breakdowns and filters; v3: charity_grants; v4: federal_awards, ACS; v5: audit rules (largest 1%, public_entity); v6: trimmed prompt, lean schema, company funderType; v7: company example
+const cached = memo<Routed>("answer-route:v8", 1000, 24 * 3600_000); // v2: breakdowns and filters; v3: charity_grants; v4: federal_awards, ACS; v5: audit rules (largest 1%, public_entity); v6: trimmed prompt, lean schema, company funderType; v7: company example; v8: premise, "where does X money go"
 export function routeQuestion(question: string): Promise<Routed> {
   const q = question.replace(/\s+/g, " ").trim();
   if (!looksLikeResearch(q)) return Promise.resolve({ research: false });

@@ -1,9 +1,12 @@
 // User edits to the filters NomBot read from a question. They ride in the URL
-// (?st=&city=&region=&max=&min=&cause=&drop=) so results, "Show more", history and CSV export all agree.
+// (?st=&city=&region=&max=&min=&cause=&label=&tier=&drop=) so results, "Show more", history and CSV export all agree.
+import { isLabel } from "./labels";
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 
-export type Overrides = { st?: string; city?: string; region?: string; max?: string; min?: string; cause?: string; drop?: string };
+// label: a graded cause label slug, or "none". tier: "all" adds partial-tier orgs, "primary" removes them.
+export type Overrides = { st?: string; city?: string; region?: string; max?: string; min?: string; cause?: string; label?: string; tier?: string; drop?: string };
+export const OVERRIDE_KEYS = ["st", "city", "region", "max", "min", "cause", "label", "tier", "drop"] as const;
 
 // Every state is loaded (plus DC and Puerto Rico), A–Z by name for the place chip.
 export const LOADED_STATES: [string, string][] = [
@@ -47,6 +50,11 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
   else if (o.min && /^\d+$/.test(o.min)) { out.minRevenue = Number(o.min); out.maxRevenue = undefined; }
   if (o.cause === "any") { out.ntee = undefined; out.nteeHint = undefined; }
   else if (o.cause && /^[A-Z]$/.test(o.cause)) out.ntee = o.cause;
+  if (o.label === "none") { out.label = undefined; out.labelPartial = undefined; }
+  else if (isLabel(o.label)) out.label = o.label;
+  if (o.tier === "all") out.labelPartial = true;
+  else if (o.tier === "primary") out.labelPartial = undefined;
+  if (!out.label) out.labelPartial = undefined;
   if (o.drop) {
     const dropped = new Set(o.drop.split(","));
     out.requirements = f.requirements.filter((r) => !dropped.has(reqSlug(r.label)));
@@ -54,10 +62,10 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
   return out;
 }
 
-export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.region || o.max || o.min || o.cause || o.drop);
+export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.region || o.max || o.min || o.cause || o.label || o.tier || o.drop);
 
 // Short summary of the filters in effect, stored with feedback and shown in the eval report.
 export const describeFilters = (f: Filters) => ({
   topic: f.topic, states: f.states, cities: f.cities, appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, minRevenue: f.minRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
-  requirements: f.requirements.map((r) => r.label), parser: f.parser,
+  label: f.label ? `${f.label}${f.labelPartial ? "+partial" : ""}` : null, requirements: f.requirements.map((r) => r.label), parser: f.parser,
 });

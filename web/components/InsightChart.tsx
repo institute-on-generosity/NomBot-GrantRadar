@@ -80,6 +80,9 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
       // Our vega-lite reads v5 specs; drop the $schema so it doesn't warn about the version.
       const { $schema: _s, ...rest } = spec; // eslint-disable-line @typescript-eslint/no-unused-vars
       if (tall && typeof rest.height === "number") rest.height = Math.round(rest.height * 1.4);
+      // vega-tooltip reuses one tooltip element and only swaps its own theme class, so a dark class
+      // left from before a dark to light switch would stick. Clear both before redrawing.
+      document.getElementById("vg-tooltip-element")?.classList.remove("light-theme", "dark-theme");
       const res = await embed(el, rest as never, { actions: false, renderer: "svg", config: theme(dark) as never, tooltip: { theme: dark ? "dark" : "light" } });
       if (gone) { res.finalize(); return; }
       view = res.view;

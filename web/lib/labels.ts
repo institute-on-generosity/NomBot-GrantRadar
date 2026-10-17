@@ -1,0 +1,23 @@
+// Graded cause labels (generosity-data migration 032: cause_labels, org_labels; methods in
+// generosity-data docs/labels/<label>.md). Causes no NTEE code captures, each org graded primary or partial.
+// Search filters by them (lib/search.ts), the org page and API show them (lib/orgLabels.ts, lib/org.ts, lib/api.ts).
+// Client-safe: no database imports here (lib/filters.ts, used by client components, imports it).
+
+export const LABELS = { climate: "Climate", women_girls: "Women and girls" } as const;
+export type LabelSlug = keyof typeof LABELS;
+export const LABEL_SLUGS = Object.keys(LABELS) as LabelSlug[];
+export const isLabel = (s: unknown): s is LabelSlug => typeof s === "string" && s in LABELS;
+export const labelName = (s: string) => (isLabel(s) ? LABELS[s] : s);
+
+// The question must name the cause itself, so a stray guess never narrows a search to a label.
+// "Boys and girls clubs" serve everyone, so they don't count as women and girls.
+const NAMES: Record<LabelSlug, RegExp> = {
+  climate: /\bclimate\b|\bclean energy\b|\brenewable energy\b|\bglobal warming\b|\bdecarboni[sz]|\bcarbon (emissions?|reduction|removal)\b/i,
+  women_girls: /\b(women|woman|womens|girls?|female|feminist)\b/i,
+};
+export function namesLabel(question: string, label: LabelSlug): boolean {
+  const q = question.replace(/\bboys\s*(and|&)\s*girls\b/gi, " ");
+  return NAMES[label].test(q);
+}
+// Rule-based reading (no Claude): the first label the question names.
+export const labelFromText = (question: string): LabelSlug | undefined => LABEL_SLUGS.find((l) => namesLabel(question, l));

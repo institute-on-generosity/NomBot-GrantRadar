@@ -33,6 +33,8 @@ export const LABELS = ["climate", "women_girls"] as const;
 export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year", "charity_funder", "county_poverty", "county_income", "county_race", "county_age", "agency", "program"] as const;
 export const MEASURES = ["dollars", "grants", "average_grant"] as const;
 export const FUNDER_TYPES = ["family", "operating", "trust", "company"] as const;
+// Directional premises a question presupposes (checked against the computed answer, lib/answer.ts).
+export const PREMISES = ["rise", "fall", "more", "less"] as const;
 export const RECIPIENT_KINDS = ["nonprofit", "school_district", "public_college", "private_college", "public_entity"] as const;
 const range = (what: string) => z.object({
   min: z.number().nullable().describe(`Lower bound in dollars of ${what}, e.g. 1000000 for "over $1M"; null = none`),
@@ -68,6 +70,7 @@ export const specSchema = z.object({
   funderType: z.enum(FUNDER_TYPES).nullable().describe("family (foundations with Family in the name, a floor), operating (private operating foundations), trust (charitable trusts), company (company or corporate foundations, e.g. the Walmart Foundation)"),
   recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (school districts and public colleges only, never private colleges)"),
   charityFunder: z.enum(CHARITY_FUNDERS).nullable().describe("charity_grants only: daf_sponsor (donor-advised fund sponsors), community_foundation, united_way, other (other grantmaking charities); null = all"),
+  premise: z.enum(PREMISES).nullable().describe("A direction the question takes as given, not asks: rise / fall (\"why did X fall\", \"given the drop in X\"), more / less (the first thing named gets more or less than the second, \"why do X get less than Y\"). Null for open or yes/no questions (\"did X fall?\", \"how has X changed\"). The answer leads with a correction when the data disagrees"),
 });
 
 export type Cause = z.infer<typeof causeSchema>;
@@ -78,7 +81,7 @@ export type Source = Spec["source"];
 export const DEFAULT_SPEC: Spec = {
   metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null,
   area: null, condition: null, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
-  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null,
+  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null, premise: null,
 };
 
 // Canonical form: upper-case states, trimmed words, so equal questions share one cache entry. Specs from
@@ -108,6 +111,7 @@ export function normalizeSpec(s: Spec): Spec {
     funderType: s.funderType ?? null,
     recipientKind: s.recipientKind ?? null,
     charityFunder: s.source === "charity_grants" ? s.charityFunder ?? null : null,
+    premise: s.premise ?? null,
   };
 }
 

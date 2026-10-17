@@ -13,6 +13,7 @@ export type Expect = {
   q: string; research?: boolean; metric?: string[]; source?: string; by?: string[]; charityFunder?: string; funderType?: string; recipientKind?: string;
   label?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
   order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number;
+  premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
 };
 export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   const bad: string[] = [];
@@ -23,7 +24,7 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   if (e.metric && !e.metric.includes(s.metric)) bad.push(`metric ${s.metric}, want ${e.metric.join("|")}`);
   if (e.source && s.source !== e.source) bad.push(`source ${s.source}, want ${e.source}`);
   if (e.by && !e.by.includes(s.by ?? "")) bad.push(`by ${s.by}, want ${e.by.join("|")}`);
-  for (const k of ["charityFunder", "funderType", "recipientKind", "condition", "area", "order", "measure"] as const)
+  for (const k of ["charityFunder", "funderType", "recipientKind", "condition", "area", "order", "measure", "premise"] as const)
     if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   for (const k of ["perResident", "perPoverty"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   if (e.label && c0?.label !== e.label) bad.push(`label ${c0?.label}, want ${e.label}`);

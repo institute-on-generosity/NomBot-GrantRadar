@@ -58,7 +58,7 @@ type Chip = { label: string; spec: Spec };
 export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   const out: Chip[] = [];
   const add = (label: string, change: Partial<Spec>) => {
-    if (!out.some((o) => o.label === label)) out.push({ label, spec: normalizeSpec({ ...s, missing: [], missingNote: null, ...change }) });
+    if (!out.some((o) => o.label === label)) out.push({ label, spec: normalizeSpec({ ...s, missing: [], missingNote: null, premise: null, ...change }) });
   };
   const c = s.causes[0];
   const one = s.causes.length <= 1;
@@ -168,7 +168,7 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   next.share = next.total;
   if (one) next[s.metric]?.();
   // A thread that compares two causes keeps comparing them.
-  if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare" })), { metric: "compare" });
+  if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare", premise: null })), { metric: "compare" });
   if (s.causes.length === 2 && s.metric === "compare") add(`Is money for ${s.causes[0].name} or ${s.causes[1].name} growing faster?`, { metric: "trend" });
   if (s.source !== "foundation_grants" && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants" });
   if (s.source === "foundation_grants" && c && ["total", "trend"].includes(s.metric)) add(`What about donor-advised fund money${forX}?`, { source: "charity_grants", charityFunder: "daf_sponsor" });
