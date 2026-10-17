@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-v4-20261017-124202/nombot.html",
+    "output": ".archify/architecture-nombot-v5-20261017-144245/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -155,7 +155,7 @@
       "id": "org",
       "type": "frontend",
       "label": "Org page + Compare",
-      "sublabel": "FLAG · people · funders",
+      "sublabel": "FLAG · people · grants in/out",
       "pos": [
         470,
         680
@@ -163,7 +163,8 @@
       "size": [
         170,
         64
-      ]
+      ],
+      "tag": "990-PF · Sched I · federal"
     },
     {
       "id": "results",
@@ -274,7 +275,7 @@
       "type": "external",
       "label": "Public data",
       "sublabel": "IRS 990 · 990-PF · Schedule I",
-      "tag": "+ ACS · USAspending · SEC EDGAR",
+      "tag": "+ ACS · USAspending · FAC · EDGAR",
       "pos": [
         1515,
         300
@@ -289,7 +290,7 @@
       "type": "backend",
       "label": "Python ETL",
       "sublabel": "load · link grants · board",
-      "tag": "GivingTuesday XML recovery",
+      "tag": "FAC UEI→EIN · GivingTuesday XML",
       "pos": [
         1515,
         450
@@ -521,7 +522,7 @@
       "id": "org-data",
       "from": "org",
       "to": "db",
-      "label": "flags · board"
+      "label": "flags · board · grants"
     },
     {
       "id": "research-q",
@@ -639,6 +640,7 @@
         "One query: SQL filters, 2,000 nearest on a half-precision HNSW index, keyword hits",
         "Sonnet 5.5 scores the top 40, 0–100 with a reason",
         "Analysis panel from the 200 closest; Export slide builds PNG / PPTX in the browser",
+        "Org page: grants received (990-PF, Schedule I by funder type, federal awards) and given (Schedule I incl. not itemized)",
         "Research Buddy (Opus 5.5) cites 990 text and calls the research_answer tool"
       ]
     },
@@ -670,6 +672,7 @@
         "IRS: 1.8M orgs, SOI, 907,095 990 filings, 5.72M foundation grants, 3.41M Schedule I grants",
         "Schedule I flags DAF sponsors, community foundations, United Ways; missing XML recovered from GivingTuesday",
         "Census SAIPE + ACS 5-year, USAspending federal awards, SEC EDGAR company foundation flag",
+        "Federal awards linked by UEI through the Federal Audit Clearinghouse crosswalk (load_fac_crosswalk.py, relink_federal.py)",
         "Cause labels: label_causes.py on the Claude subscription (claude -p); after_load.sh tops them up",
         "org_labels feed search chips, research answers, API/MCP and the Parquet snapshot",
         "Research layer: grant_cube, charity cube, grant-size histograms, rollups, cause_lookup"

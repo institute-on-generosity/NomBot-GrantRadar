@@ -486,7 +486,7 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
         </g>
         <g data-graph-role="automatic-crossover" style="--step:12">
           <path data-graph-role="automatic-crossover-underlay" d="M 640 719 L 922 719 Q 930 719 930 711 L 930 678 Q 930 670 938 670 L 1220 670" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="org" data-edge-to="db" data-edge-label="flags · board" data-edge-key="12" data-edge-id="org-data" data-composition-points="640,719;930,719;930,670;1220,670" data-composition-crossover="halo" data-composition-independent="true" d="M 640 719 L 922 719 Q 930 719 930 711 L 930 678 Q 930 670 938 670 L 1220 670" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-edge-from="org" data-edge-to="db" data-edge-label="flags · board · grants" data-edge-key="12" data-edge-id="org-data" data-composition-points="640,719;930,719;930,670;1220,670" data-composition-crossover="halo" data-composition-independent="true" d="M 640 719 L 922 719 Q 930 719 930 711 L 930 678 Q 930 670 938 670 L 1220 670" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:13">
           <path data-graph-role="automatic-crossover-underlay" d="M 810 310 L 810 234" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
@@ -549,8 +549,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           <path data-edge-from="analysis" data-edge-to="export" data-edge-label="slide" data-edge-key="27" data-edge-id="slide" data-composition-points="1055,654;1055,730" data-composition-crossover="halo" data-composition-independent="true" d="M 1055 654 L 1055 730" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:28">
-          <path data-graph-role="automatic-crossover-underlay" d="M 900 622 L 969 622 Q 977 622 977 614 L 977 270 Q 977 262 985 262 L 1188 262 Q 1196 262 1196 254 L 1196 217 Q 1196 209 1204 209 L 1220 209" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
-          <path data-edge-from="buddy" data-edge-to="answer" data-edge-label="research_answer tool" data-edge-key="28" data-edge-id="tool" data-composition-points="900,622;977,622;977,262;1196,262;1196,209;1220,209" data-composition-crossover="halo" data-composition-independent="true" d="M 900 622 L 969 622 Q 977 622 977 614 L 977 270 Q 977 262 985 262 L 1188 262 Q 1196 262 1196 254 L 1196 217 Q 1196 209 1204 209 L 1220 209" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+          <path data-graph-role="automatic-crossover-underlay" d="M 900 622 L 956.4 622 Q 964.4 622 964.4 614 L 964.4 385 Q 964.4 377 972.4 377 L 1188 377 Q 1196 377 1196 369 L 1196 217 Q 1196 209 1204 209 L 1220 209" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="buddy" data-edge-to="answer" data-edge-label="research_answer tool" data-edge-key="28" data-edge-id="tool" data-composition-points="900,622;964.4,622;964.4,377;1196,377;1196,209;1220,209" data-composition-crossover="halo" data-composition-independent="true" d="M 900 622 L 956.4 622 Q 964.4 622 964.4 614 L 964.4 385 Q 964.4 377 972.4 377 L 1188 377 Q 1196 377 1196 369 L 1196 217 Q 1196 209 1204 209 L 1220 209" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         </g>
         <g data-graph-role="automatic-crossover" style="--step:29">
           <path data-graph-role="automatic-crossover-underlay" d="M 1617.5 530 L 1617.5 590" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
@@ -684,8 +684,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
         <text x="1330" y="372" class="t-database" font-size="7" text-anchor="middle">migrations 033–046</text>
         </g>
 
-        <g id="node-org" data-node-id="org" data-node-label="Org page + Compare" tabindex="0" role="button" aria-label="Focus Org page + Compare, FLAG · people · funders, MacBook · launchd · NomBot :4000" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="FLAG · people · funders" data-node-context="MacBook · launchd · NomBot :4000">
-          <title>Org page + Compare · FLAG · people · funders · MacBook · launchd · NomBot :4000</title>
+        <g id="node-org" data-node-id="org" data-node-label="Org page + Compare" tabindex="0" role="button" aria-label="Focus Org page + Compare, FLAG · people · grants in/out, MacBook · launchd · NomBot :4000" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="FLAG · people · grants in/out" data-node-tag="990-PF · Sched I · federal" data-node-context="MacBook · launchd · NomBot :4000">
+          <title>Org page + Compare · FLAG · people · grants in/out · MacBook · launchd · NomBot :4000 · 990-PF · Sched I · federal</title>
           <rect x="470" y="680" width="170" height="64" rx="6" class="c-mask"/>
           <rect x="470" y="680" width="170" height="64" rx="6" class="c-frontend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(476 686) scale(0.6875)">
@@ -695,7 +695,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
           <text data-node-label="" x="555" y="710" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Org page + Compare</text>
-        <text x="555" y="726" class="t-muted" font-size="9" text-anchor="middle">FLAG · people · funders</text>
+        <text x="555" y="726" class="t-muted" font-size="9" text-anchor="middle">FLAG · people · grants in/out</text>
+        <text x="555" y="736" class="t-frontend" font-size="7" text-anchor="middle">990-PF · Sched I · federal</text>
         </g>
 
         <g id="node-results" data-node-id="results" data-node-label="Ranked results" tabindex="0" role="button" aria-label="Focus Ranked results, Sonnet 5.5 scores top 40, MacBook · launchd · NomBot :4000" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Sonnet 5.5 scores top 40" data-node-tag="0–100 + why" data-node-context="MacBook · launchd · NomBot :4000">
@@ -789,8 +790,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
         <text x="555" y="866" class="t-backend" font-size="7" text-anchor="middle">api_keys · rate limit</text>
         </g>
 
-        <g id="node-sources" data-node-id="sources" data-node-label="Public data" tabindex="0" role="button" aria-label="Focus Public data, IRS 990 · 990-PF · Schedule I, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="IRS 990 · 990-PF · Schedule I" data-node-tag="+ ACS · USAspending · SEC EDGAR" data-node-context="Architecture component">
-          <title>Public data · IRS 990 · 990-PF · Schedule I · Architecture component · + ACS · USAspending · SEC EDGAR</title>
+        <g id="node-sources" data-node-id="sources" data-node-label="Public data" tabindex="0" role="button" aria-label="Focus Public data, IRS 990 · 990-PF · Schedule I, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="IRS 990 · 990-PF · Schedule I" data-node-tag="+ ACS · USAspending · FAC · EDGAR" data-node-context="Architecture component">
+          <title>Public data · IRS 990 · 990-PF · Schedule I · Architecture component · + ACS · USAspending · FAC · EDGAR</title>
           <rect x="1515" y="300" width="205" height="80" rx="6" class="c-mask"/>
           <rect x="1515" y="300" width="205" height="80" rx="6" class="c-external" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(1521 306) scale(0.6875)">
@@ -799,11 +800,11 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           </g>
           <text data-node-label="" x="1617.5" y="338" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Public data</text>
         <text x="1617.5" y="354" class="t-muted" font-size="9" text-anchor="middle">IRS 990 · 990-PF · Schedule I</text>
-        <text x="1617.5" y="372" class="t-external" font-size="7" text-anchor="middle">+ ACS · USAspending · SEC EDGAR</text>
+        <text x="1617.5" y="372" class="t-external" font-size="7" text-anchor="middle">+ ACS · USAspending · FAC · EDGAR</text>
         </g>
 
-        <g id="node-etl" data-node-id="etl" data-node-label="Python ETL" tabindex="0" role="button" aria-label="Focus Python ETL, load · link grants · board, generosity-data ETL" aria-pressed="false" data-node-kind="backend" data-node-sublabel="load · link grants · board" data-node-tag="GivingTuesday XML recovery" data-node-context="generosity-data ETL">
-          <title>Python ETL · load · link grants · board · generosity-data ETL · GivingTuesday XML recovery</title>
+        <g id="node-etl" data-node-id="etl" data-node-label="Python ETL" tabindex="0" role="button" aria-label="Focus Python ETL, load · link grants · board, generosity-data ETL" aria-pressed="false" data-node-kind="backend" data-node-sublabel="load · link grants · board" data-node-tag="FAC UEI→EIN · GivingTuesday XML" data-node-context="generosity-data ETL">
+          <title>Python ETL · load · link grants · board · generosity-data ETL · FAC UEI→EIN · GivingTuesday XML</title>
           <rect x="1515" y="450" width="205" height="80" rx="6" class="c-mask"/>
           <rect x="1515" y="450" width="205" height="80" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(1521 456) scale(0.6875)">
@@ -811,7 +812,7 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           </g>
           <text data-node-label="" x="1617.5" y="488" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Python ETL</text>
         <text x="1617.5" y="504" class="t-muted" font-size="9" text-anchor="middle">load · link grants · board</text>
-        <text x="1617.5" y="522" class="t-backend" font-size="7" text-anchor="middle">GivingTuesday XML recovery</text>
+        <text x="1617.5" y="522" class="t-backend" font-size="7" text-anchor="middle">FAC UEI→EIN · GivingTuesday XML</text>
         </g>
 
         <g id="node-labels" data-node-id="labels" data-node-label="Cause labels" tabindex="0" role="button" aria-label="Focus Cause labels, label_causes.py · claude -p, generosity-data ETL" aria-pressed="false" data-node-kind="backend" data-node-sublabel="label_causes.py · claude -p" data-node-tag="Haiku screen · Sonnet/Opus check" data-node-context="generosity-data ETL">
@@ -936,9 +937,9 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           <rect x="1135.2" y="600" width="43.6" height="14" rx="3" class="c-mask"/>
           <text x="1157" y="610" class="t-edge-default" font-size="8" text-anchor="middle">funders</text>
         </g>
-        <g data-edge-from="org" data-edge-to="db" data-edge-label="flags · board" data-edge-key="12" data-edge-id="org-data">
-          <rect x="893.8" y="674.5" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="930" y="684.5" class="t-edge-default" font-size="8" text-anchor="middle">flags · board</text>
+        <g data-edge-from="org" data-edge-to="db" data-edge-label="flags · board · grants" data-edge-key="12" data-edge-id="org-data">
+          <rect x="872.2" y="674.5" width="115.6" height="14" rx="3" class="c-mask"/>
+          <text x="930" y="684.5" class="t-edge-default" font-size="8" text-anchor="middle">flags · board · grants</text>
         </g>
         <g data-edge-from="ui" data-edge-to="router" data-edge-label="research Q" data-edge-key="13" data-edge-id="research-q">
           <rect x="781" y="290" width="58" height="14" rx="3" class="c-mask"/>
@@ -1001,8 +1002,8 @@ svg[data-preset="editorial"][data-animation="trace"] [data-animate="node"] { ani
           <text x="1032" y="695" class="t-edge-default" font-size="8" text-anchor="middle">slide</text>
         </g>
         <g data-edge-from="buddy" data-edge-to="answer" data-edge-label="research_answer tool" data-edge-key="28" data-edge-id="tool">
-          <rect x="924" y="422" width="106" height="14" rx="3" class="c-mask"/>
-          <text x="977" y="432" class="t-edge-default" font-size="8" text-anchor="middle">research_answer tool</text>
+          <rect x="852.4" y="553.75" width="106" height="14" rx="3" class="c-mask"/>
+          <text x="905.4" y="563.75" class="t-edge-default" font-size="8" text-anchor="middle">research_answer tool</text>
         </g>
         <g data-edge-from="etl" data-edge-to="labels" data-edge-label="after_load.sh" data-edge-key="29" data-edge-id="renew">
           <rect x="1539.1" y="553" width="72.4" height="14" rx="3" class="c-mask"/>
