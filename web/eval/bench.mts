@@ -166,7 +166,7 @@ const stats = MODES.map((mode) => {
 
 // Storage: the vector index vs the keyword (full-text) indexes the search uses.
 const { rows: sizes } = await db.query(`SELECT
-  pg_relation_size('filing_latest_embedding_idx') AS vector,
+  pg_relation_size('filing_latest_embedding_half_idx') AS vector,
   (SELECT coalesce(sum(pg_relation_size(i.indexrelid)), 0) FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
    WHERE (i.indrelid = 'orgs'::regclass AND c.relname LIKE '%search%') OR (i.indrelid = 'filing_latest'::regclass AND c.relname LIKE '%search%')) AS keyword`);
 const gb = (b: number) => `${(Number(b) / 1e9).toFixed(2)} GB`;
