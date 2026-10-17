@@ -3,428 +3,611 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-v2-20261007-122450/nombot.html",
+    "output": ".archify/architecture-nombot-v3-20261016-231500/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
     {
-      "id": "propublica",
-      "type": "external",
-      "label": "ProPublica API",
-      "sublabel": "per-org detail",
+      "id": "findings",
+      "type": "frontend",
+      "label": "Research findings",
+      "sublabel": "verified insights rows",
       "pos": [
-        250,
-        40
-      ],
-      "size": [
-        150,
+        470,
         60
       ],
-      "tag": "planned"
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "router",
+      "type": "backend",
+      "label": "Research router",
+      "sublabel": "Sonnet 5.5 → spec",
+      "tag": "cached 24 h",
+      "pos": [
+        720,
+        60
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "chat",
+      "type": "frontend",
+      "label": "Research chat",
+      "sublabel": "/research/ask · chips",
+      "pos": [
+        980,
+        60
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "answer",
+      "type": "backend",
+      "label": "Answer engine",
+      "sublabel": "fixed parameterized SQL",
+      "tag": "no model-written SQL",
+      "pos": [
+        1220,
+        60
+      ],
+      "size": [
+        220,
+        64
+      ]
     },
     {
       "id": "users",
       "type": "external",
-      "label": "Users",
-      "sublabel": "donors · researchers",
+      "label": "Researchers",
+      "sublabel": "+ advisors · browser",
       "pos": [
         40,
         200
       ],
       "size": [
-        130,
-        60
+        150,
+        64
+      ]
+    },
+    {
+      "id": "tunnel",
+      "type": "cloud",
+      "label": "Tailscale Funnel",
+      "sublabel": "public HTTPS URL",
+      "pos": [
+        250,
+        200
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Sign-in gate",
+      "sublabel": "proxy.ts · SITE_PASSWORD",
+      "tag": "skips /api/v1, /mcp",
+      "pos": [
+        470,
+        200
+      ],
+      "size": [
+        170,
+        64
       ]
     },
     {
       "id": "ui",
       "type": "frontend",
-      "label": "Search UI",
-      "sublabel": "Next.js page",
+      "label": "Search page",
+      "sublabel": "Next.js · question box",
       "pos": [
-        250,
+        720,
         200
       ],
       "size": [
-        150,
-        60
+        180,
+        64
       ]
     },
     {
-      "id": "devs",
-      "type": "external",
-      "label": "Developers",
-      "sublabel": "external tools",
+      "id": "parser",
+      "type": "backend",
+      "label": "Query parser",
+      "sublabel": "Opus 5.5 → filters",
       "pos": [
-        40,
-        400
+        980,
+        200
       ],
       "size": [
-        130,
-        60
+        170,
+        64
+      ]
+    },
+    {
+      "id": "layer",
+      "type": "database",
+      "label": "Research layer",
+      "sublabel": "grant_cube · rollups · causes",
+      "tag": "migrations 033–040",
+      "pos": [
+        1220,
+        190
+      ],
+      "size": [
+        220,
+        80
+      ]
+    },
+    {
+      "id": "org",
+      "type": "frontend",
+      "label": "Org page + Compare",
+      "sublabel": "FLAG · people · funders",
+      "pos": [
+        470,
+        570
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "results",
+      "type": "frontend",
+      "label": "Ranked results",
+      "sublabel": "Sonnet 5.5 scores top 40",
+      "tag": "0–100 + why",
+      "pos": [
+        720,
+        340
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "search",
+      "type": "backend",
+      "label": "Hybrid search",
+      "sublabel": "SQL + halfvec HNSW",
+      "tag": "+ keywords",
+      "pos": [
+        980,
+        340
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Postgres 17 + pgvector",
+      "sublabel": "orgs · 990 text · grants",
+      "tag": "filing_flag · board · county_need",
+      "pos": [
+        1220,
+        340
+      ],
+      "size": [
+        220,
+        440
+      ]
+    },
+    {
+      "id": "buddy",
+      "type": "backend",
+      "label": "Research Buddy",
+      "sublabel": "Opus 5.5 · cites [n]",
+      "tag": "top 15 · 990 text",
+      "pos": [
+        720,
+        480
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "analysis",
+      "type": "frontend",
+      "label": "Analysis panel",
+      "sublabel": "AI overview · map gaps",
+      "tag": "Sonnet 5.5",
+      "pos": [
+        980,
+        480
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "partners",
+      "type": "external",
+      "label": "Partners",
+      "sublabel": "apps · AI agents",
+      "pos": [
+        40,
+        700
+      ],
+      "size": [
+        150,
+        64
       ]
     },
     {
       "id": "api",
       "type": "backend",
-      "label": "JSON API",
-      "sublabel": "Next.js route",
+      "label": "Partner API + MCP",
+      "sublabel": "/api/v1 · /mcp",
+      "tag": "api_keys · rate limit",
       "pos": [
-        250,
-        400
-      ],
-      "size": [
-        150,
-        60
-      ]
-    },
-    {
-      "id": "llm",
-      "type": "backend",
-      "label": "Claude Query Parser",
-      "sublabel": "Claude API",
-      "pos": [
-        500,
-        300
+        470,
+        700
       ],
       "size": [
         170,
-        60
-      ],
-      "tag": "question → filters"
+        64
+      ]
     },
     {
-      "id": "db",
-      "type": "database",
-      "label": "Postgres + pgvector",
-      "sublabel": "orgs · financials · 990 text · regions",
+      "id": "sources",
+      "type": "external",
+      "label": "Public data",
+      "sublabel": "IRS BMF · SOI · 990/990-PF",
+      "tag": "+ NTEE · SAIPE · ARC · NCES",
       "pos": [
-        870,
-        290
+        1520,
+        190
       ],
       "size": [
         200,
         80
-      ],
-      "tag": "managed · HNSW index"
+      ]
     },
     {
       "id": "etl",
       "type": "backend",
       "label": "Python ETL",
-      "sublabel": "GitHub Actions · monthly",
+      "sublabel": "load · link grants · board",
+      "tag": "rules + Claude links",
       "pos": [
-        880,
+        1520,
+        340
+      ],
+      "size": [
+        200,
+        80
+      ]
+    },
+    {
+      "id": "labels",
+      "type": "backend",
+      "label": "Cause labels",
+      "sublabel": "Claude Batch · graded",
+      "pos": [
+        1520,
+        480
+      ],
+      "size": [
+        200,
+        64
+      ]
+    },
+    {
+      "id": "embed",
+      "type": "backend",
+      "label": "Embedding job",
+      "sublabel": "nomic 512-dim · GPU",
+      "pos": [
+        1520,
         600
       ],
       "size": [
-        180,
-        100
+        200,
+        64
       ]
     },
     {
-      "id": "emb",
+      "id": "miner",
       "type": "backend",
-      "label": "Embedding Job",
-      "sublabel": "changed rows only",
+      "label": "Insights miner",
+      "sublabel": "mine_insights.py",
       "pos": [
-        880,
-        780
+        1520,
+        716
       ],
       "size": [
-        180,
-        60
-      ],
-      "tag": "512-dim"
+        200,
+        64
+      ]
     },
     {
-      "id": "rag",
+      "id": "backup",
       "type": "backend",
-      "label": "Research Buddy",
-      "sublabel": "cites every claim [n]",
+      "label": "Nightly pg_dump",
+      "sublabel": "~/Backups · newest 3",
       "pos": [
-        500,
-        100
-      ],
-      "size": [
-        170,
-        60
-      ],
-      "tag": "top 15 · Claude"
-    },
-    {
-      "id": "bmf",
-      "type": "external",
-      "label": "IRS EO BMF",
-      "sublabel": "1.8M orgs · monthly",
-      "pos": [
-        540,
-        560
-      ],
-      "size": [
-        170,
-        60
-      ]
-    },
-    {
-      "id": "soi",
-      "type": "external",
-      "label": "IRS SOI Extract",
-      "sublabel": "financials · annual",
-      "pos": [
-        540,
-        640
-      ],
-      "size": [
-        170,
-        60
-      ]
-    },
-    {
-      "id": "xml",
-      "type": "external",
-      "label": "IRS 990 e-file XML",
-      "sublabel": "mission + programs",
-      "pos": [
-        540,
-        720
-      ],
-      "size": [
-        170,
-        60
-      ]
-    },
-    {
-      "id": "ntee",
-      "type": "external",
-      "label": "NCCS NTEE Codes",
-      "sublabel": "cause taxonomy",
-      "pos": [
-        540,
-        800
-      ],
-      "size": [
-        170,
-        60
-      ]
-    },
-    {
-      "id": "rerank",
-      "type": "backend",
-      "label": "Relevance Scorer",
-      "sublabel": "Claude · top 40",
-      "tag": "0–100 + reason",
-      "pos": [
-        500,
-        200
-      ],
-      "size": [
-        170,
-        60
-      ]
-    },
-    {
-      "id": "census",
-      "type": "external",
-      "label": "Census + ARC",
-      "sublabel": "ZIP → county → Appalachia",
-      "pos": [
-        540,
+        1220,
         880
       ],
       "size": [
-        170,
-        60
+        220,
+        64
       ]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "NomBot · Vercel",
+      "label": "MacBook · launchd · NomBot :4000",
       "wraps": [
+        "findings",
+        "router",
+        "chat",
+        "answer",
+        "gate",
         "ui",
+        "parser",
+        "org",
+        "results",
+        "search",
+        "buddy",
+        "analysis",
         "api",
-        "llm",
-        "rag",
-        "rerank"
+        "layer",
+        "db",
+        "backup"
       ]
     },
     {
       "kind": "region",
-      "label": "generosity-data · GitHub Actions",
+      "label": "Postgres 17 · local",
+      "wraps": [
+        "layer",
+        "db",
+        "backup"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "generosity-data ETL",
       "wraps": [
         "etl",
-        "emb"
-      ]
-    },
-    {
-      "kind": "region",
-      "label": "Public data sources",
-      "wraps": [
-        "bmf",
-        "soi",
-        "xml",
-        "ntee",
-        "census"
-      ]
-    },
-    {
-      "kind": "region",
-      "label": "Supabase Pro · hosted Postgres",
-      "wraps": [
-        "db"
+        "labels",
+        "embed",
+        "miner"
       ]
     }
   ],
   "connections": [
     {
-      "id": "user-question",
+      "id": "visit",
       "from": "users",
+      "to": "tunnel",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "proxy",
+      "from": "tunnel",
+      "to": "gate",
+      "label": ":4000",
+      "variant": "emphasis"
+    },
+    {
+      "id": "signed-in",
+      "from": "gate",
       "to": "ui",
+      "label": "signed in",
+      "variant": "emphasis"
+    },
+    {
+      "id": "feed",
+      "from": "gate",
+      "to": "findings",
+      "label": "/research"
+    },
+    {
+      "id": "question",
+      "from": "ui",
+      "to": "parser",
       "label": "question",
       "variant": "emphasis"
     },
     {
-      "id": "dev-request",
-      "from": "devs",
-      "to": "api",
-      "label": "HTTPS"
-    },
-    {
-      "id": "ui-parse",
-      "from": "ui",
-      "to": "llm",
-      "label": "parse"
-    },
-    {
-      "id": "api-parse",
-      "from": "api",
-      "to": "llm",
-      "label": "parse"
-    },
-    {
-      "id": "hybrid-query",
-      "from": "llm",
-      "to": "db",
-      "label": "SQL filters + vector search",
+      "id": "filters",
+      "from": "parser",
+      "to": "search",
+      "label": "filters + text",
       "variant": "emphasis"
     },
     {
-      "id": "detail-lookup",
+      "id": "query",
+      "from": "search",
+      "to": "db",
+      "label": "query"
+    },
+    {
+      "id": "top40",
+      "from": "search",
+      "to": "results",
+      "label": "top 40",
+      "variant": "emphasis"
+    },
+    {
+      "id": "open-org",
+      "from": "results",
+      "to": "org",
+      "label": "open"
+    },
+    {
+      "id": "ask-buddy",
+      "from": "results",
+      "to": "buddy",
+      "label": "follow-up"
+    },
+    {
+      "id": "closest",
+      "from": "search",
+      "to": "analysis",
+      "label": "200 closest"
+    },
+    {
+      "id": "panel-data",
+      "from": "analysis",
+      "to": "db",
+      "label": "funders"
+    },
+    {
+      "id": "org-data",
+      "from": "org",
+      "to": "db",
+      "label": "flags · board"
+    },
+    {
+      "id": "research-q",
       "from": "ui",
-      "to": "propublica",
-      "label": "detail page (planned)",
-      "variant": "dashed",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "to": "router",
+      "label": "research Q"
     },
     {
-      "id": "etl-upsert",
-      "from": "etl",
-      "to": "db",
-      "label": "upsert",
-      "fromSide": "top",
-      "toSide": "bottom"
+      "id": "redirect",
+      "from": "router",
+      "to": "chat",
+      "label": "redirect"
     },
     {
-      "id": "etl-to-embed",
-      "from": "etl",
-      "to": "emb",
-      "label": "new text"
+      "id": "spec",
+      "from": "chat",
+      "to": "answer",
+      "label": "spec"
     },
     {
-      "id": "embed-write",
-      "from": "emb",
-      "to": "db",
-      "label": "vectors",
+      "id": "fixed-sql",
+      "from": "answer",
+      "to": "layer",
+      "label": "fixed SQL"
+    },
+    {
+      "id": "refresh",
+      "from": "db",
+      "to": "layer",
+      "label": "refresh",
       "variant": "dashed"
     },
     {
-      "id": "ask-results",
-      "from": "ui",
-      "to": "rag",
-      "label": "ask about results"
+      "id": "keyed",
+      "from": "partners",
+      "to": "api",
+      "label": "Bearer nb_live_ key",
+      "variant": "security"
     },
     {
-      "id": "rag-fetch",
-      "from": "rag",
+      "id": "api-read",
+      "from": "api",
       "to": "db",
-      "label": "990 text"
+      "label": "read-only"
     },
     {
-      "id": "bmf-load",
-      "from": "bmf",
+      "id": "src-load",
+      "from": "sources",
       "to": "etl",
-      "label": "org list"
+      "label": "files"
     },
     {
-      "id": "soi-load",
-      "from": "soi",
-      "to": "etl",
-      "label": "financials"
+      "id": "upsert",
+      "from": "etl",
+      "to": "db",
+      "label": "upsert"
     },
     {
-      "id": "xml-load",
-      "from": "xml",
-      "to": "etl",
-      "label": "text"
+      "id": "labels-write",
+      "from": "labels",
+      "to": "db",
+      "label": "labels"
     },
     {
-      "id": "ntee-load",
-      "from": "ntee",
-      "to": "etl",
-      "label": "categories"
+      "id": "vectors",
+      "from": "embed",
+      "to": "db",
+      "label": "vectors"
     },
     {
-      "id": "candidates",
+      "id": "insights",
+      "from": "miner",
+      "to": "db",
+      "label": "insights"
+    },
+    {
+      "id": "dump",
       "from": "db",
-      "to": "rerank",
-      "label": "top 40 candidates"
-    },
-    {
-      "id": "ranked",
-      "from": "rerank",
-      "to": "ui",
-      "label": "ranked + why",
-      "variant": "emphasis"
-    },
-    {
-      "id": "census-load",
-      "from": "census",
-      "to": "etl",
-      "label": "regions"
+      "to": "backup",
+      "label": "2:30 AM",
+      "variant": "dashed"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Query path",
+      "title": "Search path",
       "items": [
-        "Claude turns a question into filters (state, city, Appalachia, cause, budget, must-mention) + search text",
-        "One Postgres query: SQL filters + pgvector similarity + keywords",
-        "Claude scores the top 40 (0–100, with a reason); strong matches first",
-        "Research Buddy answers follow-ups from the top 15 results' 990 text, citing every claim"
+        "Opus 5.5 turns a question into filters + search text",
+        "One query: SQL filters, 2,000 nearest on a half-precision HNSW index, keyword hits",
+        "Sonnet 5.5 scores the top 40, 0–100 with a reason",
+        "Analysis panel: AI overview, landscape, county need gaps, funders, from the 200 closest",
+        "Research Buddy (Opus 5.5) answers from the top 15 results' 990 text, citing every claim"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Research answers",
+      "items": [
+        "Regex screen, then the router (Sonnet 5.5, structured output) writes a spec",
+        "Answer engine runs fixed SQL on the research layer first; never model-written SQL",
+        "Follow-ups: chips reuse specs; typed ones take one Sonnet 5.5 call",
+        "Buddy, /api/v1/answer and MCP call the same engine",
+        "Findings: the insights miner writes verified patterns; the feed shows them"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Hosting + access",
+      "items": [
+        "MacBook: launchd service on :4000, public URL via Tailscale Funnel",
+        "SITE_PASSWORD on every page; /api/v1 and /mcp need a Bearer key instead",
+        "Keys: sha256 in api_keys, per-key rate limit, daily usage; no Claude calls except answer?q=",
+        "Nightly pg_dump at 2:30 AM, newest 3 kept"
       ]
     },
     {
       "dot": "emerald",
       "title": "Data",
       "items": [
-        "BMF: ~1.8M orgs, active only (POC: 5 states, 204K)",
-        "SOI: financials (POC: 54,590 rows)",
-        "990 XML: mission + program text, the only embedding source (POC: 50,971 filings)",
-        "Census + ARC: ZIP → county → Appalachia (34,236 ZIPs)"
-      ]
-    },
-    {
-      "dot": "amber",
-      "title": "Quality + cost",
-      "items": [
-        "Search eval: 91% relevant (50 questions)",
-        "Buddy eval: 1 unsupported claim of 401",
-        "Supabase Pro $25/mo; Vercel + GitHub Actions free",
-        "Claude: parsing, scoring and Buddy (cost not yet measured)"
+        "IRS: 1.8M orgs (BMF), SOI financials, 785,772 990 filings, 5.35M foundation grants",
+        "Grant recipients linked by name rules, then Claude for the largest leftovers",
+        "Census SAIPE county need (3,144 counties), ARC Appalachia, NCES + IPEDS",
+        "Cause labels (climate, women and girls) by Claude, graded on fresh samples",
+        "Research layer: grant_cube 948,897 rows, recipient and county rollups, cause_lookup"
       ]
     }
   ]
