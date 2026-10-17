@@ -15,6 +15,7 @@
     "test:answer": "tsx eval/answer.mts",
     "test:followups": "tsx eval/followups.mts",
     "eval:route": "tsx eval/route.mts",
+    "eval:benchmark": "tsx eval/benchmark.mts",
     "test:labels": "tsx eval/labels.mts"
   },
   "dependencies": {
