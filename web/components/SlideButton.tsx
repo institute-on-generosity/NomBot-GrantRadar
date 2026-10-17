@@ -7,7 +7,8 @@ const SlideIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="no
 // "Export slide": a small menu (PNG or PowerPoint) that builds one 16:9 slide (lib/slide, loaded on
 // click with Vega and pptxgenjs, so pages don't carry them). quiet: a text link for feed cards.
 // more: a "⋯" icon button (the search page's analysis panel header), the menu items say what they export.
-export function SlideButton({ data, quiet = false, more = false, label = "Export slide" }: { data: () => SlideData; quiet?: boolean; more?: boolean; label?: string }) {
+// icon: a slide icon button with the label as its tooltip (the research chat's action row).
+export function SlideButton({ data, quiet = false, more = false, icon = false, label = "Export slide" }: { data: () => SlideData; quiet?: boolean; more?: boolean; icon?: boolean; label?: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<"png" | "pptx" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,10 @@ export function SlideButton({ data, quiet = false, more = false, label = "Export
       {more ? (
         <button type="button" className={`more-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" aria-label="More options" title="More options" onClick={() => setOpen(!open)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+        </button>
+      ) : icon ? (
+        <button type="button" className={`chat-act${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" aria-label={label} title={label} onClick={() => setOpen(!open)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4.5" width="18" height="12" rx="2" /><path d="M12 16.5V20M8.5 20h7" /></svg>
         </button>
       ) : (
         <button type="button" className={quiet ? "ins-link" : `ins-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}

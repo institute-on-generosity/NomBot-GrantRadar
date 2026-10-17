@@ -2,15 +2,13 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { AnswerCard, AnswerSkeleton } from "@/components/AnswerCard";
+import { ChatAnswer } from "@/components/ChatAnswer";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { NavLink } from "@/components/NavLink";
-import { ResearchBuddy } from "@/components/ResearchBuddy";
-import { FollowUpBox, FollowUpText, ScrollToTurn } from "@/components/ResearchThread";
-import { SearchBox } from "@/components/SearchBox";
-import type { Answer } from "@/lib/answer";
+import { Chat, FollowUpText, Suggestions, Thinking } from "@/components/ResearchThread";
 import { contentPlan } from "@/lib/answerSpec";
-import { suggestFollowUps } from "@/lib/followUp";
+import { PROMPT_SETS } from "@/lib/examples";
+import { pickFollowUps, type Turn } from "@/lib/followUp";
 import { recordQuestion } from "@/lib/researchQuestions";
 import { MAX_FOLLOW_UPS, resolveThread, threadHref } from "@/lib/thread";
 
@@ -18,18 +16,25 @@ export const metadata = { title: "Research question · NomBot" };
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 
-// A research thread: the first question's answer card, then each follow-up as its own turn (a new answer
-// card for a new number, a short streamed interpretation for "why" questions, a search link for "show me
-// the organizations"). The thread lives in the URL (?q=first&f=follow1&f=follow2), so a link reproduces
-// it. Search sends pure research questions here; a first question that's an org search, or about a
-// specific org set, goes back to the search page. Every answered turn is saved (research_questions).
+// A research conversation, ChatGPT style: one centered column, each question a right-aligned bubble,
+// each answer plain content (lib/answer: a number, a chart, bullets, icon actions), the composer pinned
+// at the bottom. Follow-ups are new answers (a changed question), streamed interpretations ("why?") or a
+// link to the organizations. The thread lives in the URL (?q=first&f=follow1&f=follow2), so a link
+// reproduces it; ?new=1 is an empty chat. Search sends pure research questions here; a first question
+// that's an org search, or about a specific org set, goes back to the search page. Every answered turn
+// is saved (research_questions) for Research's Asked questions.
 export default function AskPage(props: { searchParams: SP }) {
   return (
-    <main className="ins-page ask-page">
-      {/* Back to where research questions are asked: the home page's Research prompts. A link, not history:
-          inside a thread, history steps back one follow-up at a time. */}
-      <Link href="/?tab=research" className="back rd-back">← Research questions</Link>
-      <Suspense fallback={<AnswerSkeleton />}>
+    <main className="chat">
+      <header className="chat-top">
+        {/* A link, not history: inside a thread, history steps back one follow-up at a time. */}
+        <Link href="/?tab=research" className="chat-back">← Research questions</Link>
+        <NavLink href="/research/ask?new=1" className="chat-new" label="Starting a new question…">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+          New question
+        </NavLink>
+      </header>
+      <Suspense fallback={<div className="chat-thread"><Thinking label="Working out the answer" /></div>}>
         <Ask searchParams={props.searchParams} />
       </Suspense>
     </main>
@@ -37,18 +42,24 @@ export default function AskPage(props: { searchParams: SP }) {
 }
 
 const list = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? [v] : []);
-const orgLink = (a: Answer) => a.searchQuery && (
-  <p className="answer-orgs">
-    <NavLink href={`/?${new URLSearchParams({ question: a.searchQuery, as: "topic" })}`} label="Loading organizations…">
-      {a.orgCount ? `See the ${a.orgCount.toLocaleString("en-US")} organizations behind this` : "See the organizations behind this"} →
-    </NavLink>
-  </p>
-);
 
 async function Ask({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   const q = String(list(sp.q)[0] ?? "").trim().slice(0, 300);
-  if (!q) redirect("/?tab=research");
+  if (!q) {
+    if (!list(sp.new).length) redirect("/?tab=research");
+    // New question: an empty conversation, the composer focused, a few example questions.
+    const examples = PROMPT_SETS.find((s) => s.word === "research")?.prompts.slice(0, 4) ?? [];
+    return (
+      <Chat q={null} fs={[]} max={MAX_FOLLOW_UPS}>
+        <div className="chat-empty">
+          <h1>What do you want to know?</h1>
+          <p>Ask about money, shares, trends or counts across US nonprofits and foundations.</p>
+          <Suggestions chips={examples} />
+        </div>
+      </Chat>
+    );
+  }
   const fs = list(sp.f).map((f) => f.trim().slice(0, 300)).filter(Boolean).slice(0, MAX_FOLLOW_UPS);
   await connection();
   const toSearch = `/?${new URLSearchParams({ question: q })}`;
@@ -59,29 +70,33 @@ async function Ask({ searchParams }: { searchParams: SP }) {
   // Save each answered turn under its standalone question (repeat renders within 30 s count once).
   await Promise.all(turns.map((t) => t.kind === "answer" ? recordQuestion(t.standalone, t.spec, t.answer.headline, t.answer.status) : null))
     .catch((err) => console.error("saving questions failed", err));
-  const lastAnswer = [...turns].reverse().find((t) => t.kind === "answer") as typeof first;
-  const chips = suggestFollowUps(lastAnswer.spec).map((c) => c.label);
-  const href = threadHref(q, fs);
-  const many = turns.length > 3;
+  const history: Turn[] = turns.flatMap((t) => (t.kind === "answer" ? [{ question: t.standalone, spec: t.spec }] : []));
   return (
     <>
-      <div className="ask-box"><SearchBox key={q} value="" placeholder="Ask a new research question" /></div>
       <RecordSearch question={q} href={threadHref(q, [])} total={first.answer.orgCount ?? 0} />
-      <ResearchBuddy key={href} convKey={href} question={q} overrides={{}} all={false} />
-      <div className="thread">
+      <Chat q={q} fs={fs} max={MAX_FOLLOW_UPS}>
         {turns.map((t, i) => (
-          <section key={`${i}:${t.text}`} className="turn" id={`turn-${i}`}>
-            {i > 0 && <p className="turn-q">{t.text}{t.standalone !== t.text && t.kind === "answer" && <span title="How NomBot read this follow-up"> · {t.standalone}</span>}</p>}
-            {t.kind === "answer" && <><AnswerCard key={String(many && i < turns.length - 2)} a={t.answer} compact={many && i < turns.length - 2} />{(i === turns.length - 1 || i === 0) && orgLink(t.answer)}</>}
+          <section key={`${i}:${t.text}`} className="chat-turn" id={`turn-${i}`}>
+            <div className="chat-q">
+              <p>{t.text}</p>
+              {i > 0 && t.kind === "answer" && t.standalone !== t.text && <small title="How NomBot read this follow-up">{t.standalone}</small>}
+            </div>
+            {t.kind === "answer" && <ChatAnswer a={t.answer} />}
             {t.kind === "text" && <FollowUpText q={q} fs={fs} i={i - 1} />}
             {t.kind === "search" && (
-              <p className="answer-orgs"><NavLink href={`/?${new URLSearchParams({ question: t.standalone, as: "topic" })}`} label="Loading organizations…">Open “{t.standalone}” as an organization search →</NavLink></p>
+              <div className="chat-answer">
+                <p>That needs a list of organizations. <NavLink href={`/?${new URLSearchParams({ question: t.standalone, as: "topic" })}`} className="chat-orgs" label="Loading organizations…">Search “{t.standalone}” →</NavLink></p>
+              </div>
             )}
+            {/* The answer shows first; the picked follow-ups stream in after it */}
+            {i === turns.length - 1 && <Suspense fallback={null}><FollowUpChips history={history} /></Suspense>}
           </section>
         ))}
-      </div>
-      {fs.length > 0 && <ScrollToTurn key={`scroll:${href}`} id={`turn-${turns.length - 1}`} />}
-      <FollowUpBox key={`follow-up:${href}`} q={q} fs={fs} chips={chips} max={MAX_FOLLOW_UPS} />
+      </Chat>
     </>
   );
+}
+
+async function FollowUpChips({ history }: { history: Turn[] }) {
+  return <Suggestions chips={await pickFollowUps(history)} />;
 }

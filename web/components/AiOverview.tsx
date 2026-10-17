@@ -27,7 +27,7 @@ export function AiOverview({ o, question, visual = false }: { o: Overview; quest
       {o.bullets.length > SHOW && (
         <button type="button" className="kp-more" aria-expanded={more} onClick={() => setMore(!more)}>{more ? "Show less" : "Show more"}</button>
       )}
-      <p className="overview-foot">AI-generated from {o.count} strong matches&apos; IRS filings · verify details</p>
+      <p className="overview-foot">AI-generated from the {o.count} {o.basis === "closest" ? "closest" : "strong"} matches&apos; IRS filings · verify details</p>
     </div>
   );
   if (visual) return body;
@@ -46,7 +46,7 @@ export function AiOverview({ o, question, visual = false }: { o: Overview; quest
 export function AiOverviewSkeleton({ compact = false }: { compact?: boolean }) {
   const lines = (
     <div className="overview loading-ov" aria-label="AI overview loading">
-      <p className="ov-wait">{compact ? "Writing the AI summary…" : "Reading the strongest matches…"}</p>
+      <p className="ov-wait">{compact ? "Writing the AI summary…" : "Reading the closest matches…"}</p>
       <div className="ov-lines" aria-hidden><i /><i className="short" />{!compact && <i />}</div>
     </div>
   );

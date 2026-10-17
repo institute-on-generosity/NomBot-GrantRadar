@@ -1,5 +1,6 @@
-// AI overview: the zoom-out view above the results. Claude reads the strong matches (up to POOL)
-// plus figures computed here (sizes, places, causes, team sizes) and writes a one-line headline,
+// AI overview: the zoom-out view above the results. Claude reads the closest matches (the search's top
+// CLOSEST candidates, so it starts with the results instead of waiting ~3-5s for relevance scores; or the
+// strong matches when scores are passed in) plus figures computed here (sizes, places, causes, team sizes) and writes a one-line headline,
 // 2-3 short cited bullets, and related searches to explore. Cited [n] = rank in the results.
 // The key-number tiles and chart above it are computed without Claude (lib/overviewFacts).
 // Without ANTHROPIC_API_KEY (or if the call fails) there is no overview.
@@ -11,8 +12,12 @@ import { claude, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import { healthOf } from "./landscape";
 import { isStrong, type Ranked } from "./rerank";
+import type { Result } from "./search";
 
-export type Overview = { headline: string; bullets: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number };
+// basis: what Claude read. "closest": the top candidates by meaning, before relevance scoring; "strong": scored strong matches.
+export type Overview = { headline: string; bullets: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number; basis: Basis };
+type Basis = "closest" | "strong";
+const CLOSEST = 20; // unscored candidates read: the top of the search is mostly on topic (69% relevant in the top 10, eval/bench.mts)
 
 const SYSTEM = `You write the short overview shown above nonprofit search results, like a search engine's AI overview.
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
@@ -47,7 +52,7 @@ const top = (xs: (string | null)[], k: number) => {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, k).map(([x, n]) => `${x} (${n})`).join(", ");
 };
 
-async function fresh(question: string, strong: Ranked[], need?: string, story?: string): Promise<Overview | null> {
+async function fresh(question: string, strong: Result[], basis: Basis, need?: string, story?: string): Promise<Overview | null> {
   const client = claude();
   if (!client || strong.length < 3) return null;
   const { rows } = await db.query(
@@ -65,7 +70,7 @@ async function fresh(question: string, strong: Ranked[], need?: string, story?: 
   const allVol = staffed.filter((r) => team.get(r.ein)!.staff === 0 && (team.get(r.ein)!.vols ?? 0) > 0).length;
 
   const figures = [
-    `Strong matches: ${strong.length}`,
+    basis === "strong" ? `Strong matches: ${strong.length}` : `Closest matches (by meaning, not yet checked one by one): ${strong.length}`,
     revs.length ? `Revenue: median ${money(median(revs)!)}, range ${money(Math.min(...revs))}–${money(Math.max(...revs))} (${revs.length} with figures); under $250K: ${revs.filter((x) => x < 250_000).length}; over $1M: ${revs.filter((x) => x >= 1_000_000).length}` : "Revenue: no figures",
     `States: ${top(strong.map((r) => r.state), 5)}`,
     `Cities: ${top(strong.map((r) => r.city && titleCase(r.city)), 6)}`,
@@ -89,18 +94,21 @@ async function fresh(question: string, strong: Ranked[], need?: string, story?: 
     fallbacks: "default",
     output_config: { effort: "low", format: betaZodOutputFormat(schema) },
     system: SYSTEM,
-    messages: [{ role: "user", content: `Question: ${question}\n\nFigures:\n${figures}\n\nOrganizations:\n${list}` }],
+    messages: [{ role: "user", content: `Question: ${question}\n\nFigures:\n${figures}\n\nOrganizations:\n${list}${basis === "closest" ? `\n\nThese are the closest search matches, not yet checked one by one: a few may not fit the question. Write about the ones that clearly do, and cite only those.` : ""}` }],
   });
   const o = res.parsed_output;
   if (res.stop_reason === "refusal" || !o) return null;
-  return { headline: tidy(o.headline).replace(/\s*\[\d+(?:,\s*\d+)*\]/g, ""), bullets: o.bullets.slice(0, 3).map(tidy), explore: o.explore.slice(0, 3), orgs, count: strong.length };
+  return { headline: tidy(o.headline).replace(/\s*\[\d+(?:,\s*\d+)*\]/g, ""), bullets: o.bullets.slice(0, 3).map(tidy), explore: o.explore.slice(0, 3), orgs, count: strong.length, basis };
 }
 
-const cached = memo<Overview | null>("overview:v11", 200, 24 * 3600_000); // bump when the prompt changes (v11: headline examples; v9: headline + bullets)
+const cached = memo<Overview | null>("overview:v12", 200, 24 * 3600_000); // bump when the prompt changes (v12: closest matches before scoring; v11: headline examples; v9: headline + bullets)
 // need: an optional figures line about county poverty vs. where these organizations are (lib/landscape).
 // story: the overview chart's takeaway (lib/overviewFacts), so the headline can agree with the chart.
-export function overview(question: string, results: Ranked[], need?: string, story?: string) {
-  const strong = results.filter((r) => r.relevance && isStrong(r));
-  const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
-  return cached(`${key}|${need ?? ""}|${story ?? ""}`, () => fresh(question, strong, need, story).catch((err) => { console.error("AI overview failed", err); return null; }));
+// results: search candidates in order (unscored: the top CLOSEST are read) or ranked results (strong matches are read).
+export function overview(question: string, results: (Result | Ranked)[], need?: string, story?: string) {
+  const scored = results.some((r) => "relevance" in r && r.relevance);
+  const basis: Basis = scored ? "strong" : "closest";
+  const strong = scored ? results.filter((r) => "relevance" in r && r.relevance && isStrong(r as Ranked)) : results.slice(0, CLOSEST);
+  const key = `${basis}|${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
+  return cached(`${key}|${need ?? ""}|${story ?? ""}`, () => fresh(question, strong, basis, need, story).catch((err) => { console.error("AI overview failed", err); return null; }));
 }

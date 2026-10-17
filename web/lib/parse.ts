@@ -2,7 +2,7 @@
 // Uses Claude (structured outputs) when ANTHROPIC_API_KEY is set (see lib/llm.ts);
 // otherwise, or if the call fails, a small rule-based parser (POC fallback).
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { claude, LLM_MODEL } from "./llm";
+import { claude, fallback, PARSE_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Requirement } from "./search";
 import { LOADED_STATES } from "./filters";
@@ -65,10 +65,9 @@ async function parseFresh(question: string): Promise<Filters> {
   if (client) {
     try {
       const res = await client.beta.messages.parse({
-        model: LLM_MODEL,
+        model: PARSE_MODEL,
         max_tokens: 2048,
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
+        ...fallback(PARSE_MODEL),
         output_config: { effort: "low", format: betaZodOutputFormat(schema) },
         system: SYSTEM,
         messages: [{ role: "user", content: question }],

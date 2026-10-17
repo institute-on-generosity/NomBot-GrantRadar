@@ -1,0 +1,6784 @@
+{
+ "stamp": "2026-10-17-04-34",
+ "k": 10,
+ "goal": 0.9,
+ "macro": 0.8826530612244899,
+ "micro": 0.9020044543429844,
+ "median": 5401,
+ "rows": [
+  {
+   "q": "food banks in rural Appalachia that do workforce training, under $500K",
+   "tags": [
+    "requirement",
+    "region",
+    "budget"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "food banks rural",
+    "states": [
+     "AL",
+     "GA",
+     "KY",
+     "MD",
+     "MS",
+     "NY",
+     "NC",
+     "OH",
+     "PA",
+     "SC",
+     "TN",
+     "VA",
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": true,
+    "maxRevenue": 500000,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [
+     "workforce training"
+    ],
+    "parser": "llm"
+   },
+   "ms": 6241,
+   "total": 1170,
+   "folded": 4,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "16-1774183",
+     "name": "CITY OF REFUGE PULASKI INC",
+     "place": "PULASKI, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Rural Appalachian VA food aid with job training, under $500K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "99-3200645",
+     "name": "POWDER KEG OUTREACH INC",
+     "place": "HIGH VIEW, WV",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Rural WV vocational training fighting food insecurity, under $500K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "47-4081458",
+     "name": "UNION COUNTY TN FARMERS MARKET",
+     "place": "MAYNARDVILLE, TN",
+     "score": 60,
+     "label": {
+      "relevant": true,
+      "why": "Rural Appalachian TN food access with workforce training, small budget.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "62-0799163",
+     "name": "ANDERSON COUNTY COMMUNITY ACTION INC",
+     "place": "CLINTON, TN",
+     "score": 58,
+     "label": {
+      "relevant": false,
+      "why": "Appalachian TN food pantry, but no workforce training described.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "84-5011438",
+     "name": "NEIGHBORHOODS HANDS",
+     "place": "WINSTON SALEM, NC",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Food pantry and workforce classes, but urban Winston-Salem, not rural Appalachia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "63-1127351",
+     "name": "HALE EMPOWERMENT AND REVITALIZATION",
+     "place": "GREENSBORO, AL",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Alabama Black Belt community development, not an Appalachian food bank.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "youth mentoring nonprofits in Kentucky under $1M",
+   "tags": [
+    "budget"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "youth mentoring",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": 1000000,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "O",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5757,
+   "total": 1514,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-1379442",
+     "name": "THETA OMEGA INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Mentors young men in Louisville, small budget.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "84-4847123",
+     "name": "J E B STUDENT ATHLETE ENRICHMENT CENTER INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Provides mentoring relationships for students in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "61-1191888",
+     "name": "100 BLACK MEN OF LOUISVILLE INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Mentors young African American males in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "45-4390883",
+     "name": "MENTORING PLUS",
+     "place": "NEWPORT, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Mentoring for high-risk youth in Kentucky, under $1M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "85-2498879",
+     "name": "THOMPSON SCHOLARS FOUNDATION INC",
+     "place": "MANCHESTER, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky youth mentoring program under $1M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "47-5354733",
+     "name": "MENTORS & MEALS",
+     "place": "VERSAILLES, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky middle school mentoring program under $1M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "26-2737625",
+     "name": "YOUTH ETHICS AND SKILLS CENTER",
+     "place": "LOUISVILLE, KY",
+     "score": 85,
+     "label": {
+      "relevant": false,
+      "why": "No description; skills center, mentoring not evident.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "83-1861429",
+     "name": "WANDA JOYCE ROBINSON FOUNDATION",
+     "place": "FRANKFORT, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Mentorship for children of incarcerated parents in Kentucky, under $1M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "83-3117851",
+     "name": "ACE PROJECT INC",
+     "place": "LOUISVILLE, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Louisville youth program with mentorship, revenue under $1M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "81-5011439",
+     "name": "ROWLAND ARTS CENTER",
+     "place": "WINCHESTER, KY",
+     "score": 84,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky volunteer mentoring program for youth, small budget.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "animal shelters in Ohio",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "animal shelters",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "D",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5401,
+   "total": 1945,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "34-6004922",
+     "name": "ASHTABULA COUNTY ANIMAL PROTECTIVE LEAGUE",
+     "place": "ASHTABULA, OH",
+     "score": 96,
+     "label": {
+      "relevant": true,
+      "why": "Operates an animal shelter in Ashtabula, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "76-0846159",
+     "name": "CARROLL COUNTY ANIMAL PROTECTION LEAGUE",
+     "place": "CARROLLTON, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Operates animal shelter in Carroll County, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "31-1378848",
+     "name": "ANIMAL ADOPTION FOUNDATION",
+     "place": "HAMILTON, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "No-kill shelter for abandoned animals in Hamilton, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "31-0818511",
+     "name": "LEAGUE FOR ANIMAL WELFARE",
+     "place": "BATAVIA, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "No-kill cat and dog shelter in Batavia, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "34-0714644",
+     "name": "THE CLEVELAND ANIMAL PROTECTIVE LEAGUE",
+     "place": "CLEVELAND, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Operates large animal shelter in Cleveland, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "31-0956829",
+     "name": "HUMANE SOCIETY OF DELAWARE COUNTY",
+     "place": "DELAWARE, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Ohio humane society operating an adoption shelter.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-0952036",
+     "name": "FAIRFIELD AREA HUMANE SOCIETY",
+     "place": "LANCASTER, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Ohio humane society running an animal shelter.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "38-2016098",
+     "name": "WAYNE COUNTY HUMANE SOCIETY INC",
+     "place": "WOOSTER, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Operates an animal shelter in Wooster, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "34-1621423",
+     "name": "BEREAS ANIMAL RESCUE FUND INC",
+     "place": "COLUMBIA STA, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio shelter for stray animals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "34-1330024",
+     "name": "CHAMPAIGN COUNTY HUMANE ASSOCIATION INC",
+     "place": "URBANA, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Runs PAWS animal shelter in Urbana, Ohio.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "arts organizations in West Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "arts organizations",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "A",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5506,
+   "total": 1905,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "20-5132843",
+     "name": "KEITH ALBEE PERFORMING ARTS CENTERINC",
+     "place": "HUNTINGTON, WV",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Community arts theater in Huntington, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "83-4471579",
+     "name": "RIFFRAFF ARTS COLLECTIVE INC",
+     "place": "PRINCETON, WV",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Arts collective in Princeton, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "55-6028450",
+     "name": "ARTSBRIDGE INC",
+     "place": "PARKERSBURG, WV",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Arts support organization in Parkersburg, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "26-0041912",
+     "name": "RANDOLPH COUNTY COMMUNITY ARTS COUNSIL",
+     "place": "ELKINS, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community arts council in Elkins, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "55-0562671",
+     "name": "MONONGALIA COUNTY ARTS CENTER ASSOCIATION INC",
+     "place": "MORGANTOWN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Arts center in Morgantown, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "23-7278023",
+     "name": "ACTORS GUILD OF PARKERSBURG INC",
+     "place": "PARKERSBURG, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community theater in Parkersburg, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "55-0783904",
+     "name": "ARTSLINK INC",
+     "place": "N MARTINSVLLE, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Presents concerts and arts events in WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "86-3092218",
+     "name": "LOVE HOPE CENTER FOR THE ARTS INC",
+     "place": "FAYETTEVILLE, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Arts center in Fayetteville, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "55-0702401",
+     "name": "CLAY CENTER FOR THE ARTS & SCIENCES OF WEST VIRGINIA INC",
+     "place": "CHARLESTON, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "West Virginia arts and sciences center with arts programming.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "55-0536295",
+     "name": "APOLLO CIVIC THEATRE INC",
+     "place": "MARTINSBURG, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community theatre in Martinsburg, WV.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "housing nonprofits in Tennessee that help veterans",
+   "tags": [
+    "requirement"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "housing veterans",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "L",
+    "requirements": [
+     "Serves veterans"
+    ],
+    "parser": "llm"
+   },
+   "ms": 10731,
+   "total": 1941,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "58-1761468",
+     "name": "ALPHA OMEGA VETERANS SERVICES INC",
+     "place": "MEMPHIS, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Housing for homeless and disabled veterans in Memphis, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "62-1599468",
+     "name": "BARRON HEIGHTS COMMUNITY DEVELOPMENT CORPORATION",
+     "place": "MEMPHIS, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Transitional housing for veterans in Memphis, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "58-1673641",
+     "name": "MATTHEW 25 INCORPORATED",
+     "place": "NASHVILLE, TN",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Transitional housing for homeless veterans with VA, Nashville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "86-3824781",
+     "name": "PEARL WITH YOU INC",
+     "place": "MEMPHIS, TN",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Housing to end veteran homelessness in Memphis, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "86-3848753",
+     "name": "2ND CHANCE MINISTRY",
+     "place": "LEBANON, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Transitional housing specifically including veterans, Lebanon, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "47-3157856",
+     "name": "ANAND MARTIN FOUNDATION INC",
+     "place": "CHATTANOOGA, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Affordable housing for homeless veterans in Chattanooga, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "90-0686569",
+     "name": "AMERICA FIRST FOUNDATION INC",
+     "place": "KNOXVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Knoxville, TN nonprofit providing housing for war veterans.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "62-1638832",
+     "name": "OPERATION STAND DOWN TENNESSEE",
+     "place": "NASHVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "SSVF rent and housing assistance for TN veterans.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "45-2704829",
+     "name": "REBUILDING TOGETHER KNOXVILLE",
+     "place": "KNOXVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Repairs homes of low-income homeowners including veterans in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "94-3455841",
+     "name": "TEAM 9 HOME CARE",
+     "place": "OLD HICKORY, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Provides housing to disabled veterans and homeless in TN.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "addiction recovery programs in West Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "addiction recovery programs",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "F",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4442,
+   "total": 1918,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "85-4163668",
+     "name": "ASPIRE SERVICES CENTER",
+     "place": "MORGANTOWN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Structured addiction recovery environments in Morgantown, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "55-0784408",
+     "name": "REA OF HOPE FELLOWSHIP HOME INC",
+     "place": "CHARLESTON, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Recovery housing for WV women with addiction.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "46-0728303",
+     "name": "TEN UP MINISTRIES THRIFT STORE",
+     "place": "SAINT ALBANS, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Sober living and MAT recovery services in WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "20-5355564",
+     "name": "BRIANS SAFEHOUSE INC",
+     "place": "BECKLEY, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "West Virginia faith-based residential recovery for alcohol and substance abuse.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "85-1421696",
+     "name": "HAWC FOUNDATION",
+     "place": "HUNTINGTON, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Certified transitional living for substance recovery in WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "84-2543532",
+     "name": "UNION MISSION BEHAVIORAL HEALTH CENTER INC",
+     "place": "CHARLESTON, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Addiction recovery services in Charleston, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "72-1602813",
+     "name": "OHIO VALLEY RECOVERY INC THE UNITY CENTER",
+     "place": "BENWOOD, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Supports addiction recovery meetings in Benwood, West Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "27-0823151",
+     "name": "ONE UNIQUE RECOVERY HOUSE",
+     "place": "BUCKHANNON, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Recovery house in Buckhannon, WV, under mental health cause.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "85-4340016",
+     "name": "ABUNDANT LIFE RECOVERY HOUSING NETWORK INC",
+     "place": "MORGANTOWN, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Recovery housing network in Morgantown, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "83-1242659",
+     "name": "SEMPER LIBERI INCORPORATED",
+     "place": "MARTINSBURG, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Recovery transitional programs in Martinsburg, WV.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "free health clinics in Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "free health clinics",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "E",
+    "requirements": [
+     "free care"
+    ],
+    "parser": "llm"
+   },
+   "ms": 11001,
+   "total": 1924,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-1420756",
+     "name": "FREE CLINIC OF CENTRAL VA INC",
+     "place": "LYNCHBURG, VA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Free medical and dental clinic in Lynchburg, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "54-1921059",
+     "name": "CATOCTIN FOUNDATION INC",
+     "place": "LEESBURG, VA",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Operates Loudoun Free Clinic in Leesburg, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "51-0635977",
+     "name": "GUADALUPE FREE CLINIC OF COLONIAL BEACH INC",
+     "place": "COLONIAL BCH, VA",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer free health clinic in Colonial Beach, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "54-1993876",
+     "name": "MEL LEAMAN FREE CLINIC OF SMYTH COUNTY INC",
+     "place": "MARION, VA",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Free medical clinic in Smyth County, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "54-1610405",
+     "name": "CHARLOTTESVILLE FREE CLINIC",
+     "place": "CHARLOTTESVLE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free clinic in Virginia providing no-cost care.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "20-4715344",
+     "name": "LEDWITH LEWIS FREE CLINIC",
+     "place": "TAPPAHANNOCK, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free clinic serving low-income uninsured in Tappahannock, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "25-1922019",
+     "name": "ORANGE FREE CLINIC INC",
+     "place": "ORANGE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free primary care clinic in Orange, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "54-2032008",
+     "name": "SHENANDOAH COUNTY FREE CLINIC INC",
+     "place": "WOODSTOCK, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free clinic for low-income families in Shenandoah County, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "26-3302837",
+     "name": "WESTERN TIDEWATER FREE CLINIC INC",
+     "place": "SUFFOLK, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free clinic providing health care to uninsured in Suffolk, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "54-1801220",
+     "name": "ST LUKE COMMUNITY CLINIC INC",
+     "place": "FRONT ROYAL, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Free medical and dental clinic in Front Royal, Virginia.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "adult literacy programs in Ohio under $250K",
+   "tags": [
+    "budget"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "adult literacy programs",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": 250000,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 6428,
+   "total": 703,
+   "folded": 6,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "34-1560226",
+     "name": "NORTHWEST OHIO LITERACY COUNCIL INC",
+     "place": "LIMA, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio adult literacy tutoring, revenue under $250K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "31-1697279",
+     "name": "WOMEN WRITING FOR A CHANGE FOUNDATION",
+     "place": "CINCINNATI, OH",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Creative writing circles, not adult literacy instruction.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "45-4001689",
+     "name": "MAKING SENSE OF LANGUAGE ARTS",
+     "place": "CINCINNATI, OH",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Ohio literacy tutoring under budget, but no indication it serves adults.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "34-6539044",
+     "name": "ASSOCIATION FOR CONTINUING EDUCATION CASE WESTERN RESERVE<UNI",
+     "place": "CLEVELAND, OH",
+     "score": 52,
+     "label": {
+      "relevant": false,
+      "why": "Continuing education enrichment for university community, not literacy instruction.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "domestic violence shelters in Kentucky",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "domestic violence shelters",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4612,
+   "total": 1935,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-1276558",
+     "name": "BETHANY HOUSE ABUSE SHELTER INC",
+     "place": "SOMERSET, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Abuse shelter for DV victims in Somerset, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "61-1096261",
+     "name": "SPRINGHAVEN INC",
+     "place": "ELIZABETHTOWN, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Provides shelter to domestic violence victims in Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "61-0977016",
+     "name": "BARREN RIVER AREA SAFE SPACE INC",
+     "place": "BOWLING GREEN, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Domestic violence shelter in Bowling Green, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "47-2379743",
+     "name": "CUMBERLAND VALLEY DOMESTIC VIOLENCE SERVICES INC",
+     "place": "LONDON, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Provides shelter for DV victims in London, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "61-1234891",
+     "name": "DOMESTIC VIOLENCE EMERGENCY SERVICES OF GATEWAY INC",
+     "place": "MOREHEAD, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Emergency DV shelter in Morehead, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "61-0995748",
+     "name": "OWENSBORO AREA SHELTER INFORMATION AND SERVICES INC OASIS",
+     "place": "OWENSBORO, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Domestic violence women's shelter in Owensboro, Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-1070541",
+     "name": "SANCTUARY INC",
+     "place": "HOPKINSVILLE, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Temporary shelter for DV and rape victims in Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "20-4496496",
+     "name": "HOPES WINGS INC",
+     "place": "RICHMOND, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Operates shelter for abused women and children in Richmond, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "61-1155742",
+     "name": "SAFE HARBOR OF NORTHEAST KENTUCKY INC",
+     "place": "ASHLAND, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky domestic violence victim services organization, likely shelter.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "61-0908752",
+     "name": "ION CENTER FOR VIOLENCE PREVENTION INC",
+     "place": "COVINGTON, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky org offering emergency shelter for intimate partner violence victims.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "after-school STEM programs in Virginia",
+   "tags": [
+    "requirement"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "after-school STEM programs",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4611,
+   "total": 1920,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "82-1408294",
+     "name": "BOOLEAN GIRL INC",
+     "place": "ARLINGTON, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Virginia org providing after-school STEM classes for girls.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "54-1945545",
+     "name": "STARBASE VICTORY INC",
+     "place": "PORTSMOUTH, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Virginia youth STEM enrichment program, though in-school rather than after-school.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "52-2347666",
+     "name": "FEDERATION OF GALAXY EXPLORERS",
+     "place": "CHANTILLY, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "After-school space science enrichment in Chantilly, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "46-5254881",
+     "name": "FUTURE KINGS INC",
+     "place": "DUMFRIES, VA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Virginia STEM education program for underserved youth.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "52-1288879",
+     "name": "VIRGINIA CONGRESS OF PARENTS AND TEACHERS",
+     "place": "LEESBURG, VA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "After school enrichment with STEM/coding classes in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "82-5229225",
+     "name": "STEM FLIGHTS",
+     "place": "ALEXANDRIA, VA",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Youth STEM aviation education program in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "46-2873873",
+     "name": "YOUTH DEVELOPMENT COUNCIL OF GREENE",
+     "place": "STANARDSVILLE, VA",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Free after-school program with STEM in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "20-3253693",
+     "name": "NEWTON LEE ELEMENTARY SCHOOL PTO INCORPORATED",
+     "place": "ASHBURN, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Virginia PTO runs after-school enrichment including STEAM/lego clubs.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "82-2107962",
+     "name": "CORE EDUCATIONAL SERVICES",
+     "place": "CHANTILLY, VA",
+     "score": 72,
+     "label": {
+      "relevant": false,
+      "why": "General after-school academic services, no STEM focus stated.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "81-3211392",
+     "name": "SLIDING DOORS STEM & DYSLEXIA LEARNING CENTER",
+     "place": "ANNANDALE, VA",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Virginia after-school STEM and dyslexia learning center.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "river and watershed conservation groups in Tennessee",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "river and watershed conservation",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "C",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4674,
+   "total": 1920,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "62-1709756",
+     "name": "CUMBERLAND RIVER COMPACT INC",
+     "place": "NASHVILLE, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Cumberland River watershed group in Nashville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "62-1802858",
+     "name": "HARPETH CONSERVANCY",
+     "place": "BRENTWOOD, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Harpeth River conservancy in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "58-1746179",
+     "name": "TENNESSEE SCENIC RIVERS ASSOCIATION",
+     "place": "NASHVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee river conservation association.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "72-1594762",
+     "name": "OBED WATERSHED COMMUNITY ASSOCIATION",
+     "place": "CROSSVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Obed watershed environmental association in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "99-2628889",
+     "name": "DUCK RIVER CONSERVANCY INC",
+     "place": "NASHVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Protects Duck River and its watershed in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "82-2318211",
+     "name": "KEEP THE TENNESSEE RIVER BEAUTIFUL",
+     "place": "KNOXVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee River cleanup environmental group in Knoxville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "62-1245975",
+     "name": "WOLF RIVER CONSERVANCY INC",
+     "place": "MEMPHIS, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Wolf River conservation group in Memphis, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "20-1065856",
+     "name": "WATERWAYS",
+     "place": "CHATTANOOGA, TN",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Watershed restoration and education in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "62-0951294",
+     "name": "TENNESSEE ENVIRONMENTAL COUNCIL",
+     "place": "NASHVILLE, TN",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee group working on water quality and habitat restoration.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "23-7322143",
+     "name": "FRIENDS OF RADNOR LAKE",
+     "place": "NASHVILLE, TN",
+     "score": 75,
+     "label": {
+      "relevant": false,
+      "why": "Supports a lake natural area, not river/watershed conservation.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "community foundations in Ohio",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "community foundation",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 7085,
+   "total": 2271,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "34-1322781",
+     "name": "COMMUNITY FOUNDATION OF LORAIN COUNTY",
+     "place": "ELYRIA, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Community foundation serving Lorain County, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "34-1935499",
+     "name": "HUDSON COMMUNITY FOUNDATION",
+     "place": "HUDSON, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Hudson, Ohio community foundation with donor advised funds.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "27-1405357",
+     "name": "BEXLEY COMMUNITY FOUNDATION",
+     "place": "BEXLEY, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Bexley, Ohio community foundation.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "34-6539139",
+     "name": "MERCER COUNTY CIVIC FOUNDATION",
+     "place": "CELINA, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio county community foundation providing programs and scholarships.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "34-1405286",
+     "name": "THE TIFFIN COMMUNITY FOUNDATION",
+     "place": "TIFFIN, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community foundation for Tiffin and Seneca County, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "34-1713261",
+     "name": "THE FINDLAY-HANCOCK COUNTY COMMUNITY FOUNDATION",
+     "place": "FINDLAY, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Countywide community foundation in Findlay, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-4446189",
+     "name": "MARION COMMUNITY FOUNDATION",
+     "place": "MARION, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community foundation in Marion, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "74-3054287",
+     "name": "MARIETTA COMMUNITY FOUNDATION INC",
+     "place": "MARIETTA, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Community trust foundation in Marietta, Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "31-1428999",
+     "name": "THE GREATER OXFORD COMMUNITY FOUNDATION",
+     "place": "OXFORD, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Community foundation for Oxford, Ohio area.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "20-5860971",
+     "name": "UPPER ARLINGTON COMMUNITY FOUNDATION INC",
+     "place": "COLUMBUS, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Community foundation based in Columbus, Ohio making local grants.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "soup kitchens in Cincinnati",
+   "tags": [
+    "city"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "soup kitchen meals for hungry",
+    "states": [
+     "OH"
+    ],
+    "cities": [
+     "CINCINNATI"
+    ],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 8969,
+   "total": 1559,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "31-0879210",
+     "name": "QUEEN CITY COMMUNITY KITCHEN",
+     "place": "CINCINNATI, OH",
+     "score": 96,
+     "label": {
+      "relevant": true,
+      "why": "Operates two soup kitchens in Cincinnati.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "31-1126386",
+     "name": "OUR DAILY BREAD",
+     "place": "CINCINNATI, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Cincinnati soup kitchen serving hundreds of daily hot meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "90-0705683",
+     "name": "ST FRANCIS SERAPH MINISTRIES",
+     "place": "CINCINNATI, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Dining room serving free meals to homeless in Cincinnati.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "45-5598105",
+     "name": "ISAIAH 55 INC",
+     "place": "CINCINNATI, OH",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Serves free hot meals to community in Cincinnati.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "31-1357231",
+     "name": "ST FRANCIS-ST JOSEPH CATHOLIC WORKER HOUSE",
+     "place": "CINCINNATI, OH",
+     "score": 80,
+     "label": {
+      "relevant": false,
+      "why": "Homeless shelter meals for residents only.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "31-1341556",
+     "name": "CAIN CINCY",
+     "place": "CINCINNATI, OH",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Weekly community dinner plus pantry in Cincinnati.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "92-0659440",
+     "name": "DREAM CENTER CINCY",
+     "place": "CINCINNATI, OH",
+     "score": 74,
+     "label": {
+      "relevant": true,
+      "why": "Serves free weekly community dinners in Cincinnati.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "23-7451134",
+     "name": "INTER PARISH MINISTRY",
+     "place": "CINCINNATI, OH",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Cincinnati food pantry feeding families in need.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "31-1261322",
+     "name": "VALLEY INTERFAITH COMMUNITY RESOURCE CENTER",
+     "place": "CINCINNATI, OH",
+     "score": 72,
+     "label": {
+      "relevant": false,
+      "why": "Food pantry, not a soup kitchen serving meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "31-0537510",
+     "name": "SOCIETY OF ST VINCENT DEPAUL PARTICULAR COUNCIL OF CINTI",
+     "place": "CINCINNATI, OH",
+     "score": 70,
+     "label": {
+      "relevant": true,
+      "why": "Cincinnati food pantries and meal assistance for people in need.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "homeless shelters in Louisville",
+   "tags": [
+    "city"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "homeless shelters",
+    "states": [
+     "KY"
+    ],
+    "cities": [
+     "LOUISVILLE"
+    ],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "L",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 17045,
+   "total": 1352,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-0667139",
+     "name": "WAYSIDE CHRISTIAN MISSION",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Operates low barrier and emergency shelters in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "87-1066569",
+     "name": "A VISION FOR YOU INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Operates overnight emergency shelter beds for homeless in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "61-1135907",
+     "name": "ST JOHN CENTER INC",
+     "place": "LOUISVILLE, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Day shelter for people experiencing homelessness in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "61-0727110",
+     "name": "SOCIETY OF ST VINCENT DEPAUL COUNCIL OF LOUISVILLE",
+     "place": "LOUISVILLE, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Ozanam Inn shelter and supportive housing in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "61-1356594",
+     "name": "COMMUNITY ADVOCATES FOR RESOURCES & EMPOWERMENT INC",
+     "place": "LOUISVILLE, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Transitional housing for homeless individuals in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "99-1733822",
+     "name": "SOUL SHELTER INC",
+     "place": "LOUISVILLE, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Louisville emergency shelter homes for women in crisis.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "83-4047022",
+     "name": "SWEET EVENING BREEZE",
+     "place": "LOUISVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Emergency shelter for homeless LGBTQ+ youth in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "61-1118307",
+     "name": "COALITION FOR THE HOMELESS",
+     "place": "LOUISVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": false,
+      "why": "Coordinates homeless services; doesn't operate a shelter itself.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "82-3049204",
+     "name": "UNITING PARTNERS FOR WOMEN AND CHILDREN",
+     "place": "LOUISVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Day shelter for homeless women and children in Louisville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "51-0475765",
+     "name": "HOUSE OF HOPE KENTUCKY INC",
+     "place": "LOUISVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Provides shelter to homeless women in Louisville.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "food pantries in Knoxville",
+   "tags": [
+    "city"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "food pantries",
+    "states": [
+     "TN"
+    ],
+    "cities": [
+     "KNOXVILLE"
+    ],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 7263,
+   "total": 765,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "62-1584500",
+     "name": "HOSPITALITY PANTRIES INC",
+     "place": "KNOXVILLE, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Food pantry organization located in Knoxville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "92-3771144",
+     "name": "KNOX HAVEN",
+     "place": "KNOXVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Runs Bread of Life food pantry serving Knox County.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "37-1460143",
+     "name": "FOUNTAIN CITY MINISTRY CENTER INC",
+     "place": "KNOXVILLE, TN",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Knoxville food pantry providing emergency food bags monthly.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "82-4147458",
+     "name": "GENEROUS HOUSE KNOXVILLE",
+     "place": "KNOXVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Knoxville hunger relief providing dependable food assistance.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "83-2810611",
+     "name": "COMPASSION MINISTRY INC",
+     "place": "KNOXVILLE, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Knoxville-based mobile food pantries for local families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "62-1639138",
+     "name": "LOST SHEEP MINISTRIES INC",
+     "place": "KNOXVILLE, TN",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Knoxville ministry providing free meals to homeless; food assistance, though not a pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "59-1766786",
+     "name": "WESLEY HOUSE COMMUNITY CENTER",
+     "place": "KNOXVILLE, TN",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Operates an emergency food pantry in Knoxville.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "51-0141541",
+     "name": "KNOXVILLE NEWS-SENTINEL CHARITIES INC",
+     "place": "KNOXVILLE, TN",
+     "score": 78,
+     "label": {
+      "relevant": false,
+      "why": "Seasonal Christmas food baskets only, not an ongoing pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "46-3430928",
+     "name": "KNOXVILLE DREAM CENTER INC",
+     "place": "KNOXVILLE, TN",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Food trucks distribute food at nine Knoxville sites.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "87-4576470",
+     "name": "KNOX COUNTY COMMUNITY GARDENS AND GROWERS ALLIANCE",
+     "place": "KNOXVILLE, TN",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Community gardens alliance, not a food pantry distributing groceries.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "museums in Richmond, Virginia",
+   "tags": [
+    "city"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "museums",
+    "states": [
+     "VA"
+    ],
+    "cities": [
+     "RICHMOND"
+    ],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "A",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 6607,
+   "total": 1017,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-0505967",
+     "name": "VALENTINE MUSEUM",
+     "place": "RICHMOND, VA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Richmond history museum.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "46-4685540",
+     "name": "AMERICAN CIVIL WAR MUSEUM",
+     "place": "RICHMOND, VA",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Civil War history museum in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "51-0220694",
+     "name": "CHILDRENS MUSEUM OF RICHMOND",
+     "place": "RICHMOND, VA",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Children's museum in Richmond, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "23-7185836",
+     "name": "SCIENCE MUSEUM OF VIRGINIA FOUNDATION INCORPORATED",
+     "place": "RICHMOND, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Supports Science Museum of Virginia in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "54-1864320",
+     "name": "VIRGINIA HOLOCAUST MUSEUM",
+     "place": "RICHMOND, VA",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Holocaust museum located in Richmond, VA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "54-0699599",
+     "name": "AMERICAN CIVIL WAR MUSEUM COLLECTION",
+     "place": "RICHMOND, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Museum collection and historic house in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "52-1354117",
+     "name": "THE BLACK HISTORY MUSEUM AND CULTURAL CENTER INC",
+     "place": "RICHMOND, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Black history museum in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "54-6039788",
+     "name": "MAYMONT FOUNDATION",
+     "place": "RICHMOND, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Richmond estate with historic house museum and carriage collection.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "51-0205333",
+     "name": "VIRGINIA MUSEUM OF FINE ARTS FOUNDATION",
+     "place": "RICHMOND, VA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Supports Virginia Museum of Fine Arts in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "54-1999350",
+     "name": "AMERICAN CIVIL WAR MUSEUM FOUNDATION",
+     "place": "RICHMOND, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Fundraising arm of the American Civil War Museum in Richmond.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "youth sports leagues in Columbus Ohio",
+   "tags": [
+    "city"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "youth sports leagues",
+    "states": [
+     "OH"
+    ],
+    "cities": [
+     "COLUMBUS"
+    ],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "O",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 12006,
+   "total": 1925,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "81-4359966",
+     "name": "FINAL THIRD FOUNDATION",
+     "place": "COLUMBUS, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Runs youth recreational soccer leagues in Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "88-1329232",
+     "name": "OAHC INC",
+     "place": "COLUMBUS, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Organized youth ice hockey in central Ohio, Columbus-based.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "46-1137229",
+     "name": "MUSTANG BASEBALL OF CENTRAL OHIO",
+     "place": "COLUMBUS, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Youth baseball teams with league play in Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "99-3378669",
+     "name": "NEW AMERICAN HERITAGE SPORTS LEAGUE",
+     "place": "COLUMBUS, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Community soccer league including youth activities in Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "31-0975311",
+     "name": "WARHAWK COMET BASEBALL CLUB",
+     "place": "COLUMBUS, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Youth baseball club in central Ohio, Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "81-5382680",
+     "name": "BRICK INITIATIVE",
+     "place": "COLUMBUS, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Youth basketball instruction and league play in Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-1372561",
+     "name": "GAHANNA JUNIOR LEAGUE SPORTS INC",
+     "place": "COLUMBUS, OH",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Youth baseball and softball program in Gahanna, Columbus area.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "27-1245948",
+     "name": "COPLAY",
+     "place": "COLUMBUS, OH",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Provides youth sports activities Pre-K through 12 in Columbus.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "23-7010502",
+     "name": "OPTIMIST INTERNATIONAL",
+     "place": "COLUMBUS, OH",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Youth basketball programming for 1000+ kids in Columbus suburbs.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "20-3816804",
+     "name": "COLUMBUS CRUSADERS YOUTH SPORTS INC",
+     "place": "COLUMBUS, OH",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Columbus youth sports organization, faith-based.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "free legal aid for low-income families in Tennessee",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "free legal aid for low-income families",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 11074,
+   "total": 1939,
+   "folded": 4,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "62-0800756",
+     "name": "LEGAL AID SOCIETY OF MIDDLE TENNESSEE AND THE CUMBERLANDS",
+     "place": "NASHVILLE, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Free civil legal aid for low-income families in Middle Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "58-9132803",
+     "name": "LEGAL AID OF EAST TENNESSEE INC",
+     "place": "CHATTANOOGA, TN",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Free legal services for low-income East Tennessee residents.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "62-1630417",
+     "name": "TENNESSEE JUSTICE CENTER INC",
+     "place": "NASHVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Legal representation for low-income Tennesseans in civil matters.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "62-0979831",
+     "name": "TENNESSEE ALLIANCE FOR LEGAL SERVICES",
+     "place": "NASHVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Provides free civil legal help to disadvantaged Tennesseans via helpline and online services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "62-1558575",
+     "name": "COMMUNITY LEGAL CENTER",
+     "place": "MEMPHIS, TN",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Legal services for low-income families in Memphis.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "99-6171174",
+     "name": "JUSTICE FRANK F DROWOTA CHARITABLE TR",
+     "place": "KNOXVILLE, TN",
+     "score": 60,
+     "label": {
+      "relevant": false,
+      "why": "Grantmaking trust not yet operating; no direct legal aid.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "hospice care nonprofits in Kentucky",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "hospice care",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "E",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 12496,
+   "total": 1921,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "31-1038258",
+     "name": "HOSPICE CARE PLUS INC",
+     "place": "RICHMOND, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Richmond, KY hospice for terminally ill patients.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "31-1010160",
+     "name": "HOSPICE & PALLIATIVE CARE OF THE OHIO VALLEY INC",
+     "place": "OWENSBORO, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Owensboro hospice and palliative care provider.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "31-1035478",
+     "name": "HOSPICE OF SOUTHERN KENTUCKY INC",
+     "place": "BOWLING GREEN, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Hospice care in south-central Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "61-0978097",
+     "name": "HOSPICE OF THE BLUEGRASS INC",
+     "place": "LEXINGTON, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Hospice care provider serving 32 Kentucky counties.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "31-1010566",
+     "name": "ST ANTHONYS HOSPICE INC",
+     "place": "HENDERSON, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Henderson, KY home hospice provider.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "31-0988104",
+     "name": "HERITAGE HOSPICE INC",
+     "place": "DANVILLE, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Nonprofit hospice serving four Kentucky counties.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-0970252",
+     "name": "COMMUNITY HOSPICE INC",
+     "place": "ASHLAND, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky hospice providing care to terminally ill patients.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "31-1118731",
+     "name": "HOSPICE OF LAKE CUMBERLAND INC",
+     "place": "SOMERSET, KY",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Hospice serving seven Kentucky counties.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "31-1076528",
+     "name": "PENNYROYAL HOSPICE INC",
+     "place": "HOPKINSVILLE, KY",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Hospice care in four western Kentucky counties.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "61-0921718",
+     "name": "HOSPARUS INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Louisville hospice and palliative care organization.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "mental health counseling for teens in Ohio",
+   "tags": [
+    "requirement"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "mental health counseling for teens",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "F",
+    "requirements": [
+     "serves teens"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5010,
+   "total": 2064,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "87-1989534",
+     "name": "SARABIA FOUNDATION",
+     "place": "TOLEDO, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Mental health counseling for Toledo adolescents.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "34-0714597",
+     "name": "BEECH BROOK",
+     "place": "CLEVELAND, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Ohio child mental health counseling in schools.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "34-1191237",
+     "name": "WOOD COUNTY CHILDRENS SERVICES ASSOCIATION",
+     "place": "BOWLING GREEN, OH",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Ohio youth mental health outpatient counseling.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "23-7244648",
+     "name": "PATHWAY CARING FOR CHILDREN",
+     "place": "CANTON, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "NE Ohio child and family therapy services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "31-0972255",
+     "name": "SYNTERO INC",
+     "place": "DUBLIN, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Ohio counseling serving children and adolescents.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "34-1205791",
+     "name": "ALTA CARE GROUP INC",
+     "place": "YOUNGSTOWN, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Ohio provider of counseling for children and adolescents.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "83-4569993",
+     "name": "BLUESTONE CHILD AND ADOLESCENT PSYCHIATRIC HOSPITAL",
+     "place": "UNIVERSITY HT, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Ohio adolescent psychiatric mental health services for youth.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "31-0840585",
+     "name": "SOUTH COMMUNITY INC",
+     "place": "DAYTON, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Dayton school youth counseling program for mental health.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "34-6573631",
+     "name": "RAVENWOOD MENTAL HEALTH CENTER",
+     "place": "CHARDON, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Ohio mental health center with adolescent treatment.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "34-1869667",
+     "name": "FAMILY LIFE COUNSELING & PSYCHIATRIC SERVICES",
+     "place": "MANSFIELD, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Ohio mental health counseling for youth and families.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "veterans service organizations in West Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "veterans service organizations",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4681,
+   "total": 1917,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "55-0668800",
+     "name": "AMERICAN LEGION",
+     "place": "CHARLESTON, WV",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "State American Legion veterans organization in Charleston, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "55-0320759",
+     "name": "VETERANS OF FOREIGN WARS OF THE UNITED STATES DEPT OF WEST VA",
+     "place": "S CHARLESTON, WV",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "VFW department serving West Virginia veterans.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "55-0682583",
+     "name": "AMVETS",
+     "place": "FALLING WTRS, WV",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "AMVETS supporting veterans in WV eastern panhandle.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "55-0332288",
+     "name": "VETERANS OF FOREIGN WARS DEPARTMENT OF WEST VIRGINIA",
+     "place": "MASONTOWN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Self-described veterans service organization in WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "55-6037194",
+     "name": "AMERICAN LEGION POST 111 LINCOLN COUNTY",
+     "place": "HAMLIN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "American Legion post serving veterans in West Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "55-0371148",
+     "name": "AMERICAN LEGION",
+     "place": "WELLSBURG, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "American Legion veterans post in Wellsburg, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "33-5018481",
+     "name": "MOTOWN MARINES INC",
+     "place": "MORGANTOWN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Morgantown, WV group providing veteran support and outreach.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "23-7171916",
+     "name": "VETERANS OF FOREIGN WARS DEPARTMENT OF WEST VIRGINIA",
+     "place": "MASON, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "VFW post in WV assisting veterans, including VA claims.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "55-0334789",
+     "name": "VETERANS OF FOREIGN WARS DEPARTMENT OF WEST VIRGINIA",
+     "place": "GRAFTON, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "VFW post supporting veterans in Grafton, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "55-0715928",
+     "name": "VIETNAM VETERANS OF AMERICA INC",
+     "place": "PRINCETON, WV",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Vietnam Veterans chapter in Princeton, WV assisting veterans.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "habitat for humanity affiliates in Virginia",
+   "tags": [
+    "name"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "habitat for humanity affiliate affordable home building",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "L",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5195,
+   "total": 1898,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-1960498",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "HAYES, VA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Habitat affiliate serving Gloucester-Mathews, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "54-1541798",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "MECHANICSVLLE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Hanover and King William Habitat affiliate in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "52-1431619",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "NEWPORT NEWS, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Habitat Peninsula & Greater Williamsburg affiliate in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "54-1385198",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "RICHMOND, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Richmond Metro Habitat affiliate in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "54-1595774",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "WARRENTON, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Habitat for Humanity affiliate in Warrenton, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "54-1483949",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL",
+     "place": "LEXINGTON, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Rockbridge Area Habitat affiliate in Lexington, Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "20-2832203",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "CHARLOTTESVLE, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Habitat for Humanity Virginia, state support org for VA affiliates.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "54-1367548",
+     "name": "NEW RIVER VALLEY HABITAT FOR HUMANITY INC",
+     "place": "CHRISTIANSBRG, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "New River Valley Habitat affiliate in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "54-1640558",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "PALMYRA, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Fluvanna County Habitat affiliate in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "54-1587929",
+     "name": "HABITAT FOR HUMANITY INTERNATIONAL INC",
+     "place": "DANVILLE, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Danville-Pittsylvania Habitat affiliate in Virginia.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "boys and girls clubs in Tennessee",
+   "tags": [
+    "name"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "boys and girls clubs",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "O",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4391,
+   "total": 1931,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "26-4568046",
+     "name": "BOYS & GIRLS CLUBS IN TENNESSEE",
+     "place": "KNOXVILLE, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Statewide Boys & Girls Clubs alliance in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "62-0540402",
+     "name": "BOYS AND GIRLS CLUB OF MIDDLE TENNESSEE INC",
+     "place": "NASHVILLE, TN",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Club in Nashville, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "62-0475743",
+     "name": "BOYS & GIRLS CLUBS OF THE TENNESSEE VALLEY",
+     "place": "KNOXVILLE, TN",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Clubs in Knoxville, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "62-0784907",
+     "name": "BOYS & GIRLS CLUB OF JACKSON INC",
+     "place": "JACKSON, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Club operating in Jackson, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "62-0646371",
+     "name": "BOYS & GIRLS CLUBS OF GREATER MEMPHIS",
+     "place": "MEMPHIS, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Clubs in Memphis, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "62-0589052",
+     "name": "BOYS AND GIRLS CLUBS OF THE CLINCH VALLEY",
+     "place": "OAK RIDGE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Clubs in Oak Ridge, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "62-1706248",
+     "name": "BOYS & GIRLS CLUB OF GREENEVILLE GREENE COUNTY",
+     "place": "GREENEVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Club in Greeneville, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "62-1507789",
+     "name": "BOYS & GIRLS CLUB OF THE SMOKY MOUNTAINS INC",
+     "place": "SEVIERVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Club in Sevier County, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "20-5767918",
+     "name": "BOYS AND GIRLS CLUBS OF THECUMBERLAND PLATEAU INC",
+     "place": "ONEIDA, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys and Girls Club in Oneida, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "62-1611131",
+     "name": "BOYS & GIRLS CLUB OF MAURY COUNTY INC",
+     "place": "COLUMBIA, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Boys & Girls Club in Maury County, Tennessee.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "volunteer fire departments in rural Kentucky",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "volunteer fire department rural",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4961,
+   "total": 1935,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-1272088",
+     "name": "WAX VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "CLARKSON, KY",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural community in Clarkson, Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "61-0985349",
+     "name": "BREMEN COMMUNITY VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "BREMEN, KY",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural area in Bremen, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "61-1314420",
+     "name": "LOAD VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "GREENUP, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural Greenup County, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "61-1147750",
+     "name": "SOUTH BARREN VOLUNTTER FIRE DEPARTMENT INC",
+     "place": "GLASGOW, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural Barren County, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "61-1038661",
+     "name": "NEW LIBERTY VOLUNTEER FIRE DEPARTMENT INCORPORATED",
+     "place": "NEW LIBERTY, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural Owen County, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "61-6039297",
+     "name": "HARDYVILLE VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "MUNFORDVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department covering 100+ square miles in Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "33-2109297",
+     "name": "SUMMERSVILLE VOLUNTEER FIRE DEPARTMENT",
+     "place": "SUMMERSVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural Green County, Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "61-1036599",
+     "name": "VICCO SASSAFRAS VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "VICCO, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire and rescue in Vicco, KY, outside larger cities.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "62-1337973",
+     "name": "AUSTIN-TRACY VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "LUCAS, KY",
+     "score": 91,
+     "label": {
+      "relevant": true,
+      "why": "Volunteer fire department serving rural Barren County, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "80-0606265",
+     "name": "WEBSTER AREA VOLUNTEER FIRE DEPARTMENT INC",
+     "place": "HARNED, KY",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Rural volunteer fire department in Harned, KY.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "small animal rescues in Virginia under $100K",
+   "tags": [
+    "budget"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "animal rescue",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": 100000,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "D",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5679,
+   "total": 518,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-1861487",
+     "name": "CAT RESCUE INC",
+     "place": "CHESAPEAKE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Small Virginia cat rescue with revenue about $50K, under cap.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "37-1587960",
+     "name": "A CATS FRIEND INC",
+     "place": "FRONT ROYAL, VA",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Small foster-based cat/dog rescue in Virginia under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "47-5189520",
+     "name": "NOVA PETS ALIVE",
+     "place": "FAIRFAX, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Fairfax animal rescue and adoption under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "86-1548277",
+     "name": "WENDYS PLACE CAT RESCUE INC",
+     "place": "STAUNTON, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Small Virginia cat rescue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "03-0580245",
+     "name": "PAWS & CLAWS SPCA OF HALIFAX COUNTY",
+     "place": "SOUTH BOSTON, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Virginia animal rescue with revenue under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "47-1430057",
+     "name": "SECOND CHANCE ANIMAL RESCUE",
+     "place": "ORANGE, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Virginia animal rescue under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "39-3198956",
+     "name": "PEPPER S RESCUE AND REHABILITATION INC",
+     "place": "GLOUCESTER, VA",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Small Virginia animal rescue, revenue well under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "76-0826022",
+     "name": "COMMONWEALTH CAT RESCUE INC",
+     "place": "OAKTON, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Virginia cat and pet rescue with tiny revenue under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "27-2461781",
+     "name": "DOG WORLD RESCUE INC",
+     "place": "CLIFTON, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Small Virginia dog rescue under $100K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "83-2589365",
+     "name": "PROJECT SECOND CHANCE INC",
+     "place": "ALEXANDRIA, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Virginia-based animal rescue under $100K revenue.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "literacy nonprofits under $50K in West Virginia",
+   "tags": [
+    "budget"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "literacy",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": 50000,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5745,
+   "total": 251,
+   "folded": 8,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "55-0645632",
+     "name": "LITERACY VOLUNTEERS OF HARRISON COUNTY INC",
+     "place": "CLARKSBURG, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "WV literacy tutoring nonprofit, revenue well under $50K.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "93-3980431",
+     "name": "ALL ABOARD BOOKS INC",
+     "place": "TERRA ALTA, WV",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "WV reading promotion via author visits, under $50K.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "large hospitals in Ohio over $100M",
+   "tags": [
+    "budget",
+    "min-revenue"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "hospitals",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": 100000000,
+    "ntee": null,
+    "nteeHint": "E",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5772,
+   "total": 89,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "34-4428256",
+     "name": "TOLEDO HOSPITAL",
+     "place": "TOLEDO, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Ohio acute care hospital with $1.67B revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "34-0714357",
+     "name": "CHILDRENS HOSPITAL MEDICAL CENTER OF AKRON",
+     "place": "AKRON, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Ohio pediatric hospital system, $1.54B revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "32-0483994",
+     "name": "AULTMAN HEALTH FOUNDATION GROUP RETURN",
+     "place": "CANTON, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Canton teaching hospital, over $1B revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "32-0007056",
+     "name": "OHIOHEALTH CORPORATION",
+     "place": "COLUMBUS, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Ohio hospital system with $2.2B revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "31-4394942",
+     "name": "OHIOHEALTH CORPORATION",
+     "place": "COLUMBUS, OH",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Ohio hospital system with $5.7B revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "90-0059117",
+     "name": "UNIVERSITY HOSPITALS HEALTH SYSTEM INC",
+     "place": "SHAKER HTS, OH",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Large Ohio hospital system with revenue far above $100M.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "31-1480941",
+     "name": "GENESIS HEALTHCARE SYSTEM",
+     "place": "ZANESVILLE, OH",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Zanesville hospital system, $760M revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "31-4379443",
+     "name": "ADENA HEALTH SYSTEM",
+     "place": "CHILLICOTHE, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Ohio hospital system with $704M revenue.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "31-0564121",
+     "name": "DAYTON OSTEOPATHIC HOSPITAL",
+     "place": "MIAMISBURG, OH",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Ohio hospital system, revenue ~$870M, many discharges.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "34-0714775",
+     "name": "UNIVERSITY HOSPITALS HEALTH SYSTEM INC",
+     "place": "SHAKER HTS, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio hospital system with ~$955M revenue.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "organizations that help refugees resettle in Kentucky",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "refugee resettlement",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4313,
+   "total": 1919,
+   "folded": 2,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-1229842",
+     "name": "KENTUCKY REFUGEE MINISTRIES INC",
+     "place": "LOUISVILLE, KY",
+     "score": 96,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky refugee resettlement agency providing housing, employment, cash aid.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "61-0994341",
+     "name": "WESTERN KENTUCKY REFUGEE MUTUAL ASSISTANCE SOCIETY INC",
+     "place": "BOWLING GREEN, KY",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Provides refugee resettlement services in Bowling Green, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "61-1239600",
+     "name": "CATHOLIC CHARITIES OF LOUISVILLE INC",
+     "place": "LOUISVILLE, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Louisville charity running refugee resettlement programs.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "84-2433939",
+     "name": "COMMUNITY RESPONSE COALITION OF KENTUCKY INC",
+     "place": "LEXINGTON, KY",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky group providing wraparound support to immigrant families, likely including refugees.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "82-1800077",
+     "name": "THE WELCOME PROJECT INC",
+     "place": "OWENSBORO, KY",
+     "score": 75,
+     "label": {
+      "relevant": true,
+      "why": "Helps refugees in Owensboro become established with community resources.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "90-0716712",
+     "name": "SOMALI COMMUNITY SERVICES OF MAYFIELD",
+     "place": "LOUISVILLE, KY",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Helps Somali refugees integrate with ESL, jobs in Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "87-2173508",
+     "name": "COMMUNITY AGENDA FOR REGAINED EMPOWERMENT",
+     "place": "BOWLING GREEN, KY",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Serves refugee and immigrant communities in Bowling Green.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "99-0996363",
+     "name": "FAMILY SALOUM INC",
+     "place": "LOUISVILLE, KY",
+     "score": 52,
+     "label": {
+      "relevant": true,
+      "why": "Louisville group supporting African immigrants' integration, close to refugee resettlement.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "groups that teach coding to girls in Ohio",
+   "tags": [
+    "requirement"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "teach coding to girls",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [
+     "coding instruction for girls"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5331,
+   "total": 1963,
+   "folded": 5,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "16-1703355",
+     "name": "TECH CORPS",
+     "place": "COLUMBUS, OH",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Ohio tech education programs for K-12, highlights girls in technology.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "99-2111866",
+     "name": "LEADERS HUB FOUNDATION",
+     "place": "COLUMBUS, OH",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Free coding and programming training in Ohio, though not girl-specific.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "46-3714466",
+     "name": "SYLVAN ROBOTICS",
+     "place": "SYLVANIA, OH",
+     "score": 66,
+     "label": {
+      "relevant": false,
+      "why": "General youth robotics, not girl-focused coding.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "47-4847031",
+     "name": "INSPIRE GIRLS ACADEMY",
+     "place": "SOLON, OH",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Girls STEAM play camp; no coding mentioned.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "93-2266120",
+     "name": "MAKERSPACE CENTRAL",
+     "place": "CANTON, OH",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "General K-12 STEM in Ohio, not coding specifically for girls.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "farmers markets and local food systems in Appalachia",
+   "tags": [
+    "region"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "farmers markets local food systems",
+    "states": [
+     "AL",
+     "GA",
+     "KY",
+     "MD",
+     "MS",
+     "NY",
+     "NC",
+     "OH",
+     "PA",
+     "SC",
+     "TN",
+     "VA",
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": true,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5305,
+   "total": 1626,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "06-1642769",
+     "name": "APPALACHIAN SUSTAINABLE AGRICULTURE PROJECT",
+     "place": "ASHEVILLE, NC",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Links Appalachian farmers to markets; Appalachian Grown local food program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "34-2011588",
+     "name": "BLUE RIDGE WOMEN IN AGRICULTURE",
+     "place": "BOONE, NC",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Food hub and farmers markets in Boone, Appalachian NC.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "46-2030131",
+     "name": "NOURISH KNOXVILLE",
+     "place": "KNOXVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Operates farmers markets in East Tennessee, Appalachian region.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "81-5406689",
+     "name": "JEFFERSON G A P COALITION INC",
+     "place": "CHARLES TOWN, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "West Virginia local farmers market connecting growers with community, in Appalachia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "46-3787141",
+     "name": "WYTHEVILLE FARMERS MARKET",
+     "place": "WYTHEVILLE, VA",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Farmers market in southwest Virginia, Appalachian region.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "47-4081458",
+     "name": "UNION COUNTY TN FARMERS MARKET",
+     "place": "MAYNARDVILLE, TN",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Operates farmers market and shared kitchen in Appalachian East Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "46-3744383",
+     "name": "JONESBOROUGH LOCALLY GROWN",
+     "place": "JONESBOROUGH, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Local food market and education in Appalachian Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "45-5212352",
+     "name": "TRI-STATE LOCAL FOODS",
+     "place": "HUNTINGTON, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Year-round local farmers market in Huntington, WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "82-3078333",
+     "name": "WEST VIRGINIA FARMERS MARKET ASSOCIATION INCORPORATED",
+     "place": "CHARLESTON, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Supports farmers markets across West Virginia, core Appalachia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "31-1765073",
+     "name": "ATHENS FARMERS MARKET",
+     "place": "ATHENS, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Supports local growers' market in Appalachian southeastern Ohio.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "Appalachian music and folk heritage preservation",
+   "tags": [
+    "region"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "music folk heritage preservation",
+    "states": [
+     "AL",
+     "GA",
+     "KY",
+     "MD",
+     "MS",
+     "NY",
+     "NC",
+     "OH",
+     "PA",
+     "SC",
+     "TN",
+     "VA",
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": true,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "A",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5295,
+   "total": 1350,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "81-1618359",
+     "name": "ALLEGHANY JAM",
+     "place": "SPARTA, NC",
+     "score": 96,
+     "label": {
+      "relevant": true,
+      "why": "Preserves Appalachian heritage through traditional music instruction.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "54-1375171",
+     "name": "APPALACHIAN TRADITIONS INC",
+     "place": "NORTON, VA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Preserves Appalachian culture and folk music through festivals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "26-3375902",
+     "name": "JUNIOR APPALACHIAN MUSICIANS INC",
+     "place": "INDEPENDENCE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Preserves Appalachian old time and bluegrass music traditions for children.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "26-4283131",
+     "name": "CHESTNUT CREEK SCHOOL OF THE ARTS",
+     "place": "GALAX, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Preserves SW Virginia heritage; Junior Appalachian Musicians program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "04-3595011",
+     "name": "MUSEUM OF APPALACHIA",
+     "place": "CLINTON, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Museum preserving southern Appalachian history and culture.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "58-1322291",
+     "name": "HAYWOOD COUNTY ARTS COUNCIL INC",
+     "place": "WAYNESVILLE, NC",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Preserves mountain heritage; JAM old-time music program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "51-0523797",
+     "name": "WEST VIRGINIA MUSIC HALL OF FAME INC",
+     "place": "CHARLESTON, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Preserves West Virginia music, core Appalachian heritage.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "45-5050781",
+     "name": "APPALACHIAN HERITAGE SCHOOLS",
+     "place": "MARION, VA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Preserves Appalachian heritage via fiddle and quilting workshops.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "58-1867950",
+     "name": "SMITHVILLE FIDDLERS JAMBOREE CRAFTS FESTIVAL",
+     "place": "SMITHVILLE, TN",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Explicitly preserves Appalachian music and arts.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "54-1097933",
+     "name": "HISTORIC CRAB ORCHARD MUSEUM & PIONEER PARK INC",
+     "place": "TAZEWELL, VA",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Preserves and promotes Appalachian cultural heritage through museum programs.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "coal miner black lung advocacy groups",
+   "tags": [
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "coal miner black lung advocacy",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [
+     "black lung advocacy"
+    ],
+    "parser": "llm"
+   },
+   "ms": 4741,
+   "total": 2019,
+   "folded": 7,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "61-1401589",
+     "name": "APPALACHIAN CITIZENS LAW CENTER INC",
+     "place": "WHITESBURG, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Provides legal help and policy advocacy for black lung victims.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "01-0728178",
+     "name": "ALVEOLI CORPORATION",
+     "place": "CANONSBURG, PA",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Screens coal miners and provides black lung benefits assistance.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "27-0037896",
+     "name": "THE CENTER FOR ASBESTOS RELATED DISEASE INC",
+     "place": "LIBBY, MT",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Asbestos disease, not coal miner black lung.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "opioid overdose prevention in Appalachia",
+   "tags": [
+    "region"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "opioid overdose prevention",
+    "states": [
+     "AL",
+     "GA",
+     "KY",
+     "MD",
+     "MS",
+     "NY",
+     "NC",
+     "OH",
+     "PA",
+     "SC",
+     "TN",
+     "VA",
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": true,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "F",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5373,
+   "total": 1301,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "83-4703600",
+     "name": "WEST VIRGINIA DRUG INTERVENTION INSTITUTE INC",
+     "place": "DUNBAR, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "WV naloxone training and overdose death prevention.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "26-1614056",
+     "name": "COFFEE COUNTY ANTI-DRUG COALITION",
+     "place": "MANCHESTER, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee coalition running opioid abuse prevention program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "85-0586081",
+     "name": "SOLUTIONS ORIENTED ADDICTION RESPONSE",
+     "place": "CHARLESTON, WV",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "WV harm reduction outreach directly mitigating overdose crisis.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "86-2294038",
+     "name": "HOPE PARTNERSHIP PROJECT",
+     "place": "CHILLICOTHE, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Ross County, Ohio overdose prevention and harm reduction in Appalachian Ohio.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "84-4683212",
+     "name": "BRADLEY PREVENTION COALITION INC",
+     "place": "CLEVELAND, TN",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Cleveland TN overdose prevention with monthly Narcan training.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "26-2584597",
+     "name": "HAMILTON COUNTY COALITION",
+     "place": "CHATTANOOGA, TN",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Chattanooga coalition reducing opioid fatalities in Appalachian SE Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "47-2607914",
+     "name": "SULLIVAN COUNTY ANTI-DRUG COALITION",
+     "place": "BLOUNTVILLE, TN",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Northeast TN harm reduction funded by opioid settlement.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "62-0579512",
+     "name": "RIDGEVIEW PSYCHIATRIC HOSPITAL AND AND CENTER INC",
+     "place": "OAK RIDGE, TN",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "East Tennessee provider with programs addressing the regional opioid epidemic.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "46-1152734",
+     "name": "EVIDENCE BASED ADDICTION MEDICINE",
+     "place": "JOHNSON CITY, TN",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Opioid addiction treatment clinic in Johnson City, TN, within Appalachia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "93-3295903",
+     "name": "JACKSON COUNTY PREVENTION PARTNERSHIP",
+     "place": "GAINESBORO, TN",
+     "score": 70,
+     "label": {
+      "relevant": true,
+      "why": "Opioid use prevention in Appalachian Tennessee county.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "clean water access projects in rural West Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "clean water access rural",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "C",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4696,
+   "total": 1922,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "55-0601592",
+     "name": "WEST VIRGINIA COMMUNITY ACTION PARTNERSHIPS INC",
+     "place": "CHARLESTON, WV",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "RCAP helps small rural WV communities develop water and wastewater facilities.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "55-0739158",
+     "name": "FRIENDS OF THE CHEAT INC",
+     "place": "KINGWOOD, WV",
+     "score": 72,
+     "label": {
+      "relevant": false,
+      "why": "Acid mine drainage stream restoration, not water access.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "55-0583943",
+     "name": "MINISTERS RUN WATER ASSOCIATION",
+     "place": "RIVESVILLE, WV",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Rural WV water utility providing water to households.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "55-0747132",
+     "name": "CANAAN VALLEY INSTITUTE INC",
+     "place": "DAVIS, WV",
+     "score": 70,
+     "label": {
+      "relevant": false,
+      "why": "Stream restoration and research, not drinking water access.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "52-1736621",
+     "name": "WEST VIRGINIA RIVERS COALITION INC",
+     "place": "CHARLESTON, WV",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "WV water quality and drinking water source protection work.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "81-1405442",
+     "name": "APPALACHIAN HEADWATERS INC",
+     "place": "LEWISBURG, WV",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Stream and forest restoration, not drinking water access.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "32-0335972",
+     "name": "BUFFALO CREEK WATERSHED INC",
+     "place": "AMHERSTDALE, WV",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Creek remediation and fishing events, not clean water access.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "46-1930328",
+     "name": "GREENBRIER VALLEY RESTORATION PROJECT INCORPORATED",
+     "place": "LEWISBURG, WV",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Watershed protection and community center, not water access projects.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "83-2281021",
+     "name": "TWIN MISSIONS INTERNATIONAL",
+     "place": "MOUNT HOPE, WV",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Clean water work appears international, not rural West Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "51-0523437",
+     "name": "PINEY CREEK WATERSHED ASSOCIATION INC",
+     "place": "BECKLEY, WV",
+     "score": 50,
+     "label": {
+      "relevant": true,
+      "why": "Watershed water quality protection projects in rural southern WV.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "food banks that also offer job training",
+   "tags": [
+    "requirement",
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "food banks",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [
+     "job training"
+    ],
+    "parser": "llm"
+   },
+   "ms": 4947,
+   "total": 3015,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "58-2471596",
+     "name": "ENCOMPASS MINISTRIES INC",
+     "place": "WOODSTOCK, GA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Food pantry plus employment and workforce training.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "80-0902222",
+     "name": "GODS PANTRY",
+     "place": "POMONA, CA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Food bank that trains and helps people secure employment.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "81-5106159",
+     "name": "HOPE STARTS HERE FOOD BANK",
+     "place": "CENTENNIAL, CO",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Food bank offering employment opportunities alongside food.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "91-2144590",
+     "name": "TENINO COMMUNITY SERVICE CENTER",
+     "place": "TENINO, WA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Food bank with a Workforce Training Program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "47-1654162",
+     "name": "SAHUARITA FOOD BANK",
+     "place": "SAHUARITA, AZ",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Food bank with coalition offering employment and training assistance.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "86-1946998",
+     "name": "KCG FOOD BANK",
+     "place": "PHILADELPHIA, PA",
+     "score": 65,
+     "label": {
+      "relevant": true,
+      "why": "Food access plus youth workforce opportunities.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "45-5480270",
+     "name": "FBH COMMUNITY INC",
+     "place": "DAYTONA BEACH, FL",
+     "score": 60,
+     "label": {
+      "relevant": true,
+      "why": "Food program plus workforce development and employment services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "84-3194218",
+     "name": "CEDAR KEY FOOD PANTRY INC",
+     "place": "CEDAR KEY, FL",
+     "score": 60,
+     "label": {
+      "relevant": true,
+      "why": "Food pantry that funds vocational training expenses.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "74-2380446",
+     "name": "BRAZOS VALLEY FOOD BANK INC",
+     "place": "BRYAN, TX",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Food bank; job training not explicitly mentioned.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "46-3327035",
+     "name": "HEART FOOD PANTRY",
+     "place": "REYNOLDSBURG, OH",
+     "score": 55,
+     "label": {
+      "relevant": false,
+      "why": "Food pantry; no job training described.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "animal shelters that offer low-cost spay and neuter",
+   "tags": [
+    "requirement",
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "animal shelters",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "D",
+    "requirements": [
+     "low-cost spay and neuter"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5043,
+   "total": 2656,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "46-1120939",
+     "name": "WABASH COUNTY ANIMAL SHELTER INC",
+     "place": "WABASH, IN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Shelter with low-cost spay/neuter programs.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "48-0554339",
+     "name": "KANSAS HUMANE SOCIETY OF WICHITA INC",
+     "place": "WICHITA, KS",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Shelter offering subsidized spay/neuter for low-income pet owners.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "36-3432468",
+     "name": "STAFFORD ANIMAL SHELTER",
+     "place": "LIVINGSTON, MT",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Shelter partners with vets to provide low-cost spay/neuter.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "15-0532256",
+     "name": "FINGER LAKES SPCA OF CENTRAL NEW YORK",
+     "place": "AUBURN, NY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Shelter offering low-cost spay/neuter clinics.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "11-6000821",
+     "name": "LITTLE SHELTER ANIMAL ADOPTION CENTER INC",
+     "place": "HUNTINGTON, NY",
+     "score": 88,
+     "label": {
+      "relevant": false,
+      "why": "Spay/neuter only for its own adopted animals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "59-2507088",
+     "name": "JEFFERSON COUNTY HUMANE SOCIETY INC",
+     "place": "MONTICELLO, FL",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Shelter that provides and promotes a spay/neuter program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "23-1425036",
+     "name": "MONTGOMERY COUNTY SOCIETY FOR THE PREVENTION OF CRUELTY TO ANIMALS",
+     "place": "CONSHOHOCKEN, PA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Shelter with clinic offering public spay/neuter service programs.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "20-2631724",
+     "name": "EASY STREET ANIMAL SHELTER",
+     "place": "SAINT JO, TX",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Shelter offering community spay/neuter assistance and TNR.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "01-0344891",
+     "name": "FRANKLIN COUNTY ANIMAL SHELTER",
+     "place": "FARMINGTON, ME",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Shelter promoting and supporting community spay/neuter.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "54-2021941",
+     "name": "ASSISI ANIMAL CLINICS OF VIRGINIA INC",
+     "place": "ROANOKE, VA",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Shelter plus low-cost community pet clinic.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "housing nonprofits that provide financial literacy classes",
+   "tags": [
+    "requirement",
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "housing",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "L",
+    "requirements": [
+     "financial literacy classes"
+    ],
+    "parser": "llm"
+   },
+   "ms": 7567,
+   "total": 3839,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "92-1325113",
+     "name": "REAL ESTATE FOUNDATION INC",
+     "place": "TAMPA, FL",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Housing counseling with financial literacy and online education courses.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "39-1322491",
+     "name": "NEIGHBORHOOD HOUSING SERVICES OF BELOIT INC",
+     "place": "BELOIT, WI",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Housing org offering financial literacy education.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "06-1006312",
+     "name": "NEIGHBORHOOD HOUSING SERVICE OF NEW BRITAIN INC",
+     "place": "NEW BRITAIN, CT",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Housing nonprofit offering group financial education and budgeting coaching.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "47-0772308",
+     "name": "NEXTPOINT HOME DEVELOPMENT",
+     "place": "HASTINGS, NE",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Affordable housing developer providing financial education.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "83-2674900",
+     "name": "COLLECTIVE CHICAGO",
+     "place": "CHICAGO, IL",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Transitional housing offering financial literacy services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "86-0732457",
+     "name": "HOUSING SOLUTIONS OF NORTHERN ARIZONA INC",
+     "place": "FLAGSTAFF, AZ",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Housing counseling agency offering financial literacy counseling.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "82-1256585",
+     "name": "MAXCEN HOUSING SOCIETY DC BRANCH",
+     "place": "WASHINGTON, DC",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Housing nonprofit with adult financial literacy programming.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "23-7099108",
+     "name": "CONSTRUCT INC",
+     "place": "GREAT BARRINGTON, MA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Housing services include financial coaching.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "52-0958568",
+     "name": "HOUSING COUNSELING SERVICES INC",
+     "place": "WASHINGTON, DC",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Housing counseling with financial counseling and education.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "74-2678601",
+     "name": "FOUNDATION COMMUNITIES",
+     "place": "AUSTIN, TX",
+     "score": 75,
+     "label": {
+      "relevant": true,
+      "why": "Affordable housing provider offering adult financial education services.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "churches that run food pantries in Tennessee",
+   "tags": [
+    "requirement"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "churches",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [
+     "runs a food pantry"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5238,
+   "total": 2955,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "92-3771144",
+     "name": "KNOX HAVEN",
+     "place": "KNOXVILLE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Faith-based Knoxville ministry running Bread of Life food pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "62-1799802",
+     "name": "REGIONAL EDUCATIONAL AND ENVIRON- MENTAL PROGRAM",
+     "place": "TAZEWELL, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Tied to First Baptist Church, runs food pantry in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "62-1181398",
+     "name": "BETHESDA COMMUNITY MISSION",
+     "place": "ERIN, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Faith-based TN ministry operating a food pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "47-5525926",
+     "name": "ENGAGE CHURCH TRI-CITIES",
+     "place": "KINGSPORT, TN",
+     "score": 80,
+     "label": {
+      "relevant": false,
+      "why": "Tennessee church serving outreach meals, but no food pantry described.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "45-2383624",
+     "name": "LAST CALL 4 GRACE MINISTRIES INC",
+     "place": "MURFREESBORO, TN",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Christian ministry in Tennessee providing pantry items and meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "87-3140486",
+     "name": "JUNIPER CHURCH",
+     "place": "KNOXVILLE, TN",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee church providing food outreach and hot meals to homeless.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "90-0262650",
+     "name": "THE SOCIETY OF ST VINCENT DE PAUL OF MEMPHIS INC",
+     "place": "MEMPHIS, TN",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Catholic lay organization running a food mission in Memphis.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "62-1813012",
+     "name": "LUKE 14-12",
+     "place": "NASHVILLE, TN",
+     "score": 72,
+     "label": {
+      "relevant": false,
+      "why": "Ecumenical hot meal program, not a church food pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "62-1751911",
+     "name": "CHARIS MINISTRIES INC",
+     "place": "NASHVILLE, TN",
+     "score": 68,
+     "label": {
+      "relevant": false,
+      "why": "Food delivery ministry, not a church pantry.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "58-1611140",
+     "name": "HOPE HAVEN MINISTRIES INC",
+     "place": "KINGSPORT, TN",
+     "score": 66,
+     "label": {
+      "relevant": false,
+      "why": "Christian homeless shelter ministry, not a church-run food pantry.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "schools for children with autism in Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "schools for children with autism",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [
+     "serves children with autism"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5252,
+   "total": 1948,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-2055003",
+     "name": "ALTERNATIVE PATHS TRAINING SCHOOL INC",
+     "place": "DUMFRIES, VA",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Virginia campuses educating students with autism using ABA.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "03-0387451",
+     "name": "THE FAISON CENTER INC",
+     "place": "RICHMOND, VA",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Operates schools for children with autism in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "54-1979858",
+     "name": "MATTHEWS CENTER FOR VISUAL LEARNING",
+     "place": "MANASSAS, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Virginia private special ed day school for students with autism.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "88-1292213",
+     "name": "MAVERICK LEARNING CENTER INC",
+     "place": "VIRGINIA BCH, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Virginia school for students on the autism spectrum.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "54-1116056",
+     "name": "CHARTERHOUSE SCHOOL INC",
+     "place": "RICHMOND, VA",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Virginia special education schools serving students with autism.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "54-1815297",
+     "name": "VIRGINIA INSTITUTE OF AUTISM INCORPORATED",
+     "place": "CHARLOTTESVLE, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Operates Hormel school for students with autism in Virginia.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "54-0505950",
+     "name": "ST JOSEPHS VILLA",
+     "place": "RICHMOND, VA",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Runs Sarah Dooley Center for Autism school in Richmond.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "54-1824385",
+     "name": "FAMILIES OF AUTISTIC CHILDREN OF TIDEWATER INC",
+     "place": "VIRGINIA BCH, VA",
+     "score": 66,
+     "label": {
+      "relevant": false,
+      "why": "Social and recreational programs, not a school.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "46-3311567",
+     "name": "ONE CHILD CENTER FOR AUTISM",
+     "place": "WILLIAMSBURG, VA",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Autism therapy center, not a school.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "01-0769341",
+     "name": "PARENTS OF AUTISTIC CHILDREN NORTHERN VA POAC-NOVA",
+     "place": "BURKE, VA",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Parent/teacher training group in Virginia, not a school for autistic children.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "scholarship funds for first-generation college students in Ohio",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "scholarship funds for first-generation college students",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "B",
+    "requirements": [
+     "serves first-generation college students"
+    ],
+    "parser": "llm"
+   },
+   "ms": 8118,
+   "total": 1934,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "88-0931411",
+     "name": "LEVEL UP CINCINNATI",
+     "place": "CINCINNATI, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio scholarships specifically for first-generation college students.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "31-0840764",
+     "name": "THE CHATFIELD EDGE",
+     "place": "LOVELAND, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Ohio scholarships and support explicitly for first-generation students.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "85-2049351",
+     "name": "HOPE TOLEDO SERVICES",
+     "place": "TOLEDO, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Toledo two-generation scholarship program funding postsecondary education.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "31-1807258",
+     "name": "WILLIE & VIVIAN GADDIS FOUNDATION FOR K I D S INC",
+     "place": "COLUMBUS, OH",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Central Ohio college access program with scholarships for youth.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "23-7032312",
+     "name": "SINCLAIR COMMUNITY COLLEGE FOUNDATION",
+     "place": "DAYTON, OH",
+     "score": 72,
+     "label": {
+      "relevant": false,
+      "why": "General college foundation, not first-generation focused.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "34-1536300",
+     "name": "LIMA AREA CHAMBER FOUNDATION",
+     "place": "LIMA, OH",
+     "score": 70,
+     "label": {
+      "relevant": false,
+      "why": "College access workshops, no scholarship funding described.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "83-3463932",
+     "name": "SAY YES CLEVELAND SCHOLARSHIP INC",
+     "place": "CLEVELAND, OH",
+     "score": 68,
+     "label": {
+      "relevant": true,
+      "why": "Cleveland college scholarships improving access for district graduates.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "34-1939688",
+     "name": "CRAWFORD COLLEGE CONNECTION",
+     "place": "BUCYRUS, OH",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Ohio county college scholarships and access services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "31-1399118",
+     "name": "ANNA LOCAL SCHOOLS EDUCATION FOUNDATION",
+     "place": "ANNA, OH",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Ohio foundation awarding college scholarships to graduating seniors.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "86-2041125",
+     "name": "FRIENDS OF FRAN INC",
+     "place": "LIBERTY TWP, OH",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Ohio scholarship fund but not yet awarding; no first-gen focus.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "foster care and adoption agencies in Kentucky",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "foster care and adoption agencies",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4551,
+   "total": 1935,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "46-4105551",
+     "name": "HOPE THAT BINDS INC",
+     "place": "CUNNINGHAM, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky adoption and foster care services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "61-1358203",
+     "name": "ADOPTION ASSISTANCE INC",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky adoption assistance agency.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "46-3387149",
+     "name": "FUEGO CORPORATION",
+     "place": "LOUISVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Louisville child-placing agency offering therapeutic foster care.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "61-0458379",
+     "name": "POTTER CHILDRENS HOME AND FAMILY MINISTRIES INC",
+     "place": "BOWLING GREEN, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Bowling Green foster care program.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "61-1071817",
+     "name": "SONSHINE CHILDREN CENTER INC",
+     "place": "LINEFORK, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky organization serving foster and adoptive families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "83-3228011",
+     "name": "BE THE VILLAGE INC",
+     "place": "SOMERSET, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Supports foster and adoptive families in Pulaski County, KY.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "61-0524092",
+     "name": "PRESBYTERIAN CHILD WELFARE AGENCY OF BUCKHORN KENTUCKY INC",
+     "place": "BUCKHORN, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky agency with foster care services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "61-0595497",
+     "name": "RAMEY-ESTEP HOMES INC",
+     "place": "RUSH, KY",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Kentucky provider of foster care services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "61-0479621",
+     "name": "FATHER MALONEYS BOYS HAVEN INC",
+     "place": "LOUISVILLE, KY",
+     "score": 82,
+     "label": {
+      "relevant": true,
+      "why": "Louisville provider of therapeutic foster care services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "26-4549276",
+     "name": "ORPHAN CARE ALLIANCE INC",
+     "place": "LOUISVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Recruits foster parents and supports foster care in Kentucky.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "senior centers and meals for elderly in West Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "senior centers meals for elderly",
+    "states": [
+     "WV"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [
+     "meals for elderly"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5637,
+   "total": 1908,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "55-0539976",
+     "name": "BARBOUR COUNTY SENIOR CENTER INC",
+     "place": "PHILIPPI, WV",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "WV senior center with nutrition and meal delivery.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "55-0546156",
+     "name": "BRAXTON COUNTY SENIOR CITIZEN CENTER INC",
+     "place": "SUTTON, WV",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "WV senior center serving congregate and home-delivered meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "55-0648202",
+     "name": "CABELL COUNTY COMMUNITY SERVICES ORGANIZATION INC",
+     "place": "HUNTINGTON, WV",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Runs senior centers and meals on wheels in WV.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "55-0545763",
+     "name": "HARDY COUNTY COMMITTEE ON AGING INC",
+     "place": "MOOREFIELD, WV",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "WV county aging committee providing senior meals and services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "55-0538902",
+     "name": "COMMISSION ON AGING FAMILY SERVICES INC",
+     "place": "PETERSBURG, WV",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Grant County WV senior services with congregate and home-delivered meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "55-0536409",
+     "name": "WIRT COUNTY COMMITTEE ON AGING INC",
+     "place": "ELIZABETH, WV",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "WV aging agency with congregate and home-delivered senior meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "55-0772580",
+     "name": "CLAY-BATTELLE AREA SENIOR CITIZENS",
+     "place": "BLACKSVILLE, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "WV senior center offering hot meals and activities.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "55-0577681",
+     "name": "WOOD COUNTY SENIOR CITIZENS ASSOCIATION",
+     "place": "PARKERSBURG, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "WV senior association with congregate and home meals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "55-0487705",
+     "name": "HARRISON COUNTY SENIOR CITIZENS CENTER INC",
+     "place": "CLARKSBURG, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "WV senior center with food programs for seniors.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "55-0524706",
+     "name": "LEWIS COUNTY SENIOR CITIZENS CENTER INC",
+     "place": "WESTON, WV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "WV senior center offering congregate and home-delivered meals.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "disaster relief after floods in eastern Kentucky",
+   "tags": [
+    "region"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "disaster relief flood recovery",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": null,
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5584,
+   "total": 1918,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "99-4464652",
+     "name": "PIKE COUNTY RELIEF SERVICES INC",
+     "place": "PIKEVILLE, KY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Flood recovery for victims in Pike County, eastern Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "38-2008076",
+     "name": "APPALACHIA REACH OUT",
+     "place": "INEZ, KY",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Martin County ministry including disaster relief services.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "82-5293842",
+     "name": "EAST KENTUCKY DREAM CENTER INC",
+     "place": "PIKEVILLE, KY",
+     "score": 80,
+     "label": {
+      "relevant": true,
+      "why": "Eastern Kentucky flood relief program helping families recover.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "31-1075698",
+     "name": "UNITED HELPING HANDS OF PIKEVILLE INC",
+     "place": "PIKEVILLE, KY",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Pike County relief program for 2022 flood victims.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "83-3406337",
+     "name": "RISE ABOVE GROUP INCORPORATED",
+     "place": "LOUISA, KY",
+     "score": 74,
+     "label": {
+      "relevant": true,
+      "why": "Eastern Kentucky group providing assistance to flood victims.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "92-3660355",
+     "name": "YALL SQUAD INCORPORATED",
+     "place": "PIKEVILLE, KY",
+     "score": 72,
+     "label": {
+      "relevant": true,
+      "why": "Pikeville-based immediate natural disaster relief in eastern Kentucky.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "92-0313672",
+     "name": "FRANKFORT CARES COALITION",
+     "place": "FRANKFORT, KY",
+     "score": 66,
+     "label": {
+      "relevant": false,
+      "why": "Frankfort is central Kentucky, not eastern; flood relief is a minor activity",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "61-1076227",
+     "name": "FLOYD COUNTY EMERGENCY AND RESCUE SQUAD INCORPORATED",
+     "place": "PRESTONSBURG, KY",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Floyd County water rescue for disaster victims.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "88-2562759",
+     "name": "MAYFIELD GRAVES LTRG INC",
+     "place": "MAYFIELD, KY",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "Western Kentucky tornado recovery, not eastern Kentucky floods.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "26-0824695",
+     "name": "FAMILY DAY MINISTRIES INC",
+     "place": "MT WASHINGTON, KY",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "General family aid in Mt Washington (central KY); disaster relief incidental, not eastern floods.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "land trusts protecting farmland in Virginia",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "land trust farmland protection conservation",
+    "states": [
+     "VA"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "C",
+    "requirements": [
+     "farmland protection"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5767,
+   "total": 1927,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "54-1897302",
+     "name": "OLD DOMINION LAND CONSERVANCY INC",
+     "place": "PURCELLVILLE, VA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Virginia conservancy holding easements protecting historic countryside.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "31-0496895",
+     "name": "LAND SAVERS UNITED",
+     "place": "ROANOKE, VA",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Western Virginia easements protecting farms and rural land.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "41-2085983",
+     "name": "VIRGINIA EASTERN SHORE LAND TRUST",
+     "place": "EXMORE, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Eastern Shore Virginia land trust conserving rural lands via easements.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "54-0935569",
+     "name": "PIEDMONT ENVIRONMENTAL COUNCIL",
+     "place": "WARRENTON, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Virginia land conservation via easements protecting rural land.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "93-3449644",
+     "name": "CENTRAL VIRGINIA AGRARIAN COMMUNITY LAND TRUST",
+     "place": "RICHMOND, VA",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Virginia community land trust preserving agricultural land for farmers.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "41-2140631",
+     "name": "NORTHERN NECK LAND CONSERVANCY INC",
+     "place": "WARSAW, VA",
+     "score": 86,
+     "label": {
+      "relevant": true,
+      "why": "Northern Neck Virginia conservancy preserving rural lands with easements.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "54-2053383",
+     "name": "NEW RIVER LAND TRUST",
+     "place": "BLACKSBURG, VA",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Virginia land trust protecting family farms via easements.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "41-2233874",
+     "name": "ALLIANCE FOR THE SHENANDOAH VALLEY",
+     "place": "NEW MARKET, VA",
+     "score": 82,
+     "label": {
+      "relevant": false,
+      "why": "Advocacy and education group, not a land trust holding easements.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "54-1565794",
+     "name": "FRIENDS OF DRAGON RUN INC",
+     "place": "GLOUCESTER, VA",
+     "score": 78,
+     "label": {
+      "relevant": true,
+      "why": "Virginia group acquiring land and securing conservation easements, land-trust work.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "52-1388917",
+     "name": "THE CONSERVATION FUND A NONPROFIT CORPORATION",
+     "place": "ARLINGTON, VA",
+     "score": 62,
+     "label": {
+      "relevant": false,
+      "why": "National land conservation broadly, not specifically Virginia farmland land trust.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "theater companies in Tennessee",
+   "tags": [
+    "simple"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "theater companies",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "A",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5001,
+   "total": 1925,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "62-0418732",
+     "name": "THEATRE MEMPHIS",
+     "place": "MEMPHIS, TN",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Memphis, TN theatre producing plays.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "62-1811578",
+     "name": "NASHVILLE REPERTORY THEATRE INC",
+     "place": "NASHVILLE, TN",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Professional theatre company in Nashville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "01-0868312",
+     "name": "STREET THEATRE COMPANY",
+     "place": "NASHVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Professional theatre company in Nashville producing seasons.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "47-2489844",
+     "name": "RIVER AND RAIL THEATRE COMPANY",
+     "place": "KNOXVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Theatre company producing mainstage seasons in Knoxville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "46-1054613",
+     "name": "KNOXVILLE CHILDRENS THEATRE INC",
+     "place": "KNOXVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Children's theatre company producing plays in Knoxville, Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "23-7185772",
+     "name": "CIRCUIT PLAYHOUSE INC",
+     "place": "MEMPHIS, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Professional theatre in Memphis, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "27-0903097",
+     "name": "STUDIO TENN THEATRE COMPANY",
+     "place": "FRANKLIN, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Theatre company producing musicals and plays in Franklin, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "58-1324181",
+     "name": "JACKSON THEATRE GUILD",
+     "place": "JACKSON, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community theater producing live shows in Jackson, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "62-1734411",
+     "name": "ACTORS BRIDGE ENSEMBLE THEATER OF NASHVILLE INC",
+     "place": "NASHVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Nashville ensemble theater with professional productions.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "62-0903617",
+     "name": "GERMANTOWN COMMUNITY THEATER INC",
+     "place": "GERMANTOWN, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Community theater in Germantown, TN.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "foodbank workforce trainng in Kentuky",
+   "tags": [
+    "typo"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "food bank",
+    "states": [
+     "KY"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [
+     "workforce training"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5329,
+   "total": 1936,
+   "folded": 10,
+   "shown": []
+  },
+  {
+   "q": "help for people getting out of prison",
+   "tags": [
+    "vague",
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "reentry services for formerly incarcerated people",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5653,
+   "total": 1923,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "84-3332768",
+     "name": "REENTRY HOUSE PLUS INCORPORATED",
+     "place": "HILLSBOROUGH, NC",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Reentry housing and training for formerly incarcerated people.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "16-1702165",
+     "name": "COMMUNITY SUCCESS INITIATIVE INC",
+     "place": "RALEIGH, NC",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Adult reentry program for former prisoners.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "84-4869731",
+     "name": "GOLDEN RULE REENTRY",
+     "place": "ASHLAND, OR",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Reentry case management and group homes.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "85-3579927",
+     "name": "REIMAGINE REENTRY INC",
+     "place": "PITTSBURGH, PA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Reentry coaching and job training for formerly incarcerated.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "87-3981588",
+     "name": "AFTER LIFE INITIATIVE",
+     "place": "LOS ANGELES, CA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Supports reintegration of formerly incarcerated individuals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "82-2989132",
+     "name": "TO WHOM IT MAY CONCERN",
+     "place": "WESTERVILLE, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Reentry support, recovery housing for women after incarceration.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "47-1833909",
+     "name": "FIRST 72",
+     "place": "NEW ORLEANS, LA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Re-entry support for people returning home from prison.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "90-0794239",
+     "name": "SECOND CHANCE CENTER INC",
+     "place": "AURORA, CO",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Comprehensive reentry services for formerly incarcerated individuals.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "45-4133644",
+     "name": "HOPE FOR PRISONERS OM INC",
+     "place": "LAS VEGAS, NV",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Reentry and workforce services for people exiting the justice system.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "82-1848230",
+     "name": "IF PROJECT",
+     "place": "SEATTLE, WA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Reentry transitional support for women leaving incarceration.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "nonprofits fighting hunger",
+   "tags": [
+    "vague",
+    "no-place"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "hunger relief food",
+    "states": [],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "K3",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 4614,
+   "total": 2087,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "47-2229589",
+     "name": "GREAT PLAINS FOOD BANK",
+     "place": "FARGO, ND",
+     "score": 95,
+     "label": {
+      "relevant": true,
+      "why": "Food bank whose mission is ending hunger in North Dakota.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "23-7122205",
+     "name": "FREESTORE-FOODBANK INC",
+     "place": "CINCINNATI, OH",
+     "score": 94,
+     "label": {
+      "relevant": true,
+      "why": "Food bank working to eliminate hunger.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "68-0121855",
+     "name": "REDWOOD EMPIRE FOOD BANK",
+     "place": "SANTA ROSA, CA",
+     "score": 93,
+     "label": {
+      "relevant": true,
+      "why": "Food bank with mission to end hunger.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "91-0918619",
+     "name": "ALTERNATIVES TO HUNGER",
+     "place": "BELLINGHAM, WA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Regional hunger relief network and food bank.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "27-4262907",
+     "name": "EVERY DAY IS A MIRACLE INC",
+     "place": "BRONX, NY",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Bronx hunger relief organization feeding food-insecure families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "27-2018997",
+     "name": "BEYOND HUNGER",
+     "place": "OAK PARK, IL",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Provides hunger relief and pantries, works toward ending hunger.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "38-2379678",
+     "name": "FOOD BANK OF EASTERN MICHIGAN INC",
+     "place": "FLINT, MI",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Regional food bank feeding food-insecure residents.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "43-1241854",
+     "name": "OPERATION FOOD SEARCH INC",
+     "place": "SAINT LOUIS, MO",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Hunger relief organization providing free food and ending childhood hunger.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "33-0072922",
+     "name": "FEEDING AMERICA RIVERSIDE AND SAN BERNARDINO COUNTIES",
+     "place": "RIVERSIDE, CA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Food bank alleviating hunger in the Inland Empire.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "23-2360819",
+     "name": "SHARE FOOD PROGRAM INC",
+     "place": "PHILADELPHIA, PA",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Large regional hunger-relief food distribution organization.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "places where kids can learn music after school in Ohio",
+   "tags": [
+    "vague"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "after school youth music education",
+    "states": [
+     "OH"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "A",
+    "requirements": [
+     "after-school programs",
+     "music instruction for kids"
+    ],
+    "parser": "llm"
+   },
+   "ms": 5333,
+   "total": 1975,
+   "folded": 5,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "31-1454096",
+     "name": "THE WYOMING FINE ARTS CENTER",
+     "place": "WYOMING, OH",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Ohio arts center offering kids music programs and private lessons.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "34-1355946",
+     "name": "BROADWAY SCHOOL OF MUSIC & THE ARTS",
+     "place": "CLEVELAND, OH",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Cleveland community music school with youth lessons and drum corps.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "31-1583251",
+     "name": "CHILDRENS CHOIR OF GREATER CINCINNATI",
+     "place": "CINCINNATI, OH",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Cincinnati youth choir providing choral music education to children.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "83-2422398",
+     "name": "ACCESS THE ARTS",
+     "place": "WADSWORTH, OH",
+     "score": 62,
+     "label": {
+      "relevant": true,
+      "why": "Ohio after-school arts program for kids, includes music offerings.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "47-3694041",
+     "name": "ELYRIA ARTS COUNCIL",
+     "place": "ELYRIA, OH",
+     "score": 50,
+     "label": {
+      "relevant": false,
+      "why": "After-school visual art, not music.",
+      "by": "claude"
+     }
+    }
+   ]
+  },
+  {
+   "q": "who helps families pay utility bills in Tennessee",
+   "tags": [
+    "vague"
+   ],
+   "parser": "llm",
+   "filters": {
+    "topic": "utility bill assistance for families",
+    "states": [
+     "TN"
+    ],
+    "cities": [],
+    "appalachia": false,
+    "maxRevenue": null,
+    "minRevenue": null,
+    "ntee": null,
+    "nteeHint": "P",
+    "requirements": [],
+    "parser": "llm"
+   },
+   "ms": 5588,
+   "total": 1939,
+   "folded": 0,
+   "shown": [
+    {
+     "rank": 1,
+     "ein": "62-0926520",
+     "name": "SOUTHEAST TENNESSEE HUMAN RESOURCE AGENCY",
+     "place": "DUNLAP, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Runs LIHEAP utility assistance in Tennessee.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 2,
+     "ein": "80-0552516",
+     "name": "PROJECT HELP OF EAST TENNESSEE INC",
+     "place": "KNOXVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Emergency energy bill assistance in Knoxville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 3,
+     "ein": "62-1068615",
+     "name": "CLARKSVILLE MONTGOMERY COUNTY COMMUNITY ACTION AGENCY",
+     "place": "CLARKSVILLE, TN",
+     "score": 92,
+     "label": {
+      "relevant": true,
+      "why": "Administers low-income energy assistance in Clarksville, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 4,
+     "ein": "62-1584204",
+     "name": "GRACEWORKS MINISTRIES INC",
+     "place": "FRANKLIN, TN",
+     "score": 90,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee nonprofit providing utility payment assistance to families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 5,
+     "ein": "62-1196050",
+     "name": "HELPING HAND MINISTRY",
+     "place": "UNION CITY, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Helps needy families pay utility bills in Union City, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 6,
+     "ein": "58-1727751",
+     "name": "AID TO DISTRESSED FAMILIES OF APPALACHIAN COUNTIES INC-ADFAC INC",
+     "place": "OAK RIDGE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Household Assistance Program covers utilities for Tennessee families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 7,
+     "ein": "62-1778240",
+     "name": "COMMUNITY CARE MINISTRIES",
+     "place": "TULLAHOMA, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Provided utility assistance to families in Tullahoma, TN.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 8,
+     "ein": "62-1835250",
+     "name": "SMITH COUNTY HELP CENTER INC",
+     "place": "CARTHAGE, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Provides emergency utility assistance to Tennessee families.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 9,
+     "ein": "06-1640635",
+     "name": "ARK COMMUNITY RESOURCE & ASSISTANCE CENTER",
+     "place": "PEGRAM, TN",
+     "score": 88,
+     "label": {
+      "relevant": true,
+      "why": "Tennessee center offering bill pay assistance for those unable to pay.",
+      "by": "claude"
+     }
+    },
+    {
+     "rank": 10,
+     "ein": "47-2836128",
+     "name": "SOCIETY OF ST VINCENT DE PAUL DISTRICT COUNCIL OF NASHVILLE TN",
+     "place": "FRANKLIN, TN",
+     "score": 85,
+     "label": {
+      "relevant": true,
+      "why": "Pays utility bills to prevent shutoff in Tennessee.",
+      "by": "claude"
+     }
+    }
+   ]
+  }
+ ]
+}

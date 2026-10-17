@@ -1,48 +1,96 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Answer } from "./CitedAnswer";
 
-const href = (q: string, fs: string[]) => {
+// The research chat (/research/ask), ChatGPT style. Turns are rendered on the server and passed in;
+// this shell adds the pending turn (the new question as a bubble + "Working out the answer…"), the
+// suggested follow-ups under the latest answer, and the composer pinned at the bottom of the column.
+// Each question is added to the URL (?q=first&f=follow1…), so a link reproduces the whole thread.
+
+const href = (q: string | null, fs: string[], next: string) => {
+  if (!q) return `/research/ask?${new URLSearchParams({ q: next })}`;
   const p = new URLSearchParams({ q });
-  for (const f of fs) p.append("f", f);
+  for (const f of [...fs, next]) p.append("f", f);
   return `/research/ask?${p}`;
 };
 
-// The thread's follow-up box: a text field and up to 3 suggested follow-ups (answerable, from the last
-// answer's spec). Each follow-up is added to the URL (?q=…&f=…), so a link reproduces the whole thread.
-export function FollowUpBox({ q, fs, chips, max }: { q: string; fs: string[]; chips: string[]; max: number }) {
+type Ctx = { ask: (t: string) => void; pending: boolean; asked: string | null };
+const ChatCtx = createContext<Ctx>({ ask: () => {}, pending: false, asked: null });
+
+// q: the thread's first question (null on a new, empty chat). fs: follow-ups so far.
+export function Chat({ q, fs, max, children }: { q: string | null; fs: string[]; max: number; children: React.ReactNode }) {
   const router = useRouter();
-  const [text, setText] = useState("");
   const [pending, start] = useTransition();
   const [asked, setAsked] = useState<string | null>(null);
-  const go = (t: string) => {
+  const ask = (t: string) => {
     const v = t.trim();
     if (!v || pending) return;
     setAsked(v);
-    start(() => router.push(href(q, [...fs, v]), { scroll: false }));
+    start(() => router.push(href(q, fs, v), { scroll: false }));
   };
-  // Keyed by the thread URL on the page, so it remounts (empty) once the new turn lands.
-  if (fs.length >= max) return <p className="fu-note">This thread is at its limit. Start a new question above.</p>;
+  // Follow the conversation: the pending question while it works, then the new answer.
+  useEffect(() => {
+    if (pending) document.getElementById("chat-pending")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [pending]);
+  useEffect(() => {
+    if (fs.length) document.getElementById(`turn-${fs.length}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [fs.length]);
   return (
-    <div className="fu">
-      {pending && asked && <div className="fu-pending"><p className="turn-q">{asked}</p><p className="ov-wait"><span className="spinner" />Working out the answer…</p></div>}
-      {chips.length > 0 && !pending && (
-        <div className="fu-chips" aria-label="Suggested follow-ups">
-          {chips.map((c) => <button key={c} type="button" className="chip link" onClick={() => go(c)}>{c}</button>)}
-        </div>
-      )}
-      <form className="buddy-form fu-form" onSubmit={(e) => { e.preventDefault(); go(text); }}>
-        <input value={text} onChange={(e) => setText(e.target.value)} disabled={pending} placeholder="Ask a follow-up…" aria-label="Ask a follow-up" maxLength={300} />
-        <button type="submit" disabled={pending || !text.trim()} aria-label="Ask">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-        </button>
-      </form>
+    <ChatCtx.Provider value={{ ask, pending, asked }}>
+      <div className="chat-thread">
+        {children}
+        {pending && asked && (
+          <div className="chat-turn" id="chat-pending">
+            <div className="chat-q"><p>{asked}</p></div>
+            <Thinking label="Working out the answer" />
+          </div>
+        )}
+      </div>
+      <Composer key={`${q}:${fs.length}`} full={fs.length >= max} autoFocus={!q} />
+    </ChatCtx.Provider>
+  );
+}
+
+export function Thinking({ label }: { label: string }) {
+  return <p className="chat-thinking" role="status"><span className="dots" aria-hidden><i /><i /><i /></span>{label}…</p>;
+}
+
+// Suggested follow-ups, under the latest answer only.
+export function Suggestions({ chips }: { chips: string[] }) {
+  const { ask, pending } = useContext(ChatCtx);
+  if (!chips.length || pending) return null;
+  return (
+    <div className="chat-chips" aria-label="Suggested follow-ups">
+      {chips.map((c) => <button key={c} type="button" className="chip link" onClick={() => ask(c)}>{c}</button>)}
     </div>
   );
 }
 
-// A "why / what does it mean" follow-up: a short answer streamed from the numbers in the thread.
+function Composer({ full, autoFocus }: { full: boolean; autoFocus: boolean }) {
+  const { ask, pending } = useContext(ChatCtx);
+  const [text, setText] = useState("");
+  const box = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => { if (autoFocus) box.current?.focus(); }, [autoFocus]);
+  const send = () => { if (text.trim() && !pending) ask(text); };
+  return (
+    <div className="chat-composer">
+      {full ? <p className="chat-full">This conversation is at its limit. Start a new question.</p> : (
+        <form className="chat-box" onSubmit={(e) => { e.preventDefault(); send(); }}>
+          <textarea ref={box} rows={1} value={text} maxLength={300} disabled={pending} aria-label={autoFocus ? "Ask a research question" : "Ask a follow-up"}
+            placeholder={autoFocus ? "Ask a research question" : "Ask a follow-up"} onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
+          <button type="submit" disabled={pending || !text.trim()} aria-label="Send">
+            {pending ? <span className="spinner" /> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" /></svg>}
+          </button>
+        </form>
+      )}
+      <p className="chat-disclaimer">NomBot answers from public IRS filings. Check important numbers.</p>
+    </div>
+  );
+}
+
+// A "why / what does it mean" follow-up: streamed text, from the numbers in the thread only.
 export function FollowUpText({ q, fs, i }: { q: string; fs: string[]; i: number }) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -74,23 +122,11 @@ export function FollowUpText({ q, fs, i }: { q: string; fs: string[]; i: number 
     return () => { live = false; };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <section className="answer fu-text" aria-label="Interpretation">
-      <p className="answer-kicker">Interpretation · AI-written from the numbers above</p>
-      {!text && !error && <p className="ov-wait"><span className="spinner" />Reading the answers…</p>}
+    <div className="chat-answer chat-text" aria-label="Interpretation">
+      {!text && !error && <Thinking label="Reading the answers" />}
       {text && <Answer text={text} cite={() => undefined} />}
       {error && <p className="notice">{error}</p>}
-      {done && !error && <p className="answer-ms">Claude, from this thread&apos;s numbers only. Points marked general knowledge are not from the data.</p>}
-    </section>
+      {done && !error && <p className="chat-note">Interpretation written by AI from the numbers above. Points marked general knowledge are not from the data.</p>}
+    </div>
   );
-}
-
-// Scroll the newest turn into view after a follow-up is added.
-export function ScrollToTurn({ id }: { id: string }) {
-  const done = useRef(false);
-  useEffect(() => {
-    if (done.current) return;
-    done.current = true;
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [id]);
-  return null;
 }

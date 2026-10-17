@@ -188,7 +188,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive} total={res.total}
-            overview={(v) => <Suspense fallback={<AiOverviewSkeleton compact={v.visual} />}><OverviewPanel question={question} ranking={rankingAll} filters={filters} includeInactive={includeInactive} {...v} /></Suspense>}
+            overview={(v) => <Suspense fallback={<AiOverviewSkeleton compact={v.visual} />}><OverviewPanel question={question} candidates={res.results} filters={filters} includeInactive={includeInactive} {...v} /></Suspense>}
             gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
             map={(m) => <LandscapeMap {...m} />} />
         </Suspense>
@@ -205,11 +205,13 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   );
 }
 
-async function OverviewPanel({ question, ranking, filters, includeInactive, visual, story }: { question: string; ranking: ReturnType<typeof rank>; filters: Filters; includeInactive: boolean; visual: boolean; story?: string }) {
+// The AI overview reads the closest candidates in search order, so it runs alongside relevance scoring
+// instead of after it (~3-5s sooner). Its citations point into its own list (o.orgs), not the scored order.
+async function OverviewPanel({ question, candidates, filters, includeInactive, visual, story }: { question: string; candidates: Result[]; filters: Filters; includeInactive: boolean; visual: boolean; story?: string }) {
   // County need for the AI overview: high-poverty counties with none of the 200 closest organizations.
   const l = await landscape(filters, includeInactive);
   const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have ${l.povertyCut}%+ poverty (the poorest quarter, up to 20%); ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
-  const o = await overview(question, (await ranking).results, need, story);
+  const o = await overview(question, candidates, need, story);
   return o ? <AiOverview o={o} question={question} visual={visual} /> : visual ? null : <p className="ls-note">No overview for these results.</p>;
 }
 

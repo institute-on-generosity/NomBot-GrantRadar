@@ -5,7 +5,7 @@
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { readable } from "../components/text";
-import { claude, FAST_MODEL } from "./llm";
+import { claude, fallback, SCORE_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Filters } from "./parse";
 import { search, type Result } from "./search";
@@ -47,10 +47,9 @@ async function scoreBatch(question: string, results: Result[]): Promise<Map<stri
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
   }));
   const res = await client.beta.messages.parse({
-    model: FAST_MODEL,
+    model: SCORE_MODEL,
     max_tokens: 4096,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
+    ...fallback(SCORE_MODEL),
     output_config: { effort: "low", format: betaZodOutputFormat(schema) },
     system: SYSTEM,
     messages: [{ role: "user", content: `Question: ${question}\n\nOrganizations:\n${JSON.stringify(items)}` }],

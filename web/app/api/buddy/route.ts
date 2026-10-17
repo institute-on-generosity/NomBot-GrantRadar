@@ -11,7 +11,7 @@ import { buddyContext, buddyMessages, SYSTEM, ANSWER_RULES } from "@/lib/buddy";
 import { claude, LLM_MODEL } from "@/lib/llm";
 import { answer, answerBrief } from "@/lib/answer";
 import { routeQuestion } from "@/lib/answerRoute";
-import { normalizeSpec, specSchema } from "@/lib/answerSpec";
+import { DEFAULT_SPEC, normalizeSpec, specSchema } from "@/lib/answerSpec";
 import { ANSWER_TOOL_DESCRIPTION, ANSWER_TOOL_NAME, answerToolSchema } from "@/lib/answerTool";
 
 const TOOLS: Anthropic.Beta.BetaToolUnion[] = [{ name: ANSWER_TOOL_NAME, description: ANSWER_TOOL_DESCRIPTION, input_schema: answerToolSchema }];
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
           const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
           for (const block of final.content) {
             if (block.type !== "tool_use") continue;
-            const spec = specSchema.safeParse(block.input);
+            const spec = specSchema.safeParse({ ...DEFAULT_SPEC, ...(block.input as object) }); // older tool calls omit newer fields
             if (!spec.success) { results.push({ type: "tool_result", tool_use_id: block.id, is_error: true, content: `Invalid spec: ${spec.error.message.slice(0, 400)}` }); continue; }
             try {
               const a = await answer(ask, normalizeSpec(spec.data));

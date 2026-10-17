@@ -7,10 +7,10 @@
 // Typed follow-ups get one FAST_MODEL structured-output call, cached 24 h.
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { claude, FAST_MODEL } from "./llm";
+import { claude, fallback as fallbackOpts, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import { ROUTER_SYSTEM } from "./answerRoute";
-import { DEFAULT_SPEC, normalizeSpec, specSchema, type Cause, type Spec } from "./answerSpec";
+import { DEFAULT_SPEC, normalizeSpec, specSchema, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
 
 export type Turn = { question: string; spec: Spec };
@@ -20,9 +20,6 @@ export type Resolved =
   | { kind: "search"; standalone: string };
 
 const STATE = Object.fromEntries(LOADED_STATES) as Record<string, string>;
-const CLIMATE: Cause = { name: "climate", label: "climate", ntee: [], keywords: [] };
-const WOMEN: Cause = { name: "women and girls", label: "women_girls", ntee: [], keywords: [] };
-const MONEY = ["total", "share", "trend", "by_state", "top_funders", "top_recipients", "compare"];
 
 // A plain standalone question for a spec, used for chips' saved questions and as a fallback.
 export function describeSpec(s: Spec): string {
@@ -47,23 +44,116 @@ export function describeSpec(s: Spec): string {
   }
 }
 
-// Up to 3 answerable next questions, deterministic from the last spec.
-export function suggestFollowUps(s: Spec): { label: string; spec: Spec }[] {
-  const out: { label: string; spec: Spec }[] = [];
-  const add = (label: string, change: Partial<Spec>) => out.push({ label, spec: normalizeSpec({ ...s, missing: [], missingNote: null, ...change }) });
+// Suggested follow-ups, in two steps so every chip is answerable AND about the research question:
+//   1. candidateFollowUps: every next question our fixed SQL can answer from the last spec, kept on topic by
+//      rule (onTopic: same causes as the thread, no wider place than asked, nothing already asked). Each names
+//      its subject so it reads on its own ("Who gets the most money for climate?", not "Is it growing?").
+//   2. pickFollowUps: one FAST_MODEL call picks the 3 that best deepen the thread's FIRST question, in order.
+//      It can only choose from the candidates (indices), so it can't invent an unanswerable chip. No key,
+//      an error or a slow reply falls back to the first 3 candidates.
+type Chip = { label: string; spec: Spec };
+export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
+  const out: Chip[] = [];
+  const add = (label: string, change: Partial<Spec>) => {
+    if (!out.some((o) => o.label === label)) out.push({ label, spec: normalizeSpec({ ...s, missing: [], missingNote: null, ...change }) });
+  };
   const c = s.causes[0];
   const one = s.causes.length <= 1;
-  if (one && MONEY.includes(s.metric)) {
-    if (c?.label === "climate") add("And for women and girls?", { causes: [WOMEN] });
-    else if (c?.label === "women_girls") add("And for climate?", { causes: [CLIMATE] });
-    else if (c) add("Compare with climate", { metric: "compare", causes: [c, CLIMATE], source: "foundation_grants" });
-  }
-  if (s.metric !== "trend" && ["total", "share", "by_state", "top_recipients"].includes(s.metric) && one) add("Is it growing?", { metric: "trend" });
-  if (s.metric !== "by_state" && !s.states.length && !s.county && one && ["total", "share", "trend"].includes(s.metric)) add("By state", { metric: "by_state", perResident: true, order: "most" });
-  if (s.source === "foundation_grants" && s.metric !== "top_funders" && one && c) add("Which foundations give the most?", { metric: "top_funders" });
-  if (s.source === "foundation_grants" && ["total", "share", "trend"].includes(s.metric) && one && c) add("Government money instead", { source: "government_grants", metric: s.metric === "share" ? "total" : s.metric, yearFrom: null, yearTo: null });
-  if (s.source !== "foundation_grants" && ["total", "trend", "top_recipients"].includes(s.metric)) add("Foundation money instead", { source: "foundation_grants" });
-  return out.slice(0, 3);
+  const pf = s.source === "foundation_grants";
+  const cause = c?.name ?? "";
+  const of = cause ? ` ${cause}` : "";
+  const forX = cause ? ` for ${cause}` : "";
+  const money = pf ? "foundation money" : s.source === "government_grants" ? "government money" : s.source === "contributions" ? "contributions" : "revenue";
+  const next: Record<string, () => void> = {
+    concentration: () => {
+      add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
+      add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
+      add(`What is the typical grant${forX}?`, { metric: "grant_size" });
+      add(`How much money${forX} is general support?`, { metric: "general_support" });
+    },
+    top_recipients: () => {
+      if (pf) add(`How concentrated is funding${forX}?`, { metric: "concentration" });
+      if (pf) add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
+    },
+    top_funders: () => {
+      if (pf) add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
+      if (pf) add(`How much money${forX} is general support?`, { metric: "general_support" });
+      if (pf) add(`How much money${forX} crosses state lines?`, { metric: "out_of_state" });
+    },
+    grant_size: () => {
+      add(`How much money${forX} is general support?`, { metric: "general_support" });
+      add(`How concentrated is funding${forX}?`, { metric: "concentration" });
+    },
+    general_support: () => {
+      add(`What is the typical grant${forX}?`, { metric: "grant_size" });
+      add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
+    },
+    out_of_state: () => {
+      add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
+      add(`Which states get the most money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most", states: [], county: null });
+    },
+    by_state: () => {
+      add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend", perResident: false });
+      add(`Which states get the ${s.order === "least" ? "most" : "least"}?`, { order: s.order === "least" ? "most" : "least" });
+    },
+    by_rurality: () => add(`Which states get the most money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most" }),
+    trend: () => {
+      if (!s.states.length && !s.county) add(`Which states get the most money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most" });
+      if (pf && c) add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
+      if (pf && c) add(`Is government money for${of} growing too?`, { source: "government_grants", yearFrom: null, yearTo: null });
+    },
+    total: () => {
+      add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend", perResident: false });
+      if (!s.states.length && !s.county) add(`Which states get the most money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most" });
+      if (pf && c) add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
+    },
+  };
+  next.share = next.total;
+  if (one) next[s.metric]?.();
+  // A thread that compares two causes keeps comparing them.
+  if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare" })), { metric: "compare" });
+  if (s.causes.length === 2 && s.metric === "compare") add(`Is money for ${s.causes[0].name} or ${s.causes[1].name} growing faster?`, { metric: "trend" });
+  if (!pf && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants" });
+  return out.filter((o) => onTopic(o.spec, history));
+}
+
+const causeKey = (x: Spec) => x.causes.map((c) => c.label ?? c.name.toLowerCase()).sort().join("+");
+// A chip stays on the research question: the causes someone asked about (no new cause they never mentioned),
+// no wider place than the thread's first question, and nothing the thread already answered.
+function onTopic(c: Spec, history: Turn[]): boolean {
+  if (!history.length) return true;
+  const asked = new Set(history.map((h) => causeKey(h.spec)));
+  if (!asked.has(causeKey(c)) && !(c.metric === "compare" && history.some((h) => h.spec.causes.length === 2))) return false;
+  const first = history[0].spec;
+  if ((first.states.length || first.county) && !c.states.length && !c.county && c.metric !== "by_state") return false;
+  const done = new Set(history.map((h) => describeSpec(h.spec)));
+  return !done.has(describeSpec(c));
+}
+
+const pickSchema = z.object({ picks: z.array(z.number().int()).describe("Indices of the chosen candidates, most useful first, at most 3") });
+const picked = memo<string[]>("follow-up-picks:v1", 1000, 7 * 24 * 3600_000);
+export async function pickFollowUps(history: Turn[]): Promise<string[]> {
+  const pool = candidateFollowUps(history.at(-1)!.spec, history);
+  const fallback = pool.slice(0, 3).map((c) => c.label);
+  const client = claude();
+  if (pool.length <= 3 || !client) return fallback;
+  const key = JSON.stringify([history.map((h) => [h.question, describeSpec(h.spec)]), pool.map((c) => c.label)]);
+  const choose = picked(key, async () => {
+    const res = await client.beta.messages.parse({
+      model: FAST_MODEL,
+      max_tokens: 200,
+      ...fallbackOpts(FAST_MODEL),
+      output_config: { effort: "low", format: betaZodOutputFormat(pickSchema) },
+      system: "You suggest next questions for a philanthropy researcher. Pick the candidates that best deepen or test the answer to the thread's FIRST question (the research question), most useful first. Prefer questions that explain the latest answer (who is behind it, how it changes, where). Skip any that drift from the research question. Return candidate indices only.",
+      messages: [{ role: "user", content: `Research question: ${history[0].question}\nThread:\n${history.map((h, i) => `${i + 1}. ${h.question}`).join("\n")}\n\nCandidates:\n${pool.map((c, i) => `${i}. ${c.label}`).join("\n")}` }],
+    });
+    const idx = res.stop_reason === "refusal" ? [] : res.parsed_output?.picks ?? [];
+    const out = [...new Set(idx)].filter((i) => i >= 0 && i < pool.length).slice(0, 3).map((i) => pool[i].label);
+    if (!out.length) throw new Error("no picks");
+    return out;
+  });
+  const slow = new Promise<string[]>((r) => setTimeout(() => r(fallback), 4000));
+  return Promise.race([choose, slow]).catch(() => fallback);
 }
 
 const FOLLOW_SYSTEM = `${ROUTER_SYSTEM}
@@ -76,10 +166,10 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 
 const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: specSchema });
 
-const cached = memo<Resolved>("follow-up:v1", 1000, 24 * 3600_000);
+const cached = memo<Resolved>("follow-up:v2", 1000, 24 * 3600_000);
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
-  const chip = suggestFollowUps(last.spec).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
+  const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
   if (chip) return Promise.resolve({ kind: "answer", spec: chip.spec, standalone: describeSpec(chip.spec) });
   const key = JSON.stringify([history.map((h) => h.spec), text.trim().toLowerCase()]);
   return cached(key, () => resolveFresh(text, history));
