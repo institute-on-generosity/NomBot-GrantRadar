@@ -45,6 +45,7 @@ export function AnswerCard({ a }: { a: Answer }) {
           <InsightChart spec={a.chart.spec} label={`${a.chart.title}. ${a.headline}`} />
         </figure>
       )}
+      {a.basis && !none && <p className="chat-basis">{a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
       {a.bullets.length > 0 && <ul className="ins-points">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.missing.length > 0 && (
         <div className="answer-missing">

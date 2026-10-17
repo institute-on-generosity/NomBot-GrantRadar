@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-v3-20261016-231500/nombot.html",
+    "output": ".archify/architecture-nombot-v4-20261017-124202/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -14,7 +14,7 @@
       "sublabel": "verified insights rows",
       "pos": [
         470,
-        60
+        170
       ],
       "size": [
         170,
@@ -26,10 +26,10 @@
       "type": "backend",
       "label": "Research router",
       "sublabel": "Sonnet 5.5 → spec",
-      "tag": "cached 24 h",
+      "tag": "prompt-cached · 24 h",
       "pos": [
         720,
-        60
+        170
       ],
       "size": [
         180,
@@ -43,7 +43,7 @@
       "sublabel": "/research/ask · chips",
       "pos": [
         980,
-        60
+        170
       ],
       "size": [
         170,
@@ -54,11 +54,11 @@
       "id": "answer",
       "type": "backend",
       "label": "Answer engine",
-      "sublabel": "fixed parameterized SQL",
-      "tag": "no model-written SQL",
+      "sublabel": "fixed SQL · premise check",
+      "tag": "foundation · charity · federal · 990",
       "pos": [
         1220,
-        60
+        170
       ],
       "size": [
         220,
@@ -72,7 +72,7 @@
       "sublabel": "+ advisors · browser",
       "pos": [
         40,
-        200
+        310
       ],
       "size": [
         150,
@@ -86,7 +86,7 @@
       "sublabel": "public HTTPS URL",
       "pos": [
         250,
-        200
+        310
       ],
       "size": [
         160,
@@ -101,7 +101,7 @@
       "tag": "skips /api/v1, /mcp",
       "pos": [
         470,
-        200
+        310
       ],
       "size": [
         170,
@@ -115,7 +115,7 @@
       "sublabel": "Next.js · question box",
       "pos": [
         720,
-        200
+        310
       ],
       "size": [
         180,
@@ -129,7 +129,7 @@
       "sublabel": "Opus 5.5 → filters",
       "pos": [
         980,
-        200
+        310
       ],
       "size": [
         170,
@@ -140,11 +140,11 @@
       "id": "layer",
       "type": "database",
       "label": "Research layer",
-      "sublabel": "grant_cube · rollups · causes",
-      "tag": "migrations 033–040",
+      "sublabel": "cubes · histograms · causes",
+      "tag": "migrations 033–046",
       "pos": [
         1220,
-        190
+        300
       ],
       "size": [
         220,
@@ -158,7 +158,7 @@
       "sublabel": "FLAG · people · funders",
       "pos": [
         470,
-        570
+        680
       ],
       "size": [
         170,
@@ -173,7 +173,7 @@
       "tag": "0–100 + why",
       "pos": [
         720,
-        340
+        450
       ],
       "size": [
         180,
@@ -188,10 +188,10 @@
       "tag": "+ keywords",
       "pos": [
         980,
-        340
+        450
       ],
       "size": [
-        170,
+        150,
         64
       ]
     },
@@ -203,7 +203,7 @@
       "tag": "filing_flag · board · county_need",
       "pos": [
         1220,
-        340
+        450
       ],
       "size": [
         220,
@@ -218,7 +218,7 @@
       "tag": "top 15 · 990 text",
       "pos": [
         720,
-        480
+        590
       ],
       "size": [
         180,
@@ -233,10 +233,10 @@
       "tag": "Sonnet 5.5",
       "pos": [
         980,
-        480
+        590
       ],
       "size": [
-        170,
+        150,
         64
       ]
     },
@@ -247,7 +247,7 @@
       "sublabel": "apps · AI agents",
       "pos": [
         40,
-        700
+        810
       ],
       "size": [
         150,
@@ -262,7 +262,7 @@
       "tag": "api_keys · rate limit",
       "pos": [
         470,
-        700
+        810
       ],
       "size": [
         170,
@@ -273,14 +273,14 @@
       "id": "sources",
       "type": "external",
       "label": "Public data",
-      "sublabel": "IRS BMF · SOI · 990/990-PF",
-      "tag": "+ NTEE · SAIPE · ARC · NCES",
+      "sublabel": "IRS 990 · 990-PF · Schedule I",
+      "tag": "+ ACS · USAspending · SEC EDGAR",
       "pos": [
-        1520,
-        190
+        1515,
+        300
       ],
       "size": [
-        200,
+        205,
         80
       ]
     },
@@ -289,13 +289,13 @@
       "type": "backend",
       "label": "Python ETL",
       "sublabel": "load · link grants · board",
-      "tag": "rules + Claude links",
+      "tag": "GivingTuesday XML recovery",
       "pos": [
-        1520,
-        340
+        1515,
+        450
       ],
       "size": [
-        200,
+        205,
         80
       ]
     },
@@ -303,15 +303,16 @@
       "id": "labels",
       "type": "backend",
       "label": "Cause labels",
-      "sublabel": "Claude Batch · graded",
+      "sublabel": "label_causes.py · claude -p",
       "pos": [
-        1520,
-        480
+        1515,
+        590
       ],
       "size": [
-        200,
+        205,
         64
-      ]
+      ],
+      "tag": "Haiku screen · Sonnet/Opus check"
     },
     {
       "id": "embed",
@@ -319,11 +320,11 @@
       "label": "Embedding job",
       "sublabel": "nomic 512-dim · GPU",
       "pos": [
-        1520,
-        600
+        1515,
+        710
       ],
       "size": [
-        200,
+        205,
         64
       ]
     },
@@ -333,11 +334,11 @@
       "label": "Insights miner",
       "sublabel": "mine_insights.py",
       "pos": [
-        1520,
-        716
+        1515,
+        826
       ],
       "size": [
-        200,
+        205,
         64
       ]
     },
@@ -348,10 +349,38 @@
       "sublabel": "~/Backups · newest 3",
       "pos": [
         1220,
-        880
+        960
       ],
       "size": [
         220,
+        64
+      ]
+    },
+    {
+      "id": "askfind",
+      "type": "frontend",
+      "label": "Ask about this finding",
+      "sublabel": "Sonnet 5.5 · its data only",
+      "pos": [
+        470,
+        60
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "export",
+      "type": "frontend",
+      "label": "Export slide",
+      "sublabel": "browser only · PNG / PPTX",
+      "pos": [
+        980,
+        730
+      ],
+      "size": [
+        150,
         64
       ]
     }
@@ -376,7 +405,9 @@
         "api",
         "layer",
         "db",
-        "backup"
+        "backup",
+        "askfind",
+        "export"
       ]
     },
     {
@@ -470,13 +501,21 @@
       "id": "closest",
       "from": "search",
       "to": "analysis",
-      "label": "200 closest"
+      "label": "200 closest",
+      "labelAt": [
+        1055,
+        528
+      ]
     },
     {
       "id": "panel-data",
       "from": "analysis",
       "to": "db",
-      "label": "funders"
+      "label": "funders",
+      "labelAt": [
+        1157,
+        610
+      ]
     },
     {
       "id": "org-data",
@@ -564,6 +603,31 @@
       "to": "backup",
       "label": "2:30 AM",
       "variant": "dashed"
+    },
+    {
+      "id": "ask-finding",
+      "from": "findings",
+      "to": "askfind",
+      "label": "ask"
+    },
+    {
+      "id": "slide",
+      "from": "analysis",
+      "to": "export",
+      "label": "slide"
+    },
+    {
+      "id": "tool",
+      "from": "buddy",
+      "to": "answer",
+      "label": "research_answer tool"
+    },
+    {
+      "id": "renew",
+      "from": "etl",
+      "to": "labels",
+      "label": "after_load.sh",
+      "variant": "dashed"
     }
   ],
   "cards": [
@@ -571,22 +635,22 @@
       "dot": "cyan",
       "title": "Search path",
       "items": [
-        "Opus 5.5 turns a question into filters + search text",
+        "Opus 5.5 turns a question into filters + search text; cause-label chips (climate, women and girls)",
         "One query: SQL filters, 2,000 nearest on a half-precision HNSW index, keyword hits",
         "Sonnet 5.5 scores the top 40, 0–100 with a reason",
-        "Analysis panel: AI overview, landscape, county need gaps, funders, from the 200 closest",
-        "Research Buddy (Opus 5.5) answers from the top 15 results' 990 text, citing every claim"
+        "Analysis panel from the 200 closest; Export slide builds PNG / PPTX in the browser",
+        "Research Buddy (Opus 5.5) cites 990 text and calls the research_answer tool"
       ]
     },
     {
       "dot": "violet",
       "title": "Research answers",
       "items": [
-        "Regex screen, then the router (Sonnet 5.5, structured output) writes a spec",
-        "Answer engine runs fixed SQL on the research layer first; never model-written SQL",
-        "Follow-ups: chips reuse specs; typed ones take one Sonnet 5.5 call",
+        "Regex screen, then the prompt-cached Sonnet 5.5 router writes a spec",
+        "Fixed SQL on foundation_grants, charity_grants, federal_awards or 990 lines; never model-written SQL",
+        "Premise check corrects false assumptions; trust note when a cause has no graded label",
         "Buddy, /api/v1/answer and MCP call the same engine",
-        "Findings: the insights miner writes verified patterns; the feed shows them"
+        "Findings: miner writes verified patterns; Ask about this finding answers from that finding's data"
       ]
     },
     {
@@ -603,11 +667,12 @@
       "dot": "emerald",
       "title": "Data",
       "items": [
-        "IRS: 1.8M orgs (BMF), SOI financials, 785,772 990 filings, 5.35M foundation grants",
-        "Grant recipients linked by name rules, then Claude for the largest leftovers",
-        "Census SAIPE county need (3,144 counties), ARC Appalachia, NCES + IPEDS",
-        "Cause labels (climate, women and girls) by Claude, graded on fresh samples",
-        "Research layer: grant_cube 948,897 rows, recipient and county rollups, cause_lookup"
+        "IRS: 1.8M orgs, SOI, 907,095 990 filings, 5.72M foundation grants, 3.41M Schedule I grants",
+        "Schedule I flags DAF sponsors, community foundations, United Ways; missing XML recovered from GivingTuesday",
+        "Census SAIPE + ACS 5-year, USAspending federal awards, SEC EDGAR company foundation flag",
+        "Cause labels: label_causes.py on the Claude subscription (claude -p); after_load.sh tops them up",
+        "org_labels feed search chips, research answers, API/MCP and the Parquet snapshot",
+        "Research layer: grant_cube, charity cube, grant-size histograms, rollups, cause_lookup"
       ]
     }
   ]

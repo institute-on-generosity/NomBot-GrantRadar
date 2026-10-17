@@ -38,6 +38,7 @@ export type Answer = {
   searchQuery: string | null;      // an org search to drill down
   orgCount?: number;               // organizations behind the answer, for "See the N organizations" 
   premise?: { claim: string; holds: boolean } | null; // a direction the question assumed (spec.premise), checked against the data
+  basis?: "codes" | "keywords" | null; // a cause counted without a checked label: shown under the answer as a trust note
   ms: number;
 };
 
@@ -582,7 +583,7 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // awards count a graded label's primary tier only, follow-up chips for breakdowns and federal answers.
 // v16: grant-size medians and 90th percentiles from the size histograms (generosity-data 046).
 // v18: premise check (spec.premise), keyword causes ignore passing mentions, single-organization note in state rankings.
-const answerMemo = memo<Answer>("answer:v19", 500, 6 * 3600_000);
+const answerMemo = memo<Answer>("answer:v20", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -609,7 +610,10 @@ async function compute(question: string, s: Spec, cube: boolean): Promise<Answer
   // Nothing answerable: lead with exactly what's missing, not a generic refusal.
   if (status === "unanswerable" && missing.length && s.metric === "none") out.headline = `${missing.map((m) => m.what).join(" and ")} ${missing.length > 1 || /s$/.test(missing[0].what) ? "aren't" : "isn't"} in our IRS data`;
   if (status === "unanswerable" && !missing.length) missing.push({ what: "This question", why: out.headline, source: "Not in our data", url: "" });
-  return { ...out, question, spec: s, status, missing, premise, queries: ctx.queries, ms: Date.now() - t0 };
+  // Causes without a graded label are counted by IRS codes or keywords: say so on the answer itself, not only in
+  // "How we got this". Keywords is the rougher of the two, so it wins when both appear.
+  const basis = /Approximate keyword set/.test(out.causeNote) ? "keywords" : /NTEE codes /.test(out.causeNote) ? "codes" : null;
+  return { ...out, question, spec: s, status, missing, premise, basis, queries: ctx.queries, ms: Date.now() - t0 };
 }
 
 // A direction the question took as given ("why did education funding fall") against the computed change or

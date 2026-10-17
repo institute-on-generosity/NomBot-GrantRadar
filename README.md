@@ -65,12 +65,10 @@ Authorization: Bearer nb_live_…
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg" />
-  <img src="docs/architecture-light.svg" alt="NomBot architecture: researchers reach the MacBook-hosted app through a Tailscale Funnel URL and a SITE_PASSWORD sign-in gate; the search page sends a question to the Opus 5.5 query parser, hybrid search (SQL + half-precision HNSW + keywords) on local Postgres 17 + pgvector, and Sonnet 5.5 ranked results, which open org pages + Compare (FLAG, people, funders), Research Buddy and the analysis panel (AI overview, county need gaps, funders); research questions go through the Sonnet 5.5 router to the /research/ask chat and a fixed-SQL answer engine on the research layer (grant_cube, rollups, causes); the findings feed shows verified insights; partners call /api/v1 and /mcp with Bearer API keys; the generosity-data ETL loads public IRS, NTEE, Census SAIPE, ARC and NCES data, links grants, grades cause labels with Claude, embeds filings and mines insights; Postgres is dumped nightly" />
+  <img src="docs/architecture-light.svg" alt="NomBot architecture: researchers reach the MacBook-hosted app through a Tailscale Funnel URL and a SITE_PASSWORD sign-in gate; the search page sends a question to the Opus 5.5 query parser, hybrid search (SQL + half-precision HNSW + keywords) on local Postgres 17 + pgvector, and Sonnet 5.5 ranked results, which open org pages + Compare (FLAG, people, funders), Research Buddy (which calls the answer engine as its research_answer tool) and the analysis panel (AI overview, county need gaps, funders), which exports a PNG or PPTX slide in the browser; research questions go through the prompt-cached Sonnet 5.5 router to the /research/ask chat and a fixed-SQL answer engine with a premise check over foundation, charity (Schedule I), federal and Form 990 sources on the research layer (cubes, grant-size histograms, causes); the findings feed shows verified insights, each with an Ask about this finding chat; partners call /api/v1 and /mcp with Bearer API keys; the generosity-data ETL loads public IRS 990, 990-PF and Schedule I, Census ACS, USAspending and SEC EDGAR data (missing XML recovered from GivingTuesday), links grants, runs label_causes.py on the Claude subscription after each load (after_load.sh), embeds filings and mines insights; Postgres is dumped nightly" />
 </picture>
 
 [Interactive diagram](docs/architecture.html) · Self-hosted on the MacBook (Oct 16); Supabase + Vercel remain the cloud target.
-
-> Diagram out of date: **Export slide** (browser-side PNG/PPTX), the finding page's **Ask about this finding** chat, and Research Buddy's `research_answer` tool call aren't drawn.
 
 - **Search:** question → Claude parser → filters + search text → one SQL + vector query → Claude scores the top 40, 0–100 with a reason → strong matches first, weaker ones folded. The query draws a few thousand candidates from indexes (2,000 nearest by meaning on a half-precision HNSW index, up to 1,000 keyword hits per source, up to 300 filings that state a required activity), then joins only those. One cached search (200 rows, 10 min) serves the results, "Show more" and the landscape. The embedding model loads at server start; `warm_search()` keeps the indexes in memory (every 10 min).
 - **Research Buddy:** follow-up question → top 15 ranked results' 990 text → Claude reasons (steps shown) → answer citing [n] for every claim. No source, no claim.
@@ -288,6 +286,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 **Nov 16–22: Research Buddy**
 - [x] Multi-turn chat over results, with history
 - [x] Reasoning steps + citation per claim; citations open the org
+- [x] **Trust note for unlabeled causes (Oct 17):** answers counted by IRS category codes or keywords instead of a graded label say so under the answer ("Based on IRS category codes, not a checked label. Treat totals as approximate."), in the research chat and the search page's answer card
 - [ ] 30-question eval, zero unsupported claims: **1 of 401** (was 12 of 406)
 
 **Dec 21–31: Wrap-up**
