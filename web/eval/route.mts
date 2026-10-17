@@ -12,7 +12,7 @@ type Spec = import("../lib/answerSpec").Spec;
 export type Expect = {
   q: string; research?: boolean; metric?: string[]; source?: string; by?: string[]; charityFunder?: string; funderType?: string; recipientKind?: string;
   label?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
-  order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number;
+  order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number; region?: string; topN?: number; streak?: number;
   premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
 };
 export function check(e: Expect, research: boolean, s: Spec | null): string[] {
@@ -34,6 +34,7 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   if (e.funderSizeMin && s.funderSize?.min !== e.funderSizeMin) bad.push(`funderSize.min ${s.funderSize?.min}, want ${e.funderSizeMin}`);
   if (e.recipientSizeMax && s.recipientSize?.max !== e.recipientSizeMax) bad.push(`recipientSize.max ${s.recipientSize?.max}, want ${e.recipientSizeMax}`);
   for (const k of ["yearFrom", "yearTo"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
+  for (const k of ["region", "topN", "streak"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   return bad;
 }
 

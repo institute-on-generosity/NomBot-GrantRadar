@@ -47,5 +47,20 @@
   { "q": "Why did government grants to nonprofits drop?", "metric": ["trend"], "source": "government_grants", "premise": "fall", "premiseHolds": false },
   { "q": "Why do animal shelters get less foundation money than food banks?", "metric": ["compare"], "ntee": "D20", "premise": "less", "premiseHolds": false },
   { "q": "Why do food banks get less foundation money than animal shelters?", "metric": ["compare"], "ntee": "K31", "premise": "less", "premiseHolds": true },
-  { "q": "Where does opioid money go?", "metric": ["by_state", "top_recipients", "breakdown", "total"], "headlineNot": "Washington" }
+  { "q": "Where does opioid money go?", "metric": ["by_state", "top_recipients", "breakdown", "total"], "headlineNot": "Washington" },
+  { "q": "How much foundation money goes to Appalachia?", "metric": ["total", "by_state", "breakdown"], "region": "appalachia", "headlineNot": "13 states" },
+  { "q": "What share of foundation giving comes from the 100 largest foundations?", "metric": ["top_funders"], "topN": 100 },
+  { "q": "How many nonprofits ran deficits two years in a row?", "metric": ["count_orgs"], "condition": "deficit", "streak": 2 },
+  { "q": "How did foundation giving to health change from 2015 to 2024?", "metric": ["trend"], "ntee": "E", "yearFrom": 2015, "status": "partial" },
+  { "q": "How has total nonprofit revenue changed since 2015?", "metric": ["trend"], "source": "revenue", "status": "partial" },
+  { "q": "Which causes get the least foundation money relative to how many nonprofits work on them?", "status": "partial", "headlineNot": "^0 |\\(0\\)" },
+  { "q": "How does federal grant money to nonprofits compare with foundation grants?", "status": "partial" },
+  { "q": "How much do state and local governments give to nonprofits, separate from federal money?", "status": "partial" },
+  { "q": "What is the average payout rate of private foundations?", "missing": "other" },
+  { "q": "What are typical overhead rates for human services nonprofits?", "missing": "other" },
+  { "q": "How long do foundations keep funding the same grantee?", "missing": "other" },
+  { "q": "In real, inflation-adjusted dollars, is foundation money for food banks growing?", "metric": ["trend"], "ntee": "K31", "status": "ok" },
+  { "q": "How much do itemizers deduct for charitable gifts in each state?", "metric": ["by_state", "breakdown"], "source": "household_giving" },
+  { "q": "Do high-income households give a larger share of income than low-income households?", "metric": ["breakdown"], "by": ["income"], "source": "household_giving" },
+  { "q": "How has itemized charitable giving changed since 2015?", "metric": ["trend"], "source": "household_giving", "yearFrom": 2015 }
 ]

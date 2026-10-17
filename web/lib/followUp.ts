@@ -10,7 +10,7 @@ import { z } from "zod";
 import { claude, fallback as fallbackOpts, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import { ROUTER_SYSTEM } from "./answerRoute";
-import { DEFAULT_SPEC, normalizeSpec, specSchema, type Spec } from "./answerSpec";
+import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
 
 export type Turn = { question: string; spec: Spec };
@@ -23,11 +23,12 @@ const STATE = Object.fromEntries(LOADED_STATES) as Record<string, string>;
 
 // A plain standalone question for a spec, used for chips' saved questions and as a fallback.
 const CHARITY_MONEY: Record<string, string> = { daf_sponsor: "donor-advised fund money", community_foundation: "community foundation money", united_way: "United Way money", other: "money from grantmaking charities" };
-const moneyOf = (s: Spec) => s.source === "government_grants" ? "government money" : s.source === "federal_awards" ? "federal money for nonprofits" : s.source === "contributions" ? "contributions" : s.source === "revenue" ? "revenue"
+const moneyOf = (s: Spec) => s.source === "household_giving" ? "itemized charitable deductions" : s.source === "government_grants" ? "government money" : s.source === "federal_awards" ? "federal money for nonprofits" : s.source === "contributions" ? "contributions" : s.source === "revenue" ? "revenue"
   : s.source === "charity_grants" ? CHARITY_MONEY[s.charityFunder ?? ""] ?? "grant money from charities" : "foundation money";
 export function describeSpec(s: Spec): string {
   const cause = s.causes.map((c) => c.name).join(" and ") || "all causes";
-  const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : s.states.length ? ` in ${s.states.join(", ")}` : "";
+  const place = s.county ? ` in ${s.county}` : s.region === "appalachia" ? " in Appalachia" : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : s.states.length ? ` in ${s.states.join(", ")}` : "";
+  if (s.source === "household_giving") return householdQuestion(s, place);
   const money = moneyOf(s);
   switch (s.metric) {
     case "trend": return `Is ${money} for ${cause}${place} growing?`;
@@ -45,6 +46,28 @@ export function describeSpec(s: Spec): string {
     case "count_orgs": return `How many ${cause} organizations${place} ${s.condition === "deficit" ? "run deficits" : s.condition === "low_cash" ? "have under 3 months of cash" : s.condition === "gov_reliant" ? "rely on government grants" : "are there"}?`;
     default: return `How much ${money} goes to ${cause}${place}?`;
   }
+}
+
+// Household giving (IRS SOI itemized charitable deductions): its own questions, no causes or funders.
+function householdQuestion(s: Spec, place: string): string {
+  const per = s.perResident ? " per tax return" : "";
+  if (s.metric === "trend") return `How have itemized charitable deductions${place} changed${s.yearFrom ? ` since ${s.yearFrom}` : ""}?`;
+  if (s.metric === "share") return `What share of income do itemizers${place} deduct for charity?`;
+  if (s.metric === "by_state" || (s.metric === "breakdown" && s.by === "state")) return `Which states deduct the ${s.order === "least" ? "least" : "most"} for charity${per}?`;
+  if (s.metric === "breakdown" && s.by === "county") return `Which counties${place} deduct the ${s.order === "least" ? "least" : "most"} for charity${per}?`;
+  if (s.metric === "breakdown" && s.by === "income") return `What share of income do itemizers${place} give, by income?`;
+  return `How much do itemizers${place} deduct for charitable gifts${per}?`;
+}
+function householdChips(s: Spec, add: (label: string, change: Partial<Spec>) => void) {
+  const place = s.county ? ` in ${s.county}` : s.region === "appalachia" ? " in Appalachia" : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
+  const q = (c: Partial<Spec>) => householdQuestion({ ...s, by: null, perResident: false, order: "most", yearFrom: null, yearTo: null, ...c }, place);
+  const one = s.states.length === 1 && !s.county;
+  if (s.metric !== "trend") add(q({ metric: "trend" }), { metric: "trend", by: null, perResident: false, yearFrom: null, yearTo: null });
+  if (!(s.metric === "breakdown" && s.by === "income")) add(q({ metric: "breakdown", by: "income" }), { metric: "breakdown", by: "income", perResident: false, measure: null });
+  if (one && !(s.metric === "breakdown" && s.by === "county")) add(q({ metric: "breakdown", by: "county", perResident: true }), { metric: "breakdown", by: "county", perResident: true, measure: null });
+  if (!s.states.length && !s.county && !s.region && !(s.metric === "by_state" && s.perResident)) add(q({ metric: "by_state", perResident: true }), { metric: "by_state", by: null, perResident: true, order: "most" });
+  if (s.metric !== "share") add(q({ metric: "share" }), { metric: "share", by: null, perResident: false });
+  add(`How much foundation money goes to organizations${place}?`, { source: "foundation_grants", metric: "total", by: null, perResident: false, yearFrom: null, yearTo: null });
 }
 
 // Suggested follow-ups, in two steps so every chip is answerable AND about the research question:
@@ -166,6 +189,7 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
     },
   };
   next.share = next.total;
+  if (s.source === "household_giving") { householdChips(s, add); return out.filter((o) => onTopic(o.spec, history)); }
   if (one) next[s.metric]?.();
   // A thread that compares two causes keeps comparing them.
   if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare", premise: null })), { metric: "compare" });
@@ -222,9 +246,9 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 - kind "search": it asks to see or list specific organizations. spec: copy the last spec.
 - standalone: the follow-up rewritten as a complete question that makes sense alone, e.g. "How much foundation money goes to women and girls in New York?"`;
 
-const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: specSchema });
+const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: llmSpecSchema });
 
-const cached = memo<Resolved>("follow-up:v2", 1000, 24 * 3600_000);
+const cached = memo<Resolved>("follow-up:v3", 1000, 24 * 3600_000); // v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
@@ -248,6 +272,6 @@ async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
   });
   const o = res.stop_reason === "refusal" ? null : res.parsed_output;
   if (!o) return { kind: "text", standalone: text };
-  if (o.kind === "answer") return { kind: "answer", spec: normalizeSpec({ ...DEFAULT_SPEC, ...o.spec }), standalone: o.standalone || text };
+  if (o.kind === "answer") return { kind: "answer", spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o.spec) }), standalone: o.standalone || text };
   return { kind: o.kind, standalone: o.standalone || text };
 }

@@ -21,7 +21,9 @@ export const METRICS = [
   "breakdown",        // foundation grants split by one dimension (by): cause, county, recipient size, funder size ...
   "none",             // nothing in our data answers it (see missing)
 ] as const;
-export const SOURCES = ["foundation_grants", "charity_grants", "federal_awards", "government_grants", "contributions", "revenue"] as const;
+export const SOURCES = ["foundation_grants", "charity_grants", "federal_awards", "government_grants", "contributions", "revenue", "household_giving"] as const;
+// Places beyond states and counties: county sets (Appalachia = ARC counties, zip_regions.appalachia).
+export const REGIONS = ["appalachia"] as const;
 // Grantmaking charities on Form 990 Schedule I (generosity-data 041-042, charity_funder_profile.funder_class).
 export const CHARITY_FUNDERS = ["daf_sponsor", "community_foundation", "united_way", "other"] as const;
 export const CONDITIONS = ["deficit", "low_cash", "gov_reliant", "surplus"] as const;
@@ -29,8 +31,8 @@ export const MISSING = ["individual_giving", "corporate_giving", "federal_awards
 export const LABELS = ["climate", "women_girls"] as const;
 // Breakdown dimensions (metric breakdown, foundation grants; research layer of generosity-data 038-040).
 // county_poverty / county_income / county_race / county_age: counties grouped by Census ACS 5-year bands (county_acs).
-// agency / program: federal_awards only (awarding agency, assistance listing).
-export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year", "charity_funder", "county_poverty", "county_income", "county_race", "county_age", "agency", "program"] as const;
+// agency / program: federal_awards only (awarding agency, assistance listing). income: household_giving only (IRS SOI AGI classes).
+export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year", "charity_funder", "county_poverty", "county_income", "county_race", "county_age", "agency", "program", "income"] as const;
 export const MEASURES = ["dollars", "grants", "average_grant"] as const;
 export const FUNDER_TYPES = ["family", "operating", "trust", "company"] as const;
 // Directional premises a question presupposes (checked against the computed answer, lib/answer.ts).
@@ -51,13 +53,17 @@ export const causeSchema = z.object({
 export const specSchema = z.object({
   metric: z.enum(METRICS),
   causes: z.array(causeSchema).describe("0 causes = all causes; 2 for compare / overlap_funders"),
-  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue)"),
+  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue), household_giving (IRS SOI individual returns: charitable deductions itemizers claim, by state, county, ZIP and income, tax years 2013-2023; no cause or recipient)"),
   yearFrom: z.number().int().nullable(),
   yearTo: z.number().int().nullable(),
   states: z.array(z.string()).describe("Two-letter codes of the place asked about; empty = whole US"),
   county: z.string().nullable().describe("County name if the question names one, e.g. 'Cook County'"),
+  region: z.enum(REGIONS).nullable().describe("A region that is a set of counties: appalachia (Appalachian Regional Commission counties)"),
   area: z.enum(["rural", "urban"]).nullable(),
   condition: z.enum(CONDITIONS).nullable().describe("For count_orgs: deficit, low_cash (under 3 months of cash), gov_reliant (half or more of revenue from government grants), surplus"),
+  // Plain integers, 0 = not asked: structured outputs cap the number of nullable (union) parameters.
+  streak: z.number().int().describe("For count_orgs with a condition: the condition held this many years in a row (\"deficits two years in a row\" = 2); 0 = newest year only"),
+  topN: z.number().int().describe("For top_funders: a set of the N largest funders whose share is asked (\"the 100 largest foundations\" = 100); 0 = top 10"),
   perResident: z.boolean(),
   perPoverty: z.boolean().describe("Per person in poverty (Census ACS) instead of per resident: \"per poor person\", \"relative to poverty\""),
   order: z.enum(["most", "least"]),
@@ -73,14 +79,22 @@ export const specSchema = z.object({
   premise: z.enum(PREMISES).nullable().describe("A direction the question takes as given, not asks: rise / fall (\"why did X fall\", \"given the drop in X\"), more / less (the first thing named gets more or less than the second, \"why do X get less than Y\"). Null for open or yes/no questions (\"did X fall?\", \"how has X changed\"). The answer leads with a correction when the data disagrees"),
 });
 
+// The spec as Claude fills it in structured outputs (router, follow-ups): Appalachia rides on area ("appalachia"),
+// because a separate nullable region field makes the compiled grammar too large (Oct 17). fromLlmSpec maps it back.
+export const llmSpecSchema = specSchema.omit({ region: true }).extend({ area: z.enum(["rural", "urban", "appalachia"]).nullable() });
+export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
+  const { area, ...rest } = o;
+  return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null };
+}
+
 export type Cause = z.infer<typeof causeSchema>;
 export type Spec = z.infer<typeof specSchema>;
 export type Metric = Spec["metric"];
 export type Source = Spec["source"];
 
 export const DEFAULT_SPEC: Spec = {
-  metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null,
-  area: null, condition: null, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
+  metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null, region: null,
+  area: null, condition: null, streak: 0, topN: 0, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
   by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null, premise: null,
 };
 
@@ -103,6 +117,9 @@ export function normalizeSpec(s: Spec): Spec {
     })),
     states: [...new Set(s.states.map((x) => x.toUpperCase().trim()).filter((x) => /^[A-Z]{2}$/.test(x)))],
     county: s.county?.trim() || null,
+    region: s.region ?? null,
+    streak: typeof s.streak === "number" && s.streak >= 2 ? Math.min(Math.round(s.streak), 10) : 0,
+    topN: typeof s.topN === "number" && s.topN > 10 ? Math.min(Math.round(s.topN), 5000) : 0, // top 10 is every top_funders answer already
     by: s.by ?? null,
     perPoverty: !!s.perPoverty,
     measure: s.measure && s.measure !== "dollars" ? s.measure : null,

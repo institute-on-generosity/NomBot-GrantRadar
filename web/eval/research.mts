@@ -26,6 +26,7 @@ const run = async (e: Expect) => {
   const a = await answer(e.q, r.spec);
   const want = e.status ?? (e.missing ? "any" : "answered");
   if (want === "answered" && a.status === "unanswerable") bad.push(`unanswerable: ${a.headline}`);
+  if ((want === "ok" || want === "partial") && a.status !== want) bad.push(`status ${a.status}, want ${want}${a.missing.length ? ` (missing: ${a.missing.map((m) => m.what).join(", ")})` : ""}`);
   if (/NaN|undefined|Infinity|null/.test(a.headline + a.numbers.map((n) => n.value).join(" "))) bad.push(`broken number: ${a.headline}`);
   if (e.headlineNot && new RegExp(e.headlineNot, "i").test(a.headline + " " + a.causeNote)) bad.push(`headline/cause note mentions "${e.headlineNot}"`);
   // Premise check (spec.premise): holds or not as expected, and a false premise is corrected first thing.

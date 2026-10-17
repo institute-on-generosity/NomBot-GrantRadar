@@ -129,6 +129,34 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   // Benchmarks (generosity-data 053): national coverage share of IRS SOI grants paid (foundations + 4947 trusts)
   { name: "national foundation total: share of IRS SOI 2022", s: spec({ metric: "total" }),
     check: async (a) => [Number(a.coverage.find((c) => c.label.startsWith("Vs IRS SOI"))!.value.match(/^([\d.]+)%/)![1]), await one(`SELECT round(100 * (SELECT sum(usd) FROM grant_totals WHERE tax_year=2022) / (SELECT sum(value) FROM benchmarks WHERE source IN ('irs_soi_pf','irs_soi_trust') AND measure='grants_paid' AND year=2022))`)] },
+  // Never mislead (Oct 17): regions, top-N funder sets, multi-year conditions, years outside the data, invalid NTEE keys.
+  { name: "Appalachia (ARC counties), foundation $ 2022-24", s: spec({ region: "appalachia" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.grants_usd), 0)), await one(`SELECT sum(amount) FROM grant_clean WHERE tax_year BETWEEN 2022 AND 2024 AND county_fips IN (SELECT county_fips FROM zip_regions WHERE appalachia)`)] },
+  { name: "share from the 100 largest foundations", s: spec({ metric: "top_funders", topN: 100 }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(usd) FROM (SELECT sum(amount) AS usd FROM grant_clean WHERE tax_year BETWEEN 2022 AND 2024 GROUP BY funder_ein ORDER BY 1 DESC LIMIT 100) t`)] },
+  { name: "deficits two years in a row", s: spec({ metric: "count_orgs", condition: "deficit", streak: 2 }),
+    check: async (a) => [Number(a.numbers[0].value.replace(/,/g, "")), await one(`WITH y AS (SELECT f.ein, f.tax_year, f.expenses > f.revenue AS d, max(f.tax_year) OVER (PARTITION BY f.ein) AS newest FROM flag_year f JOIN orgs o ON o.ein = f.ein WHERE coalesce(o.foundation,'') NOT IN ('02','03','04'))
+      SELECT count(*) FROM (SELECT ein FROM y WHERE tax_year > newest - 2 GROUP BY ein HAVING count(*) = 2 AND bool_and(coalesce(d, false))) t`)] },
+  { name: "health 2015-2024: partial, names the years", s: spec({ metric: "trend", causes: [{ name: "health", label: null, ntee: ["E"], keywords: [] }], yearFrom: 2015, yearTo: 2024 }),
+    check: async (a) => [a.status === "partial" && /starts in 2022/.test(a.headline) && a.missing.some((m) => /before 2022/.test(m.what)) ? 1 : 0, 1] },
+  { name: "causes with the least money: no invalid NTEE key", s: spec({ metric: "breakdown", by: "cause", order: "least" }),
+    check: async (a) => [/^\d|\(0\)|\(c\)/.test(a.headline) ? 1 : 0, 0] },
+  { name: "router sentence note is the headline, not suffixed", s: spec({ metric: "none", missing: ["other"], missingNote: "Our grant data covers tax years 2022-2025 only, so 2008 giving is not available." }),
+    check: async (a) => [/isn't in our IRS data$/.test(a.headline) ? 1 : 0, 0] },
+  // Household giving (IRS SOI individual returns, generosity-data 054) against the tables directly.
+  { name: "household: US charitable deductions 2023", s: spec({ source: "household_giving" }),
+    check: async (a) => [Number(a.rows.find((r) => r.tax_year === 2023)!.charitable_deductions_usd), await one(`SELECT sum(charity_usd) FROM soi_individual_county WHERE level='state' AND tax_year=2023`)] },
+  { name: "household: top state per return 2023", s: spec({ source: "household_giving", metric: "by_state", perResident: true }),
+    check: async (a) => [Number(a.rows[0].per_return), await one(`SELECT sum(charity_usd)::float8 / sum(returns) FROM soi_individual_county WHERE level='state' AND tax_year=2023 AND state=$1`, [a.rows[0].key])] },
+  { name: "household: Appalachia 2023", s: spec({ source: "household_giving", region: "appalachia" }),
+    check: async (a) => [Number(a.rows.find((r) => r.tax_year === 2023)!.charitable_deductions_usd), await one(`SELECT sum(charity_usd) FROM soi_individual_county WHERE level='county' AND tax_year=2023 AND county_fips IN (SELECT county_fips FROM zip_regions WHERE appalachia)`)] },
+  { name: "household: share of AGI, $200K and up, 2023", s: spec({ source: "household_giving", metric: "breakdown", by: "income" }),
+    check: async (a) => [Number(a.rows.find((r) => r.key === "8")!.share_of_agi), await one(`SELECT sum(charity_usd)::float8 / sum(agi) FROM soi_individual_county WHERE level='state' AND tax_year=2023 AND agi_stub=8`)] },
+  { name: "household: trend, 2013 in base-year dollars", s: spec({ source: "household_giving", metric: "trend" }),
+    check: async (a) => { const r = a.rows.find((x) => x.tax_year === 2013)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
+      return [Number(r[k]), await one(`SELECT sum(charity_usd) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1) / (SELECT value FROM cpi_u WHERE period='M13' AND year=2013) FROM soi_individual_county WHERE level='state' AND tax_year=2013`)]; } },
+  { name: "household: Ohio counties per return (top)", s: spec({ source: "household_giving", metric: "breakdown", by: "county", states: ["OH"], perResident: true }),
+    check: async (a) => [Number(a.rows[0].per_return), await one(`SELECT sum(charity_usd)::float8 / sum(returns) FROM soi_individual_county WHERE level='county' AND tax_year=2023 AND county_fips=$1`, [a.rows[0].key])] },
 ];
 
 let fail = 0;

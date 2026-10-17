@@ -27,7 +27,7 @@ type Expect = { q: string; premiseHolds?: boolean; [k: string]: unknown }; // ev
 const routeEval = "./route.mts"; // variable path keeps tsc from resolving .mts
 const { check: routeCheck } = (await import(routeEval)) as { check: (e: Expect, research: boolean, s: Spec | null) => string[] };
 
-type Check = { kind: "fdn_total" | "fdn_trend" | "fdn_top_state"; ntee?: string[] };
+type Check = { kind: "fdn_total" | "fdn_trend" | "fdn_top_state" | "hh_top_state"; ntee?: string[] };
 type Q = { id: string; cat: string; q: string; origin: string; needs: string; expect?: Omit<Expect, "q">; capability?: string[]; check?: Check };
 type Status = "ok" | "partial" | "unanswerable" | "wrong route" | "misleading";
 type Res = {
@@ -69,6 +69,17 @@ function plainSpec(s: Spec, c: Check): boolean {
     && JSON.stringify(n) === JSON.stringify(c.ntee ?? []);
 }
 async function runCheck(c: Check, a: Answer): Promise<{ ok: boolean | null; note: string }> {
+  // Household giving (IRS SOI, soi_individual_county): the state the headline names first vs the top state by
+  // charitable deduction dollars in the headline's tax year.
+  if (c.kind === "hh_top_state") {
+    if (a.spec.source !== "household_giving" || a.spec.perResident || a.spec.states.length) return { ok: null, note: "check skipped: not a plain household by-state answer" };
+    const named = [...stateByName.keys()].filter((n) => a.headline.toLowerCase().startsWith(n)).sort((x, z) => z.length - x.length)[0];
+    const yr = +(a.headline.match(/\b(20\d\d)\b(?!.*\b20\d\d\b)/)?.[1] ?? 2023);
+    const { rows: [r] } = await db.query(`SELECT state AS st, sum(charity_usd)::float8 AS usd FROM soi_individual_county WHERE level = 'state' AND tax_year = $1 GROUP BY 1 ORDER BY 2 DESC LIMIT 1`, [yr]);
+    const m = firstMoney(a.headline);
+    const amtOk = !!m && Math.abs(m.v - r.usd) / r.usd <= m.tol;
+    return { ok: !!named && stateByName.get(named) === r.st && amtOk, note: `headline ${named ?? "?"}${m ? ` $${(m.v / 1e9).toFixed(1)}B` : ""} vs SQL ${r.st} $${(r.usd / 1e9).toFixed(1)}B (${yr})` };
+  }
   if (!plainSpec(a.spec, c)) return { ok: null, note: "check skipped: spec has filters beyond the check" };
   const p: unknown[] = [];
   const w = nteeWhere(c.ntee, p);
