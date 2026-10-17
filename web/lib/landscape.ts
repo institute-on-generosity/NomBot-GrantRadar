@@ -27,6 +27,7 @@ export type Landscape = {
   teamReported: number;
   ages: Bar[];       // years since the IRS ruling: under 5, 5-15, 15-30, 30+
   medianAge: number | null; // median years tax-exempt, for the Overview tab
+  medianIncome: number | null; incomeReported: number; // newest yearly income (revenue), for the Overview tiles
   grantYears: [number, number]; // tax years summed in orgs[].grants (the newest three loaded)
   counties: Record<string, number>;
   countyOrgs: Record<string, { ein: string; name: string; city: string | null }[]>; // per county, closest matches first
@@ -145,6 +146,10 @@ async function build(filters: Filters, includeInactive: boolean): Promise<Landsc
       return { key, label, count: orgs.length, orgs };
     }),
     grantYears: years,
+    ...(() => {
+      const xs = results.map((r) => r.revenue?.amount).filter((x): x is number => x != null).sort((a, b) => a - b);
+      return { medianIncome: xs.length ? xs[Math.floor(xs.length / 2)] : null, incomeReported: xs.length };
+    })(),
     medianAge: (() => {
       const xs = [...trackOf.values()].map((t) => t.age).filter((a): a is number => a != null).sort((a, b) => a - b);
       return xs.length ? xs[Math.floor(xs.length / 2)] : null;
@@ -215,7 +220,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v23", 200, 3600_000); // v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
+const cached = memo<Landscape>("landscape:v24", 200, 3600_000); // v24: median income; v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
 export function landscape(filters: Filters, includeInactive = false) {
   return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
 }

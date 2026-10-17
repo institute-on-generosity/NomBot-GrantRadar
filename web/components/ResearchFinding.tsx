@@ -5,7 +5,8 @@ import type { View } from "vega";
 import { InsightChart, exportChart } from "./InsightChart";
 import { Answer } from "./CitedAnswer";
 import { useStoredList } from "./useStored";
-import { askSuggestions, citation, download, toCsv, type Insight, type Row } from "@/lib/insightMeta";
+import { SlideButton } from "./SlideButton";
+import { askSuggestions, citation, download, findingSlide, toCsv, type Insight, type Row } from "@/lib/insightMeta";
 import { REPORT_EVENT, REPORT_KEY, toggleReport } from "@/lib/report";
 
 // Client parts of a research finding's page (app/research/[slug]): save and cite, the large chart,
@@ -27,6 +28,7 @@ export function FindingActions({ i }: { i: Insight }) {
   };
   return (
     <span className="rd-actions">
+      <SlideButton data={() => findingSlide(i, location.origin)} />
       <button type="button" className={`ins-btn${cite ? " on" : ""}`} aria-expanded={Boolean(cite)} onClick={() => (cite ? setCite(null) : copy(citation(i, location.origin)))} title="Copy a citation for this finding">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M7 7h3v5H6v-1a4 4 0 0 1 1-3" /><path d="M15 7h3v5h-4v-1a4 4 0 0 1 1-3" /></svg>
         Cite

@@ -5,10 +5,12 @@ import { FinanceView } from "./FinanceView";
 import { LandscapeTabs } from "./LandscapeTabs";
 import type { MapData } from "./LandscapeMap";
 import { NavLink } from "./NavLink";
+import { OverviewVisual } from "./OverviewVisual";
 import { TrackRecord } from "./TrackRecord";
 import { LOADED_STATES, money } from "@/lib/filters";
 import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
+import { overviewFacts } from "@/lib/overviewFacts";
 import { isStrong, type rank } from "@/lib/rerank";
 import { titleCase } from "./text";
 import type { Filters } from "@/lib/parse";
@@ -17,18 +19,23 @@ import { themes } from "@/lib/themes";
 
 // Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it
 // (plus strong matches no foundation funds yet). Finances: growing, shrinking, deficits, thin reserves.
-export async function Landscape({ question, filters, includeInactive, map, overview, gems }: {
-  question: string; filters: Filters; includeInactive: boolean; overview: React.ReactNode; gems?: React.ReactNode;
+// Overview tab: headline, key-number tiles and one chart from the landscape (no Claude, so they show
+// first), then the AI overview's bullets (overview(), told it sits under the visual and given the
+// chart's takeaway as its story), then Track record. total: every organization the search matched.
+export async function Landscape({ question, filters, includeInactive, total, map, overview, gems }: {
+  question: string; filters: Filters; includeInactive: boolean; total: number; gems?: React.ReactNode;
+  overview: (o: { visual: boolean; story?: string }) => React.ReactNode;
   map: (m: MapData) => React.ReactNode;
 }) {
   const l = await landscape(filters, includeInactive);
-  const first = { key: "overview", label: "Overview", title: "AI overview", node: overview };
+  const first = { key: "overview", label: "Overview", title: "AI overview", node: overview({ visual: false }) };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
+  const facts = overviewFacts(l, total);
   const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
   const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
     <LandscapeTabs views={[
-      { ...first, node: <>{overview}{track}</> },
+      { ...first, node: <><OverviewVisual facts={facts} question={question} />{overview({ visual: true, story: facts.chart?.takeaway })}{track}</> },
       { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} orgs={l.orgs} />

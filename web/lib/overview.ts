@@ -1,6 +1,7 @@
 // AI overview: the zoom-out view above the results. Claude reads the strong matches (up to POOL)
-// plus figures computed here (sizes, places, causes, team sizes) and writes a short landscape
-// summary, a few patterns, and related searches to explore. Cited [n] = rank in the results.
+// plus figures computed here (sizes, places, causes, team sizes) and writes a one-line headline,
+// 2-3 short cited bullets, and related searches to explore. Cited [n] = rank in the results.
+// The key-number tiles and chart above it are computed without Claude (lib/overviewFacts).
 // Without ANTHROPIC_API_KEY (or if the call fails) there is no overview.
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
@@ -11,18 +12,30 @@ import { memo } from "./memo";
 import { healthOf } from "./landscape";
 import { isStrong, type Ranked } from "./rerank";
 
-export type Overview = { summary: string; patterns: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number };
+export type Overview = { headline: string; bullets: string[]; explore: string[]; orgs: { n: number; ein: string; name: string; place: string; facts: string; about: string }[]; count: number };
 
 const SYSTEM = `You write the short overview shown above nonprofit search results, like a search engine's AI overview.
 You get the user's question, figures computed from the matching organizations, and the numbered organizations themselves (IRS data).
 Help the user zoom out: what does this landscape look like?
-- summary: 1-2 sentences, at most 38 words, on the overall picture (how many, how big, where, what kinds of work). Use the computed figures for counts and ranges; never count yourself.
-- patterns: 2-3 observations of at most 12 words each, each about a group of organizations, citing one or two examples like [2, 7]. Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text, and need where the figures give it (high-poverty counties with none of these organizations).
+The answer sits under key-number tiles and a chart, and the headline may go on a conference slide.
+- headline: one sentence, at most 14 words, the single most telling fact about this landscape. Lead with a number from the figures. When the figures give a "Story" line, the headline can say it in other words. No citations in the headline.
+  The headline must read as one natural, grammatical sentence a researcher would say aloud. Plain verbs ("take in", "spend", "have", "run"), never slang like "pull in" or "rake in". If it has two parts, join them with "and" or "while", each a full clause.
+  Usually one clause is best. Add a second only when it is a different, telling fact. Don't reuse the examples' wording.
+  Good: "43% of youth mentoring groups spent more than they took in last year"
+  Good: "Most Kentucky food banks run on under $500K, while three take in over $5M"
+  Bad: "82% of Ohio animal shelters take in under $1M a year, and the biggest pull in $10.4M" (slang, plural verb for one organization)
+  Bad: "Small budgets dominate; deficits common" (fragment, semicolon)
+- bullets: 2-3 observations of at most 16 words each, each about a group of organizations, citing one or two examples like [2, 7]. Don't repeat the headline or simply restate the tiles (count, median income, deficit share, foundation dollars). Only claims the data shows: sizes, places, causes, team sizes (staff/volunteers), finances (growth, deficits, reserves), program types named in the text, and need where the figures give it (high-poverty counties with none of these organizations).
+- No semicolons, colons or dashes as punctuation in the headline or bullets. Short plain sentences.
 - explore: 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle: a nearby cause, another place, or a narrower activity. Don't repeat the question.
 Cite organizations only by their number in square brackets. Plain language, no hype, no advice.
 Write for an everyday donor, at about a 6th-grade reading level: short sentences, common words ("income", not "revenue"; "spent more than it took in", not "deficit"; "cash to cover N months", not "reserves"). No jargon or acronyms.`;
 
-const schema = z.object({ summary: z.string(), patterns: z.array(z.string()), explore: z.array(z.string()) });
+const schema = z.object({ headline: z.string(), bullets: z.array(z.string()), explore: z.array(z.string()) });
+
+// Slide-ready text: no em dashes (or spaced en dashes) or semicolons even when the model slips.
+// Ranges like "$100K–$1M" keep their en dash.
+const tidy = (t: string) => t.replace(/\s+[—–]\s+|\s*—\s*/g, ", ").replace(/\s*;\s*/g, ", ").replace(/\s+/g, " ").trim();
 
 // Cut at a word boundary, with an ellipsis when shortened.
 const clip = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`);
@@ -34,7 +47,7 @@ const top = (xs: (string | null)[], k: number) => {
   return [...c].sort((a, b) => b[1] - a[1]).slice(0, k).map(([x, n]) => `${x} (${n})`).join(", ");
 };
 
-async function fresh(question: string, strong: Ranked[], need?: string): Promise<Overview | null> {
+async function fresh(question: string, strong: Ranked[], need?: string, story?: string): Promise<Overview | null> {
   const client = claude();
   if (!client || strong.length < 3) return null;
   const { rows } = await db.query(
@@ -60,6 +73,7 @@ async function fresh(question: string, strong: Ranked[], need?: string): Promise
     h.reported ? `Finances (${h.reported} report): last year ${count(h.margin)}; reserves ${count(h.reserves)}; revenue trend (${h.trendReported} with two years) ${count(h.trend)}` : "Finances: not reported",
     staffed.length ? `Team size (${staffed.length} report it): median staff ${median(staffed.map((r) => team.get(r.ein)!.staff!))}; all-volunteer (0 staff): ${allVol}` : "Team size: not reported",
     need ?? null,
+    story ? `Story (from the chart shown above the overview): ${story}` : null,
   ].filter(Boolean).join("\n");
   const list = strong.map((r, i) => {
     const t = team.get(r.ein);
@@ -79,13 +93,14 @@ async function fresh(question: string, strong: Ranked[], need?: string): Promise
   });
   const o = res.parsed_output;
   if (res.stop_reason === "refusal" || !o) return null;
-  return { summary: o.summary, patterns: o.patterns.slice(0, 3), explore: o.explore.slice(0, 3), orgs, count: strong.length };
+  return { headline: tidy(o.headline).replace(/\s*\[\d+(?:,\s*\d+)*\]/g, ""), bullets: o.bullets.slice(0, 3).map(tidy), explore: o.explore.slice(0, 3), orgs, count: strong.length };
 }
 
-const cached = memo<Overview | null>("overview:v8", 200, 24 * 3600_000); // bump when the prompt changes
+const cached = memo<Overview | null>("overview:v11", 200, 24 * 3600_000); // bump when the prompt changes (v11: headline examples; v9: headline + bullets)
 // need: an optional figures line about county poverty vs. where these organizations are (lib/landscape).
-export function overview(question: string, results: Ranked[], need?: string) {
+// story: the overview chart's takeaway (lib/overviewFacts), so the headline can agree with the chart.
+export function overview(question: string, results: Ranked[], need?: string, story?: string) {
   const strong = results.filter((r) => r.relevance && isStrong(r));
   const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${strong.map((r) => r.ein).join(",")}`;
-  return cached(`${key}|${need ?? ""}`, () => fresh(question, strong, need).catch((err) => { console.error("AI overview failed", err); return null; }));
+  return cached(`${key}|${need ?? ""}|${story ?? ""}`, () => fresh(question, strong, need, story).catch((err) => { console.error("AI overview failed", err); return null; }));
 }

@@ -4,8 +4,9 @@ import type { View } from "vega";
 import { NavLink } from "./NavLink";
 import { InsightChart, exportChart } from "./InsightChart";
 import { InsightPoints } from "./InsightPoints";
+import { SlideButton } from "./SlideButton";
 import { useStoredList } from "./useStored";
-import { download, reportMarkdown, researchHref, sectionLabel, SECTIONS, toCsv, updated, type Insight } from "@/lib/insightMeta";
+import { download, findingSlide, reportMarkdown, researchHref, sectionLabel, SECTIONS, toCsv, updated, type Insight } from "@/lib/insightMeta";
 import { clearReport, removeFromReport, REPORT_EVENT, REPORT_KEY, toggleReport } from "@/lib/report";
 import { LOADED_STATES } from "@/lib/filters";
 
@@ -113,6 +114,7 @@ function InsightCard({ i, saved, lead = false }: { i: Insight; saved: boolean; l
             <button type="button" className="ins-link" disabled={!view} onClick={() => chartFile("png")}>PNG</button>
             <button type="button" className="ins-link" disabled={!view} onClick={() => chartFile("svg")}>SVG</button>
           </>}
+          <SlideButton quiet label="Slide" data={() => findingSlide(i, location.origin)} />
           <button type="button" className={`ins-btn save${saved ? " on" : ""}`} aria-pressed={saved} onClick={() => toggleReport(i)}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden><path d="M6 3h12v18l-6-4.5L6 21Z" /></svg>
             {saved ? "Saved" : "Save"}

@@ -1,5 +1,6 @@
 // Insights feed: shared types and helpers (safe for client code; no database access here).
 // Rows come from the `insights` table (see lib/insights.ts); only verified rows reach the app.
+import type { SlideData } from "./slide";
 
 export const SECTIONS = [
   { key: "funding-gaps", label: "Funding gaps" },
@@ -82,6 +83,23 @@ export function citation(i: Pick<Insight, "headline" | "sources" | "refreshed_at
   const src = [...new Set((i.sources ?? []).map((s) => s.label))];
   return [`"${i.headline}." NomBot Research${updated(i) ? `, updated ${updated(i)}` : ""}.`, `${origin}${researchHref(i.slug)} (accessed ${today}).`,
     src.length ? `Data: ${src.join(". ")}.` : ""].filter(Boolean).join(" ");
+}
+
+// A finding as one conference slide (lib/slide): headline, up to 3 key numbers, its chart, and the
+// first point plus "Why it matters" (the slide keeps what fits its word budget).
+export function findingSlide(i: Insight, origin: string): SlideData {
+  const pts = (i.points ?? []).filter((p) => typeof p === "string" && p.trim());
+  const why = pts.find((p) => p.startsWith("**Why it matters:**"));
+  const first = pts.find((p) => p !== why);
+  return {
+    kicker: [sectionLabel(i.section), i.state, "NomBot research"].filter(Boolean).join(" · "),
+    headline: i.headline,
+    numbers: (i.stats ?? []).slice(0, 3),
+    chart: i.chart && { spec: i.chart },
+    bullets: [first ?? (pts.length ? null : i.summary), why?.replace(/^\*\*Why it matters:\*\*\s*/, "")].filter((b): b is string => Boolean(b)).map((b) => b.charAt(0).toUpperCase() + b.slice(1)),
+    link: `${origin}${researchHref(i.slug)}`,
+    file: `${i.slug}-slide`,
+  };
 }
 
 // Starter questions for "Ask about this finding", by section.
