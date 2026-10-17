@@ -111,6 +111,24 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.funder_ein IN (SELECT ein FROM company_foundations)`, [a.rows[0].funder_ein])] },
   { name: "top company foundations are all flagged", s: spec({ metric: "top_funders", funderType: "company" }),
     check: async (a) => [await one(`SELECT count(*) FROM unnest($1::text[]) e WHERE e NOT IN (SELECT ein FROM company_foundations)`, [a.rows.map((r) => r.funder_ein)]), 0] },
+  // Inflation (BLS CPI-U, generosity-data 052): real dollars against the CPI table read directly. Tax years use the
+  // calendar-year annual average (M13), federal fiscal years the October-September mean; base = newest annual average.
+  { name: "climate trend, 2022 primary $ in base-year dollars", s: spec({ metric: "trend", causes: [climate] }),
+    check: async (a) => { const r = a.rows.find((x) => x.tax_year === 2022)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
+      return [Number(r[k]), await one(`SELECT sum(g.amount) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1) / (SELECT value FROM cpi_u WHERE period='M13' AND year=2022) ${CLEAN} AND g.tax_year=2022 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate' AND tier='primary')`)]; } },
+  { name: "all foundation $ trend, growth after inflation", s: spec({ metric: "trend" }),
+    check: async (a) => [Number(a.numbers[1].value.replace(/[^0-9.\-−]/g, "").replace("−", "-")), await one(`WITH t AS (SELECT tax_year, sum(g.amount) AS usd ${CLEAN} AND g.tax_year IN (2022, 2024) GROUP BY 1), c AS (SELECT year, value FROM cpi_u WHERE period='M13')
+      SELECT round(100 * ((SELECT usd FROM t WHERE tax_year=2024) / (SELECT usd FROM t WHERE tax_year=2022) * (SELECT value FROM c WHERE year=2022) / (SELECT value FROM c WHERE year=2024) - 1), 1)`)] },
+  { name: "federal awards trend, fiscal-year CPI", s: spec({ source: "federal_awards", metric: "trend" }),
+    check: async (a) => { const r = a.rows.find((x) => x.fiscal_year === 2022)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
+      return [Number(r[k]), await one(`SELECT sum(amount) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1)
+        / (SELECT avg(value) FROM cpi_u WHERE period <> 'M13' AND make_date(year, substr(period, 2)::int, 1) BETWEEN '2021-10-01' AND '2022-09-01') FROM federal_awards WHERE fiscal_year=2022`)]; } },
+  { name: "gov grants trend (same orgs), 2023 $ in base-year dollars", s: spec({ metric: "trend", source: "government_grants" }),
+    check: async (a) => { const r = a.rows.find((x) => x.tax_year === 2023)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
+      return [Number(r[k]), Number(r.usd) * await one(`SELECT (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1) / (SELECT value FROM cpi_u WHERE period='M13' AND year=2023)`)]; } },
+  // Benchmarks (generosity-data 053): national coverage share of IRS SOI grants paid (foundations + 4947 trusts)
+  { name: "national foundation total: share of IRS SOI 2022", s: spec({ metric: "total" }),
+    check: async (a) => [Number(a.coverage.find((c) => c.label.startsWith("Vs IRS SOI"))!.value.match(/^([\d.]+)%/)![1]), await one(`SELECT round(100 * (SELECT sum(usd) FROM grant_totals WHERE tax_year=2022) / (SELECT sum(value) FROM benchmarks WHERE source IN ('irs_soi_pf','irs_soi_trust') AND measure='grants_paid' AND year=2022))`)] },
 ];
 
 let fail = 0;

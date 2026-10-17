@@ -455,6 +455,74 @@ function flagYear(s: Spec): { year: number; note: string | null } {
 }
 const yearLabel = (y: number) => (y > G_FULL ? `${y} (partial)` : String(y));
 
+// ------------------------------------------------------------------ inflation (generosity-data 052: cpi_u_year)
+// BLS CPI-U, all items, US city average. Tax years (990, 990-PF) use the calendar-year annual average of the
+// year the tax year starts in. Federal fiscal years use the October-September average. Real dollars are in
+// the latest year with a full annual average ("2025 dollars"). Growth after inflation doesn't depend on the base.
+type Infl = { base: number; baseCpi: number; fiscal: boolean; idx: Map<number, number> };
+async function inflation(ctx: Ctx, years: number[], fiscal = false): Promise<Infl | null> {
+  const p = new P();
+  const rows = await ctx.q<{ year: number; cpi: number; fy: number | null; base: boolean }>(`Consumer prices: BLS CPI-U, calendar-year${fiscal ? " and federal fiscal-year (October to September)" : ""} averages`,
+    `SELECT year, cpi::float8 AS cpi, fy_cpi::float8 AS fy, year = (SELECT max(year) FROM cpi_u_year) AS base FROM cpi_u_year
+WHERE year = ANY(${p.add(years)}::int[]) OR year = (SELECT max(year) FROM cpi_u_year)`, p).catch(() => []);
+  const base = rows.find((r) => r.base);
+  const idx = new Map(rows.flatMap((r) => { const v = fiscal ? r.fy : r.cpi; return v != null ? [[r.year, v] as [number, number]] : []; }));
+  if (!base || years.some((y) => !idx.has(y))) return null;
+  return { base: base.year, baseCpi: base.cpi, fiscal, idx }; // fiscal-year dollars land in the base calendar year's prices too
+}
+const realOf = (inf: Infl, usd: number, year: number) => usd * inf.baseCpi / inf.idx.get(year)!;
+const realGrowth = (inf: Infl | null, g: number | null, from: number, to: number) => (inf && g != null ? (1 + g) * inf.idx.get(from)! / inf.idx.get(to)! - 1 : null);
+// "grew 13% (7% after inflation)", "grew 2% (down 1% after inflation)"
+function grewText(g: number, r: number | null, rose = "grew") {
+  const head = `${g >= 0 ? rose : "fell"} ${pct(Math.abs(g))}`;
+  if (r == null) return head;
+  return `${head} (${(r >= 0) === (g >= 0) ? "" : r >= 0 ? "up " : "down "}${pct(Math.abs(r))} after inflation)`;
+}
+const inflMethod = (inf: Infl) => ` After inflation = adjusted with the BLS CPI-U (all items, US city average), in ${inf.base} dollars, using ${inf.fiscal ? "each federal fiscal year's average, October to September" : "the annual average of the calendar year each tax year starts in"}.`;
+const SRC_CPI = { label: "BLS Consumer Price Index for All Urban Consumers (CPI-U, series CUUR0000SA0)", url: "https://www.bls.gov/cpi/data.htm" };
+// A radio under the chart switches its dollar field between current and inflation-adjusted values: each row
+// carries `${field}_nom` and `${field}_real`, and a calculate step picks one. Slides draw the default.
+function inflToggle(spec: Record<string, unknown>, field: string, inf: Infl) {
+  const real = `${inf.base} dollars (after inflation)`;
+  return {
+    ...spec,
+    params: [...((spec.params as unknown[]) ?? []), { name: "dollars", value: "Current dollars", bind: { input: "radio", options: ["Current dollars", real], name: " " } }],
+    transform: [{ calculate: `dollars === ${JSON.stringify(real)} ? datum.${field}_real : datum.${field}_nom`, as: field }, ...((spec.transform as unknown[]) ?? [])],
+  };
+}
+
+// ------------------------------------------------------------------ external benchmarks (generosity-data 053)
+// National 990-PF totals against IRS SOI (grants paid by private foundations and 4947 trusts) and Giving USA
+// (giving by foundations), for the years we have in full. Shown in national all-causes foundation answers.
+type Bench = { source: string; year: number; label: string; benchmark_usd: number; url: string; ours_all_lines_usd: number; ours_us_orgs_usd: number };
+async function benchmarks(ctx: Ctx, y: Years): Promise<{ coverage: { label: string; value: string }[]; method: string; sources: { label: string; url: string }[] }> {
+  const p = new P();
+  const rows = await ctx.q<Bench>("Published national totals vs ours (benchmark_coverage: IRS SOI, Giving USA)", `SELECT source, year, label, benchmark_usd::float8 AS benchmark_usd, url,
+       ours_all_lines_usd::float8 AS ours_all_lines_usd, ours_us_orgs_usd::float8 AS ours_us_orgs_usd
+FROM benchmark_coverage WHERE ours_full_year AND complete AND year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)} ORDER BY year DESC`, p).catch(() => []);
+  const soi = rows.find((r) => r.source === "irs_soi"), gu = rows.find((r) => r.source === "giving_usa");
+  if (!soi && !gu) return { coverage: [], method: "", sources: [] };
+  const coverage: { label: string; value: string }[] = [], m: string[] = [], sources: { label: string; url: string }[] = [];
+  if (soi) {
+    coverage.push({ label: `Vs IRS SOI ${soi.year}`, value: `${pct(soi.ours_us_orgs_usd / soi.benchmark_usd)} of ${money(soi.benchmark_usd)} grants paid (all our 990-PF lines: ${pct(soi.ours_all_lines_usd / soi.benchmark_usd)})` });
+    m.push(`IRS Statistics of Income counts ${money(soi.benchmark_usd)} in grants paid by private foundations and charitable trusts filing a 990-PF for tax year ${soi.year}. Grants counted here are ${pct(soi.ours_us_orgs_usd / soi.benchmark_usd)} of it, and every itemized 990-PF grant line we load is ${pct(soi.ours_all_lines_usd / soi.benchmark_usd)}. SOI is a sample estimate on a cash basis, and the grants counted here leave out individuals, foreign recipients and other private foundations.`);
+    sources.push({ label: `IRS SOI domestic private foundation and charitable trust statistics, tax year ${soi.year}`, url: "https://www.irs.gov/statistics/soi-tax-stats-domestic-private-foundation-and-charitable-trust-statistics" });
+  }
+  if (gu) {
+    coverage.push({ label: `Vs Giving USA ${gu.year}`, value: `${pct(gu.ours_us_orgs_usd / gu.benchmark_usd)} of ${money(gu.benchmark_usd)} given by foundations` });
+    m.push(`Giving USA estimates foundations gave ${money(gu.benchmark_usd)} in ${gu.year}. Grants counted here are ${pct(gu.ours_us_orgs_usd / gu.benchmark_usd)} of that. It's an estimate built from Candid data with its own definitions, so treat the share as a rough check.`);
+    sources.push({ label: gu.label.replace(/^Giving USA giving by foundations \((.*)\)$/, "$1: giving by foundations"), url: gu.url });
+  }
+  return { coverage, method: ` Benchmarks: ${m.join(" ")}`, sources };
+}
+// Form 990 lines nationally: IRS SOI's newest 501(c)(3) Form 990 figure, as context only (other year, other filers).
+const EO_MEASURE: Record<string, string> = { government_grants: "gov_grants", contributions: "contributions", revenue: "revenue" };
+async function eoBenchmark(ctx: Ctx, source: string): Promise<{ label: string; value: string } | null> {
+  const p = new P();
+  const [r] = await ctx.q<{ year: number; value: number }>("IRS SOI: Form 990 returns of 501(c)(3) organizations, newest tax year (benchmarks)", `SELECT year, value::float8 AS value FROM benchmarks WHERE source = 'irs_soi_eo' AND measure = ${p.add(EO_MEASURE[source])} ORDER BY year DESC LIMIT 1`, p).catch(() => []);
+  return r ? { label: `IRS SOI ${r.year}, 501(c)(3) Form 990 filers`, value: `${money(r.value)} (another year and filer set, so not a share)` } : null;
+}
+
 // ------------------------------------------------------------------ building blocks: foundation grants
 type YearRow = { year: number | null; usd: number; primary_usd: number; grants: number; orgs: number; funders: number };
 // Money to a cause (or a filtered subject) by tax year, with distinct recipients and funders. Sums from
@@ -597,7 +665,9 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v18: premise check (spec.premise), keyword causes ignore passing mentions, single-organization note in state rankings.
 // v21: Schedule I placeholder lines ("SEE ATTACHED", "VARIOUS") out of charity_grant_clean (generosity-data 050),
 // national charity_grants totals show what's reported but not itemized.
-const answerMemo = memo<Answer>("answer:v21", 500, 6 * 3600_000);
+// v22: growth after inflation (BLS CPI-U, generosity-data 052) in trend answers, with a chart toggle, and IRS SOI /
+// Giving USA benchmarks (generosity-data 053) in national totals' coverage.
+const answerMemo = memo<Answer>("answer:v22", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -830,29 +900,43 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   ];
   const yr = yrs(y.from, y.to);
   const where = pl.label;
+  // Inflation: growth after inflation next to nominal growth, and real dollars in the chart and CSV.
+  const inf = await inflation(ctx, Array.from({ length: y.to - y.from + 1 }, (_, i) => y.from + i));
+  const fl = (g: number | null) => realGrowth(inf, g, y.full[0], y.full.at(-1)!);
 
   if (!causes[0]) {
     // All foundation money in a place.
-    const vals = den.years.map((r) => ({ year: yearLabel(r.year!), usd: r.usd }));
-    const u = unit(Math.max(...vals.map((v) => v.usd), 1));
+    const vals = den.years.map((r) => ({ year: yearLabel(r.year!), usd: r.usd, real: inf ? realOf(inf, r.usd, r.year!) : null }));
+    const u = unit(Math.max(...vals.map((v) => Math.max(v.usd, v.real ?? 0)), 1));
     const fullSum = den.years.filter((r) => r.year! <= G_FULL).reduce((a, r) => a + r.usd, 0);
     const first = den.years.find((r) => r.year === y.full[0]), last = den.years.find((r) => r.year === y.full.at(-1));
     const growth = first && last && first !== last ? last.usd / first.usd - 1 : null;
+    const realG = fl(growth);
+    const trend = s.metric === "trend" && growth != null;
     const pop0 = s.perResident || pl.states.includes("DC") ? await placePop(ctx, pl) : 0;
     if (pl.states.includes("DC")) caveats.push(DC_NOTE);
+    // National 990-PF totals, all causes, no filters: our coverage of IRS SOI and Giving USA.
+    const bench = national && pl.g.kind === "pf" && !hasFilt(pl.f) ? await benchmarks(ctx, y) : null;
+    const growthTile = growth != null ? [{ value: signed(growth), label: `${y.full[0]} to ${y.full.at(-1)}`, note: realG != null && !trend ? `${signed(realG)} after inflation` : undefined }] : [];
+    const realTile = trend && realG != null ? [{ value: signed(realG), label: `after inflation, ${y.full[0]} to ${y.full.at(-1)}` }] : [];
+    const barSpec = vbar(vals.map((v) => ({ year: v.year, amount: +(v.usd / u.div).toFixed(3), amount_nom: +(v.usd / u.div).toFixed(3), amount_real: v.real != null ? +(v.real / u.div).toFixed(3) : null })), "year", "amount", "Tax year", u.title, u.fmt);
     return {
-      headline: `${pl.g.who} gave ${money(den.total.usd)} to organizations in ${where}, ${yr}${pop0 > 0 ? `: ${perRes(fullSum / fullYears / pop0)} per resident a year` : ""}`,
-      numbers: [{ value: money(den.total.usd), label: `${pl.g.grants}, ${yr}`, note: niShown ? `plus ${money(ni!.usd)} reported but not itemized` : undefined }, ...(pop0 > 0 ? [{ value: perRes(fullSum / fullYears / pop0), label: "per resident a year", note: pl.states.includes("DC") ? DC_NOTE_SHORT : undefined }] : []), { value: money(fullSum / fullYears), label: "a year (full years)" },
-        ...(growth != null ? [{ value: signed(growth), label: `${y.full[0]} to ${y.full.at(-1)}` }] : [])],
+      headline: trend
+        ? `${cap(pl.g.money)} to organizations in ${where} ${grewText(growth!, realG)} from ${y.full[0]} to ${y.full.at(-1)}`
+        : `${pl.g.who} gave ${money(den.total.usd)} to organizations in ${where}, ${yr}${pop0 > 0 ? `: ${perRes(fullSum / fullYears / pop0)} per resident a year` : ""}`,
+      numbers: trend
+        ? [...growthTile, ...realTile, { value: money(fullSum / fullYears), label: "a year (full years)" }]
+        : [{ value: money(den.total.usd), label: `${pl.g.grants}, ${yr}`, note: niShown ? `plus ${money(ni!.usd)} reported but not itemized` : undefined }, ...(pop0 > 0 ? [{ value: perRes(fullSum / fullYears / pop0), label: "per resident a year", note: pl.states.includes("DC") ? DC_NOTE_SHORT : undefined }] : []), { value: money(fullSum / fullYears), label: "a year (full years)" },
+          ...growthTile],
       bullets: [`${b(money(fullSum / fullYears))} a year in ${pl.g.kind === "pf" ? "private-foundation grants" : pl.g.grants} to ${where}`,
         ...(niShown ? [`Plus ${b(money(ni!.usd))} reported but not itemized by recipient`] : []),
         `${b(int(den.total.n))} grants counted, all recipients, by recipient address`,
-        ...(growth != null ? [`Grant dollars changed ${b(signed(growth))} from ${y.full[0]} to ${y.full.at(-1)}`] : [])],
-      chart: { title: `${cap(pl.g.grants)} to ${where}, by tax year`, sub: u.title, spec: vbar(vals.map((v) => ({ year: v.year, amount: +(v.usd / u.div).toFixed(3) })), "year", "amount", "Tax year", u.title, u.fmt) },
-      rows: den.years.map((r) => ({ tax_year: r.year, grants_usd: r.usd, grants: r.n, linked_usd: r.linked_usd })),
-      causeNote: notes[0], coverage, caveats,
-      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}`,
-      sources: [pl.g.src], searchQuery: null,
+        ...(growth != null && !trend ? [`Grant dollars changed ${b(signed(growth))} from ${y.full[0]} to ${y.full.at(-1)}${realG != null ? `, ${b(signed(realG))} after inflation` : ""}`] : [])],
+      chart: { title: `${cap(pl.g.grants)} to ${where}, by tax year`, sub: u.title, spec: inf ? inflToggle(barSpec, "amount", inf) : barSpec },
+      rows: den.years.map((r) => ({ tax_year: r.year, grants_usd: r.usd, ...(inf ? { [`grants_usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, r.usd, r.year!)) } : {}), grants: r.n, linked_usd: r.linked_usd })),
+      causeNote: notes[0], coverage: [...coverage, ...(bench?.coverage ?? [])], caveats,
+      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}${inf ? inflMethod(inf) : ""}${bench?.method ?? ""}`,
+      sources: [pl.g.src, ...(inf ? [SRC_CPI] : []), ...(bench?.sources ?? [])], searchQuery: null,
       ...(growth != null ? { change: { subject: `${pl.g.money} to organizations in ${where}`, g: growth, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };
   }
@@ -865,7 +949,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const m = ms[i]!;
     for (const r of m.years) {
       const d = den.years.find((x) => x.year === r.year);
-      rowsOut.push({ cause: c!.name, tax_year: r.year, usd: r.usd, primary_usd: label[i] ? r.primary_usd : null, recipients: r.orgs, funders: r.funders, share_of_linked: d ? r.usd / d.linked_usd : null });
+      rowsOut.push({ cause: c!.name, tax_year: r.year, usd: r.usd, primary_usd: label[i] ? r.primary_usd : null, ...(inf && s.metric === "trend" ? { [`${label[i] ? "primary_usd" : "usd"}_in_${inf.base}_dollars`]: Math.round(realOf(inf, label[i] ? r.primary_usd : r.usd, r.year!)) } : {}), recipients: r.orgs, funders: r.funders, share_of_linked: d ? r.usd / d.linked_usd : null });
       if (causes.length === 1 && label[i]) {
         series.push({ year: yearLabel(r.year!), tier: "Main purpose (primary)", usd: r.primary_usd });
         series.push({ year: yearLabel(r.year!), tier: "One program among others (partial)", usd: r.usd - r.primary_usd });
@@ -926,18 +1010,27 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const idx: Row[] = y0 && d0 ? y.full.flatMap((yy) => {
       const r = m0.years.find((x) => x.year === yy), d = den.years.find((x) => x.year === yy);
       if (!r || !d) return [];
-      const v = label[0] ? r.primary_usd / y0.primary_usd : r.usd / y0.usd;
-      return [{ year: String(yy), series: cap(c0.name), change: +(v - 1).toFixed(4) }, { year: String(yy), series: `All ${pl.g.grants}`, change: +(d.linked_usd / d0.linked_usd - 1).toFixed(4) }];
-    }) : [];
+      const v = label[0] ? r.primary_usd / y0.primary_usd : r.usd / y0.usd, dv = d.linked_usd / d0.linked_usd;
+      // After inflation: the same ratio deflated by prices between the first year and this one.
+      const k = inf ? inf.idx.get(y.full[0])! / inf.idx.get(yy)! : null;
+      return [{ year: String(yy), series: cap(c0.name), change_nom: +(v - 1).toFixed(4), change_real: k != null ? +(v * k - 1).toFixed(4) : null },
+        { year: String(yy), series: `All ${pl.g.grants}`, change_nom: +(dv - 1).toFixed(4), change_real: k != null ? +(dv * k - 1).toFixed(4) : null }];
+    }).map((r) => ({ ...r, change: r.change_nom })) : [];
+    const realG = fl(g);
+    const tSpec = trendSpec(idx, cap(c0.name), `All ${pl.g.grants}`);
     return {
       ...base,
-      chart: idx.length ? { title: `Change since ${y.full[0]}: ${c0.name} vs all ${pl.g.grants}`, sub: "Percent change", spec: trendSpec(idx, cap(c0.name), `All ${pl.g.grants}`) } : base.chart,
-      headline: g == null ? `${cap(pl.g.grants)} to ${c0.name}: ${money(floor0)} in ${yr}` : `${cap(pl.g.money)} for ${c0.name} ${g >= 0 ? "grew" : "fell"} ${pct(Math.abs(g))} from ${y.full[0]} to ${y.full.at(-1)}`,
+      chart: idx.length ? { title: `Change since ${y.full[0]}: ${c0.name} vs all ${pl.g.grants}`, sub: "Percent change", spec: inf ? inflToggle(tSpec, "change", inf) : tSpec } : base.chart,
+      headline: g == null ? `${cap(pl.g.grants)} to ${c0.name}: ${money(floor0)} in ${yr}` : `${cap(pl.g.money)} for ${c0.name} ${grewText(g, realG)} from ${y.full[0]} to ${y.full.at(-1)}`,
       numbers: [...(g != null ? [{ value: signed(g), label: `${y.full[0]} to ${y.full.at(-1)}${label[0] ? ", primary" : ""}` }] : []),
+        ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []),
         { value: money(perYear0), label: `a year${label[0] ? ", primary" : ""}` },
         { value: int(m0.total.orgs), label: "recipient orgs" }],
-      bullets: [denGrowth != null && g != null ? `All ${pl.g.grants} ${denGrowth >= 0 ? "grew" : "fell"} ${b(pct(Math.abs(denGrowth)))} over the same years` : "",
-        `${b(int(m0.total.funders))} ${pl.g.givers} gave to ${c0.name}${upper ? `, ${b(money(fullYearSum(m0, false) / fullYears))} a year counting partial` : ""}`].filter(Boolean),
+      bullets: [denGrowth != null && g != null ? `All ${pl.g.grants} ${grewText(denGrowth, fl(denGrowth)).replace(/^(grew|fell) (\S+)/, (_, w, n) => `${w} ${b(n)}`)} over the same years` : "",
+        `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`,
+        upper ? `${b(money(fullYearSum(m0, false) / fullYears))} a year counting partial` : ""].filter(Boolean),
+      method: `${base.method}${inf && realG != null ? inflMethod(inf) : ""}`,
+      sources: [...base.sources, ...(inf && realG != null ? [SRC_CPI] : [])],
       ...(g != null ? { change: { subject: `${pl.g.money} for ${c0.name}`, g, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };
   }
@@ -1131,16 +1224,19 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
     caveats.push("Trend uses only organizations with a filing in every year shown, so new and late filers don't distort it.");
     const a = rows[0], z = rows.at(-1);
     const g = a && z && a !== z && a.usd ? z.usd / a.usd - 1 : null;
-    const u = unit(Math.max(...rows.map((r) => r.usd), 1));
+    const inf = rows.length ? await inflation(ctx, rows.map((r) => r.year)) : null;
+    const realG = a && z ? realGrowth(inf, g, a.year, z.year) : null;
+    const u = unit(Math.max(...rows.map((r) => Math.max(r.usd, inf ? realOf(inf, r.usd, r.year) : 0)), 1));
+    const bars = vbar(rows.map((r) => ({ year: String(r.year), amount: +(r.usd / u.div).toFixed(3), amount_nom: +(r.usd / u.div).toFixed(3), amount_real: inf ? +(realOf(inf, r.usd, r.year) / u.div).toFixed(3) : null })), "year", "amount", "Tax year", u.title, u.fmt);
     return {
-      headline: g == null ? `Not enough organizations filed in every year to show a trend` : `${fd.short[0].toUpperCase() + fd.short.slice(1)} to ${causeName(c, pl)} ${g >= 0 ? "rose" : "fell"} ${pct(Math.abs(g))} from ${from} to ${to} (same ${int(a.orgs)} orgs)`,
-      numbers: [...(g != null ? [{ value: signed(g), label: `${from} to ${to}` }] : []), ...(z ? [{ value: money(z.usd), label: `${fd.short}, ${z.year}` }] : []), { value: int(a?.orgs ?? 0), label: "orgs filing every year" }],
+      headline: g == null ? `Not enough organizations filed in every year to show a trend` : `${fd.short[0].toUpperCase() + fd.short.slice(1)} to ${causeName(c, pl)} ${grewText(g, realG, "rose")} from ${from} to ${to} (same ${int(a.orgs)} orgs)`,
+      numbers: [...(g != null ? [{ value: signed(g), label: `${from} to ${to}` }] : []), ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []), ...(z ? [{ value: money(z.usd), label: `${fd.short}, ${z.year}` }] : []), { value: int(a?.orgs ?? 0), label: "orgs filing every year" }],
       bullets: [g != null ? `${b(signed(g))} in ${fd.short} from ${from} to ${to}` : "Too few filings to compare years", `${b(int(a?.orgs ?? 0))} organizations filed a return for every year`],
-      chart: { title: `${fd.short} to ${causeName(c, pl)}, same organizations each year`, sub: u.title, spec: vbar(rows.map((r) => ({ year: String(r.year), amount: +(r.usd / u.div).toFixed(3) })), "year", "amount", "Tax year", u.title, u.fmt) },
-      rows: rows.map((r) => ({ tax_year: r.year, usd: r.usd, orgs: r.orgs })), causeNote: note, caveats,
+      chart: { title: `${fd.short} to ${causeName(c, pl)}, same organizations each year`, sub: u.title, spec: inf ? inflToggle(bars, "amount", inf) : bars },
+      rows: rows.map((r) => ({ tax_year: r.year, usd: r.usd, ...(inf ? { [`usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, r.usd, r.year)) } : {}), orgs: r.orgs })), causeNote: note, caveats,
       coverage: [{ label: "Orgs in every year", value: int(a?.orgs ?? 0) }],
-      method: `Each organization's ${fd.name} for tax years ${from}–${to}, newest return per year, summed over organizations that filed for every year.`,
-      sources: [SRC.f990], searchQuery: searchFor(s, pl),
+      method: `Each organization's ${fd.name} for tax years ${from}–${to}, newest return per year, summed over organizations that filed for every year.${inf ? inflMethod(inf) : ""}`,
+      sources: [SRC.f990, ...(inf ? [SRC_CPI] : [])], searchQuery: searchFor(s, pl),
       ...(g != null ? { change: { subject: `${fd.short} to ${c ? causeName(c, pl) : "nonprofits"}`, g, from: String(from), to: String(to) } } : {}),
     };
   }
@@ -1153,14 +1249,16 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
   const notes = await Promise.all(causes.map((c, i) => causeNote(c, ms[i]?.cs ?? causeSql(null, new P(), "", ""), caveats)));
   const where = pl.label;
   if (!causes[0]) {
+    // National: IRS SOI's newest 501(c)(3) figure for the same line, as context.
+    const eo = where === "the US" && !hasFilt(pl.f) ? await eoBenchmark(ctx, s.source) : null;
     return {
       headline: `Nonprofits in ${where} reported ${money(all.usd)} in ${fd.short} for ${fy.year}`,
       numbers: [{ value: money(all.usd), label: `${fd.short}, ${fy.year}` }, { value: int(all.reporting), label: "orgs reporting any" }, { value: pct(all.usd / Math.max(1, all.revenue)), label: "of their total revenue" }],
       bullets: [`${b(money(all.usd))} in ${fd.short} across ${b(int(all.orgs))} e-filed returns`, `${b(pct(all.usd / Math.max(1, all.revenue)))} of these organizations' total revenue`],
       chart: null, rows: [{ tax_year: fy.year, usd: all.usd, orgs: all.orgs, reporting: all.reporting, revenue: all.revenue }], causeNote: notes[0],
-      coverage: [{ label: "E-filed returns", value: int(all.orgs) }, { label: "Full Form 990", value: int(all.full990) }, { label: "Report any", value: int(all.reporting) }],
+      coverage: [{ label: "E-filed returns", value: int(all.orgs) }, { label: "Full Form 990", value: int(all.full990) }, { label: "Report any", value: int(all.reporting) }, ...(eo ? [eo] : [])],
       caveats, method: `Sum of ${fd.name}, tax year ${fy.year}, one return per organization (newest filing), private foundations excluded. ${s.source === "government_grants" ? "Blank line 1e counts as $0." : ""}`,
-      sources: [SRC.f990], searchQuery: null,
+      sources: [SRC.f990, ...(eo ? [{ label: "IRS SOI charities and other tax-exempt organizations statistics (501(c)(3) Form 990 returns)", url: "https://www.irs.gov/statistics/soi-tax-stats-charities-and-other-tax-exempt-organizations-statistics" }] : [])], searchQuery: null,
     };
   }
   const m0 = ms[0]!, c0 = causes[0]!;
@@ -1957,10 +2055,10 @@ async function federal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const inX = pl.label !== "the US" ? ` in ${pl.label}` : "";
   const nm = (x: string) => titleCase(x);
   const base = { searchQuery: searchFor(s, pl), sources: [SRC.fed, ...(c?.label ? [SRC.labels] : []), ...(c?.ntee.length ? [SRC.ntee] : [])] };
-  const finish = async (o: Omit<Out, "caveats" | "causeNote" | "searchQuery" | "sources">, cs: CauseSql, extra: string[] = []): Promise<Out> => {
+  const finish = async (o: Omit<Out, "caveats" | "causeNote" | "searchQuery" | "sources">, cs: CauseSql, extra: string[] = [], moreSources: { label: string; url: string }[] = []): Promise<Out> => {
     const note = await causeNote(c, cs, caveats);
     if (c) caveats.push("Causes count only recipients linked to an IRS-registered organization (by name and place), so cause totals run low.");
-    return { ...o, ...base, causeNote: note, caveats: [...extra, ...caveats, ...FED_CAVEATS, await fedLinkNote()] };
+    return { ...o, ...base, sources: [...base.sources, ...moreSources], causeNote: note, caveats: [...extra, ...caveats, ...FED_CAVEATS, await fedLinkNote()] };
   };
   const metric = s.metric === "breakdown" && s.by === "state" && !s.measure ? "by_state" : s.metric === "grant_size" && s.by ? "breakdown" : s.metric;
   switch (metric) {
@@ -2004,10 +2102,15 @@ FROM x JOIN flag_year f ON f.ein = x.recipient_ein AND f.tax_year = 2024 AND f.f
           chart, rows, coverage: [{ label: "Award-years", value: int(all.total.awards) }], method, versus: { first: causes[0]!.name, second: causes[1]!.name, a: v0, z: v1 } }, cs, cmpNote ? [cmpNote] : []);
       }
       if (metric === "trend") {
-        return finish({ headline: growth == null ? `Federal awards to nonprofits${forX}${inX}: ${money(v0)}, FY${yr}` : `Federal awards to nonprofits${forX}${inX} ${growth >= 0 ? "grew" : "fell"} ${pct(Math.abs(growth))} from FY${y.from} to FY${y.to}`,
-          numbers: [...(growth != null ? [{ value: signed(growth), label: `FY${y.from} to FY${y.to}` }] : []), { value: money(v0 / nYears), label: "a year" }, { value: int(m0.total.orgs), label: "recipients" }],
+        // Federal fiscal years (October to September) deflate by the fiscal-year average CPI-U, not the calendar year's.
+        const inf = await inflation(ctx, m0.years.map((r) => r.year!), true);
+        const realG = realGrowth(inf, growth, y.from, y.to);
+        const tChart = inf ? { ...chart, spec: inflToggle(vbar(m0.years.map((r) => { const v = c?.label ? r.primary_usd : r.usd; return { year: `FY${r.year}`, amount: +(v / u.div).toFixed(3), amount_nom: +(v / u.div).toFixed(3), amount_real: +(realOf(inf, v, r.year!) / u.div).toFixed(3) }; }), "year", "amount", "Fiscal year", u.title, u.fmt), "amount", inf) } : chart;
+        return finish({ headline: growth == null ? `Federal awards to nonprofits${forX}${inX}: ${money(v0)}, FY${yr}` : `Federal awards to nonprofits${forX}${inX} ${grewText(growth, realG)} from FY${y.from} to FY${y.to}`,
+          numbers: [...(growth != null ? [{ value: signed(growth), label: `FY${y.from} to FY${y.to}` }] : []), ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []), { value: money(v0 / nYears), label: "a year" }, { value: int(m0.total.orgs), label: "recipients" }],
           bullets: [`${b(money(yv(m0, y.to, c)))} in FY${y.to}, ${b(money(yv(m0, y.from, c)))} in FY${y.from}`],
-          chart, rows, coverage: [{ label: "Award-years", value: int(m0.total.awards) }], method, ...(growth != null ? { change: { subject: `federal awards to nonprofits${forX}${inX}`, g: growth, from: `FY${y.from}`, to: `FY${y.to}` } } : {}) }, cs);
+          chart: tChart, rows: inf ? rows.map((r) => ({ ...r, [`usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, Number(c?.label ? r.primary_usd : r.usd), Number(r.fiscal_year))) })) : rows,
+          coverage: [{ label: "Award-years", value: int(m0.total.awards) }], method: `${method}${inf ? inflMethod(inf) : ""}`, ...(growth != null ? { change: { subject: `federal awards to nonprofits${forX}${inX}`, g: growth, from: `FY${y.from}`, to: `FY${y.to}` } } : {}) }, cs, [], inf ? [SRC_CPI] : []);
       }
       const share = v0 / Math.max(1, all.total.usd);
       return finish({

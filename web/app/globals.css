@@ -1173,6 +1173,12 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
 .ins-chart { width: 100%; min-height: 180px; }
 .ins-chart > .vega-embed { width: 100%; display: block; }
 .ins-chart .vega-embed summary { display: none; } /* vega-embed's own menu (actions are off) */
+/* Chart toggles (Vega-Lite radio params, e.g. current vs inflation-adjusted dollars) */
+.ins-chart .vega-bindings { margin-top: 8px; font-size: 12px; color: var(--mute); }
+.ins-chart .vega-bind-radio { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.ins-chart .vega-bind-radio label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.ins-chart .vega-bind-radio input { accent-color: var(--g); margin: 0; }
+@media print { .ins-chart .vega-bindings { display: none; } }
 .ins-chart-err { margin-top: 14px; font-size: 13px; color: var(--mute); }
 .ins-sk-chart { height: 200px; margin-top: 18px; border-radius: 12px; }
 .ins-card .sk-line.short { width: 22%; height: 10px; margin-top: 0; }
