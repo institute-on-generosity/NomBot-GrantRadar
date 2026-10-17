@@ -67,23 +67,77 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   const of = cause ? ` ${cause}` : "";
   const forX = cause ? ` for ${cause}` : "";
   const money = moneyOf(s);
+  const fed = s.source === "federal_awards";
+  const flag = !pf && !fed; // Form 990 lines: government grants, contributions, revenue
+  const ACS = ["county_poverty", "county_income", "county_race", "county_age"];
   const next: Record<string, () => void> = {
     concentration: () => {
-      add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
-      add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
-      add(`What is the typical grant${forX}?`, { metric: "grant_size" });
-      add(`How much money${forX} is general support?`, { metric: "general_support" });
+      if (flag) {
+        add(`Which organizations report the most ${money}${forX}?`, { metric: "top_recipients", by: null });
+        add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend", by: null });
+        return;
+      }
+      if (s.by === "recipient_size") {
+        add(`How much ${money} goes to organizations by revenue size${forX}?`, { metric: "breakdown", by: "recipient_size" });
+        add(`How concentrated is funding${forX} among recipients?`, { by: null });
+      }
+      add(`Who gets the most money${forX}?`, { metric: "top_recipients", by: null });
+      add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders", by: null });
+      add(`What is the typical grant${forX}?`, { metric: "grant_size", by: null });
+      add(`How much money${forX} is general support?`, { metric: "general_support", by: null });
+    },
+    breakdown: () => {
+      const by = s.by ?? "cause";
+      if (fed) {
+        if (by !== "agency") add(`Which federal agencies give the most to nonprofits${forX}?`, { metric: "top_funders", by: null, perResident: false, perPoverty: false });
+        add(`Which nonprofits get the most federal money${forX}?`, { metric: "top_recipients", by: null, perResident: false, perPoverty: false });
+        add(`Is federal money for nonprofits${of ? ` for${of}` : ""} growing?`, { metric: "trend", by: null, perResident: false, perPoverty: false });
+        return;
+      }
+      if (ACS.includes(by)) {
+        if (!s.states.length) add(`Which states get the most ${money}${forX} per resident?`, { metric: "by_state", by: null, perResident: true, perPoverty: false, order: "most" });
+        add(`Do rural counties get less ${money}${forX}?`, { metric: "by_rurality", by: null, perResident: false, perPoverty: false });
+        for (const o of ACS.filter((x) => x !== by).slice(0, 2)) add(`How does ${money}${forX} split by ${o === "county_poverty" ? "county poverty rate" : o === "county_income" ? "county income" : o === "county_race" ? "county race and ethnicity" : "county age"}?`, { by: o as Spec["by"] });
+        return;
+      }
+      if (pf) {
+        add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend", by: null, measure: null });
+        add(`Who gets the most money${forX}?`, { metric: "top_recipients", by: null, measure: null });
+        if (s.source === "foundation_grants") add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders", by: null, measure: null });
+        if (by !== "state" && !s.county) add(`Which states get the most ${money}${forX}?`, { metric: "by_state", by: null, measure: null });
+      }
+    },
+    count_orgs: () => {
+      const subj = cause ? (/(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|churches|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`) : "nonprofits";
+      const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
+      if (s.condition !== "deficit") add(`How many ${subj}${place} run deficits?`, { condition: "deficit" });
+      if (s.condition !== "low_cash") add(`How many ${subj}${place} have under 3 months of cash?`, { condition: "low_cash" });
+      if (s.condition !== "gov_reliant") add(`How many ${subj}${place} rely on government grants?`, { condition: "gov_reliant" });
+      add(`How much government money goes to ${subj}${place}?`, { metric: "total", source: "government_grants", condition: null });
     },
     top_recipients: () => {
+      if (fed) add(`Which federal agencies give the most to nonprofits${forX}?`, { metric: "top_funders" });
+      if (!pf) add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend" });
       if (pf) add(`How concentrated is funding${forX}?`, { metric: "concentration" });
       if (pf) add(`Which foundations give the most${of ? ` to${of}` : ""}?`, { metric: "top_funders" });
     },
     top_funders: () => {
+      if (fed) {
+        add(`Which nonprofits get the most federal money${forX}?`, { metric: "top_recipients" });
+        add(`Is federal money for nonprofits${of ? ` for${of}` : ""} growing?`, { metric: "trend" });
+        if (!s.states.length && !s.county) add(`Which states get the most federal money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most" });
+        add(`Which federal programs fund nonprofits most${forX}?`, { metric: "breakdown", by: "program" });
+      }
       if (pf) add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
       if (pf) add(`How much money${forX} is general support?`, { metric: "general_support" });
       if (pf) add(`How much money${forX} crosses state lines?`, { metric: "out_of_state" });
     },
     grant_size: () => {
+      if (fed) {
+        add(`Which federal agencies give the most to nonprofits${forX}?`, { metric: "top_funders" });
+        add(`Is federal money for nonprofits${of ? ` for${of}` : ""} growing?`, { metric: "trend" });
+        return;
+      }
       add(`How much money${forX} is general support?`, { metric: "general_support" });
       add(`How concentrated is funding${forX}?`, { metric: "concentration" });
     },

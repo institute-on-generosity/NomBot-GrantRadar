@@ -112,13 +112,16 @@ class Ctx {
 // A cause as SQL: a join and/or WHERE terms on the alias's EIN and NTEE columns. tier: the label's tier column.
 // all: a subject with no cause restriction (e.g. "organizations under $1M", where only the filters apply).
 type C = Cause & { all?: boolean; via?: string }; // via: the cause_terms / NTEE name a plain-English cause matched
-type CauseSql = { join: string; where: string[]; tier: string | null; kind: "label" | "ntee" | "keyword" | "all" };
+type CauseSql = { join: string; where: string[]; tier: string | null; kind: "label" | "ntee" | "keyword" | "all"; primaryOnly?: boolean };
 function tsq(keywords: string[]): string {
   return keywords.map((k) => k.split(/[^a-z0-9]+/).filter(Boolean).join(" <-> ")).filter(Boolean).map((k) => `(${k})`).join(" | ");
 }
-function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = ""): CauseSql {
+// primaryOnly: a graded label counts only orgs where the cause is the main stated purpose. Used for whole-org
+// money (Form 990 lines, federal awards): a partial-tier org's entire budget isn't money for the cause (a
+// credit-union network with one green-lending program would count all its government grants as climate).
+function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primaryOnly = false): CauseSql {
   if (!c || c.all) return { join: "", where: [], tier: null, kind: "all" };
-  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}`, where: [], tier: `l${sfx}.tier`, kind: "label" };
+  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
   if (c.ntee.length) return { join: "", where: [`${ntee} LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`], tier: null, kind: "ntee" };
   const q = tsq(c.keywords.length ? c.keywords : [c.name.toLowerCase()]);
   const t = p.add(q || "nothing");
@@ -149,9 +152,11 @@ function bandRange(r: { min: number | null; max: number | null }, edges: number[
   const text = r.min != null && r.max != null ? `${edgeText(edges[lo - 2])} to ${edgeText(edges[hi - 1])}` : r.max != null ? `under ${edgeText(edges[hi - 1])}` : r.min != null ? `${edgeText(edges[lo - 2])} and up` : "any";
   return { b: [lo, hi], text };
 }
-const KIND_SQL: Record<string, string[]> = { nonprofit: ["nonprofit"], school_district: ["school_district"], public_college: ["college_public"], private_college: ["college_private"], public_entity: ["school_district", "college_public", "college_private"] };
-const KIND_NAME: Record<string, string> = { nonprofit: "identified nonprofits", school_district: "school districts", public_college: "public colleges", private_college: "private colleges", public_entity: "school districts and colleges", college_public: "public colleges", college_private: "private colleges", unidentified: "unidentified recipients" };
-const FTYPE_NAME: Record<string, string> = { family: "family-named foundations", family_named: "family-named foundations", operating: "private operating foundations", trust: "charitable trusts", other: "other private foundations" };
+// public_entity = government recipients only (school districts and public colleges). Private colleges are
+// private nonprofits, so they're their own kind, never folded in.
+const KIND_SQL: Record<string, string[]> = { nonprofit: ["nonprofit"], school_district: ["school_district"], public_college: ["college_public"], private_college: ["college_private"], public_entity: ["school_district", "college_public"] };
+const KIND_NAME: Record<string, string> = { nonprofit: "identified nonprofits", school_district: "school districts", public_college: "public colleges", private_college: "private colleges", public_entity: "school districts and public colleges", college_public: "public colleges", college_private: "private colleges", unidentified: "unidentified recipients" };
+const FTYPE_NAME: Record<string, string> = { family: "family-named foundations", family_named: "family-named foundations", operating: "private operating foundations", trust: "charitable trusts", other: "other private foundations", company: "company foundations" };
 function filtersOf(s: Spec): Filt {
   const notes: string[] = [], to: string[] = [], from: string[] = [];
   let rb: Filt["rb"] = null, fb: Filt["fb"] = null;
@@ -170,7 +175,9 @@ function filtersOf(s: Spec): Filt {
     from.unshift(FTYPE_NAME[ftype]);
     notes.push(ftype === "family_named"
       ? "The IRS doesn't flag family foundations. Family-named = \"Family\" in the foundation's name, so this is a floor: most family foundations carry a person's name instead."
-      : ftype === "operating" ? "Private operating foundations run their own programs (IRS master file foundation code 02 or 03) and give few grants." : "Charitable trusts = nonexempt trusts that file a 990-PF (section 4947(a)(1)).");
+      : ftype === "operating" ? "Private operating foundations run their own programs (IRS master file foundation code 02 or 03) and give few grants."
+      : ftype === "company" ? "The IRS doesn't flag company foundations. Company = a business gives to the foundation on its 990-PF, the name says so, or the name matches an SEC-listed company. Giving programs run inside a company aren't counted."
+      : "Charitable trusts = nonexempt trusts that file a 990-PF (section 4947(a)(1)).");
   }
   const kinds = s.recipientKind ? KIND_SQL[s.recipientKind] : null;
   if (kinds) {
@@ -185,7 +192,9 @@ const hasFilt = (f: Filt) => !!(f.rb || f.fb || f.ftype || f.kinds);
 function filtGc(f: Filt, p: P, g = "g"): string[] {
   const w: string[] = [];
   if (f.rb) w.push(`${g}.recipient_ein IN (SELECT ein FROM recipient_profile WHERE band BETWEEN ${p.add(f.rb[0])} AND ${p.add(f.rb[1])})`);
-  if (f.fb || f.ftype) w.push(`${g}.funder_ein IN (SELECT ein FROM funder_profile WHERE ${[...(f.fb ? [`asset_band BETWEEN ${p.add(f.fb[0])} AND ${p.add(f.fb[1])}`] : []), ...(f.ftype ? [`funder_type = ${p.add(f.ftype)}`] : [])].join(" AND ")})`);
+  const ft = f.ftype === "company" ? null : f.ftype; // company foundations: their own table (generosity-data 045), not a funder_profile type
+  if (f.ftype === "company") w.push(`${g}.funder_ein IN (SELECT ein FROM company_foundations)`);
+  if (f.fb || ft) w.push(`${g}.funder_ein IN (SELECT ein FROM funder_profile WHERE ${[...(f.fb ? [`asset_band BETWEEN ${p.add(f.fb[0])} AND ${p.add(f.fb[1])}`] : []), ...(ft ? [`funder_type = ${p.add(ft)}`] : [])].join(" AND ")})`);
   if (f.kinds) {
     const ent = f.kinds.filter((k) => k !== "nonprofit");
     if (ent.length) w.push(`${g}.id IN (SELECT gr.id FROM grants gr JOIN public_entities pe ON pe.id = gr.recipient_entity WHERE pe.kind = ANY(${p.add(ent)}::text[]))`);
@@ -200,7 +209,7 @@ const filtEin = (f: Filt, p: P, ein: string) => (f.rb ? [`${ein} IN (SELECT ein 
 // Sums come from grant_cube (alias x) when the cause is a label or NTEE prefixes of up to 3 characters
 // and there's no county; otherwise from grant_clean. Same grants, same numbers (eval/answer-cube.mts).
 const cubeCause = (c: C | null) => !c || c.all || !!c.label || (c.ntee.length > 0 && c.ntee.every((n) => n.length <= 3));
-const cubeOk = (ctx: Ctx, c: C | null, pl: Place) => ctx.cube && !pl.county && cubeCause(c) && !(pl.g.kind === "charity" && pl.f.rb);
+const cubeOk = (ctx: Ctx, c: C | null, pl: Place) => ctx.cube && !pl.county && cubeCause(c) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company"; // no company column in the cube
 type CubeSql = { where: string[]; primary: (() => string) | null }; // primary: adds its parameter only when used
 function cubeWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, linkedOnly: boolean, x = "x"): CubeSql {
   const w = [`${x}.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`];
@@ -336,7 +345,7 @@ const grades = () => gradeMemo("all", async () => {
   }]));
 });
 
-const linkMemo = memo<{ grants: number; dollars: number }>("answer-link:v2", 4, 3600_000);
+const linkMemo = memo<{ grants: number; dollars: number }>("answer-link:v3", 4, 3600_000);
 const linkRate = (g: GSrc = PF) => linkMemo(g.kind, async () => {
   const r = await db.query(g.kind === "pf"
     ? `SELECT sum(linked_n)::float8 / sum(n) AS g, sum(linked_usd)::float8 / sum(usd) AS d FROM grant_totals WHERE tax_year BETWEEN 2022 AND 2024`
@@ -349,8 +358,10 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
   const via = c.via ? ` Matched to codes through our cause taxonomy (term "${c.via}").` : "";
   if (cs.kind === "label") {
     const g = (await grades())[c.label!];
-    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. Primary is a floor, primary + partial an upper bound.`);
-    return `${g?.name ?? c.label} label (org_labels): primary = the main stated purpose, partial = one program among others.${via}`;
+    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : "Primary is a floor, primary + partial an upper bound."}`);
+    return cs.primaryOnly
+      ? `${g?.name ?? c.label} label (org_labels), primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
+      : `${g?.name ?? c.label} label (org_labels): primary = the main stated purpose, partial = one program among others.${via}`;
   }
   if (cs.kind === "ntee") {
     if (c.ntee.some((n) => n.startsWith("X"))) caveats.push("Churches and other houses of worship don't have to file Form 990 or apply for recognition, so most congregations are missing from these figures.");
@@ -530,7 +541,7 @@ type FlagSum = { orgs: number; full990: number; reporting: number; usd: number; 
 async function flagMoney(ctx: Ctx, c: Cause | null, pl: Place, year: number, source: string, title: string) {
   const fd = FIELD[source];
   const p = new P();
-  const cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+  const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
   const where = [`f.tax_year = ${p.add(year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
   const [r] = await ctx.q<FlagSum>(title, `SELECT count(*)::int AS orgs, count(*) FILTER (WHERE f.form = '990')::int AS full990,
        count(*) FILTER (WHERE coalesce(${fd.col}, 0) > 0)::int AS reporting,
@@ -542,7 +553,7 @@ WHERE ${and(where)}`, p);
 }
 async function orgUniverse(ctx: Ctx, c: Cause | null, pl: Place): Promise<number> {
   const p = new P();
-  const cs = causeSql(c, p, "o.ein", "o.ntee_cd");
+  const cs = causeSql(c, p, "o.ein", "o.ntee_cd", "", true);
   const zip = pl.county || pl.area ? "LEFT JOIN zip_regions z ON z.zip5 = left(o.zip, 5)::char(5)" : "";
   const where = ["coalesce(o.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "o.state", "z.county_fips"), ...filtEin(pl.f, p, "o.ein")];
   const [r] = await ctx.q<{ n: number }>("Organizations in the set (IRS master file)", `SELECT count(*)::int AS n FROM orgs o ${cs.join} ${zip}
@@ -554,8 +565,12 @@ WHERE ${and(where)}`, p);
 type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "status"> & { status?: Answer["status"] };
 
 // v11: research layer (grant_cube, filters, breakdowns, cause taxonomy, DC note). v12: Schedule I charity grants,
-// federal awards (USAspending), Census ACS (per person in poverty, county groups).
-const answerMemo = memo<Answer>("answer:v12", 500, 6 * 3600_000);
+// federal awards (USAspending), Census ACS (per person in poverty, county groups). v13: IRS 05B batches loaded
+// (2025-26 returns the index files under 05A), so 2023-25 totals rose; Fidelity 2023 caveat dropped.
+// v15: largest 1% by revenue (concentration), public_entity without private colleges, Form 990 lines and federal
+// awards count a graded label's primary tier only, follow-up chips for breakdowns and federal answers.
+// v16: grant-size medians and 90th percentiles from the size histograms (generosity-data 046).
+const answerMemo = memo<Answer>("answer:v17", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -607,7 +622,6 @@ const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null)
   "Schedule I grants: what public charities filing Form 990 report giving to US organizations and governments, usually grants over $5,000. Private foundations are a separate source.",
   ...(cls === "daf_sponsor" ? ["DAF sponsor = a charity that holds donor-advised funds and whose DAF grants (Schedule D) are at least half of its Schedule I grants. Community foundations and United Ways are counted separately."] : []),
   ...(cls === "community_foundation" ? ["Community foundation = \"Community Foundation\", \"Community Fund\" or \"Community Trust\" in the name, or NTEE code T31 when DAF grants aren't most of its giving."] : []),
-  ...(cls == null || cls === "daf_sponsor" ? ["Fidelity Charitable's tax year 2023 return is missing from the IRS e-file batches (the batch file is cut short), so 2023 runs low."] : []),
   ...(cls == null || cls === "daf_sponsor" || cls === "community_foundation" ? ["Schedule I doesn't say which grants a donor advised. DAF sponsors' grants are mostly DAF grants, and community foundations' mix DAF and their own grants."] : []),
   "Grants to another DAF sponsor, community foundation or United Way are left out, so the money isn't counted twice.",
   ...(cls == null || cls === "other" ? ["Amounts include goods given in kind (food banks, donated supplies) at the value the filer reports."] : []),
@@ -637,6 +651,10 @@ async function dispatch(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     if (s.by && ACS_BANDS[s.by]) return byCountyGroup(ctx, s, pl);
     return federal(ctx, s, pl);
   }
+  // "The largest 1% of nonprofits": by revenue (or contributions, government grants) on Form 990, and,
+  // for grant sources split by recipient size, the grant money those largest orgs receive.
+  if (s.metric === "concentration" && !isGrantSrc(s)) return flagConcentration(ctx, s, pl);
+  if (s.metric === "concentration" && s.by === "recipient_size") return sizeConcentration(ctx, s, pl);
   const gm = ["top_funders", "out_of_state", "grant_size", "general_support", "concentration", "overlap_funders", "fastest_causes"];
   if (!isGrantSrc(s) && gm.includes(s.metric)) {
     // Form 990 reports one government-grants (or contributions) total per org: no funder, grant or purpose.
@@ -791,6 +809,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const ofWhat = wide ? `all ${pl.g.adj} grant` : group ? "these foundations' identified grant" : `identified ${pl.g.adj} grant`;
   const share0 = floor0 / Math.max(1, baseUsd);
   const who = whoGave(pl);
+  const entities = !!pl.f.kinds && !pl.f.kinds.includes("nonprofit");
   const fullYearSum = (m: typeof m0, prim: boolean) => m.years.filter((r) => r.year! <= G_FULL).reduce((a, r) => a + (prim ? r.primary_usd : r.usd), 0);
   const perYear0 = fullYearSum(m0, label[0]) / fullYears;
   const pop = s.perResident ? await placePop(ctx, pl) : 0;
@@ -853,10 +872,11 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       ...perResTile,
       { value: pct(share0), label: `of ${ofWhat} $` },
       { value: money(perYear0), label: "a year" },
-      { value: int(m0.total.orgs), label: "recipient orgs" }],
+      ...(entities ? [] : [{ value: int(m0.total.orgs), label: "recipient orgs" }])],
     bullets: [`${b(money(perYear0))} a year to ${c0.name}${label[0] ? ` as a main purpose, ${b(money(fullYearSum(m0, false) / fullYears))} with partial` : ""}`,
       `${b(pct(share0))} of ${ofWhat} dollars${where !== "the US" ? ` in ${where}` : ""}`,
-      `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`],
+      // School districts and public colleges are matched by name, mostly without an EIN: count funders only.
+      entities ? `${b(int(m0.total.funders))} ${pl.g.givers} gave to them` : `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`],
   };
 }
 
@@ -989,9 +1009,12 @@ WHERE ${and([...gw.where, ...(by === "county" ? ["g.county_fips IS NOT NULL"] : 
   const chartV = (x: number) => (measure === "dollars" && !per ? +(x / u.div).toFixed(3) : measure === "grants" ? x : +x.toFixed(2));
   const axis = measure === "dollars" && !per ? u.title : measure === "grants" ? "Grants" : "$";
   const fmt = measure === "dollars" && !per ? u.fmt : measure === "grants" ? ",.0f" : "$,.0f";
+  // Recipient kinds: identified nonprofits always lead, so lead with the schools and colleges people ask about.
+  const ents = by === "recipient_kind" ? ["school_district", "college_public", "college_private"].map((k) => groups.find((g) => g.k === k)).filter((g): g is (typeof groups)[number] => !!g) : [];
+  const kindLine = ents.length ? `${whoGave(pl)} gave ${ents.map((g) => `${fmtV(g.v)} to ${KIND_NAME[g.k!]}`).join(", ").replace(/, ([^,]*)$/, " and $1")}${inX}, ${yr}` : null;
   return {
-    headline: `${sentence}${inX}: ${fmtV(top.v)}${measure === "dollars" && !per ? `, ${pct(share(top))} of the total` : per ? " a year" : ""}, ${yr}${dcOutlier && top.k === "DC" && nextNonDc ? `. Without DC, ${nextNonDc.name} at ${fmtV(nextNonDc.v)}` : ""}`,
-    numbers: ranked.slice(0, 3).map((g) => ({ value: fmtV(g.v), label: g.name, note: dcTag(g) })),
+    headline: kindLine ?? `${sentence}${inX}: ${fmtV(top.v)}${measure === "dollars" && !per ? `, ${pct(share(top))} of the total` : per ? " a year" : ""}, ${yr}${dcOutlier && top.k === "DC" && nextNonDc ? `. Without DC, ${nextNonDc.name} at ${fmtV(nextNonDc.v)}` : ""}`,
+    numbers: (ents.length ? ents : ranked.slice(0, 3)).map((g) => ({ value: fmtV(g.v), label: g.name, note: dcTag(g) })),
     bullets: [
       ...(measure === "dollars" && !per ? [`Top 3 ${BY_TITLE[by].replace(/ \(.+\)$/, "").replace(/ group$/, "")} groups got ${b(pct(ranked.slice(0, 3).reduce((a, g) => a + share(g), 0)))} of ${b(money(totalUsd))}`] : [`${b(money(totalUsd))} in ${b(int(totalN))} grants across ${b(int(groups.length))} groups`]),
       ...(dcOutlier && top.k === "DC" && nextNonDc ? [`Without DC, ${nextNonDc.name} leads with ${b(fmtV(nextNonDc.v))}`] : []),
@@ -1020,7 +1043,7 @@ async function flagTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const c = causes[0];
     const from = Math.max(s.yearFrom ?? F_FIRST, F_FIRST), to = Math.min(Math.max(s.yearTo ?? F_FULL, from + 1), F_LAST);
     const p = new P();
-    const cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+    const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const where = [`f.tax_year BETWEEN ${p.add(from)} AND ${p.add(to)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
     const rows = await ctx.q<{ year: number; usd: number; orgs: number }>(`Same organizations each year: ${fd.short}`, `WITH s AS (
   SELECT f.ein, f.tax_year, coalesce(${fd.col}, 0) AS v FROM flag_year f ${cs.join} WHERE ${and(where)}),
@@ -1070,7 +1093,16 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
   const top = await topFlagRecipients(ctx, c0, pl, fy.year, s.source, 8);
   const u = unit(Math.max(...top.map((t) => t.usd), 1));
   caveats.push(`${int(m0.orgs)} of ${int(universe)} organizations in the set have an e-filed ${fy.year} return; the rest (mostly small, 990-N or paper filers) are missing.`);
-  const upper = isLabel ? `up to ${money(m0.usd)} with partial` : undefined;
+  // Primary tier only (causeSql primaryOnly). Say what the partial tier would add, and who drives it.
+  if (isLabel) {
+    const pp = new P();
+    const w = [`f.tax_year = ${pp.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...placeWhere(pl, pp, "f.state", "f.county_fips"), ...filtEin(pl.f, pp, "f.ein")];
+    const [pt] = await ctx.q<{ usd: number; orgs: number; top: string | null; top_usd: number | null }>(`${fd.short}: orgs where ${c0.name} is one program among others (partial tier, left out)`, `WITH x AS (SELECT o.name, coalesce(${fd.col}, 0)::float8 AS v FROM flag_year f JOIN org_labels l ON l.ein = f.ein AND l.label = ${pp.add(c0.label)} AND l.tier = 'partial' JOIN orgs o ON o.ein = f.ein
+  WHERE ${and(w)})
+SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name FROM x ORDER BY v DESC LIMIT 1) AS top, (SELECT max(v) FROM x)::float8 AS top_usd FROM x`, pp);
+    if (pt?.usd > 0) caveats.push(`Counted only for orgs whose main purpose is ${c0.name}. ${int(pt.orgs)} orgs where it's one program among others reported ${money(pt.usd)} more, led by ${pt.top ? titleCase(pt.top) : "one org"} (${money(pt.top_usd ?? 0)}), but most of that money funds their other work.`);
+  }
+  const upper: string | undefined = undefined;
   const compareBullet = causes[1] && ms[1] ? [`${b(money(causes[1].label ? ms[1].primary_usd : ms[1].usd))} to ${causes[1].name}, ${b(pct((causes[1].label ? ms[1].primary_usd : ms[1].usd) / Math.max(1, all.usd)))} of the total`] : [];
   return {
     headline: s.metric === "compare" && causes[1] && ms[1]
@@ -1080,7 +1112,7 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
       { value: pct(share), label: `of all nonprofits' ${fd.short}` },
       ...(s.source !== "revenue" ? [{ value: pct(ofRev), label: "of these orgs' revenue" }] : []),
       { value: int(m0.reporting), label: `orgs reporting ${fd.short}` }],
-    bullets: [`${b(money(floor0))} in ${fd.short}${isLabel ? ` to orgs where it's the main purpose, ${b(money(m0.usd))} with partial` : ""}`,
+    bullets: [`${b(money(floor0))} in ${fd.short}${isLabel ? " to orgs where it's the main purpose" : ""}`,
       ...(compareBullet.length ? compareBullet : [`${b(pct(share))} of all nonprofits' ${fd.short}${where !== "the US" ? ` in ${where}` : ""}`]),
       `${b(int(m0.reporting))} of ${b(int(m0.orgs))} filers reported any ${fd.short}`],
     chart: top.length ? { title: `Largest ${fd.short} to ${c0.name}, ${fy.year}`, sub: u.title, spec: hbar(top.map((t) => ({ name: t.name.replace(/\b\w+/g, (w) => w[0] + w.slice(1).toLowerCase()).slice(0, 44) + (t.tier === "partial" ? " (partial)" : ""), amount: +(t.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) } : null,
@@ -1095,7 +1127,7 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
 async function topFlagRecipients(ctx: Ctx, c: Cause | null, pl: Place, year: number, source: string, n = 10) {
   const fd = FIELD[source];
   const p = new P();
-  const cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+  const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
   const where = [`f.tax_year = ${p.add(year)}`, `coalesce(${fd.col}, 0) > 0`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
   return ctx.q<{ ein: string; name: string; state: string; usd: number; revenue: number; tier: string | null }>(`Largest ${fd.short}, ${year}`, `SELECT f.ein, o.name, o.state, ${fd.col}::float8 AS usd, f.revenue::float8 AS revenue${cs.tier ? `, ${cs.tier} AS tier` : ", NULL AS tier"}
 FROM flag_year f JOIN orgs o ON o.ein = f.ein ${cs.join}
@@ -1171,7 +1203,7 @@ async function byState(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const caveats: string[] = [];
   let sql: string, cs: CauseSql;
   const states = pl.states.length ? pl.states : null;
-  if (foundation && ctx.cube && cubeCause(c) && (c || hasFilt(pl.f)) && !(pl.g.kind === "charity" && pl.f.rb)) {
+  if (foundation && ctx.cube && cubeCause(c) && (c || hasFilt(pl.f)) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company") {
     // Research cube: same sums as grant_clean for a cause or filters, by recipient state.
     cs = causeSql(c, new P(), "", "");
     const cw = cubeWhere(c, p, { ...pl, county: null, area: null }, y, !!c);
@@ -1194,7 +1226,7 @@ WHERE t.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}${states ? ` AND t.s
 WHERE ${and(gw.where)} GROUP BY 1`;
   } else {
     const fd = FIELD[s.source];
-    cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+    cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const w = [`f.tax_year = ${p.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...(states ? [`f.state = ANY(${p.add(states)}::text[])`] : []), ...filtEin(pl.f, p, "f.ein")];
     sql = `SELECT f.state, coalesce(sum(coalesce(${fd.col}, 0)), 0)::float8 AS usd, ${primarySum(cs, `coalesce(${fd.col}, 0)`)} AS primary_usd FROM flag_year f ${cs.join}
 WHERE ${and(w)} GROUP BY 1`;
@@ -1290,7 +1322,7 @@ async function byCountyGroup(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     money = `SELECT g.county_fips AS k, ${primarySum(cs, "g.amount")} AS usd FROM ${pl.g.clean} g ${cs.join} WHERE ${and([...gw.where, "g.county_fips IS NOT NULL"])} GROUP BY 1`;
   } else {
     const fd = FIELD[s.source];
-    cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+    cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const w = [`f.tax_year = ${p.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", "f.county_fips IS NOT NULL", ...cs.where, ...placeWhere({ ...pl, area: null }, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
     money = `SELECT f.county_fips AS k, ${primarySum(cs, `coalesce(${fd.col}, 0)`)} AS usd FROM flag_year f ${cs.join} WHERE ${and(w)} GROUP BY 1`;
   }
@@ -1351,7 +1383,7 @@ FROM ${pl.g.cube} x WHERE ${and(cw.where)} GROUP BY 1`;
 WHERE ${and(gw.where)} GROUP BY 1`;
   } else {
     const fd = FIELD[s.source];
-    cs = causeSql(c, p, "f.ein", "f.ntee_cd");
+    cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const w = [`f.tax_year = ${p.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(plNoArea, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
     sql = `SELECT CASE WHEN cn.population < ${RURAL_POP} THEN 'rural' WHEN cn.population IS NOT NULL THEN 'urban' ELSE 'unmapped' END AS area,
        coalesce(sum(coalesce(${fd.col}, 0)), 0)::float8 AS usd FROM flag_year f ${cs.join} LEFT JOIN county_need cn ON cn.county_fips = f.county_fips
@@ -1431,7 +1463,7 @@ async function topRecipients(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const fd = FIELD[s.source];
     const rows = await topFlagRecipients(ctx, c, pl, fy.year, s.source, 10);
     const caveats: string[] = [];
-    const cs = causeSql(c, new P(), "f.ein", "f.ntee_cd");
+    const cs = causeSql(c, new P(), "f.ein", "f.ntee_cd", "", true);
     const note = await causeNote(c, cs, caveats);
     if (s.source === "government_grants") caveats.push(GOV_CAVEAT);
     if (!rows.length) throw new Unanswerable(`No ${fd.short} reported for ${causeName(c, pl)} in ${pl.label}.`);
@@ -1507,32 +1539,86 @@ WHERE ${and(gw2.where)} AND g.funder_state <> g.recipient_state GROUP BY 1 ORDER
   };
 }
 
+// ---- grant-size histograms (generosity-data 046): percentiles without sorting every grant
+// Rows: amount bucket (3 significant digits), exact (every amount equals the bucket), count, min, max.
+// Ordered by bucket then exact first, that's the sorted order of the amounts. A percentile is read like
+// percentile_cont: exact when its ranks land in exact rows (or a row's first or last rank, its min or max),
+// otherwise interpolated between the row's min and max, which bound the true value (under 1% apart).
+type HistRow = { b: number; exact: boolean; n: number; lo: number; hi: number };
+type Pctl = { v: number; lo: number; hi: number };
+const exactP = (v: number): Pctl => ({ v, lo: v, hi: v });
+const histSql = (table: string, where: string[]) => `SELECT h.bucket::float8 AS b, h.exact, sum(h.n)::int AS n, min(h.lo)::float8 AS lo, max(h.hi)::float8 AS hi
+FROM ${table} h WHERE ${and(where)} GROUP BY 1, 2 ORDER BY 1, 2 DESC`;
+function histPctl(rows: HistRow[], q: number): Pctl {
+  const total = rows.reduce((t, r) => t + r.n, 0);
+  if (!total) return exactP(0);
+  const at = (i: number): Pctl => {
+    let start = 0;
+    for (const r of rows) {
+      if (i < start + r.n) {
+        if (r.exact || r.lo === r.hi || i === start) return exactP(r.lo);
+        if (i === start + r.n - 1) return exactP(r.hi);
+        return { v: r.lo + ((r.hi - r.lo) * (i - start)) / (r.n - 1), lo: r.lo, hi: r.hi };
+      }
+      start += r.n;
+    }
+    return exactP(rows[rows.length - 1].hi);
+  };
+  const h = q * (total - 1), k = Math.floor(h), f = h - k;
+  const x = at(k), y = f > 0 ? at(k + 1) : x;
+  const mix = (u: number, w: number) => u + f * (w - u);
+  return { v: mix(x.v, y.v), lo: mix(x.lo, y.lo), hi: mix(x.hi, y.hi) };
+}
+function histStats(rows: HistRow[]) {
+  const median = histPctl(rows, 0.5), p90 = histPctl(rows, 0.9);
+  const loose = (x: Pctl) => money(x.lo) !== money(x.hi);
+  return { median, p90, approx: loose(median) || loose(p90) };
+}
+// Display: the value when every value inside the bounds shows the same, else "about" the estimate.
+const histMoney = (p: Pctl) => (money(p.lo) === money(p.hi) ? money(p.v) : `about ${money(p.v)}`);
+
 // ---- grant size
 async function grantSize(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const c = s.causes[0] ?? null;
   const y = grantYears(s);
+  // Research layer: percentiles from grant_size_hist / charity_grant_size_hist, count and average from the cube.
+  // Keyword causes, long NTEE codes and counties use the exact grant_clean query.
+  const hist = cubeOk(ctx, c, pl);
   const stat = async (cc: Cause | null, title: string) => {
     const p = new P();
     const gw = grantWhere(cc, p, pl, y, false);
+    if (hist) {
+      const ph = new P(), pc = new P();
+      const hw = cubeWhere(cc, ph, pl, y, false, "h"), cw = cubeWhere(cc, pc, pl, y, false);
+      const [hr, [cr]] = await Promise.all([
+        ctx.q<HistRow>(`${title} (grant-size histogram)`, histSql(pl.g.kind === "pf" ? "grant_size_hist" : "charity_grant_size_hist", hw.where), ph),
+        ctx.q<{ n: number; avg: number }>(`${title}, count and average (research cube)`, `SELECT coalesce(sum(x.n), 0)::int AS n, (sum(x.usd)::float8 / nullif(sum(x.n), 0)) AS avg FROM ${pl.g.cube} x WHERE ${and(cw.where)}`, pc),
+      ]);
+      const h = histStats(hr);
+      return { n: cr.n, avg: cr.avg ?? 0, median: h.median, p90: h.p90, approx: h.approx, cs: gw.cs };
+    }
     const [r] = await ctx.q<{ n: number; avg: number; median: number; p90: number }>(title, `SELECT count(*)::int AS n, avg(g.amount)::float8 AS avg,
        percentile_cont(0.5) WITHIN GROUP (ORDER BY g.amount)::float8 AS median, percentile_cont(0.9) WITHIN GROUP (ORDER BY g.amount)::float8 AS p90
 FROM ${pl.g.clean} g ${gw.cs.join} WHERE ${and(gw.where)}`, p);
-    return { ...r, cs: gw.cs };
+    return { ...r, median: exactP(r.median), p90: exactP(r.p90), approx: false, cs: gw.cs };
   };
-  const [a, all] = await Promise.all([stat(c, `Grant sizes, ${causeName(c, pl)}`), c ? stat(null, "Grant sizes, all grants in the place") : null]);
+  const [a0, all0] = await Promise.all([stat(c, `Grant sizes, ${causeName(c, pl)}`), c ? stat(null, "Grant sizes, all grants in the place") : null]);
+  // Shown values: exact at the precision shown, or "about" where the histogram can't pin them.
+  const shown = (r: typeof a0) => ({ ...r, median: r.median.v, p90: r.p90.v, med$: histMoney(r.median), p90$: histMoney(r.p90) });
+  const a = shown(a0), all = all0 ? shown(all0) : null;
   if (!a.n) throw new Unanswerable(`No ${pl.g.grants} found for ${causeName(c, pl)} in ${pl.label}.`);
   const caveats: string[] = [];
   const note = await causeNote(c, a.cs, caveats);
   caveats.push(pl.g.kind === "pf" ? "One row per grant line on a 990-PF; a foundation paying one grantee in installments shows several lines." : "One row per grant line on a Schedule I. Many filers list each recipient once a year, others list each payment.", ...(await grantCaveats(pl)));
   const vals = [{ group: causeName(c, pl), stat: "Median", usd: a.median }, { group: causeName(c, pl), stat: "Average", usd: a.avg }, ...(all ? [{ group: "All grants", stat: "Median", usd: all.median }, { group: "All grants", stat: "Average", usd: all.avg }] : [])];
   return {
-    headline: `The median ${pl.g.adj} grant${pl.f.from ? ` from ${pl.f.from}` : ""} to ${c ? c.name : pl.f.to || "all causes"} is ${money(a.median)}, the average ${money(a.avg)}, ${yrs(y.from, y.to)}`,
-    numbers: [{ value: money(a.median), label: "median grant" }, { value: money(a.avg), label: "average grant" }, ...(all ? [{ value: money(all.median), label: "median, all grants" }] : [{ value: int(a.n), label: "grants" }])],
-    bullets: [`Median ${b(money(a.median))}, average ${b(money(a.avg))} across ${b(int(a.n))} grants`, `One in ten grants is ${b(money(a.p90))} or more`, ...(all ? [`All grants in ${pl.label}: median ${b(money(all.median))}`] : [])],
+    headline: `The median ${pl.g.adj} grant${pl.f.from ? ` from ${pl.f.from}` : ""} to ${c ? c.name : pl.f.to || "all causes"} is ${a.med$}, the average ${money(a.avg)}, ${yrs(y.from, y.to)}`,
+    numbers: [{ value: a.med$, label: "median grant" }, { value: money(a.avg), label: "average grant" }, ...(all ? [{ value: all.med$, label: "median, all grants" }] : [{ value: int(a.n), label: "grants" }])],
+    bullets: [`Median ${b(a.med$)}, average ${b(money(a.avg))} across ${b(int(a.n))} grants`, `One in ten grants is ${b(a.p90$)} or more`, ...(all ? [`All grants in ${pl.label}: median ${b(all.med$)}`] : [])],
     chart: { title: `Grant size, ${causeName(c, pl)}${all ? " vs all grants" : ""}`, sub: "$ per grant", spec: vbar(vals.map((v) => ({ ...v, usd: Math.round(v.usd) })), "stat", "usd", "", "$ per grant", "$,.0f", all ? "group" : undefined) },
     rows: [{ group: causeName(c, pl), grants: a.n, median: a.median, average: a.avg, p90: a.p90 }, ...(all ? [{ group: "all grants", grants: all.n, median: all.median, average: all.avg, p90: all.p90 }] : [])],
     causeNote: note, caveats, coverage: [{ label: "Grants", value: int(a.n) }],
-    method: `Median, average and 90th percentile of ${pl.g.kind === "pf" ? "990-PF" : "Schedule I"} grant amounts, tax years ${yrs(y.from, y.to)}, to ${c ? "identified recipients in the cause set" : "all recipients"} in ${pl.label}.`,
+    method: `Median, average and 90th percentile of ${pl.g.kind === "pf" ? "990-PF" : "Schedule I"} grant amounts, tax years ${yrs(y.from, y.to)}, to ${c ? "identified recipients in the cause set" : "all recipients"} in ${pl.label}.${hist ? ` Median and 90th percentile from grant-size histograms in the research layer (${pl.g.kind === "pf" ? "grant_size_hist" : "charity_grant_size_hist"}, amounts cut to 3 significant digits)${a0.approx || all0?.approx ? ". A value marked about is interpolated inside one bucket, within 1% of the exact figure" : ", exact here"}.` : ""}`,
     sources: [pl.g.src], searchQuery: searchFor(s, pl),
   };
 }
@@ -1606,6 +1692,102 @@ FROM k`, rw ? pr : p);
   };
 }
 
+// ---- the largest 1% of nonprofits by a Form 990 line (revenue, contributions, government grants)
+// Ranked by the line itself, one return per org for the tax year. The top 1% is counted two ways: of all
+// orgs on the IRS list in the set (990-N and non-filers are small, so they sit below the cut) and of e-filers.
+async function flagConcentration(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  const c = s.causes[0] ?? null;
+  const fd = FIELD[s.source];
+  const fy = flagYear(s);
+  const universe = await orgUniverse(ctx, c, pl);
+  const p = new P();
+  const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
+  const where = [`f.tax_year = ${p.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
+  const k1 = Math.max(1, Math.ceil(universe * 0.01)), k10 = Math.max(1, Math.ceil(universe * 0.1));
+  const [r] = await ctx.q<{ n: number; total: number; top1: number; top1f: number; top10: number; cut1: number; top10orgs: number }>(`Share of ${fd.short} held by the largest organizations, ${fy.year}`, `WITH v AS MATERIALIZED (SELECT greatest(coalesce(${fd.col}, 0), 0)::float8 AS v FROM flag_year f ${cs.join} WHERE ${and(where)}),
+n AS (SELECT count(*)::int AS n, coalesce(sum(v), 0)::float8 AS total FROM v),
+r AS (SELECT v, row_number() OVER (ORDER BY v DESC) AS rn FROM (SELECT v FROM v ORDER BY v DESC LIMIT ${p.add(Math.max(k10, 10))}) t)
+SELECT n.n, n.total,
+  (SELECT coalesce(sum(v), 0) FROM r WHERE rn <= ${p.add(k1)})::float8 AS top1,
+  (SELECT coalesce(sum(v), 0) FROM r WHERE rn <= greatest(1, ceil(n.n * 0.01)))::float8 AS top1f,
+  (SELECT coalesce(sum(v), 0) FROM r WHERE rn <= ${p.add(k10)})::float8 AS top10,
+  (SELECT min(v) FROM r WHERE rn <= ${p.add(k1)})::float8 AS cut1,
+  (SELECT coalesce(sum(v), 0) FROM r WHERE rn <= 10)::float8 AS top10orgs
+FROM n`, p);
+  if (!r?.n || !r.total) throw new Unanswerable(`No ${fd.short} reported for ${causeName(c, pl)} in ${pl.label}.`);
+  const caveats: string[] = [];
+  const note = await causeNote(c, cs, caveats);
+  if (fy.note) caveats.push(fy.note);
+  if (s.source === "government_grants") caveats.push(GOV_CAVEAT);
+  caveats.push(`The top 1% = the ${int(k1)} largest of the ${int(universe)} organizations on the IRS list${c ? " in the set" : ""}. Only ${int(r.n)} e-filed a ${fy.year} Form 990 or 990-EZ. The rest are mostly small 990-N filers, so they fall below the cut.`,
+    ...(s.source === "revenue" ? ["Revenue counts every source an org reports: gifts, grants, program fees and investment income. Hospitals and universities earn most of theirs from fees, so they dominate the top."] : []));
+  const s1 = r.top1 / r.total, s10 = r.top10 / r.total, s1f = r.top1f / r.total;
+  const subject = c ? orgsOf(c.name) : "nonprofits";
+  const inX = pl.label !== "the US" ? ` in ${pl.label}` : "";
+  const vals = [{ group: `Top 1% (${int(k1)} orgs)`, share: +s1.toFixed(4) }, { group: "Next 9%", share: +(s10 - s1).toFixed(4) }, { group: "Other 90%", share: +(1 - s10).toFixed(4) }];
+  return {
+    headline: `The largest 1% of ${subject}${inX} took in ${pct(s1)} of all ${fd.short} reported for ${fy.year}`,
+    numbers: [{ value: pct(s1), label: `to the largest 1% (${int(k1)} orgs)` }, { value: money(r.cut1), label: `or more puts an org in the top 1%` }, { value: pct(s10), label: "to the largest 10%" }],
+    bullets: [`The largest 1% held ${b(money(r.top1))} of ${b(money(r.total))}`, `Counting only e-filers, the top 1% held ${b(pct(s1f))}`, `The 10 largest alone held ${b(pct(r.top10orgs / r.total))}`],
+    chart: { title: `How concentrated: ${fd.short} of ${subject}${inX}, ${fy.year}`, sub: `Share of ${fd.short}`, spec: hbar(vals, "group", "share", `Share of ${fd.short}`, ".0%") },
+    rows: [{ tax_year: fy.year, orgs_on_irs_list: universe, efilers: r.n, total_usd: r.total, top1pct_orgs: k1, top1pct_usd: r.top1, top1pct_cutoff_usd: r.cut1, top10pct_usd: r.top10, top10_orgs_usd: r.top10orgs }],
+    causeNote: note, caveats, coverage: [{ label: "Orgs on the IRS list", value: int(universe) }, { label: `E-filed ${fy.year} returns`, value: int(r.n) }],
+    method: `${cap(fd.name)}, tax year ${fy.year}, one return per organization (newest filing), private foundations excluded${c ? ", in the cause set" : ""}${inX}. Organizations ranked by that amount. Top 1% = the largest 1% of all organizations on the IRS master file in the set, top 10% likewise.`,
+    sources: [SRC.f990, SRC.bmf], searchQuery: searchFor(s, pl), orgCount: universe,
+  };
+}
+
+// ---- grant money to the largest 1% (and 10%) of nonprofits by revenue
+// Organizations with a known revenue (recipient_profile: newest e-filed 990, else the IRS master file),
+// ranked by revenue. Grant dollars by the recipient's EIN, over all identified-recipient dollars.
+async function sizeConcentration(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  const c = s.causes[0] ?? null;
+  const y = grantYears(s);
+  const p = new P();
+  const cs = causeSql(c, p, "o.ein", "o.ntee_cd");
+  const uw = ["coalesce(o.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...(pl.states.length ? [`o.state = ANY(${p.add(pl.states)}::text[])`] : [])];
+  const rw = ryOk(ctx, pl) ? ryWhere(c, p, pl, y) : null;
+  const gw = rw ? null : grantWhere(c, p, pl, y, true);
+  const perRecipient = rw ? `SELECT r.recipient_ein AS ein, sum(r.usd)::float8 AS usd FROM grant_recipient_year r ${rw.join} WHERE ${and(rw.where)} GROUP BY 1`
+    : `SELECT g.recipient_ein AS ein, sum(g.amount)::float8 AS usd FROM ${pl.g.clean} g ${gw!.cs.join} WHERE ${and(gw!.where)} GROUP BY 1`;
+  const [r] = await ctx.q<{ n: number; rev: number; cut1: number; cut10: number; rev1: number; rev10: number; g1: number; g10: number; gall: number; gknown: number }>(`${cap(pl.g.grants)} to the largest organizations by revenue${rw ? " (research layer)" : ""}`, `WITH u AS MATERIALIZED (SELECT rp.ein, greatest(rp.revenue, 0)::float8 AS revenue FROM recipient_profile rp JOIN orgs o ON o.ein = rp.ein ${cs.join} WHERE ${and(uw)}),
+n AS (SELECT count(*)::int AS n, coalesce(sum(revenue), 0)::float8 AS rev FROM u),
+c1 AS (SELECT revenue FROM u ORDER BY revenue DESC OFFSET (SELECT greatest(ceil(n * 0.01)::int - 1, 0) FROM n) LIMIT 1),
+c10 AS (SELECT revenue FROM u ORDER BY revenue DESC OFFSET (SELECT greatest(ceil(n * 0.10)::int - 1, 0) FROM n) LIMIT 1),
+g AS MATERIALIZED (${perRecipient}),
+gu AS (SELECT g.usd, u.revenue FROM g JOIN u USING (ein))
+SELECT n.n, n.rev, (SELECT revenue FROM c1)::float8 AS cut1, (SELECT revenue FROM c10)::float8 AS cut10,
+  (SELECT coalesce(sum(revenue), 0) FROM u WHERE revenue >= (SELECT revenue FROM c1))::float8 AS rev1,
+  (SELECT coalesce(sum(revenue), 0) FROM u WHERE revenue >= (SELECT revenue FROM c10))::float8 AS rev10,
+  (SELECT coalesce(sum(usd), 0) FROM gu WHERE revenue >= (SELECT revenue FROM c1))::float8 AS g1,
+  (SELECT coalesce(sum(usd), 0) FROM gu WHERE revenue >= (SELECT revenue FROM c10))::float8 AS g10,
+  (SELECT coalesce(sum(usd), 0) FROM g)::float8 AS gall, (SELECT coalesce(sum(usd), 0) FROM gu)::float8 AS gknown
+FROM n`, p);
+  if (!r?.n || !r.gall) throw new Unanswerable(`No ${pl.g.grants} found for ${causeName(c, pl)} in ${pl.label}.`);
+  const caveats: string[] = [];
+  const note = await causeNote(c, cs, caveats);
+  if (y.partial) caveats.push(`${G_LAST} returns are still arriving, so ${G_LAST} is incomplete.`);
+  caveats.push(`Revenue = newest e-filed 990 or 990-EZ, else the IRS master file, not the grant year. ${pct(1 - r.gknown / r.gall)} of identified-recipient grant dollars went to orgs with no known revenue and count in the total only.`,
+    ...(pl.states.length ? ["Organizations are ranked within the states asked by their registered address. Grants are placed by the grant's address, usually the same."] : []),
+    ...(await grantCaveats(pl)));
+  const k1 = Math.ceil(r.n * 0.01);
+  const g1 = r.g1 / r.gall, g10 = r.g10 / r.gall, rv1 = r.rev1 / Math.max(1, r.rev);
+  const subject = c ? orgsOf(c.name) : "nonprofits";
+  const inX = pl.label !== "the US" ? ` in ${pl.label}` : "";
+  const yr = yrs(y.from, y.to);
+  const vals = [{ group: "Largest 1% by revenue", share: +g1.toFixed(4) }, { group: "Next 9%", share: +(g10 - g1).toFixed(4) }, { group: "Other 90% and unknown", share: +(1 - g10).toFixed(4) }];
+  return {
+    headline: `The largest 1% of ${subject}${inX} by revenue got ${pct(g1)} of ${pl.g.money}, ${yr}`,
+    numbers: [{ value: pct(g1), label: `of ${pl.g.adj} grant $ to the largest 1%` }, { value: money(r.cut1), label: "revenue or more = top 1%" }, { value: pct(rv1), label: "of all revenue held by that 1%" }],
+    bullets: [`The largest 1%, ${b(int(k1))} orgs, got ${b(money(r.g1))} of ${b(money(r.gall))}`, `The largest 10% got ${b(pct(g10))} of the grant dollars`, `The top 1% hold ${b(pct(rv1))} of these orgs' revenue, so grants are less concentrated`],
+    chart: { title: `${cap(pl.g.grants)} by recipient revenue rank${inX}, ${yr}`, sub: "Share of grant dollars", spec: hbar(vals, "group", "share", "Share of grant dollars", ".0%") },
+    rows: [{ orgs_with_revenue: r.n, revenue_usd: r.rev, top1pct_cutoff_usd: r.cut1, top10pct_cutoff_usd: r.cut10, top1pct_revenue_usd: r.rev1, top1pct_grants_usd: r.g1, top10pct_grants_usd: r.g10, all_identified_grants_usd: r.gall }],
+    causeNote: note, caveats, coverage: [{ label: "Orgs with known revenue", value: int(r.n) }, { label: "Top 1% revenue cutoff", value: money(r.cut1) }],
+    method: `Organizations with a known revenue (private foundations excluded)${c ? " in the cause set" : ""}${inX}, ranked by revenue. Top 1% = revenue at or above the 1st-percentile cutoff. Their ${pl.g.form}, tax years ${yr}, over all ${pl.g.grants} to identified recipients there.`,
+    sources: [pl.g.src, SRC.f990, SRC.bmf], searchQuery: null,
+  };
+}
+
 // ---- foundations that fund both X and Y
 async function overlap(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const [a, z] = s.causes;
@@ -1654,7 +1836,7 @@ function fedYears(s: Spec) {
 }
 // WHERE terms on federal_awards (alias fa, with orgs o joined) for a cause, place and years.
 function fedWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, sfx = "") {
-  const cs = causeSql(c, p, "fa.recipient_ein", "o.ntee_cd", sfx);
+  const cs = causeSql(c, p, "fa.recipient_ein", "o.ntee_cd", sfx, true);
   const w = [`fa.fiscal_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`, ...(c && !c.all ? ["fa.recipient_ein IS NOT NULL"] : []), ...cs.where];
   if (pl.county) w.push(`fa.pop_county_fips = ${p.add(pl.county.fips)}`);
   else if (pl.states.length) w.push(`fa.pop_state = ANY(${p.add(pl.states)}::text[])`);
@@ -1792,13 +1974,37 @@ FROM ${fw.from} WHERE ${and([...fw.where, dim[by][1]])} GROUP BY 1`, p);
     case "grant_size": {
       const p = new P();
       const fw = fedWhere(c, p, pl, y);
-      const [r] = await ctx.q<{ n: number; avg: number; median: number; p90: number }>("Federal award sizes (award-years above $0)", `SELECT count(*)::int AS n, avg(fa.amount)::float8 AS avg, percentile_cont(0.5) WITHIN GROUP (ORDER BY fa.amount)::float8 AS median,
+      // fed_award_size_hist (generosity-data 046) unless the cause is keywords or a long NTEE code, or a county.
+      const hist = ctx.cube && !pl.county && cubeCause(c);
+      let r: { n: number; avg: number; median: number; p90: number }, med$: string, p90$: string, approx = false;
+      if (hist) {
+        const ph = new P();
+        const w = [`h.fiscal_year BETWEEN ${ph.add(y.from)} AND ${ph.add(y.to)}`];
+        if (c && !c.all) {
+          w.push("h.linked");
+          if (c.label) w.push("h.labels <> '{}'", `h.labels && ${ph.add([`${c.label}:primary`])}::text[]`);
+          else w.push(`h.ntee3 LIKE ANY(${ph.add(c.ntee.map((n) => `${n}%`))}::text[])`);
+        }
+        if (pl.states.length) w.push(`h.pop_state = ANY(${ph.add(pl.states)}::text[])`);
+        if (pl.area) w.push(`h.rural IS ${pl.area === "rural" ? "TRUE" : "FALSE"}`);
+        if (pl.f.rb) w.push(`h.recipient_band BETWEEN ${ph.add(pl.f.rb[0])} AND ${ph.add(pl.f.rb[1])}`);
+        const [hr, [t]] = await Promise.all([
+          ctx.q<HistRow>("Federal award sizes (award-years above $0, award-size histogram)", histSql("fed_award_size_hist", w), ph),
+          ctx.q<{ n: number; usd: number }>("Federal award-years and dollars (award-size histogram)", `SELECT coalesce(sum(h.n), 0)::int AS n, coalesce(sum(h.usd), 0)::float8 AS usd FROM fed_award_size_hist h WHERE ${and(w)}`, ph),
+        ]);
+        const h = histStats(hr);
+        r = { n: t.n, avg: t.usd / Math.max(1, t.n), median: h.median.v, p90: h.p90.v };
+        med$ = histMoney(h.median); p90$ = histMoney(h.p90); approx = h.approx;
+      } else {
+        [r] = await ctx.q<{ n: number; avg: number; median: number; p90: number }>("Federal award sizes (award-years above $0)", `SELECT count(*)::int AS n, avg(fa.amount)::float8 AS avg, percentile_cont(0.5) WITHIN GROUP (ORDER BY fa.amount)::float8 AS median,
        percentile_cont(0.9) WITHIN GROUP (ORDER BY fa.amount)::float8 AS p90 FROM ${fw.from} WHERE ${and([...fw.where, "fa.amount > 0"])}`, p);
+        med$ = money(r?.median ?? 0); p90$ = money(r?.p90 ?? 0);
+      }
       if (!r?.n) throw new Unanswerable(`No federal awards to nonprofits found${forX}${inX}.`);
-      return finish({ headline: `The median federal award to a nonprofit${forX}${inX} is ${money(r.median)} a year, the average ${money(r.avg)}, FY${yr}`,
-        numbers: [{ value: money(r.median), label: "median award-year" }, { value: money(r.avg), label: "average" }, { value: int(r.n), label: "award-years" }],
-        bullets: [`One in ten is ${b(money(r.p90))} or more`], chart: null, rows: [{ award_years: r.n, median: r.median, average: r.avg, p90: r.p90 }],
-        coverage: [{ label: "Award-years", value: int(r.n) }], method: `Net obligations per award and fiscal year above $0, fiscal years ${yr}.` }, fw.cs);
+      return finish({ headline: `The median federal award to a nonprofit${forX}${inX} is ${med$} a year, the average ${money(r.avg)}, FY${yr}`,
+        numbers: [{ value: med$, label: "median award-year" }, { value: money(r.avg), label: "average" }, { value: int(r.n), label: "award-years" }],
+        bullets: [`One in ten is ${b(p90$)} or more`], chart: null, rows: [{ award_years: r.n, median: r.median, average: r.avg, p90: r.p90 }],
+        coverage: [{ label: "Award-years", value: int(r.n) }], method: `Net obligations per award and fiscal year above $0, fiscal years ${yr}.${hist ? ` Median and 90th percentile from an award-size histogram in the research layer (fed_award_size_hist, amounts cut to 3 significant digits)${approx ? ". A value marked about is interpolated inside one bucket, within 1% of the exact figure" : ", exact here"}.` : ""}` }, fw.cs);
     }
     default:
       throw new Unanswerable("Federal awards answer totals, trends, states, counties, agencies, programs, recipients and award sizes. They have no funder-overlap, general-support or out-of-state detail.");
@@ -1814,7 +2020,7 @@ const fedLinkNote = () => fedLinkMemo("all", async () => {
 async function countOrgs(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const c = s.causes[0] ?? null;
   const p = new P();
-  const cs = causeSql(c, p, "o.ein", "o.ntee_cd");
+  const cs = causeSql(c, p, "o.ein", "o.ntee_cd", "", true);
   const zip = pl.county || pl.area ? "LEFT JOIN zip_regions z ON z.zip5 = left(o.zip, 5)::char(5)" : "";
   const where = ["coalesce(o.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "o.state", "z.county_fips"), ...filtEin(pl.f, p, "o.ein")];
   const [r] = await ctx.q<{ orgs: number; filed: number; full990: number; deficit: number; surplus: number; low_cash: number; cash_known: number; gov_reliant: number; year_min: number; year_max: number }>("Organizations and their newest e-filed return", `WITH s AS (SELECT o.ein FROM orgs o ${cs.join} ${zip} WHERE ${and(where)}),

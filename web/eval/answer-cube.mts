@@ -107,5 +107,81 @@ for (const [name, s] of cases) {
   console.log(`${diffs.length ? "✗" : "✓"} ${String(t1 - t0).padStart(5)} ms -> ${String(t2 - t1).padStart(5)} ms ${usedCube ? "[layer]" : "[grant_clean]"} ${name}${diffs.length ? `\n    ${diffs.slice(0, 6).join("\n    ")}` : ""}`);
 }
 console.log(`\n${cases.length - fail}/${cases.length} match. Total ${tOld} ms on grant_clean, ${tNew} ms on the research layer.`);
+
+// Grant-size answers (generosity-data 046): medians and 90th percentiles from the size histograms vs exact
+// percentile_cont on grant_clean / charity_grant_clean / federal_awards. Counts and averages must match.
+// Median and p90 within 1% (bucket bounds). Shown values equal, or marked "about" when a bucket can't pin them.
+const g = (s: Partial<Spec>) => spec({ metric: "grant_size", ...s });
+const sizeCases: [string, Spec][] = [
+  ["size: all, US", g({})],
+  ["size: all, 2024", g({ yearFrom: 2024, yearTo: 2024 })],
+  ["size: rural US", g({ area: "rural" })],
+  ["size: urban OH", g({ area: "urban", states: ["OH"] })],
+  ["size: CA", g({ states: ["CA"] })],
+  ["size: education US", g({ causes: [cause("education", ["B"])] })],
+  ["size: higher ed", g({ causes: [cause("higher education", ["B4"])] })],
+  ["size: hospitals E2", g({ causes: [cause("hospitals", ["E2"])] })],
+  ["size: food banks K31 2023", g({ causes: [cause("food banks", ["K31"])], yearFrom: 2023, yearTo: 2023 })],
+  ["size: arts rural", g({ causes: [cause("arts", ["A"])], area: "rural" })],
+  ["size: religion TX", g({ causes: [cause("religion", ["X"])], states: ["TX"] })],
+  ["size: climate", g({ causes: [climate] })],
+  ["size: women & girls NY", g({ causes: [women], states: ["NY"] })],
+  ["size: health, two states", g({ causes: [cause("health", ["E"])], states: ["MA", "CT"] })],
+  ["size: recipients under $1M", g({ recipientSize: { min: null, max: 1e6 } })],
+  ["size: recipients $1M-$10M, arts", g({ causes: [cause("arts", ["A"])], recipientSize: { min: 1e6, max: 1e7 } })],
+  ["size: foundations $1B+", g({ funderSize: { min: 1e9, max: null } })],
+  ["size: foundations under $10M, education", g({ causes: [cause("education", ["B"])], funderSize: { min: null, max: 1e7 } })],
+  ["size: family foundations", g({ funderType: "family" })],
+  ["size: family foundations, religion", g({ causes: [cause("religion", ["X"])], funderType: "family" })],
+  ["size: school districts", g({ recipientKind: "school_district" })],
+  ["size: public entities", g({ recipientKind: "public_entity" })],
+  ["size: nonprofits only, rural", g({ recipientKind: "nonprofit", area: "rural" })],
+  ["size: charity all", g({ source: "charity_grants" })],
+  ["size: charity DAF", g({ source: "charity_grants", charityFunder: "daf_sponsor" })],
+  ["size: charity DAF climate", g({ source: "charity_grants", charityFunder: "daf_sponsor", causes: [climate] })],
+  ["size: charity community foundations OH arts", g({ source: "charity_grants", charityFunder: "community_foundation", causes: [cause("arts", ["A"])], states: ["OH"] })],
+  ["size: charity United Ways rural", g({ source: "charity_grants", charityFunder: "united_way", area: "rural" })],
+  ["size: charity education 2023", g({ source: "charity_grants", causes: [cause("education", ["B"])], yearFrom: 2023, yearTo: 2023 })],
+  ["size: federal all", g({ source: "federal_awards" })],
+  ["size: federal health", g({ source: "federal_awards", causes: [cause("health", ["E"])] })],
+  ["size: federal TX", g({ source: "federal_awards", states: ["TX"] })],
+  ["size: federal rural", g({ source: "federal_awards", area: "rural" })],
+  ["size: federal climate", g({ source: "federal_awards", causes: [climate] })],
+  ["size: federal recipients under $1M", g({ source: "federal_awards", recipientSize: { min: null, max: 1e6 } })],
+  // fallbacks: county and keyword causes keep the exact query
+  ["size: Cook County youth (exact path)", g({ causes: [cause("youth", ["O"])], county: "Cook County", states: ["IL"] })],
+  ["size: opioid keywords (exact path)", g({ causes: [cause("opioid addiction", [], null, ["opioid", "opioids"])] })],
+];
+let sFail = 0, sOld = 0, sNew = 0, nStat = 0, nExact = 0, maxErr = 0, nShownSame = 0, nShown = 0;
+for (const [name, s] of sizeCases) {
+  const t0 = Date.now();
+  const old = await answer(name, s, { cube: false });
+  const t1 = Date.now();
+  const neu = await answer(name, s, { cube: true });
+  const t2 = Date.now();
+  sOld += t1 - t0; sNew += t2 - t1;
+  const diffs: string[] = [], errs: string[] = [];
+  const rounded = /marked about/.test(neu.method);
+  if (old.rows.length !== neu.rows.length) diffs.push(`rows: ${old.rows.length} vs ${neu.rows.length}`);
+  else old.rows.forEach((r, i) => {
+    for (const k of Object.keys(r)) {
+      const x = num(r[k]), y = num(neu.rows[i][k]);
+      if (k === "median" || k === "p90") {
+        if (x == null || y == null) { diffs.push(`row ${i} ${k}: ${r[k]} vs ${neu.rows[i][k]}`); continue; }
+        const e = Math.abs(y - x) / Math.max(1, Math.abs(x));
+        nStat++; if (e < 1e-9) nExact++; maxErr = Math.max(maxErr, e);
+        if (e > 0) errs.push(`${k} ${x} vs ${y.toFixed(1)} (${(e * 100).toFixed(3)}%)`);
+        if (e > 0.01) diffs.push(`row ${i} ${k}: ${x} vs ${y} (${(e * 100).toFixed(2)}%)`);
+      } else if (!same(r[k], neu.rows[i][k])) diffs.push(`row ${i} ${k}: ${r[k]} vs ${neu.rows[i][k]}`);
+    }
+  });
+  old.numbers.forEach((o, i) => { nShown++; const v = neu.numbers[i]?.value ?? ""; if (o.value === v) nShownSame++; else if (!rounded || !v.startsWith("about ")) diffs.push(`tile ${i}: ${o.value} vs ${v}`); });
+  if (!rounded && old.headline !== neu.headline) diffs.push(`headline: "${old.headline}" vs "${neu.headline}"`);
+  const usedHist = neu.queries.some((q) => /size_hist/.test(q.sql));
+  if (diffs.length) sFail++;
+  console.log(`${diffs.length ? "✗" : "✓"} ${String(t1 - t0).padStart(5)} ms -> ${String(t2 - t1).padStart(5)} ms ${usedHist ? "[hist]" : "[exact]"}${rounded ? " [rounded]" : ""} ${name}${errs.length ? `  ${errs.join(", ")}` : ""}${diffs.length ? `\n    ${diffs.slice(0, 6).join("\n    ")}` : ""}`);
+}
+console.log(`\n${sizeCases.length - sFail}/${sizeCases.length} grant-size answers within tolerance. ${nExact}/${nStat} medians and p90s exact, max error ${(maxErr * 100).toFixed(3)}%. ${nShownSame}/${nShown} tiles identical. Total ${sOld} ms exact, ${sNew} ms on the histograms.`);
+fail += sFail;
 await db.end();
 process.exit(fail ? 1 : 0);

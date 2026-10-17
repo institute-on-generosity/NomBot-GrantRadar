@@ -32,7 +32,7 @@ export const LABELS = ["climate", "women_girls"] as const;
 // agency / program: federal_awards only (awarding agency, assistance listing).
 export const BY = ["state", "county", "cause", "cause_detail", "recipient_size", "funder_size", "funder_type", "recipient_kind", "rurality", "year", "charity_funder", "county_poverty", "county_income", "county_race", "county_age", "agency", "program"] as const;
 export const MEASURES = ["dollars", "grants", "average_grant"] as const;
-export const FUNDER_TYPES = ["family", "operating", "trust"] as const;
+export const FUNDER_TYPES = ["family", "operating", "trust", "company"] as const;
 export const RECIPIENT_KINDS = ["nonprofit", "school_district", "public_college", "private_college", "public_entity"] as const;
 const range = (what: string) => z.object({
   min: z.number().nullable().describe(`Lower bound in dollars of ${what}, e.g. 1000000 for "over $1M"; null = none`),
@@ -65,8 +65,8 @@ export const specSchema = z.object({
   measure: z.enum(MEASURES).nullable().describe("For breakdown: dollars (default), grants (count) or average_grant"),
   recipientSize: range("the recipient's annual revenue").nullable().describe("Only recipients with annual revenue in this range (\"small nonprofits under $1M\")"),
   funderSize: range("the foundation's assets").nullable().describe("Only foundations with assets in this range (\"foundations over $1B\")"),
-  funderType: z.enum(FUNDER_TYPES).nullable().describe("family (foundations with Family in the name, a floor), operating (private operating foundations), trust (charitable trusts)"),
-  recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (any of the three)"),
+  funderType: z.enum(FUNDER_TYPES).nullable().describe("family (foundations with Family in the name, a floor), operating (private operating foundations), trust (charitable trusts), company (company or corporate foundations, e.g. the Walmart Foundation)"),
+  recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (school districts and public colleges only, never private colleges)"),
   charityFunder: z.enum(CHARITY_FUNDERS).nullable().describe("charity_grants only: daf_sponsor (donor-advised fund sponsors), community_foundation, united_way, other (other grantmaking charities); null = all"),
 });
 

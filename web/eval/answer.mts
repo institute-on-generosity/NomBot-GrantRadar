@@ -89,6 +89,26 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [Number(a.rows.find((r) => r.key === "daf_sponsor")?.usd ?? 0), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024`)] },
   { name: "DAF sponsors, top recipients in health", s: spec({ source: "charity_grants", charityFunder: "daf_sponsor", metric: "top_recipients", causes: [{ name: "health", label: null, ntee: ["E"], keywords: [] }] }),
     check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(c.amount) ${CG("daf_sponsor")} AND c.tax_year BETWEEN 2022 AND 2024 AND c.recipient_ein=$1`, [a.rows[0].ein])] },
+  // The largest 1% of nonprofits: by revenue on Form 990, and foundation money to the largest 1% by revenue
+  { name: "largest 1% of nonprofits by revenue, 2024", s: spec({ metric: "concentration", source: "revenue" }),
+    check: async (a) => [Number(a.rows[0].top1pct_usd), await one(`SELECT sum(v) FROM (SELECT greatest(coalesce(cy_revenue, 0), 0) AS v FROM (SELECT DISTINCT ON (f.ein) f.* FROM filing_flag f JOIN orgs o ON o.ein=f.ein WHERE f.tax_year=2024 AND coalesce(o.foundation,'') NOT IN ('02','03','04') ORDER BY f.ein, f.object_id DESC) x ORDER BY 1 DESC LIMIT $1) t`, [a.rows[0].top1pct_orgs])] },
+  { name: "foundation $ to the largest 1% by revenue", s: spec({ metric: "concentration", by: "recipient_size" }),
+    check: async (a) => [Number(a.rows[0].top1pct_grants_usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IN (SELECT rp.ein FROM recipient_profile rp JOIN orgs o2 ON o2.ein=rp.ein WHERE coalesce(o2.foundation,'') NOT IN ('02','03','04') AND greatest(rp.revenue,0) >= $1)`, [a.rows[0].top1pct_cutoff_usd])] },
+  // School districts and public colleges: never private colleges
+  { name: "school districts and public colleges", s: spec({ recipientKind: "public_entity" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_entity IN (SELECT id FROM public_entities WHERE kind IN ('school_district','college_public'))`)] },
+  // Form 990 lines with a graded label: primary tier only (a partial-tier org's whole budget isn't the cause's)
+  { name: "gov grants, climate, top recipient is primary", s: spec({ metric: "top_recipients", source: "government_grants", causes: [climate] }),
+    check: async (a) => [await one(`SELECT count(*) FROM org_labels WHERE label='climate' AND tier<>'primary' AND ein = ANY($1)`, [a.rows.map((r) => r.ein)]), 0] },
+  // Company (corporate) foundations: company_foundations (generosity-data 045), never the grant cube
+  { name: "company foundations, all US 2022-24", s: spec({ funderType: "company" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein IN (SELECT ein FROM company_foundations)`)] },
+  { name: "company foundations to education", s: spec({ funderType: "company", causes: [{ name: "education", label: null, ntee: ["B"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND o.ntee_cd LIKE 'B%' AND g.funder_ein IN (SELECT ein FROM company_foundations)`)] },
+  { name: "top company foundations, all causes", s: spec({ metric: "top_funders", funderType: "company" }),
+    check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.funder_ein IN (SELECT ein FROM company_foundations)`, [a.rows[0].funder_ein])] },
+  { name: "top company foundations are all flagged", s: spec({ metric: "top_funders", funderType: "company" }),
+    check: async (a) => [await one(`SELECT count(*) FROM unnest($1::text[]) e WHERE e NOT IN (SELECT ein FROM company_foundations)`, [a.rows.map((r) => r.funder_ein)]), 0] },
 ];
 
 let fail = 0;
