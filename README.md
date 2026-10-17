@@ -239,6 +239,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [x] Early UX: exact vs. closest matches, detail pages, linked sources, sort, CSV export, inactive orgs hidden
 - [x] Early UX: IRS master file viewer, history, saved (★), loading popup, caching (sort ~0.1s), animations
 - [x] Apple-style UI: Claude-style sidebar, search suggestions, dark mode
+- [x] **Print from dark mode (Oct 17):** paper always uses the light colors; charts redraw in light colors for print and switch back after
 - [x] Relevance score 0–100 with an AI reason on hover; weak matches folded
 - [x] Editable filter chips (place, city, Appalachia, size, cause); results update in ~0.4s
 - [x] IRS financial (SOI) viewer; sources open beside the org in a popover

@@ -1,4 +1,4 @@
-/* Apple-style tokens: neutral grays, one green accent, system font. Dark mode mirrors them. */
+/* Apple-style tokens: neutral grays, one green accent, system font. Dark mode mirrors them (screen only: paper always gets the light set). */
 :root {
   --g: #248a3d; --g-dark: #1b6e30; --g-fill: #248a3d; --g-fill-hover: #1b6e30; --g-tint: rgba(36,138,61,.09); --g-line: rgba(36,138,61,.28);
   --ink: #1d1d1f; --ink-2: #424245; --mute: #6e6e73; --faint: #86868b;
@@ -9,7 +9,7 @@
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
   color-scheme: light dark;
 }
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
   :root {
     --g: #30d158; --g-dark: #4ade80; --g-fill: #248a3d; --g-fill-hover: #2a9d46; --g-tint: rgba(48,209,88,.13); --g-line: rgba(48,209,88,.35);
     --ink: #f5f5f7; --ink-2: #d2d2d7; --mute: #98989d; --faint: #6e6e73;
@@ -584,7 +584,7 @@ button.fchip-main { cursor: pointer; }
 .ls-tname { grid-area: name; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; }
 .ls-tname b { font-weight: 600; }
 .ls-least { font-style: normal; font-size: 11px; font-weight: 600; color: #8a5a00; background: rgba(245,165,36,.16); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
-@media (prefers-color-scheme: dark) { .ls-least { color: #ffc56b; background: rgba(245,165,36,.18); } }
+@media screen and (prefers-color-scheme: dark) { .ls-least { color: #ffc56b; background: rgba(245,165,36,.18); } }
 .ls-tper { grid-area: per; font-size: 12.5px; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ls-tper b { color: var(--ink); font-weight: 600; }
 .ls-themes summary .ls-track { grid-area: bar; align-self: center; background: var(--bg); }
@@ -731,8 +731,8 @@ main:has(.serp) { max-width: 1400px; }
 .fin.up, .fin.ok { color: var(--g-dark); background: var(--g-tint); }
 .fin.down, .fin.bad { color: #b4232a; background: rgba(229,72,77,.1); }
 .fin.watch { color: #8a5a00; background: rgba(245,165,36,.16); }
-@media (prefers-color-scheme: dark) { .fin.watch { color: #ffc56b; background: rgba(245,165,36,.18); } }
-@media (prefers-color-scheme: dark) { .fin.down, .fin.bad { color: #ff8a8e; background: rgba(229,72,77,.18); } }
+@media screen and (prefers-color-scheme: dark) { .fin.watch { color: #ffc56b; background: rgba(245,165,36,.18); } }
+@media screen and (prefers-color-scheme: dark) { .fin.down, .fin.bad { color: #ff8a8e; background: rgba(229,72,77,.18); } }
 .fin { position: relative; outline: none; }
 .fin-tip { display: none; position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: max-content; max-width: 300px; padding: 7px 10px; border-radius: 9px; background: var(--bg); box-shadow: var(--shadow), 0 0 0 1px var(--line); font-size: 12px; font-weight: 400; color: var(--ink-2); white-space: normal; animation: drop .15s var(--spring) both; }
 .fin:hover .fin-tip, .fin:focus-visible .fin-tip { display: block; }
@@ -761,9 +761,9 @@ main:has(.serp) { max-width: 1400px; }
 .fin-list li a:hover .fl-name { color: var(--g); }
 .fin-list li b { flex: none; min-width: 4.4em; text-align: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; border-radius: 999px; padding: 2px 8px; }
 .fin-list li b.good { color: var(--g-dark); background: var(--g-tint); } .fin-list li b.bad { color: #b4232a; background: rgba(229,72,77,.1); }
-@media (prefers-color-scheme: dark) { .fin-list li b.bad { color: #ff8a8e; } }
+@media screen and (prefers-color-scheme: dark) { .fin-list li b.bad { color: #ff8a8e; } }
 .fin-list li b.watch { color: #8a5a00; background: rgba(245,165,36,.16); }
-@media (prefers-color-scheme: dark) { .fin-list li b.watch { color: #ffc56b; } }
+@media screen and (prefers-color-scheme: dark) { .fin-list li b.watch { color: #ffc56b; } }
 /* Org page: where the money comes from (Part VIII) */
 .income { margin-top: 16px; }
 .income h3 { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
@@ -1089,6 +1089,10 @@ main h1:not(.hero h1) { margin-inline-start: -0.045em; }
   .org dl.yoy-facts { margin-top: 6pt; gap: 4pt 16pt; }
   .people li { padding: 3pt 0; }
   .rating .asks { margin-top: 8pt; padding: 7pt 10pt; }
+  /* Cmd+P can snapshot before a dark chart redraws in light colors: force axes, grid and labels light */
+  .ins-chart .role-axis-grid line, .ins-chart .role-axis-domain line, .ins-chart .role-axis-tick line { stroke: #e5e5ea; }
+  .ins-chart .role-axis-label text, .ins-chart .role-axis-title text, .ins-chart .role-legend-label text, .ins-chart .role-legend-title text { fill: #6e6e73; }
+  .ins-chart .role-title-text text { fill: #1d1d1f; }
   main .print-stamp { display: block; margin-top: 18pt; padding-top: 8pt; border-top: 1px solid #ccc; font-size: 8.5pt; color: #555; }
 }
 /* Oct 13 optical pass: Finances rows get a fill when picked, so center their text like the pills */
@@ -1538,4 +1542,9 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
   .chat-q { max-width: 88%; }
   .chat-lead { font-size: 16px; }
   .chat-nums { gap: 2px 12px; }
+}
+
+/* Research chat on paper: the conversation only, no composer, navigation, actions or suggested follow-ups */
+@media print {
+  .chat-composer, .chat-top, .chat-actions, .chat-chips { display: none !important; }
 }

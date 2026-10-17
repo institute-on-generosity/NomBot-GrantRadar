@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { View } from "vega";
 
 // One Vega-Lite chart, themed with the app's colors. vega + vega-lite + vega-embed (~1 MB) load only
-// when the first chart scrolls near the screen, so the home page stays fast. Redraws on a light/dark switch.
+// when the first chart scrolls near the screen, so the home page stays fast. Redraws on a light/dark switch and in light colors for print.
 
 // Categorical hues in fixed order (validated set: dataviz reference palette), stepped per mode.
 const CATEGORY = {
@@ -52,6 +52,28 @@ export function vegaConfig({ ink, mute, line, accent, font }: Ink, dark: boolean
 
 const darkQuery = () => window.matchMedia("(prefers-color-scheme: dark)");
 const onScheme = (cb: () => void) => { const q = darkQuery(); q.addEventListener("change", cb); return () => q.removeEventListener("change", cb); };
+
+// Paper is white, so while printing every chart draws (even ones not scrolled to yet) in light colors,
+// then goes back after. Cmd+P flips this on beforeprint; PrintButton also waits for the redraw first.
+let printing = false;
+let drawing = 0; // charts mid-draw
+const printSubs = new Set<() => void>();
+const setPrinting = (on: boolean) => { if (printing !== on) { printing = on; printSubs.forEach((f) => f()); } };
+const onPrint = (cb: () => void) => { printSubs.add(cb); return () => { printSubs.delete(cb); }; };
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeprint", () => setPrinting(true));
+  const paperMedia = window.matchMedia("print");
+  // afterprint can fire while print media still applies (CSS colors still light): wait for it to end
+  window.addEventListener("afterprint", () => { if (!paperMedia.matches) setPrinting(false); });
+  paperMedia.addEventListener("change", (e) => setPrinting(e.matches));
+}
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+export async function readyForPrint(maxMs = 1500) {
+  setPrinting(true);
+  const end = Date.now() + maxMs;
+  await frame(); await frame();
+  while (drawing > 0 && Date.now() < end) await new Promise((r) => setTimeout(r, 30));
+}
 let lib: Promise<typeof import("vega-embed")> | null = null;
 export const vegaEmbed = () => (lib ??= import("vega-embed"));
 
@@ -59,7 +81,11 @@ export const vegaEmbed = () => (lib ??= import("vega-embed"));
 export function InsightChart({ spec, label, onView, tall = false }: { spec: Record<string, unknown>; label: string; onView?: (v: View | null) => void; tall?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
-  const dark = useSyncExternalStore(onScheme, () => darkQuery().matches, () => false);
+  const prefersDark = useSyncExternalStore(onScheme, () => darkQuery().matches, () => false);
+  const print = useSyncExternalStore(onPrint, () => printing, () => false);
+  const dark = prefersDark && !print;
+  const paper = prefersDark && print; // the CSS colors are still dark on screen: use the fixed light set
+  const draw = near || print;
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -71,9 +97,12 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
   }, []);
 
   useEffect(() => {
-    if (!near || !box.current) return;
+    if (!draw || !box.current) return;
     let view: View | null = null;
     let gone = false;
+    let busy = true;
+    drawing++;
+    const settle = () => { if (busy) { busy = false; drawing--; } };
     const el = box.current;
     vegaEmbed().then(async ({ default: embed }) => {
       if (gone) return;
@@ -83,13 +112,14 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
       // vega-tooltip reuses one tooltip element and only swaps its own theme class, so a dark class
       // left from before a dark to light switch would stick. Clear both before redrawing.
       document.getElementById("vg-tooltip-element")?.classList.remove("light-theme", "dark-theme");
-      const res = await embed(el, rest as never, { actions: false, renderer: "svg", config: theme(dark) as never, tooltip: { theme: dark ? "dark" : "light" } });
+      const config = paper ? vegaConfig(LIGHT, false) : theme(dark);
+      const res = await embed(el, rest as never, { actions: false, renderer: "svg", config: config as never, tooltip: { theme: dark ? "dark" : "light" } });
       if (gone) { res.finalize(); return; }
       view = res.view;
       onView?.(view);
-    }).catch((e) => { console.error("chart failed", e); if (!gone) setError(true); });
-    return () => { gone = true; view?.finalize(); onView?.(null); };
-  }, [near, dark, spec, onView, tall]);
+    }).catch((e) => { console.error("chart failed", e); if (!gone) setError(true); }).finally(settle);
+    return () => { gone = true; settle(); view?.finalize(); onView?.(null); };
+  }, [draw, dark, paper, spec, onView, tall]);
 
   if (error) return <p className="ins-chart-err">This chart could not be drawn. The data is in the CSV.</p>;
   return <div ref={box} className={`ins-chart${tall ? " tall" : ""}`} role="img" aria-label={label} />;
