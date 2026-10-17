@@ -7,7 +7,8 @@
 //                plus Schedule I money reported but not itemized (charity_filers.not_itemized_usd, generosity-data 050)
 // Schedule I lines that name no recipient ("SEE ATTACHED", "VARIOUS": is_placeholder_recipient()) are never grants to
 // or from a named organization here. They count in the filer's not-itemized amount instead.
-// Every query runs on an index on the EIN column (recipient_ein partial indexes, funder_ein indexes).
+// Every query runs on an index on the EIN column (recipient_ein partial indexes, funder_ein indexes). Grants given
+// read per-funder rollups (generosity-data 051: org_given_year, org_given_top), refreshed by refresh_research_layer().
 import { db } from "./db";
 
 export type YearTotal = { year: number; n: number; total: number };
@@ -69,29 +70,15 @@ export async function orgFunding(ein: string) {
     // organizations) and what's reported but not itemized (line 1 minus named lines, placeholders inside it)
     q<{ year: number; n: number; total: string; line1: string | null; not_itemized: string | null }>(
       `SELECT year, coalesce(y.n, 0) AS n, coalesce(y.total, 0) AS total, f.line1, f.not_itemized FROM
-         (SELECT tax_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM charity_grants
-           WHERE funder_ein = $1 AND tax_year IS NOT NULL AND NOT is_placeholder_recipient(recipient_name) GROUP BY 1) y
+         (SELECT year, n, total FROM org_given_year WHERE ein = $1 AND source = 'si') y
          FULL JOIN (SELECT tax_year AS year, sum(grants_domestic)::bigint AS line1, sum(not_itemized_usd)::bigint AS not_itemized
                       FROM charity_filers WHERE ein = $1 GROUP BY 1) f USING (year)
         WHERE coalesce(y.n, 0) > 0 OR coalesce(f.not_itemized, 0) > 0
         ORDER BY year DESC`),
-    q<{ ein: string | null; name: string; city: string | null; state: string | null; n: number; total: string; latest: number }>(
-      `SELECT recipient_ein AS ein, coalesce(min(o.name), min(c.recipient_name)) AS name, min(c.recipient_city) AS city, min(c.recipient_state) AS state,
-              count(*)::int AS n, sum(c.amount)::bigint AS total, max(c.tax_year) AS latest
-         FROM charity_grants c LEFT JOIN orgs o ON o.ein = c.recipient_ein
-        WHERE c.funder_ein = $1 AND NOT is_placeholder_recipient(c.recipient_name)
-        GROUP BY recipient_ein, CASE WHEN recipient_ein IS NULL THEN upper(c.recipient_name) END
-        ORDER BY total DESC NULLS LAST LIMIT ${TOP + 1}`),
+    givenTop(ein, "si"),
     q<{ year: number; n: number; total: string }>(
-      `SELECT tax_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM grants
-        WHERE funder_ein = $1 AND tax_year IS NOT NULL GROUP BY 1 ORDER BY 1 DESC`),
-    q<{ ein: string | null; name: string; city: string | null; state: string | null; n: number; total: string; latest: number }>(
-      `SELECT recipient_ein AS ein, coalesce(min(o.name), min(g.recipient_name)) AS name, min(g.recipient_city) AS city, min(g.recipient_state) AS state,
-              count(*)::int AS n, sum(g.amount)::bigint AS total, max(g.tax_year) AS latest
-         FROM grants g LEFT JOIN orgs o ON o.ein = g.recipient_ein
-        WHERE g.funder_ein = $1
-        GROUP BY recipient_ein, CASE WHEN recipient_ein IS NULL THEN upper(g.recipient_name) END
-        ORDER BY total DESC NULLS LAST LIMIT ${TOP + 1}`),
+      `SELECT year, n, total FROM org_given_year WHERE ein = $1 AND source = 'pf' ORDER BY 1 DESC`),
+    givenTop(ein, "pf"),
   ]);
 
   const funders = (rows: typeof ciTop) => rows.slice(0, TOP).map((r) => ({ ein: r.ein, name: r.name, n: r.n, total: num(r.total), latest: Number(r.latest), kind: r.kind ?? null }));
@@ -124,6 +111,27 @@ export async function orgFunding(ein: string) {
       foundation: pfgY.length ? { total: sum(pfgY), n: count(pfgY), years: pfgY, top: recipients(pfGivenTop), more: pfGivenTop.length > TOP } : null,
     },
   };
+}
+
+// Top recipients of what this organization gave. Funders with 1,000+ lines in a source (Fidelity Charitable: ~308K)
+// read the precomputed top 26 (generosity-data 051, org_given_top); the rest group their own lines, the same way.
+type RecipientRow = { ein: string | null; name: string; city: string | null; state: string | null; n: number; total: string; latest: number };
+const GIVEN_LINES = {
+  si: `SELECT c.recipient_ein, c.recipient_name, c.recipient_city, c.recipient_state, c.amount, c.tax_year FROM charity_grants c
+        WHERE c.funder_ein = $1 AND NOT is_placeholder_recipient(c.recipient_name)`,
+  pf: `SELECT g.recipient_ein, g.recipient_name, g.recipient_city, g.recipient_state, g.amount, g.tax_year FROM grants g WHERE g.funder_ein = $1`,
+};
+async function givenTop(ein: string, source: "si" | "pf"): Promise<RecipientRow[]> {
+  const pre = await db.query(
+    `SELECT recipient_ein AS ein, name, city, state, n, total, latest FROM org_given_top WHERE ein = $1 AND source = $2 ORDER BY rank`, [ein, source]);
+  if (pre.rows.length) return pre.rows as RecipientRow[];
+  const live = await db.query(
+    `SELECT l.recipient_ein AS ein, coalesce(min(o.name), min(l.recipient_name)) AS name, min(l.recipient_city) AS city, min(l.recipient_state) AS state,
+            count(*)::int AS n, sum(l.amount)::bigint AS total, max(l.tax_year) AS latest
+       FROM (${GIVEN_LINES[source]}) l LEFT JOIN orgs o ON o.ein = l.recipient_ein
+      GROUP BY l.recipient_ein, CASE WHEN l.recipient_ein IS NULL THEN upper(l.recipient_name) END
+      ORDER BY total DESC NULLS LAST, ein, name LIMIT ${TOP + 1}`, [ein]);
+  return live.rows as RecipientRow[];
 }
 
 // Caveats shown with the numbers (UI and API), one per source.
