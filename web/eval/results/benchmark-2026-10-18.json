@@ -1,0 +1,3372 @@
+[
+ {
+  "id": "T01",
+  "cat": "trends",
+  "q": "Is total foundation giving growing?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/all",
+  "headline": "Foundation money to organizations in the US grew 32% (8.7% after inflation) from 2020 to 2024",
+  "notes": [
+   "headline 32% vs SQL 31.79% (2020->2024)"
+  ],
+  "review": null,
+  "checked": "pass",
+  "routeMs": 1762,
+  "answerMs": 108,
+  "usage": {
+   "input": 7168,
+   "output": 175,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T02",
+  "cat": "trends",
+  "q": "How has foundation funding for mental health changed since 2022?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/F",
+  "headline": "Foundation money for Mental health grew 23% (15% after inflation) from 2022 to 2024",
+  "notes": [
+   "headline 23% vs SQL 22.83% (2022->2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1900,
+  "answerMs": 739,
+  "usage": {
+   "input": 7175,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T03",
+  "cat": "trends",
+  "q": "Is foundation funding for food banks growing?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/K31",
+  "headline": "Foundation money for Food banks fell 20% (34% after inflation) from 2020 to 2024",
+  "notes": [
+   "headline -20% vs SQL -20.32% (2020->2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 2353,
+  "answerMs": 515,
+  "usage": {
+   "input": 7171,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T04",
+  "cat": "trends",
+  "q": "Which causes grew fastest in foundation funding from 2022 to 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "fastest_causes/foundation_grants/all",
+  "headline": "Recreation & Sports grew fastest: +44% in foundation grants, 2022 to 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2247,
+  "answerMs": 472,
+  "usage": {
+   "input": 7182,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T05",
+  "cat": "trends",
+  "q": "How has foundation giving to education changed since 2022?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/B",
+  "headline": "Foundation money for Education grew 12% (4.9% after inflation) from 2022 to 2024",
+  "notes": [
+   "headline 12% vs SQL 12.44% (2022->2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1794,
+  "answerMs": 848,
+  "usage": {
+   "input": 7173,
+   "output": 205,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T06",
+  "cat": "trends",
+  "q": "Is federal grant money to nonprofits growing?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/federal_awards/all",
+  "headline": "Federal awards to nonprofits grew 7.2% (down 3.7% after inflation) from FY2022 to FY2025",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1644,
+  "answerMs": 1441,
+  "usage": {
+   "input": 7173,
+   "output": 174,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T08",
+  "cat": "trends",
+  "q": "Did donor-advised fund grants grow between 2022 and 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/charity_grants/daf_sponsor/all",
+  "headline": "Money from DAF sponsors to organizations in the US grew 38% (28% after inflation) from 2022 to 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1756,
+  "answerMs": 46,
+  "usage": {
+   "input": 7180,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T09",
+  "cat": "trends",
+  "q": "Is foundation money for climate growing?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/climate",
+  "headline": "Foundation money for climate grew 97% (62% after inflation) from 2020 to 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1980,
+  "answerMs": 411,
+  "usage": {
+   "input": 7169,
+   "output": 203,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T11",
+  "cat": "trends",
+  "q": "Why did foundation funding for education fall?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/B",
+  "headline": "Foundation money for education didn't fall. The total grew 35% from 2020 to 2024",
+  "notes": [
+   "headline 35% vs SQL 35.28% (2020->2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1849,
+  "answerMs": 1115,
+  "usage": {
+   "input": 7170,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T12",
+  "cat": "trends",
+  "q": "How has foundation giving changed over the last 10 years?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/all",
+  "headline": "Foundation money to organizations in the US grew 240% (160% after inflation) from 2016 to 2024. Tax years before 2020 miss many smaller filers, so growth from 2016 runs high",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1848,
+  "answerMs": 708,
+  "usage": {
+   "input": 7174,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T13",
+  "cat": "trends",
+  "q": "How did foundation giving to health change from 2015 to 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/E",
+  "headline": "Foundation money for Health grew 313% (212% after inflation) from 2015 to 2024. Tax years before 2020 miss many smaller filers, so growth from 2015 runs high",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1863,
+  "answerMs": 1176,
+  "usage": {
+   "input": 7177,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T14",
+  "cat": "trends",
+  "q": "Did foundation giving to racial justice spike after 2020 and then fall back?",
+  "capability": [
+   "cause_label:racial_equity"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/kw:racial justice+racial equity+racial",
+  "headline": "Foundation money for Racial justice grew 313% (231% after inflation) from 2018 to 2024. Tax years before 2020 miss many smaller filers, so growth from 2018 runs high",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1924,
+  "answerMs": 875,
+  "usage": {
+   "input": 7182,
+   "output": 219,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T15",
+  "cat": "trends",
+  "q": "How did foundation giving respond to the 2008 recession?",
+  "capability": [
+   "history_pre2022"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/foundation_grants/all",
+  "headline": "Foundations gave $12.2B to organizations in the US, 2012. Tax years before 2020 miss many smaller filers, so growth from 2012 runs high. Our data starts in 2012, so 2008–2010 isn't included",
+  "notes": [
+   "missing: Years before 2012"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1685,
+  "answerMs": 79,
+  "usage": {
+   "input": 7175,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T16",
+  "cat": "trends",
+  "q": "How much did foundation giving grow after adjusting for inflation from 2022 to 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/all",
+  "headline": "Foundation money to organizations in the US grew 11% (3.6% after inflation) from 2022 to 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1684,
+  "answerMs": 80,
+  "usage": {
+   "input": 7186,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T17",
+  "cat": "trends",
+  "q": "In real, inflation-adjusted dollars, is foundation money for food banks growing?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_grants/K31",
+  "headline": "Foundation money for Food banks fell 20% (34% after inflation) from 2020 to 2024",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1780,
+  "answerMs": 515,
+  "usage": {
+   "input": 7184,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T18",
+  "cat": "trends",
+  "q": "How has federal funding to nonprofits changed since 2015?",
+  "capability": [
+   "history_pre2022"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/federal_awards/all",
+  "headline": "Federal awards to nonprofits grew 7.2% (down 3.7% after inflation) from FY2022 to FY2025. Our data starts in 2022, so 2015–2021 isn't included",
+  "notes": [
+   "missing: Years before 2022"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1685,
+  "answerMs": 1062,
+  "usage": {
+   "input": 7176,
+   "output": 175,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "T20",
+  "cat": "trends",
+  "q": "Which foundations increased their grantmaking the most from 2022 to 2024?",
+  "capability": [
+   "funder_trend"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "top_funders/foundation_grants/all missing:other",
+  "headline": "Gates Fdn is the largest foundation funder of all causes: $9.7B, 2022–24",
+  "notes": [
+   "missing: Change in each funder's giving"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1707,
+  "answerMs": 10269,
+  "usage": {
+   "input": 7182,
+   "output": 189,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C01",
+  "cat": "causes",
+  "q": "Which cause areas get the most foundation money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by cause/all",
+  "headline": "Education (B) got the most foundation money: $42.7B, 23% of the total, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1641,
+  "answerMs": 149,
+  "usage": {
+   "input": 7171,
+   "output": 180,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C02",
+  "cat": "causes",
+  "q": "Within animal welfare, how is foundation money split across sub-causes?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by cause_detail/D",
+  "headline": "Animal Protection & Welfare (D20) got the most foundation money for Animal welfare: $1.0B, 41% of the total, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1733,
+  "answerMs": 120,
+  "usage": {
+   "input": 7179,
+   "output": 216,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C03",
+  "cat": "causes",
+  "q": "Which parts of education get the least foundation money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by cause_detail/B",
+  "headline": "Education (B0) got the least foundation money for Education: $200, 0.00% of the total, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1932,
+  "answerMs": 100,
+  "usage": {
+   "input": 7171,
+   "output": 212,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C04",
+  "cat": "causes",
+  "q": "How much foundation money goes to food banks?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/K31",
+  "headline": "Foundations gave $889.8M to Food banks, 2022–24: 0.48% of identified grant dollars",
+  "notes": [
+   "headline $889.8M vs SQL $889.8M (0.0% off, 2022-2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1974,
+  "answerMs": 713,
+  "usage": {
+   "input": 7170,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C05",
+  "cat": "causes",
+  "q": "How much foundation money goes to mental health?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/F",
+  "headline": "Foundations gave $1.5B to Mental health, 2022–24: 0.81% of identified grant dollars",
+  "notes": [
+   "headline $1500.0M vs SQL $1481.6M (1.2% off, 2022-2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1754,
+  "answerMs": 1389,
+  "usage": {
+   "input": 7170,
+   "output": 205,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C06",
+  "cat": "causes",
+  "q": "How much foundation money goes to the arts?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/A",
+  "headline": "Foundations gave $15.1B to Arts, 2022–24: 8.2% of identified grant dollars",
+  "notes": [
+   "headline $15100.0M vs SQL $15082.8M (0.1% off, 2022-2024)"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1823,
+  "answerMs": 997,
+  "usage": {
+   "input": 7170,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C09",
+  "cat": "causes",
+  "q": "What share of foundation money goes to religious organizations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/foundation_grants/X",
+  "headline": "Foundations gave $3.5B to Religion, 2022–24: 1.9% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1762,
+  "answerMs": 757,
+  "usage": {
+   "input": 7173,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C10",
+  "cat": "causes",
+  "q": "Which foundations give the most to climate?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/foundation_grants/climate",
+  "headline": "Sergey Brin Family Fdn is the largest foundation funder of climate: $262.6M, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2127,
+  "answerMs": 708,
+  "usage": {
+   "input": 7169,
+   "output": 205,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C12",
+  "cat": "causes",
+  "q": "How concentrated is climate funding?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "concentration/foundation_grants/climate",
+  "headline": "The top 1% of recipients got 48% of foundation money for climate, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2250,
+  "answerMs": 10,
+  "usage": {
+   "input": 7168,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C13",
+  "cat": "causes",
+  "q": "Climate vs women and girls: which gets more foundation money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "compare/foundation_grants/climate,women_girls",
+  "headline": "Women and girls got 35% more foundation money than climate, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1974,
+  "answerMs": 718,
+  "usage": {
+   "input": 7176,
+   "output": 237,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C15",
+  "cat": "causes",
+  "q": "How much foundation money goes to women and girls?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/women_girls",
+  "headline": "Foundations gave $3.1B to Women and girls, 2022–24: 1.7% of identified grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1666,
+  "answerMs": 816,
+  "usage": {
+   "input": 7171,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C16",
+  "cat": "causes",
+  "q": "How much US philanthropy goes to climate change?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/climate",
+  "headline": "Foundations gave $2.3B to Climate change, 2022–24: 1.3% of identified grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1696,
+  "answerMs": 473,
+  "usage": {
+   "input": 7172,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C17",
+  "cat": "causes",
+  "q": "How much US philanthropy goes to women and girls?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/women_girls",
+  "headline": "Foundations gave $3.1B to women and girls, 2022–24: 1.7% of identified grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1782,
+  "answerMs": 658,
+  "usage": {
+   "input": 7173,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C18",
+  "cat": "causes",
+  "q": "How much foundation money goes to racial equity and racial justice work?",
+  "capability": [
+   "cause_label:racial_equity"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:racial equity+racial justice",
+  "headline": "Foundations gave $327.4M to racial equity and racial justice, 2022–24: 0.18% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1712,
+  "answerMs": 594,
+  "usage": {
+   "input": 7177,
+   "output": 218,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C19",
+  "cat": "causes",
+  "q": "How much foundation money goes to LGBTQ organizations?",
+  "capability": [
+   "cause_label:lgbtq"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:lgbtq+gay+lesbian+transgender+queer",
+  "headline": "Foundations gave $124.8M to LGBTQ organizations, 2022–24: 0.07% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2517,
+  "answerMs": 316,
+  "usage": {
+   "input": 7176,
+   "output": 230,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C20",
+  "cat": "causes",
+  "q": "How much foundation money supports people with disabilities?",
+  "capability": [
+   "cause_label:disability"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:disabilities+disability+disabled+developmental disabilities",
+  "headline": "Foundations gave $411.1M to People with disabilities, 2022–24: 0.22% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1838,
+  "answerMs": 716,
+  "usage": {
+   "input": 7172,
+   "output": 225,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C21",
+  "cat": "causes",
+  "q": "How much foundation money supports immigrants and refugees?",
+  "capability": [
+   "cause_label:immigrants"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:immigrant+refugee",
+  "headline": "Foundations gave $404.6M to Immigrants and refugees, 2022–24: 0.22% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1794,
+  "answerMs": 623,
+  "usage": {
+   "input": 7174,
+   "output": 217,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C22",
+  "cat": "causes",
+  "q": "How much foundation money goes to democracy and voting rights?",
+  "capability": [
+   "cause_label:democracy"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:democracy+voting rights+voter registration+civic engagement+election",
+  "headline": "Foundations gave $408.1M to Democracy and voting rights, 2022–24: 0.22% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1858,
+  "answerMs": 706,
+  "usage": {
+   "input": 7175,
+   "output": 230,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C23",
+  "cat": "causes",
+  "q": "How much foundation money goes to local journalism?",
+  "capability": [
+   "cause_label:journalism"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "total/foundation_grants/kw:journalism+local news+news media+newsroom+public radio",
+  "headline": "Foundations gave $1.4B to Local journalism, 2022–24: 0.74% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1974,
+  "answerMs": 830,
+  "usage": {
+   "input": 7171,
+   "output": 223,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C24",
+  "cat": "causes",
+  "q": "Where does foundation money for opioid addiction go?",
+  "capability": [
+   "cause_label:opioids"
+  ],
+  "status": "misleading",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/substance_use",
+  "headline": "Texas gets the most foundation grants to Substance use: $42.5M",
+  "notes": [
+   "answered as if complete; no note that cause_label:opioids is missing"
+  ],
+  "review": "answered as if complete; no note that cause_label:opioids is missing",
+  "checked": null,
+  "routeMs": 1696,
+  "answerMs": 477,
+  "usage": {
+   "input": 7173,
+   "output": 208,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C25",
+  "cat": "causes",
+  "q": "How much goes to animal rights and anti-cruelty advocacy versus pet rescue and foster?",
+  "capability": [
+   "cause_label:animal_subcauses"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "compare/foundation_grants/D02+D05+D12+D20,D20+D30+D40",
+  "headline": "Pet rescue and foster got 35% more foundation money than animal rights and anti-cruelty advocacy, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2715,
+  "answerMs": 546,
+  "usage": {
+   "input": 7189,
+   "output": 316,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C26",
+  "cat": "causes",
+  "q": "Which causes get the least foundation money relative to how many nonprofits work on them?",
+  "capability": [
+   "funding_gap_ratio"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "breakdown/foundation_grants/by cause/all missing:other",
+  "headline": "Mutual & Membership Benefit (Y) got the least foundation money: $56.5M, 0.03% of the total, 2022–24",
+  "notes": [
+   "missing: Money per nonprofit by cause"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1697,
+  "answerMs": 164,
+  "usage": {
+   "input": 7182,
+   "output": 192,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "C27",
+  "cat": "causes",
+  "q": "How much US foundation money goes to global health programs abroad?",
+  "capability": [
+   "international"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/kw:global health+international health+health abroad missing:foreign_giving",
+  "headline": "Foundations gave $0 to global health, 2022–24: 0.00% of identified grant dollars",
+  "notes": [
+   "missing: Money to other countries"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1698,
+  "answerMs": 528,
+  "usage": {
+   "input": 7175,
+   "output": 219,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P01",
+  "cat": "place",
+  "q": "Which states get the most foundation money per resident?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/all/per resident",
+  "headline": "District of Columbia gets the most foundation grants per resident: $6,878 a year, then Massachusetts at $629",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1615,
+  "answerMs": 3,
+  "usage": {
+   "input": 7171,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P02",
+  "cat": "place",
+  "q": "Which states get the least foundation money per resident?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/all/per resident",
+  "headline": "Mississippi gets the least foundation grants per resident: $64.55 a year",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1597,
+  "answerMs": 3,
+  "usage": {
+   "input": 7171,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P03",
+  "cat": "place",
+  "q": "Which states get the most foundation money for food banks?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/K31",
+  "headline": "Illinois gets the most foundation grants to food banks: $140.0M",
+  "notes": [
+   "headline illinois $140.0M vs SQL IL $140.0M"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": "pass",
+  "routeMs": 1695,
+  "answerMs": 407,
+  "usage": {
+   "input": 7172,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P05",
+  "cat": "place",
+  "q": "Which counties in California get the most foundation money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by county/all/CA",
+  "headline": "Los Angeles County, CA got the most foundation money in California: $8.1B, 28% of the total, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1498,
+  "answerMs": 98,
+  "usage": {
+   "input": 7171,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P06",
+  "cat": "place",
+  "q": "How much of the foundation money in West Virginia comes from out-of-state foundations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "out_of_state/foundation_grants/all/WV",
+  "headline": "50% of foundation money for all causes in West Virginia came from out-of-state foundations, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1926,
+  "answerMs": 649,
+  "usage": {
+   "input": 7183,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P07",
+  "cat": "place",
+  "q": "How much foundation money reaches rural counties in Kentucky and West Virginia?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/all/KY,WV",
+  "headline": "Foundations gave $346.9M to organizations in rural counties of Kentucky, West Virginia, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1622,
+  "answerMs": 90,
+  "usage": {
+   "input": 7183,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P08",
+  "cat": "place",
+  "q": "Do rural counties get less foundation money per person than urban ones?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_rurality/foundation_grants/all/per resident",
+  "headline": "Rural counties get $69.76 per resident a year in foundation grants, 3.1x less than larger counties",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1621,
+  "answerMs": 114,
+  "usage": {
+   "input": 7177,
+   "output": 178,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P10",
+  "cat": "place",
+  "q": "How much foundation money goes to Appalachia?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/all",
+  "headline": "Foundations gave $7.3B to organizations in Appalachia, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 5410,
+  "answerMs": 235,
+  "usage": {
+   "input": 7172,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P11",
+  "cat": "place",
+  "q": "Which metro areas get the most foundation money per resident?",
+  "capability": [
+   "region_geography"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "by_state/foundation_grants/all/per resident missing:other",
+  "headline": "District of Columbia gets the most foundation grants per resident: $6,878 a year, then Massachusetts at $629",
+  "notes": [
+   "missing: Metro areas"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1713,
+  "answerMs": 2,
+  "usage": {
+   "input": 7174,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P12",
+  "cat": "place",
+  "q": "Which congressional districts get the most federal grant money for nonprofits?",
+  "capability": [
+   "region_geography"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "breakdown/federal_awards/by state/all missing:other",
+  "headline": "New York got the most in federal awards to nonprofits: $27.2B, 12% of the total, FY2022–25",
+  "notes": [
+   "missing: Congressional districts"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 2229,
+  "answerMs": 632,
+  "usage": {
+   "input": 7179,
+   "output": 185,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P13",
+  "cat": "place",
+  "q": "Do foundation grants reach the places where nonprofits deliver services, not just where they're headquartered?",
+  "capability": [
+   "service_area"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Where services are delivered isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1733,
+  "answerMs": 2,
+  "usage": {
+   "input": 7189,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P14",
+  "cat": "place",
+  "q": "Which foundations give the most to Native American communities?",
+  "capability": [
+   "cause_label:native_communities"
+  ],
+  "status": "partial",
+  "engine": "ok",
+  "spec": "top_funders/foundation_grants/kw:native american+american indian+alaska native+tribal+indigenous",
+  "headline": "The Bush Fdn is the largest foundation funder of Native American communities: $83.1M, 2022–24",
+  "notes": [],
+  "review": "cause counted by keywords, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2013,
+  "answerMs": 1531,
+  "usage": {
+   "input": 7172,
+   "output": 232,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P15",
+  "cat": "place",
+  "q": "Which states' foundations send the most money to other states?",
+  "capability": [
+   "funder_geography"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "out_of_state/foundation_grants/all missing:other",
+  "headline": "52% of foundation money for all causes in the US came from out-of-state foundations, 2022–24",
+  "notes": [
+   "missing: Rankings by funder state"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1580,
+  "answerMs": 900,
+  "usage": {
+   "input": 7172,
+   "output": 187,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "P16",
+  "cat": "place",
+  "q": "How much do community foundations give in their home county versus elsewhere?",
+  "capability": [
+   "funder_geography"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/charity_grants/community_foundation/all missing:other",
+  "headline": "Funder home county versus recipient county isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1827,
+  "answerMs": 0,
+  "usage": {
+   "input": 7177,
+   "output": 189,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F01",
+  "cat": "funder types",
+  "q": "How much do company foundations give to K-12 education?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/company/B2",
+  "headline": "Company foundations gave $92.4M to K-12 education, 2022–24: 1.0% of their identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1663,
+  "answerMs": 907,
+  "usage": {
+   "input": 7172,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F02",
+  "cat": "funder types",
+  "q": "Which company foundations give the most to K-12 schools?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/foundation_grants/company/B2",
+  "headline": "Cianbro Charitable Fdn is the largest foundation funder of K-12 schools: $6.0M, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1700,
+  "answerMs": 927,
+  "usage": {
+   "input": 7174,
+   "output": 211,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F03",
+  "cat": "funder types",
+  "q": "How much do family foundations give in California?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/family/all/CA",
+  "headline": "Family-named foundations gave $5.1B to all causes in California, 2022–24: 17% of all grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1516,
+  "answerMs": 528,
+  "usage": {
+   "input": 7168,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F04",
+  "cat": "funder types",
+  "q": "Do big foundations make bigger grants than small ones?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by funder_size/all",
+  "headline": "Foundations with $1B and up in assets made the largest average foundation grant: $298K, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1532,
+  "answerMs": 142,
+  "usage": {
+   "input": 7174,
+   "output": 183,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F05",
+  "cat": "funder types",
+  "q": "How much do foundations with over $1 billion in assets give to health?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/E",
+  "headline": "Foundations with $1B and up in assets gave $3.8B to Health, 2022–24: 6.4% of their identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1695,
+  "answerMs": 290,
+  "usage": {
+   "input": 7177,
+   "output": 215,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F07",
+  "cat": "funder types",
+  "q": "What share of foundation giving comes from the 100 largest foundations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/foundation_grants/all",
+  "headline": "The 100 largest foundations gave 31% of foundation money to US organizations, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2190,
+  "answerMs": 10316,
+  "usage": {
+   "input": 7178,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F08",
+  "cat": "funder types",
+  "q": "What is the average payout rate of private foundations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/foundation_finances/all",
+  "headline": "In 2024 the median private foundation paid out 5.2% of its investment assets, and 55% paid out 5% or more",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1670,
+  "answerMs": 254,
+  "usage": {
+   "input": 7171,
+   "output": 174,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F09",
+  "cat": "funder types",
+  "q": "Do foundations pay out more than the 5% minimum?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/foundation_finances/all",
+  "headline": "In 2024 the median private foundation paid out 5.2% of its investment assets, and 55% paid out 5% or more",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1673,
+  "answerMs": 254,
+  "usage": {
+   "input": 7175,
+   "output": 174,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F10",
+  "cat": "funder types",
+  "q": "How much did foundation assets grow from 2022 to 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_finances/all",
+  "headline": "The median private foundation paid out 5.7% of its investment assets in 2022 and 5.2% in 2024. 71% paid out 5% or more in 2022, 55% in 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1672,
+  "answerMs": 333,
+  "usage": {
+   "input": 7177,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F11",
+  "cat": "funder types",
+  "q": "How much do corporations give in total, including direct corporate gifts?",
+  "capability": [
+   "corporate_direct"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/company/all missing:corporate_giving",
+  "headline": "Company foundations gave $10.8B to all causes, 2022–24: 4.8% of all grant dollars",
+  "notes": [
+   "missing: Corporate giving outside company foundations"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1773,
+  "answerMs": 885,
+  "usage": {
+   "input": 7177,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F12",
+  "cat": "funder types",
+  "q": "How much do companies give to food banks outside their foundations?",
+  "capability": [
+   "corporate_direct"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/company/K31 missing:corporate_giving",
+  "headline": "Company foundations gave $132.6M to food banks, 2022–24: 1.4% of their identified grant dollars",
+  "notes": [
+   "missing: Corporate giving outside company foundations"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1673,
+  "answerMs": 813,
+  "usage": {
+   "input": 7174,
+   "output": 212,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F13",
+  "cat": "funder types",
+  "q": "How many new private foundations were created each year since 2015?",
+  "capability": [
+   "org_formation",
+   "history_pre2022"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_finances/all missing:other",
+  "headline": "Foundation formation counts by year aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2079,
+  "answerMs": 0,
+  "usage": {
+   "input": 7173,
+   "output": 186,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D01",
+  "cat": "DAFs and charities",
+  "q": "How much do donor-advised funds give to climate?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/charity_grants/daf_sponsor/climate",
+  "headline": "Donor-advised fund sponsors gave $1.8B to climate, 2022–24: 1.6% of identified grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1672,
+  "answerMs": 692,
+  "usage": {
+   "input": 7172,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D02",
+  "cat": "DAFs and charities",
+  "q": "What share of donor-advised fund grants goes to religious organizations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/charity_grants/daf_sponsor/X",
+  "headline": "Donor-advised fund sponsors gave $9.6B to Religion, 2022–24: 8.4% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1673,
+  "answerMs": 1658,
+  "usage": {
+   "input": 7178,
+   "output": 209,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D03",
+  "cat": "DAFs and charities",
+  "q": "Which causes get the most money from donor-advised funds?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/charity_grants/by cause/daf_sponsor/all",
+  "headline": "Education (B) got the most money from DAF sponsors: $26.1B, 23% of the total, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1549,
+  "answerMs": 66,
+  "usage": {
+   "input": 7174,
+   "output": 185,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D04",
+  "cat": "DAFs and charities",
+  "q": "How concentrated is donor-advised fund giving among the biggest sponsors?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/charity_grants/daf_sponsor/all",
+  "headline": "Fidelity Investments Charitable Gift Fund is the largest DAF sponsor funder of all causes: $32.4B, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1790,
+  "answerMs": 2542,
+  "usage": {
+   "input": 7182,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D05",
+  "cat": "DAFs and charities",
+  "q": "What's the typical grant from a community foundation?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "grant_size/charity_grants/community_foundation/all",
+  "headline": "The median community foundation grant to all causes is $18K, the average $93K, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1533,
+  "answerMs": 749,
+  "usage": {
+   "input": 7171,
+   "output": 180,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D06",
+  "cat": "DAFs and charities",
+  "q": "Do community foundations or DAF sponsors give more to education?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/charity_grants/by charity_funder/B",
+  "headline": "Other grantmaking charities gave the most money for education: $47.1B, 60% of the total, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2298,
+  "answerMs": 38,
+  "usage": {
+   "input": 7176,
+   "output": 210,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D07",
+  "cat": "DAFs and charities",
+  "q": "Which states get the most money from DAF sponsors per resident?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/charity_grants/daf_sponsor/all/per resident",
+  "headline": "District of Columbia gets the most grants from DAF sponsors per resident: $3,699 a year, then Massachusetts at $326",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2102,
+  "answerMs": 53,
+  "usage": {
+   "input": 7176,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D08",
+  "cat": "DAFs and charities",
+  "q": "How much do United Ways give to food banks?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/charity_grants/united_way/K31",
+  "headline": "United Ways gave $38.0M to Food banks, 2022–24: 1.0% of identified grant dollars",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1668,
+  "answerMs": 256,
+  "usage": {
+   "input": 7170,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D10",
+  "cat": "DAFs and charities",
+  "q": "How much money flows into donor-advised funds each year?",
+  "capability": [
+   "daf_flows"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/charity_grants/all missing:other",
+  "headline": "Money flowing into DAFs aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2103,
+  "answerMs": 1,
+  "usage": {
+   "input": 7173,
+   "output": 184,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D11",
+  "cat": "DAFs and charities",
+  "q": "What is the payout rate of donor-advised funds?",
+  "capability": [
+   "daf_flows"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/charity_grants/daf_sponsor/all missing:other",
+  "headline": "Donor-advised fund payout rates aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2104,
+  "answerMs": 0,
+  "usage": {
+   "input": 7173,
+   "output": 192,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D12",
+  "cat": "DAFs and charities",
+  "q": "How much did my Fidelity DAF grant to charities last year?",
+  "capability": [
+   "daf_account_level"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/charity_grants/daf_sponsor/all missing:daf_grants",
+  "headline": "Grants by individual donor-advised funds aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1886,
+  "answerMs": 0,
+  "usage": {
+   "input": 7177,
+   "output": 185,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D13",
+  "cat": "DAFs and charities",
+  "q": "How much do giving circles give, and to what causes?",
+  "capability": [
+   "giving_circles"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Giving circles as a donor type isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1586,
+  "answerMs": 0,
+  "usage": {
+   "input": 7172,
+   "output": 185,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "D14",
+  "cat": "DAFs and charities",
+  "q": "How much do grantmaking charities give in total?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/charity_grants/all",
+  "headline": "Grantmaking charities gave $496.6B to organizations in the US, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1586,
+  "answerMs": 105,
+  "usage": {
+   "input": 7171,
+   "output": 173,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G01",
+  "cat": "federal and government",
+  "q": "Which federal agencies gave nonprofits the most in 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/federal_awards/all",
+  "headline": "Department of Health and Human Services awarded the most in federal awards to nonprofits: $38.4B, 43% of the total, FY2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1585,
+  "answerMs": 395,
+  "usage": {
+   "input": 7178,
+   "output": 178,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G02",
+  "cat": "federal and government",
+  "q": "Which federal agencies fund the most climate work at nonprofits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "top_funders/federal_awards/climate",
+  "headline": "Environmental Protection Agency awarded the most in federal awards to nonprofits for climate: $16.1B, 98% of the total, FY2022–25",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1765,
+  "answerMs": 76,
+  "usage": {
+   "input": 7178,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G03",
+  "cat": "federal and government",
+  "q": "How much federal grant money went to Head Start providers?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/federal_awards/kw:head start",
+  "headline": "Federal agencies awarded $24.3B to nonprofits for Head Start, FY2022–25: 9.0% of federal awards to nonprofits there",
+  "notes": [],
+  "review": "cause counted by keywords, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2160,
+  "answerMs": 1131,
+  "usage": {
+   "input": 7173,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G04",
+  "cat": "federal and government",
+  "q": "What is the median federal award to a nonprofit?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "grant_size/federal_awards/all",
+  "headline": "The median federal award to a nonprofit is about $366K a year, the average $999K, FY2022–25",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1707,
+  "answerMs": 131,
+  "usage": {
+   "input": 7172,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G05",
+  "cat": "federal and government",
+  "q": "Which Ohio counties get the most federal money for nonprofits per resident?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/federal_awards/by county/all/OH/per resident",
+  "headline": "Pike County, OH got the most in federal awards to nonprofits in Ohio per resident: $459 a year, FY2022–25",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1599,
+  "answerMs": 91,
+  "usage": {
+   "input": 7181,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G06",
+  "cat": "federal and government",
+  "q": "Which federal programs fund the most nonprofit work in rural counties?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/federal_awards/by program/all",
+  "headline": "Head Start (93.600) got the most in federal awards to nonprofits in rural counties of the US: $4.6B, 46% of the total, FY2022–25",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1643,
+  "answerMs": 145,
+  "usage": {
+   "input": 7179,
+   "output": 179,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G08",
+  "cat": "federal and government",
+  "q": "How does federal grant money to nonprofits compare with foundation grants?",
+  "capability": [
+   "cross_source_compare"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/federal_awards/all missing:other",
+  "headline": "Federal agencies awarded $272.0B to nonprofits, FY2022–25",
+  "notes": [
+   "missing: Side-by-side with foundation grants"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1775,
+  "answerMs": 1058,
+  "usage": {
+   "input": 7179,
+   "output": 186,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G09",
+  "cat": "federal and government",
+  "q": "How much do state and local governments give to nonprofits, separate from federal money?",
+  "capability": [
+   "state_local_gov"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/government_grants/all missing:other",
+  "headline": "Nonprofits in the US reported $321.8B in government grants for 2024",
+  "notes": [
+   "missing: State and local government grants alone"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1793,
+  "answerMs": 218,
+  "usage": {
+   "input": 7180,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G10",
+  "cat": "federal and government",
+  "q": "How many human services nonprofits in Kentucky rely on government grants?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/government_grants/P/KY",
+  "headline": "78 of 434 Human services organizations in Kentucky with recent filings got half or more of revenue from government grants (18%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1862,
+  "answerMs": 553,
+  "usage": {
+   "input": 7179,
+   "output": 214,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G11",
+  "cat": "federal and government",
+  "q": "How dependent are human services nonprofits on government money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/revenue/P",
+  "headline": "6,469 of 35,898 human services organizations in the US with recent filings got half or more of revenue from government grants (18%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2181,
+  "answerMs": 381,
+  "usage": {
+   "input": 7173,
+   "output": 209,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G12",
+  "cat": "federal and government",
+  "q": "How much federal contract money goes to nonprofits?",
+  "capability": [
+   "federal_beyond_grants"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/federal_awards/all missing:federal_awards",
+  "headline": "Federal agencies awarded $272.0B to nonprofits, FY2022–25",
+  "notes": [
+   "missing: Federal money beyond nonprofits"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 2308,
+  "answerMs": 1044,
+  "usage": {
+   "input": 7173,
+   "output": 201,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G13",
+  "cat": "federal and government",
+  "q": "How much federal research money goes to public universities?",
+  "capability": [
+   "federal_beyond_grants"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/federal_awards/all missing:federal_awards",
+  "headline": "Federal agencies awarded $272.0B to nonprofits, FY2022–25",
+  "notes": [
+   "missing: Federal money beyond nonprofits"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1885,
+  "answerMs": 1074,
+  "usage": {
+   "input": 7170,
+   "output": 179,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G14",
+  "cat": "federal and government",
+  "q": "How much government money has gone to climate change?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/government_grants/climate",
+  "headline": "Climate organizations reported $1.3B in government grants for 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2180,
+  "answerMs": 232,
+  "usage": {
+   "input": 7169,
+   "output": 200,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "G15",
+  "cat": "federal and government",
+  "q": "What share of nonprofit revenue comes from government grants?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/government_grants/all",
+  "headline": "Nonprofits in the US reported $321.8B in government grants for 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1468,
+  "answerMs": 75,
+  "usage": {
+   "input": 7175,
+   "output": 172,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E01",
+  "cat": "equity and need",
+  "q": "Do low-income counties get less foundation money per resident than wealthy ones?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by county_income/all/per resident",
+  "headline": "Counties with median income $90K and up get $342 per resident a year in foundation money, vs $61.84 in counties with median income under $55K, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1559,
+  "answerMs": 57,
+  "usage": {
+   "input": 7181,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E02",
+  "cat": "equity and need",
+  "q": "Do high-poverty counties get less foundation money per resident?",
+  "capability": [],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "breakdown/foundation_grants/by county_poverty/all/per resident",
+  "headline": "Counties with 20% or more in poverty get $144 per resident a year in foundation money, vs $159 in counties with under 10% in poverty, 2022–24. Counts one year, not 10 in a row",
+  "notes": [
+   "missing: 10 years in a row"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1579,
+  "answerMs": 36,
+  "usage": {
+   "input": 7176,
+   "output": 183,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E03",
+  "cat": "equity and need",
+  "q": "Do majority Black or Hispanic counties get less foundation money?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by county_race/all",
+  "headline": "Counties with a majority people of color get $323 per resident a year in foundation money, vs $100 in counties with under 25% people of color, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1572,
+  "answerMs": 43,
+  "usage": {
+   "input": 7178,
+   "output": 181,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E04",
+  "cat": "equity and need",
+  "q": "Do high-poverty counties get more federal money per person in poverty?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/federal_awards/by county_poverty/all/per poor",
+  "headline": "Counties with 20% or more in poverty get $920 per person in poverty a year in federal awards to nonprofits, vs $1,295 in counties with under 10% in poverty, FY2022–25",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 3358,
+  "answerMs": 69,
+  "usage": {
+   "input": 7178,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E05",
+  "cat": "equity and need",
+  "q": "Which states get the most foundation money per person in poverty?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/all/per poor",
+  "headline": "District of Columbia gets the most foundation grants per person in poverty: $47,820 a year, then Massachusetts at $6,556",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1573,
+  "answerMs": 4,
+  "usage": {
+   "input": 7174,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E07",
+  "cat": "equity and need",
+  "q": "How much foundation money goes to organizations led by people of color?",
+  "capability": [
+   "led_by"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/kw:people of color+bipoc+communities of color+black-led+latino-led+racial equity missing:other",
+  "headline": "Foundations gave $327.4M to organizations led by people of color, 2022–24: 0.18% of identified grant dollars",
+  "notes": [
+   "missing: Leadership demographics of recipient organizations"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2131,
+  "answerMs": 1831,
+  "usage": {
+   "input": 7175,
+   "output": 253,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E08",
+  "cat": "equity and need",
+  "q": "How much foundation money goes to women-led nonprofits?",
+  "capability": [
+   "led_by"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/women_girls missing:other",
+  "headline": "Foundations gave $3.1B to women-led nonprofits, 2022–24: 1.7% of identified grant dollars",
+  "notes": [
+   "missing: Nonprofits led by women"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 2130,
+  "answerMs": 1970,
+  "usage": {
+   "input": 7175,
+   "output": 224,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E09",
+  "cat": "equity and need",
+  "q": "What share of foundation grants benefit low-income people?",
+  "capability": [
+   "population_served"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "share/foundation_grants/kw:low-income+poverty+economically disadvantaged missing:other",
+  "headline": "Foundations gave $14.0B to low-income people, 2022–24: 7.6% of identified grant dollars",
+  "notes": [
+   "missing: Who grants serve (low-income people)"
+  ],
+  "review": "cause counted by keywords, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1935,
+  "answerMs": 3406,
+  "usage": {
+   "input": 7173,
+   "output": 233,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E10",
+  "cat": "equity and need",
+  "q": "How much foundation money do small nonprofits under $1M get?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/foundation_grants/all",
+  "headline": "Foundations gave $12.4B to organizations with under $1M in revenue, 2022–24: 6.7% of identified grant dollars",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1715,
+  "answerMs": 4107,
+  "usage": {
+   "input": 7176,
+   "output": 185,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "E11",
+  "cat": "equity and need",
+  "q": "How much foundation money goes to small vs large nonprofits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by recipient_size/all",
+  "headline": "Organizations with $100M and up in revenue got the most foundation money: $70.1B, 38% of the total, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1716,
+  "answerMs": 197,
+  "usage": {
+   "input": 7176,
+   "output": 183,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R01",
+  "cat": "grant practice",
+  "q": "What is the median grant size for arts organizations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "grant_size/foundation_grants/A",
+  "headline": "The median foundation grant to Arts organizations is $5K, the average $46K, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1891,
+  "answerMs": 2261,
+  "usage": {
+   "input": 7171,
+   "output": 210,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R02",
+  "cat": "grant practice",
+  "q": "What share of foundation grants are general operating support?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "general_support/foundation_grants/all",
+  "headline": "30% of foundation dollars to all causes were general operating support, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1594,
+  "answerMs": 106,
+  "usage": {
+   "input": 7171,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R03",
+  "cat": "grant practice",
+  "q": "What share of foundation grants in Texas are general operating support?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "general_support/foundation_grants/all/TX",
+  "headline": "29% of foundation dollars to all causes were general operating support, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1804,
+  "answerMs": 62,
+  "usage": {
+   "input": 7175,
+   "output": 179,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R05",
+  "cat": "grant practice",
+  "q": "What share of foundation grants are multi-year commitments?",
+  "capability": [
+   "multi_year"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Multi-year grants aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1683,
+  "answerMs": 0,
+  "usage": {
+   "input": 7174,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R06",
+  "cat": "grant practice",
+  "q": "What share of foundation money goes to the largest 1% of nonprofits by revenue?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "concentration/foundation_grants/by recipient_size/all",
+  "headline": "The largest 1% of nonprofits by revenue got 53% of foundation money, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1593,
+  "answerMs": 2095,
+  "usage": {
+   "input": 7184,
+   "output": 180,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R07",
+  "cat": "grant practice",
+  "q": "How concentrated is foundation money for women and girls?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "concentration/foundation_grants/women_girls",
+  "headline": "The top 1% of recipients got 40% of foundation money for Women and girls, 2022–24",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1817,
+  "answerMs": 70,
+  "usage": {
+   "input": 7173,
+   "output": 209,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R08",
+  "cat": "grant practice",
+  "q": "What share of foundation grants are under $10,000?",
+  "capability": [
+   "size_distribution"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Grants under a dollar size isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2855,
+  "answerMs": 0,
+  "usage": {
+   "input": 7172,
+   "output": 184,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R09",
+  "cat": "grant practice",
+  "q": "Average foundation grant to hospitals by state",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/foundation_grants/by state/E2",
+  "headline": "Delaware got the largest average foundation grant for Hospitals: $323K, 2022–24",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1685,
+  "answerMs": 111,
+  "usage": {
+   "input": 7171,
+   "output": 213,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R10",
+  "cat": "grant practice",
+  "q": "How many foundations accept unsolicited applications?",
+  "capability": [
+   "funder_practices"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Foundation application policies aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1960,
+  "answerMs": 0,
+  "usage": {
+   "input": 7172,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R11",
+  "cat": "grant practice",
+  "q": "How much foundation money goes to capacity building versus program support?",
+  "capability": [
+   "grant_purpose"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Grant purpose (capacity building, program, capital) isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1637,
+  "answerMs": 0,
+  "usage": {
+   "input": 7175,
+   "output": 192,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R12",
+  "cat": "grant practice",
+  "q": "How long do foundations keep funding the same grantee?",
+  "capability": [
+   "grant_relationships",
+   "history_pre2022"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Grant relationships over time isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1826,
+  "answerMs": 1,
+  "usage": {
+   "input": 7173,
+   "output": 183,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "R13",
+  "cat": "grant practice",
+  "q": "What share of nonprofit revenue do the largest 1% of nonprofits take in?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "concentration/revenue/all",
+  "headline": "The largest 1% of nonprofits took in 87% of all revenue reported for 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1616,
+  "answerMs": 421,
+  "usage": {
+   "input": 7184,
+   "output": 173,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N01",
+  "cat": "nonprofit finances",
+  "q": "How many food banks are running deficits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/revenue/K31",
+  "headline": "507 of 1,958 food banks in the US with recent filings ran a deficit (26%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1732,
+  "answerMs": 157,
+  "usage": {
+   "input": 7168,
+   "output": 208,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N02",
+  "cat": "nonprofit finances",
+  "q": "How many nonprofits in Mississippi have less than three months of cash?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/foundation_grants/all/MS",
+  "headline": "1,091 of 3,643 nonprofits in Mississippi with recent filings had under 3 months of cash (30%)",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1544,
+  "answerMs": 258,
+  "usage": {
+   "input": 7179,
+   "output": 184,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N03",
+  "cat": "nonprofit finances",
+  "q": "How many animal shelters in Ohio run deficits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/foundation_grants/D20/OH",
+  "headline": "137 of 334 animal shelters in Ohio with recent filings ran a deficit (41%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1887,
+  "answerMs": 160,
+  "usage": {
+   "input": 7174,
+   "output": 216,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N04",
+  "cat": "nonprofit finances",
+  "q": "How many nonprofits ran deficits two years in a row?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/revenue/all",
+  "headline": "61,634 of 309,002 nonprofits in the US with recent filings ran deficits 2 years in a row (20%)",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1544,
+  "answerMs": 4249,
+  "usage": {
+   "input": 7175,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N05",
+  "cat": "nonprofit finances",
+  "q": "How has total nonprofit revenue changed since 2015?",
+  "capability": [
+   "history_pre2022",
+   "finances_panel"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/revenue/all",
+  "headline": "Revenue to all causes rose 8.4% (5.3% after inflation) from 2023 to 2024 (same 137,292 orgs). Our data starts in 2023, so 2015–2022 isn't included",
+  "notes": [
+   "missing: Years before 2023"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 2156,
+  "answerMs": 365,
+  "usage": {
+   "input": 7175,
+   "output": 173,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N06",
+  "cat": "nonprofit finances",
+  "q": "What share of all nonprofit revenue goes to hospitals?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/revenue/E2",
+  "headline": "Hospitals reported $1.37T in revenue for 2024",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1903,
+  "answerMs": 140,
+  "usage": {
+   "input": 7177,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N07",
+  "cat": "nonprofit finances",
+  "q": "What is the total revenue of museums in New York?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "total/revenue/A5/NY",
+  "headline": "Museums in New York reported $2.7B in revenue for 2024",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1738,
+  "answerMs": 180,
+  "usage": {
+   "input": 7171,
+   "output": 204,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N08",
+  "cat": "nonprofit finances",
+  "q": "What share of contributions go to religious organizations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/contributions/X",
+  "headline": "Religion organizations reported $18.9B in contributions for 2024",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2407,
+  "answerMs": 173,
+  "usage": {
+   "input": 7171,
+   "output": 200,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N10",
+  "cat": "nonprofit finances",
+  "q": "How many people do nonprofits employ in Indiana?",
+  "capability": [
+   "staff_volunteers"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/revenue/all/IN missing:other",
+  "headline": "Nonprofit employment and workforce counts aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1635,
+  "answerMs": 0,
+  "usage": {
+   "input": 7174,
+   "output": 189,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N11",
+  "cat": "nonprofit finances",
+  "q": "What are typical overhead rates for human services nonprofits?",
+  "capability": [
+   "expense_detail"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/P missing:other",
+  "headline": "Overhead rates aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1702,
+  "answerMs": 0,
+  "usage": {
+   "input": 7175,
+   "output": 210,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N12",
+  "cat": "nonprofit finances",
+  "q": "Which kinds of nonprofits depend most on donations versus earned revenue?",
+  "capability": [
+   "revenue_mix"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/revenue/all missing:other",
+  "headline": "Earned revenue versus donations mix by nonprofit type isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1940,
+  "answerMs": 0,
+  "usage": {
+   "input": 7182,
+   "output": 191,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N13",
+  "cat": "nonprofit finances",
+  "q": "How much do food bank CEOs earn on average?",
+  "capability": [
+   "compensation"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/K31 missing:other",
+  "headline": "Executive pay isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1806,
+  "answerMs": 0,
+  "usage": {
+   "input": 7172,
+   "output": 212,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H01",
+  "cat": "household and total giving",
+  "q": "How much do individuals give to churches each year?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/foundation_grants/X missing:individual_giving",
+  "headline": "Foundation money for religion grew 55% (28% after inflation) from 2020 to 2024",
+  "notes": [
+   "missing: Individual giving by cause or donor"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1902,
+  "answerMs": 614,
+  "usage": {
+   "input": 7170,
+   "output": 212,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H02",
+  "cat": "household and total giving",
+  "q": "How much do individuals donate to food banks?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/K31 missing:individual_giving",
+  "headline": "Foundations gave $889.8M to Food banks, 2022–24: 0.48% of identified grant dollars",
+  "notes": [
+   "missing: Individual giving by cause or donor"
+  ],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 2225,
+  "answerMs": 384,
+  "usage": {
+   "input": 7170,
+   "output": 212,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H03",
+  "cat": "household and total giving",
+  "q": "What share of US households give to charity?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "share/household_giving/all missing:individual_giving",
+  "headline": "Itemizers in the US deducted 1.4% of all income (AGI) for charitable gifts in 2023: $205.8B",
+  "notes": [
+   "missing: Individual giving by cause or donor"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1686,
+  "answerMs": 108,
+  "usage": {
+   "input": 7167,
+   "output": 192,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H04",
+  "cat": "household and total giving",
+  "q": "How has the share of households that give changed since 2000?",
+  "capability": [
+   "household_giving",
+   "history_pre2022"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/household_giving/all missing:individual_giving",
+  "headline": "Charitable deductions in the US rose 6.6% (down 19% after inflation) from 2013 to 2023, as itemizers went from 44.5M to 14.9M after the 2017 tax law. Our data starts in 2013, so 2000–2012 isn't included",
+  "notes": [
+   "missing: Individual giving by cause or donor, Years before 2013"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1799,
+  "answerMs": 19,
+  "usage": {
+   "input": 7172,
+   "output": 194,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H05",
+  "cat": "household and total giving",
+  "q": "How much do itemizers deduct for charitable gifts in each state?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/household_giving/all",
+  "headline": "California had the highest charitable deductions: $33.5B, 16% of the total, 2023",
+  "notes": [
+   "headline california $33.5B vs SQL CA $33.5B (2023)"
+  ],
+  "review": null,
+  "checked": "pass",
+  "routeMs": 1798,
+  "answerMs": 26,
+  "usage": {
+   "input": 7178,
+   "output": 174,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H06",
+  "cat": "household and total giving",
+  "q": "Do high-income households give a larger share of income than low-income households?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "breakdown/household_giving/by income/all",
+  "headline": "Returns with $200K and up in AGI gave the largest share of income in charitable deductions: 2.2%, 2023. Lowest: $1 to $10K, 0.16%",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1677,
+  "answerMs": 45,
+  "usage": {
+   "input": 7176,
+   "output": 177,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H07",
+  "cat": "household and total giving",
+  "q": "How much do Americans leave to charity in bequests?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/household_giving/all missing:individual_giving",
+  "headline": "Itemizers in the US deducted $205.8B in charitable gifts in 2023, on 7.3% of tax returns",
+  "notes": [
+   "missing: Individual giving by cause or donor"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1845,
+  "answerMs": 35,
+  "usage": {
+   "input": 7173,
+   "output": 178,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H08",
+  "cat": "household and total giving",
+  "q": "How much is total US charitable giving each year from all sources?",
+  "capability": [
+   "household_giving",
+   "external_benchmarks"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/foundation_grants/all missing:individual_giving,corporate_giving,foreign_giving,other",
+  "headline": "Foundation money to organizations in the US grew 32% (8.7% after inflation) from 2020 to 2024",
+  "notes": [
+   "missing: Individual giving by cause or donor, Corporate giving outside company foundations, Money to other countries, Total giving from all sources combined"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1881,
+  "answerMs": 136,
+  "usage": {
+   "input": 7174,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H09",
+  "cat": "household and total giving",
+  "q": "How much do people give through crowdfunding like GoFundMe?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:individual_giving",
+  "headline": "Individual giving by cause or donor isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1707,
+  "answerMs": 0,
+  "usage": {
+   "input": 7177,
+   "output": 180,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H10",
+  "cat": "household and total giving",
+  "q": "How many people volunteer at nonprofits in Texas?",
+  "capability": [
+   "staff_volunteers"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all/TX missing:volunteering",
+  "headline": "Volunteering isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1799,
+  "answerMs": 0,
+  "usage": {
+   "input": 7175,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H11",
+  "cat": "household and total giving",
+  "q": "Do women give more to charity than men?",
+  "capability": [
+   "household_giving"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/household_giving/all missing:individual_giving",
+  "headline": "Individual giving by cause or donor isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1690,
+  "answerMs": 1,
+  "usage": {
+   "input": 7168,
+   "output": 178,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "H12",
+  "cat": "household and total giving",
+  "q": "What share of total giving comes from foundations versus individuals, bequests and corporations?",
+  "capability": [
+   "household_giving",
+   "external_benchmarks"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "share/foundation_grants/all missing:individual_giving,corporate_giving",
+  "headline": "Foundations gave $223.2B to organizations in the US, 2022–24",
+  "notes": [
+   "missing: Individual giving by cause or donor, Corporate giving outside company foundations"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1690,
+  "answerMs": 77,
+  "usage": {
+   "input": 7183,
+   "output": 187,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K01",
+  "cat": "track record and people",
+  "q": "Which animal welfare nonprofits are the newest versus the longest established?",
+  "capability": [
+   "org_age"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/D missing:other",
+  "headline": "Organization age isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1740,
+  "answerMs": 0,
+  "usage": {
+   "input": 7180,
+   "output": 211,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K02",
+  "cat": "track record and people",
+  "q": "Do older nonprofits get more foundation money than newer ones?",
+  "capability": [
+   "org_age"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Organization age isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2248,
+  "answerMs": 0,
+  "usage": {
+   "input": 7177,
+   "output": 179,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K03",
+  "cat": "track record and people",
+  "q": "Which board members sit on the most climate nonprofit boards?",
+  "capability": [
+   "boards_people"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/climate missing:other",
+  "headline": "Board members aren't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1740,
+  "answerMs": 0,
+  "usage": {
+   "input": 7176,
+   "output": 206,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K04",
+  "cat": "track record and people",
+  "q": "How many foundations share board members with the nonprofits they fund?",
+  "capability": [
+   "boards_people"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "Board members shared with grantees isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1740,
+  "answerMs": 0,
+  "usage": {
+   "input": 7176,
+   "output": 184,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K05",
+  "cat": "track record and people",
+  "q": "How many new nonprofits registered with the IRS in 2024?",
+  "capability": [
+   "org_formation"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/revenue/all missing:other",
+  "headline": "Organization age isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 2269,
+  "answerMs": 0,
+  "usage": {
+   "input": 7177,
+   "output": 178,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "K06",
+  "cat": "track record and people",
+  "q": "Which food security nonprofits got foundation grants every year from 2022 to 2024?",
+  "capability": [
+   "grant_relationships"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/K missing:other",
+  "headline": "Grant relationships over time isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1944,
+  "answerMs": 0,
+  "usage": {
+   "input": 7184,
+   "output": 218,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "X01",
+  "cat": "benchmarks and context",
+  "q": "How does our foundation giving total compare with Giving USA's estimate for foundations?",
+  "capability": [
+   "external_benchmarks"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/all missing:other",
+  "headline": "Foundations gave $223.2B to organizations in the US, 2022–24",
+  "notes": [
+   "missing: Giving USA estimates for comparison"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1720,
+  "answerMs": 82,
+  "usage": {
+   "input": 7183,
+   "output": 187,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "X02",
+  "cat": "benchmarks and context",
+  "q": "What share of GDP goes to charitable giving?",
+  "capability": [
+   "external_benchmarks",
+   "household_giving"
+  ],
+  "status": "unanswerable",
+  "engine": "unanswerable",
+  "spec": "none/foundation_grants/all missing:other",
+  "headline": "National GDP comparison isn't in our IRS data",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1770,
+  "answerMs": 0,
+  "usage": {
+   "input": 7172,
+   "output": 182,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "X03",
+  "cat": "benchmarks and context",
+  "q": "Will foundation giving to climate rise next year?",
+  "capability": [
+   "forecast"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/foundation_grants/climate missing:forecast",
+  "headline": "Foundation money for climate grew 97% (62% after inflation) from 2020 to 2024",
+  "notes": [
+   "missing: Forecasts"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1783,
+  "answerMs": 346,
+  "usage": {
+   "input": 7172,
+   "output": 207,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "X04",
+  "cat": "benchmarks and context",
+  "q": "How does US foundation giving to climate compare with global climate philanthropy?",
+  "capability": [
+   "external_benchmarks",
+   "international"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "total/foundation_grants/climate missing:foreign_giving",
+  "headline": "Foundations gave $2.3B to climate, 2022–24: 1.3% of identified grant dollars",
+  "notes": [
+   "missing: Money to other countries"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 2191,
+  "answerMs": 320,
+  "usage": {
+   "input": 7180,
+   "output": 209,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "X06",
+  "cat": "benchmarks and context",
+  "q": "Why does DC get so much foundation money per resident?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "by_state/foundation_grants/all/per resident",
+  "headline": "District of Columbia gets the most foundation grants per resident: $6,878 a year, then Massachusetts at $629",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1809,
+  "answerMs": 3,
+  "usage": {
+   "input": 7173,
+   "output": 176,
+   "cacheRead": 7151,
+   "cacheWrite": 0
+  }
+ }
+]

@@ -21,6 +21,8 @@ const threads: [string, string[]][] = [
   ["How much government money goes to climate organizations?", []],
   ["How much do itemizers deduct for charitable gifts in each state?", []],
   ["How much do households in Ohio deduct for charity?", []],
+  ["Are foundations paying out more than 5%?", []],
+  ["What share of food banks ran deficits each year?", []],
 ];
 
 let fails = 0;

@@ -21,14 +21,14 @@ export const METRICS = [
   "breakdown",        // foundation grants split by one dimension (by): cause, county, recipient size, funder size ...
   "none",             // nothing in our data answers it (see missing)
 ] as const;
-export const SOURCES = ["foundation_grants", "charity_grants", "federal_awards", "government_grants", "contributions", "revenue", "household_giving"] as const;
+export const SOURCES = ["foundation_grants", "charity_grants", "federal_awards", "government_grants", "contributions", "revenue", "household_giving", "foundation_finances"] as const;
 // Places beyond states and counties: county sets (Appalachia = ARC counties, zip_regions.appalachia).
 export const REGIONS = ["appalachia"] as const;
 // Grantmaking charities on Form 990 Schedule I (generosity-data 041-042, charity_funder_profile.funder_class).
 export const CHARITY_FUNDERS = ["daf_sponsor", "community_foundation", "united_way", "other"] as const;
 export const CONDITIONS = ["deficit", "low_cash", "gov_reliant", "surplus"] as const;
 export const MISSING = ["individual_giving", "corporate_giving", "federal_awards", "daf_grants", "foreign_giving", "forecast", "volunteering", "other"] as const;
-export const LABELS = ["climate", "women_girls"] as const;
+export const LABELS = ["climate", "women_girls", "substance_use"] as const;
 // Breakdown dimensions (metric breakdown, foundation grants; research layer of generosity-data 038-040).
 // county_poverty / county_income / county_race / county_age: counties grouped by Census ACS 5-year bands (county_acs).
 // agency / program: federal_awards only (awarding agency, assistance listing). income: household_giving only (IRS SOI AGI classes).
@@ -45,7 +45,7 @@ const range = (what: string) => z.object({
 
 export const causeSchema = z.object({
   name: z.string().describe("The cause in plain words, e.g. 'climate', 'animal shelters', 'homelessness'"),
-  label: z.enum(LABELS).nullable().describe("Graded cause label when the cause is climate/clean energy or women and girls; else null"),
+  label: z.enum(LABELS).nullable().describe("Graded cause label when the cause is climate/clean energy, women and girls, or substance use/addiction/opioids; else null"),
   ntee: z.array(z.string()).describe("NTEE code prefixes when the cause maps cleanly to codes (e.g. ['D20'] animal shelters/humane societies, ['K31'] food banks, ['B'] education, ['E'] health, ['L41'] homeless shelters, ['A'] arts). Empty when no clean code"),
   keywords: z.array(z.string()).describe("2-6 lowercase words or short phrases that name the cause in mission text, used only when there is no label and no clean NTEE code"),
 });
@@ -53,7 +53,7 @@ export const causeSchema = z.object({
 export const specSchema = z.object({
   metric: z.enum(METRICS),
   causes: z.array(causeSchema).describe("0 causes = all causes; 2 for compare / overlap_funders"),
-  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue), household_giving (IRS SOI individual returns: charitable deductions itemizers claim, by state, county, ZIP and income, tax years 2013-2023; no cause or recipient)"),
+  source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue), household_giving (IRS SOI individual returns: charitable deductions itemizers claim, by state, county, ZIP and income, tax years 2013-2023; no cause or recipient), foundation_finances (990-PF finances per foundation and year, tax years 2022-2025: payout rate = qualifying distributions / net investment assets against the 5% rule, assets, grants paid; no cause)"),
   yearFrom: z.number().int().nullable(),
   yearTo: z.number().int().nullable(),
   states: z.array(z.string()).describe("Two-letter codes of the place asked about; empty = whole US"),

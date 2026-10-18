@@ -1,6 +1,6 @@
 // Read-only JSON search. Needs an API key (Authorization: Bearer nb_live_...); docs at /api/docs.
 // GET /api/v1/search?q=food+bank+workforce+training&state=WV,KY&city=Huntington&max_revenue=500000&ntee=K3&limit=10
-// Graded cause label: &label=climate (or women_girls), &label_tier=all to add partial-tier orgs.
+// Graded cause label: &label=climate (or women_girls, substance_use), &label_tier=all to add partial-tier orgs.
 // No Claude calls: meaning search runs on the local embedding model, so a partner can't run up LLM costs.
 import type { NextRequest } from "next/server";
 import { keyed, baseUrl } from "@/lib/apiAuth";

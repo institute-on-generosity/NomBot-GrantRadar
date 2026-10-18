@@ -1,6 +1,7 @@
 [
   {"q": "how much government money has gone to climate change?", "metric": ["total"], "source": "government_grants", "label": "climate"},
   {"q": "how much foundation money goes to women and girls in New York", "metric": ["total"], "source": "foundation_grants", "label": "women_girls", "states": ["NY"]},
+  {"q": "how much foundation money goes to opioid addiction and recovery in Ohio", "metric": ["total"], "source": "foundation_grants", "label": "substance_use", "states": ["OH"]},
   {"q": "which states give the least foundation money per resident", "metric": ["by_state"], "perResident": true, "order": "least"},
   {"q": "how many animal shelters in Ohio run deficits", "metric": ["count_orgs"], "condition": "deficit", "ntee": "D20", "states": ["OH"]},
   {"q": "how much do individuals give to churches each year?", "missing": "individual_giving"},
@@ -60,7 +61,7 @@
   {"q": "Which states get the most money from DAF sponsors per resident?", "metric": ["by_state"], "source": "charity_grants", "charityFunder": "daf_sponsor", "perResident": true},
   {"q": "HHS grants to nonprofits in California by county", "metric": ["breakdown"], "by": ["county"], "source": "federal_awards", "states": ["CA"]},
   {"q": "How much state government money goes to youth programs?", "metric": ["total"], "source": "government_grants", "ntee": "O"},
-  {"q": "Who funds opioid addiction programs in Ohio?", "metric": ["top_funders"], "states": ["OH"]},
+  {"q": "Who funds opioid addiction programs in Ohio?", "metric": ["top_funders"], "label": "substance_use", "states": ["OH"]},
   {"q": "Which organizations receive the most foundation money for veterans?", "metric": ["top_recipients"]},
   {"q": "How many people volunteer at nonprofits in Texas?", "missing": "volunteering"},
   {"q": "largest hospitals in Texas", "research": false},

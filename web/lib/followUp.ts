@@ -29,6 +29,7 @@ export function describeSpec(s: Spec): string {
   const cause = s.causes.map((c) => c.name).join(" and ") || "all causes";
   const place = s.county ? ` in ${s.county}` : s.region === "appalachia" ? " in Appalachia" : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : s.states.length ? ` in ${s.states.join(", ")}` : "";
   if (s.source === "household_giving") return householdQuestion(s, place);
+  if (s.source === "foundation_finances") return payoutQuestion(s, place);
   const money = moneyOf(s);
   switch (s.metric) {
     case "trend": return `Is ${money} for ${cause}${place} growing?`;
@@ -43,9 +44,34 @@ export function describeSpec(s: Spec): string {
     case "general_support": return `What share of foundation money for ${cause}${place} is general operating support?`;
     case "out_of_state": return `How much foundation money for ${cause}${place} comes from other states?`;
     case "overlap_funders": return `Which foundations fund both ${cause}?`;
-    case "count_orgs": return `How many ${cause} organizations${place} ${s.condition === "deficit" ? "run deficits" : s.condition === "low_cash" ? "have under 3 months of cash" : s.condition === "gov_reliant" ? "rely on government grants" : "are there"}?`;
+    case "count_orgs": {
+      const cond = s.condition === "deficit" ? "run deficits" : s.condition === "low_cash" ? "have under 3 months of cash" : s.condition === "gov_reliant" ? "rely on government grants" : s.condition === "surplus" ? "run surpluses" : "are there";
+      if (s.by === "year") return `What share of ${cause} organizations${place} ${s.condition ? cond : "run deficits"}, by year?`;
+      if (s.by === "recipient_size") return `What share of ${cause} organizations${place} ${s.condition ? cond : "run deficits"}, by revenue size?`;
+      return `How many ${cause} organizations${place} ${cond}?`;
+    }
     default: return `How much ${money} goes to ${cause}${place}?`;
   }
+}
+
+// Foundation finances (990-PF payout against the 5% rule, assets): no causes, so their own questions and chips.
+function payoutQuestion(s: Spec, place: string): string {
+  const who = s.funderType === "operating" ? "private operating foundations" : s.funderType === "company" ? "company foundations" : s.funderType === "family" ? "family foundations" : "foundations";
+  if (s.metric === "trend") return `Is ${who.replace(/s$/, "")} payout${place} rising or falling?`;
+  if (s.metric === "by_state" || (s.metric === "breakdown" && s.by === "state")) return `Which states' foundations pay out the most?`;
+  if (s.metric === "breakdown" && s.by === "funder_type") return `How does payout differ by foundation type?`;
+  if (s.metric === "breakdown") return `What is the median payout rate of ${who}${place} by asset size?`;
+  return `Do ${who}${place} pay out more than 5%?`;
+}
+function payoutChips(s: Spec, add: (label: string, change: Partial<Spec>) => void) {
+  const place = s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
+  const q = (c: Partial<Spec>) => payoutQuestion({ ...s, by: null, order: "most", ...c }, place);
+  if (s.metric !== "trend") add(q({ metric: "trend" }), { metric: "trend", by: null, yearFrom: null, yearTo: null });
+  if (!(s.metric === "breakdown" && (s.by ?? "funder_size") === "funder_size")) add(q({ metric: "breakdown", by: "funder_size" }), { metric: "breakdown", by: "funder_size" });
+  if (!(s.metric === "breakdown" && s.by === "funder_type") && !s.funderType) add(q({ metric: "breakdown", by: "funder_type" }), { metric: "breakdown", by: "funder_type" });
+  if (!s.states.length && s.metric !== "by_state") add(q({ metric: "by_state" }), { metric: "by_state", by: null, order: "most" });
+  if (!["share", "total"].includes(s.metric) || s.by) add(q({ metric: "share" }), { metric: "share", by: null });
+  add(`How much foundation money goes to organizations${place}?`, { source: "foundation_grants", metric: "total", by: null, yearFrom: null, yearTo: null });
 }
 
 // Household giving (IRS SOI itemized charitable deductions): its own questions, no causes or funders.
@@ -133,10 +159,12 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
     count_orgs: () => {
       const subj = cause ? (/(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|churches|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`) : "nonprofits";
       const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
-      if (s.condition !== "deficit") add(`How many ${subj}${place} run deficits?`, { condition: "deficit" });
-      if (s.condition !== "low_cash") add(`How many ${subj}${place} have under 3 months of cash?`, { condition: "low_cash" });
-      if (s.condition !== "gov_reliant") add(`How many ${subj}${place} rely on government grants?`, { condition: "gov_reliant" });
-      add(`How much government money goes to ${subj}${place}?`, { metric: "total", source: "government_grants", condition: null });
+      if (s.condition !== "deficit") add(`How many ${subj}${place} run deficits?`, { condition: "deficit", by: null });
+      if (s.condition !== "low_cash") add(`How many ${subj}${place} have under 3 months of cash?`, { condition: "low_cash", by: null });
+      if (s.condition !== "gov_reliant") add(`How many ${subj}${place} rely on government grants?`, { condition: "gov_reliant", by: null });
+      if (s.by !== "year") add(`What share of ${subj}${place} ${s.condition === "low_cash" ? "have under 3 months of cash" : "run deficits"}, by year?`, { by: "year", condition: s.condition === "low_cash" ? "low_cash" : "deficit", streak: 0 });
+      if (s.by !== "recipient_size") add(`What share of ${subj}${place} ${s.condition === "low_cash" ? "have under 3 months of cash" : "run deficits"}, by revenue size?`, { by: "recipient_size", condition: s.condition === "low_cash" ? "low_cash" : "deficit", streak: 0, recipientSize: null });
+      add(`How much government money goes to ${subj}${place}?`, { metric: "total", source: "government_grants", condition: null, by: null });
     },
     top_recipients: () => {
       if (fed) add(`Which federal agencies give the most to nonprofits${forX}?`, { metric: "top_funders" });
@@ -190,6 +218,7 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   };
   next.share = next.total;
   if (s.source === "household_giving") { householdChips(s, add); return out.filter((o) => onTopic(o.spec, history)); }
+  if (s.source === "foundation_finances") { payoutChips(s, add); return out.filter((o) => onTopic(o.spec, history)); }
   if (one) next[s.metric]?.();
   // A thread that compares two causes keeps comparing them.
   if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare", premise: null })), { metric: "compare" });
@@ -248,7 +277,7 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 
 const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: llmSpecSchema });
 
-const cached = memo<Resolved>("follow-up:v3", 1000, 24 * 3600_000); // v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v5", 1000, 24 * 3600_000); // v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());

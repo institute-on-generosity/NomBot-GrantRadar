@@ -15,6 +15,7 @@ const climate = { name: "climate", label: "climate" as const, ntee: [], keywords
 const women = { name: "women and girls", label: "women_girls" as const, ntee: [], keywords: [] };
 const shelters = { name: "animal shelters", label: null, ntee: ["D20"], keywords: [] };
 const opioid = { name: "opioid addiction", label: null, ntee: [], keywords: ["opioid", "opioids"] };
+const substance = { name: "substance use and addiction", label: "substance_use" as const, ntee: [], keywords: [] };
 const one = async (sql: string, params: unknown[] = []) => Number(Object.values((await db.query(sql, params)).rows[0])[0]);
 
 // Independent checks: base tables, the miner's CLEAN filter written out again.
@@ -55,6 +56,8 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "concentration, climate", s: spec({ metric: "concentration", causes: [climate] }) },
   { name: "overlap climate x women", s: spec({ metric: "overlap_funders", causes: [climate, women] }) },
   { name: "opioid (keyword set) $", s: spec({ causes: [opioid] }) },
+  { name: "substance use OH (any tier)", s: spec({ causes: [substance], states: ["OH"] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_state='OH' AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='substance_use')`)] },
   { name: "gov-reliant human services, KY", s: spec({ metric: "count_orgs", causes: [{ name: "human services", label: null, ntee: ["P"], keywords: [] }], states: ["KY"], condition: "gov_reliant" }) },
   { name: "low cash, Cook County", s: spec({ metric: "count_orgs", county: "Cook County", states: ["IL"], condition: "low_cash" }) },
   { name: "gov grants top funders (partial)", s: spec({ metric: "top_funders", source: "government_grants", causes: [climate] }) },
@@ -116,9 +119,13 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "climate trend, 2022 primary $ in base-year dollars", s: spec({ metric: "trend", causes: [climate] }),
     check: async (a) => { const r = a.rows.find((x) => x.tax_year === 2022)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
       return [Number(r[k]), await one(`SELECT sum(g.amount) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1) / (SELECT value FROM cpi_u WHERE period='M13' AND year=2022) ${CLEAN} AND g.tax_year=2022 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate' AND tier='primary')`)]; } },
+  // a trend with no years runs 2020-2024 (G_TREND: first year e-filing was required)
   { name: "all foundation $ trend, growth after inflation", s: spec({ metric: "trend" }),
-    check: async (a) => [Number(a.numbers[1].value.replace(/[^0-9.\-−]/g, "").replace("−", "-")), await one(`WITH t AS (SELECT tax_year, sum(g.amount) AS usd ${CLEAN} AND g.tax_year IN (2022, 2024) GROUP BY 1), c AS (SELECT year, value FROM cpi_u WHERE period='M13')
-      SELECT round(100 * ((SELECT usd FROM t WHERE tax_year=2024) / (SELECT usd FROM t WHERE tax_year=2022) * (SELECT value FROM c WHERE year=2022) / (SELECT value FROM c WHERE year=2024) - 1), 1)`)] },
+    check: async (a) => [Number(a.numbers[1].value.replace(/[^0-9.\-−]/g, "").replace("−", "-")), await one(`WITH t AS (SELECT tax_year, sum(g.amount) AS usd ${CLEAN} AND g.tax_year IN (2020, 2024) GROUP BY 1), c AS (SELECT year, value FROM cpi_u WHERE period='M13')
+      SELECT round(100 * ((SELECT usd FROM t WHERE tax_year=2024) / (SELECT usd FROM t WHERE tax_year=2020) * (SELECT value FROM c WHERE year=2020) / (SELECT value FROM c WHERE year=2024) - 1), 1)`)] },
+  // years before e-filing was required: the answer uses them and says how much smaller they are (generosity-data 057)
+  { name: "trend since 2015: early-years coverage caveat", s: spec({ metric: "trend", yearFrom: 2015 }),
+    check: async (a) => [a.caveats.some((c) => /E-filing was optional/.test(c)) && a.rows.some((x) => x.tax_year === 2015) ? 1 : 0, 1] },
   { name: "federal awards trend, fiscal-year CPI", s: spec({ source: "federal_awards", metric: "trend" }),
     check: async (a) => { const r = a.rows.find((x) => x.fiscal_year === 2022)!; const k = Object.keys(r).find((x) => /_in_\d{4}_dollars$/.test(x))!;
       return [Number(r[k]), await one(`SELECT sum(amount) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1)
@@ -157,6 +164,32 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
       return [Number(r[k]), await one(`SELECT sum(charity_usd) * (SELECT value FROM cpi_u WHERE period='M13' ORDER BY year DESC LIMIT 1) / (SELECT value FROM cpi_u WHERE period='M13' AND year=2013) FROM soi_individual_county WHERE level='state' AND tax_year=2013`)]; } },
   { name: "household: Ohio counties per return (top)", s: spec({ source: "household_giving", metric: "breakdown", by: "county", states: ["OH"], perResident: true }),
     check: async (a) => [Number(a.rows[0].per_return), await one(`SELECT sum(charity_usd)::float8 / sum(returns) FROM soi_individual_county WHERE level='county' AND tax_year=2023 AND county_fips=$1`, [a.rows[0].key])] },
+  // Foundation finances (generosity-data 055, foundation_finances, 990-PF): payout rate = qualifying distributions /
+  // net investment assets, private operating foundations out, written on the base table (no view). Rates in basis points.
+  { name: "payout: median rate 2024 (bp)", s: spec({ metric: "share", source: "foundation_finances" }),
+    check: async (a) => [Math.round(Number(a.rows[0].median_payout_rate) * 1e4), Math.round(1e4 * await one(`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY coalesce(qualifying_distributions, 0)::numeric / net_investment_assets) FROM foundation_finances WHERE tax_year = 2024 AND net_investment_assets > 0 AND NOT coalesce(private_operating, false)`))] },
+  { name: "payout: share at 5% or more 2024 (bp)", s: spec({ metric: "share", source: "foundation_finances" }),
+    check: async (a) => [Math.round(Number(a.rows[0].share_at_5pct_or_more) * 1e4), Math.round(1e4 * await one(`SELECT avg((coalesce(qualifying_distributions, 0) >= 0.05 * net_investment_assets)::int) FROM foundation_finances WHERE tax_year = 2024 AND net_investment_assets > 0 AND NOT coalesce(private_operating, false)`))] },
+  { name: "payout by size: $1B and up median (bp)", s: spec({ metric: "breakdown", by: "funder_size", source: "foundation_finances" }),
+    check: async (a) => [Math.round(Number(a.rows.find((r) => r.group === "$1B and up")!.median_payout_rate) * 1e4), Math.round(1e4 * await one(`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY coalesce(qualifying_distributions, 0)::numeric / net_investment_assets) FROM foundation_finances WHERE tax_year = 2024 AND net_investment_assets > 0 AND NOT coalesce(private_operating, false) AND fmv_assets >= 1e9`))] },
+  { name: "payout trend: 2022 dollar-weighted rate (bp)", s: spec({ metric: "trend", source: "foundation_finances" }),
+    check: async (a) => [Math.round(Number(a.rows.find((r) => r.tax_year === 2022)!.dollar_weighted_payout_rate) * 1e4), Math.round(1e4 * await one(`SELECT sum(coalesce(qualifying_distributions, 0))::numeric / sum(net_investment_assets) FROM foundation_finances WHERE tax_year = 2022 AND net_investment_assets > 0 AND NOT coalesce(private_operating, false)`))] },
+  { name: "foundation finances vs IRS SOI 2022: net investment assets within 2%", s: spec({ metric: "share", source: "foundation_finances" }),
+    check: async (a) => [Math.abs(await one(`SELECT sum(net_investment_assets) / (SELECT value FROM benchmarks WHERE source = 'irs_soi_pf' AND measure = 'noncharitable_assets' AND year = 2022) FROM foundation_finances WHERE tax_year = 2022 AND NOT charitable_trust`) - 1) < 0.02 && a.coverage.some((c) => c.label === "Vs IRS SOI 2022") ? 1 : 0, 1] },
+  // Nonprofit finance panel (generosity-data 056, org_finance_year), checked on filing_flag: own Form 990 for the year,
+  // else the next year's Form 990 prior-year column.
+  { name: "food banks: deficits 2024 (Form 990, by year)", s: spec({ metric: "count_orgs", condition: "deficit", by: "year", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.find((r) => r.tax_year === 2024)!.met_condition), await one(`WITH own AS (SELECT DISTINCT ON (ein, tax_year) * FROM filing_flag ORDER BY ein, tax_year, object_id DESC),
+      y AS (SELECT ein, form, cy_revenue AS rev, cy_expenses AS exp FROM own WHERE tax_year = 2024
+            UNION ALL SELECT n.ein, '990', f.py_revenue, f.py_expenses FROM own n JOIN filing_flag f ON f.object_id = n.object_id
+              WHERE n.tax_year = 2025 AND n.form = '990' AND f.py_revenue IS NOT NULL AND f.py_expenses IS NOT NULL AND NOT EXISTS (SELECT 1 FROM own x WHERE x.ein = n.ein AND x.tax_year = 2024))
+      SELECT count(*) FROM y JOIN orgs o ON o.ein = y.ein WHERE y.form = '990' AND o.ntee_cd LIKE 'K31%' AND coalesce(o.foundation, '') NOT IN ('02','03','04') AND y.exp > y.rev`)] },
+  { name: "deficits by revenue size: under $100K, 2024", s: spec({ metric: "count_orgs", condition: "deficit", by: "recipient_size" }),
+    check: async (a) => [Number(a.rows.find((r) => r.revenue_band === "Under $100K")!.met_condition), await one(`SELECT count(*) FROM (SELECT DISTINCT ON (ein) * FROM filing_flag WHERE tax_year = 2024 ORDER BY ein, object_id DESC) f JOIN orgs o ON o.ein = f.ein
+      WHERE coalesce(o.foundation, '') NOT IN ('02','03','04') AND f.cy_revenue < 100000 AND f.cy_expenses > f.cy_revenue`)] },
+  { name: "median months of cash, nonprofits under $1M (x100)", s: spec({ metric: "count_orgs", condition: "low_cash", recipientSize: { min: null, max: 1e6 } }),
+    check: async (a) => [Math.round(Number(a.rows[0].median_months_cash) * 100), Math.round(100 * await one(`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY n.cash * 12.0 / n.cy_expenses) FROM (SELECT DISTINCT ON (f.ein) f.* FROM filing_flag f JOIN orgs o ON o.ein = f.ein
+      WHERE coalesce(o.foundation, '') NOT IN ('02','03','04') AND o.ein IN (SELECT ein FROM recipient_profile WHERE band BETWEEN 1 AND 3) ORDER BY f.ein, f.tax_year DESC, f.object_id DESC) n WHERE n.cy_expenses > 0 AND n.cash IS NOT NULL`))] },
 ];
 
 let fail = 0;
@@ -179,7 +212,8 @@ if (process.argv.includes("--route")) {
   const { routeQuestion } = await import("../lib/answerRoute");
   const qs = ["How much do donor-advised funds give to climate?", "Which federal agencies give the most to nonprofits in Ohio?", "Do high-poverty counties get less foundation money per resident?", "Which states get the most foundation money per person in poverty?", "Do community foundations or DAF sponsors give more to education?", "how much government money has gone to climate change?", "how much foundation money goes to women and girls in New York",
     "which states give the least foundation money per resident", "how many animal shelters in Ohio run deficits", "how much do individuals give to churches each year?",
-    "food banks in Ohio"];
+    "food banks in Ohio", "Are foundations paying out more than 5%?", "What is the median payout rate by foundation size?", "Is foundation payout rising or falling?",
+    "What share of food banks ran deficits each year?", "How many months of cash do small nonprofits have?"];
   for (const q of qs) {
     const t = Date.now();
     const r = await routeQuestion(q);

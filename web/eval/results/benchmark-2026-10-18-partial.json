@@ -1,0 +1,175 @@
+[
+ {
+  "id": "F08",
+  "cat": "funder types",
+  "q": "What is the average payout rate of private foundations?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/foundation_finances/all",
+  "headline": "In 2024 the median private foundation paid out 5.2% of its investment assets, and 55% paid out 5% or more",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1793,
+  "answerMs": 245,
+  "usage": {
+   "input": 7109,
+   "output": 174,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F09",
+  "cat": "funder types",
+  "q": "Do foundations pay out more than the 5% minimum?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "share/foundation_finances/all",
+  "headline": "In 2024 the median private foundation paid out 5.2% of its investment assets, and 55% paid out 5% or more",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1650,
+  "answerMs": 245,
+  "usage": {
+   "input": 7113,
+   "output": 174,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "F10",
+  "cat": "funder types",
+  "q": "How much did foundation assets grow from 2022 to 2024?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "trend/foundation_finances/all",
+  "headline": "The median private foundation paid out 5.7% of its investment assets in 2022 and 5.2% in 2024. 71% paid out 5% or more in 2022, 55% in 2024",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1752,
+  "answerMs": 224,
+  "usage": {
+   "input": 7115,
+   "output": 177,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N01",
+  "cat": "nonprofit finances",
+  "q": "How many food banks are running deficits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/foundation_grants/K31",
+  "headline": "507 of 1,958 food banks in the US with recent filings ran a deficit (26%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1927,
+  "answerMs": 169,
+  "usage": {
+   "input": 7106,
+   "output": 211,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N02",
+  "cat": "nonprofit finances",
+  "q": "How many nonprofits in Mississippi have less than three months of cash?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/revenue/all/MS",
+  "headline": "1,091 of 3,643 nonprofits in Mississippi with recent filings had under 3 months of cash (30%)",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 1668,
+  "answerMs": 252,
+  "usage": {
+   "input": 7117,
+   "output": 181,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N03",
+  "cat": "nonprofit finances",
+  "q": "How many animal shelters in Ohio run deficits?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/foundation_grants/D20/OH",
+  "headline": "137 of 334 Animal shelters in Ohio with recent filings ran a deficit (41%)",
+  "notes": [],
+  "review": "cause counted by NTEE codes, not a graded label: check what the set catches",
+  "checked": null,
+  "routeMs": 1751,
+  "answerMs": 134,
+  "usage": {
+   "input": 7112,
+   "output": 217,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N04",
+  "cat": "nonprofit finances",
+  "q": "How many nonprofits ran deficits two years in a row?",
+  "capability": [],
+  "status": "ok",
+  "engine": "ok",
+  "spec": "count_orgs/revenue/all",
+  "headline": "61,634 of 309,002 nonprofits in the US with recent filings ran deficits 2 years in a row (20%)",
+  "notes": [],
+  "review": null,
+  "checked": null,
+  "routeMs": 3538,
+  "answerMs": 4216,
+  "usage": {
+   "input": 7113,
+   "output": 177,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ },
+ {
+  "id": "N05",
+  "cat": "nonprofit finances",
+  "q": "How has total nonprofit revenue changed since 2015?",
+  "capability": [
+   "history_pre2022",
+   "finances_panel"
+  ],
+  "status": "partial",
+  "engine": "partial",
+  "spec": "trend/revenue/all",
+  "headline": "Revenue to all causes rose 8.4% (5.3% after inflation) from 2023 to 2024 (same 137,292 orgs). Our data starts in 2023, so 2015–2022 isn't included",
+  "notes": [
+   "missing: Years before 2023"
+  ],
+  "review": null,
+  "checked": null,
+  "routeMs": 1977,
+  "answerMs": 336,
+  "usage": {
+   "input": 7113,
+   "output": 173,
+   "cacheRead": 7089,
+   "cacheWrite": 0
+  }
+ }
+]

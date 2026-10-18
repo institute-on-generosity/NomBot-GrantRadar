@@ -13,7 +13,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "city", in: "query", type: "string", example: "Mansfield", desc: "City names, comma separated (up to 10)." },
       { name: "max_revenue", in: "query", type: "integer", example: "500000", desc: "Only organizations with revenue at or below this, in dollars." },
       { name: "ntee", in: "query", type: "string", example: "O", desc: "NTEE cause code prefix, e.g. K (food) or K31 (food banks)." },
-      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate or women_girls. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls or substance_use. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) keeps organizations whose main work is the cause. all also adds partial ones, where it is one named goal or program among broader work." },
       { name: "limit", in: "query", type: "integer", example: "10", desc: "Results to return, 1 to 50. Default 10." },
     ],
