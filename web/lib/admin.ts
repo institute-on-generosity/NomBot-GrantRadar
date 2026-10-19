@@ -22,6 +22,9 @@ export const HELPER_IP = "100.83.20.103";
 const TAILSCALE = "/Applications/Tailscale.app/Contents/MacOS/Tailscale";
 const BACKUP_DIR = join(homedir(), "Backups", "nombot");
 const BACKUP_LOG = join(homedir(), "Library", "Logs", "iog", "backup.log");
+// Off-machine copy to the Linux helper (~/iog-host/backup-offsite.sh): last good copy (JSON) and one log line per run.
+const OFFSITE_JSON = join(homedir(), "Library", "Logs", "iog", "backup-offsite.json");
+const OFFSITE_LOG = join(homedir(), "Library", "Logs", "iog", "backup-offsite.log");
 const LABEL_DEFS = join(homedir(), "Desktop", "generosity-data", "etl", "labels", "defs");
 export const STALE_HEARTBEAT_MS = 3 * 60_000;
 
@@ -116,6 +119,8 @@ export type HeartbeatPayload = {
   disks?: { mount: string; total_gb: number; free_gb: number }[];
   gpus?: { name: string; util?: number; mem_used_mb?: number; mem_total_mb?: number; temp_c?: number }[];
   jobs?: { pid: number; elapsed_s: number; kind: string; cmd: string }[];
+  // embed_worker.py status (cron every 10 min): rows still without a vector, last run, rows written, result.
+  embedding?: { pending?: number | null; last_run?: string; done?: number; result?: string; device?: string; tagging?: boolean } | null;
 };
 export type Helper = {
   tailscale: { found: boolean; online: boolean; lastSeen: string | null; host: string | null; os: string | null; error: string | null };
@@ -442,7 +447,10 @@ export const keys = () => cached<KeyRow[]>(minute, "keys", async () => {
 });
 
 // ---------- 7. Backups ----------
-export type Backups = { dumps: { file: string; at: string; bytes: number }[]; latest: { file: string; at: string; bytes: number } | null; lastLog: string | null; ok: boolean; level: Level };
+export type Backups = {
+  dumps: { file: string; at: string; bytes: number }[]; latest: { file: string; at: string; bytes: number } | null; lastLog: string | null; ok: boolean; level: Level;
+  offsite: { file: string; at: string; bytes: number; kept: number | null; level: Level } | null; offsiteLog: string | null;
+};
 export const backups = () => cached<Backups>(minute, "backups", async () => {
   let dumps: Backups["dumps"] = [];
   try {
@@ -457,7 +465,13 @@ export const backups = () => cached<Backups>(minute, "backups", async () => {
   } catch { /* no log */ }
   const ok = !!lastLog && /backup ok/.test(lastLog);
   const age = dumps[0] ? Date.now() - Date.parse(dumps[0].at) : Infinity;
-  return { dumps, latest: dumps[0] ?? null, lastLog, ok, level: !ok || age > 50 * 3600_000 ? "bad" : age > 26 * 3600_000 ? "warn" : "ok" };
+  let offsite: Backups["offsite"] = null, offsiteLog: string | null = null;
+  try {
+    const o = JSON.parse(await readFile(OFFSITE_JSON, "utf8"));
+    offsite = { ...o, level: Date.now() - Date.parse(o.at) > 50 * 3600_000 ? "warn" : "ok" };
+  } catch { /* never copied */ }
+  try { offsiteLog = (await readFile(OFFSITE_LOG, "utf8")).trim().split("\n").filter((l) => l.trim()).at(-1)?.slice(0, 200) ?? null; } catch { /* no log */ }
+  return { dumps, latest: dumps[0] ?? null, lastLog, ok, offsite, offsiteLog, level: !ok || age > 50 * 3600_000 ? "bad" : age > 26 * 3600_000 ? "warn" : "ok" };
 });
 
 // ---------- formatting ----------

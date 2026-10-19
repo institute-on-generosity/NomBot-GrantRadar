@@ -149,6 +149,7 @@ async function HelperSection() {
   const mem = p?.mem;
   const disk = p?.disks?.find((d) => d.mount === "/home") ?? p?.disks?.[0];
   const gpu = p?.gpus?.[0];
+  const emb = p?.embedding;
   const spec = {
     width: "container", height: 110,
     data: { values: h.history.flatMap((r) => [
@@ -175,6 +176,9 @@ async function HelperSection() {
           text={disk ? `${fmtBytes(disk.free_gb * 1024 ** 3)} free of ${fmtBytes(disk.total_gb * 1024 ** 3)}` : "no data"} />
         <Card label="GPU" value={gpu ? `${gpu.util ?? "–"}%` : "–"}
           detail={gpu ? `${gpu.name}, ${fmtBytes((gpu.mem_used_mb ?? 0) * 1024 ** 2)} of ${fmtBytes((gpu.mem_total_mb ?? 0) * 1024 ** 2)}, ${gpu.temp_c ?? "–"}°C` : "no data"} />
+        <Card label="Embedding" level={!emb ? "off" : emb.result?.startsWith("error") ? "bad" : "ok"}
+          value={emb ? `${(emb.pending ?? 0).toLocaleString()} pending` : "–"}
+          detail={emb ? `last run ${emb.last_run ? agoText(emb.last_run) : "unknown"}${emb.result && emb.result !== "ok" ? `, ${emb.result}` : ""}${emb.device ? ` on ${emb.device}` : ""}` : "embed_worker.py has not run"} />
       </div>
       <div className={s.grid2}>
         {h.history.length > 1 && <Chart title="Last 2 hours" spec={spec} label="Linux helper CPU, GPU and memory use, percent" />}
@@ -374,7 +378,11 @@ async function BackupsSection() {
         <Card label="Kept" value={`${b.dumps.length}`} detail="newest 3 are kept" />
         <Card label="Last run" level={b.ok ? "ok" : "bad"} value={b.ok ? "success" : "check log"} detail={b.lastLog ?? "no log"} />
       </div>
-      <div className={s.banner}><Dot level="warn" />No off-machine copy. Every dump lives on this Mac only.</div>
+      {b.offsite ? (
+        <div className={s.banner}><Dot level={b.offsite.level} />Off-machine copy: {when(b.offsite.at)}, {b.offsite.file} on the Linux helper ({b.offsite.kept ?? "?"} kept){b.offsiteLog && !/copy ok/.test(b.offsiteLog) ? `. Last try: ${b.offsiteLog}` : ""}</div>
+      ) : (
+        <div className={s.banner}><Dot level="warn" />No off-machine copy yet. {b.offsiteLog ?? "Every dump lives on this Mac only."}</div>
+      )}
       {b.dumps.length > 0 && (
         <div className={s.tableWrap}>
           <table className={s.table}>
