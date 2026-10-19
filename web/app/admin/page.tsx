@@ -1,4 +1,4 @@
-// Internal admin dashboard: database, live site, Linux helper, data freshness, cause labels, API, keys, backups.
+// Internal admin dashboard: database, live site, Linux helper, data freshness, cause labels, API, API calls, keys, backups.
 // Not linked from any page. proxy.ts asks for ADMIN_PASSWORD (signed cookie, lib/adminAuth.ts) after the site
 // password, and this page checks the cookie again. Data: lib/admin.ts (cached 30 s to 10 min).
 import { Suspense, type ReactNode } from "react";
@@ -9,6 +9,7 @@ import { ADMIN_COOKIE, isAdminCookie } from "@/lib/adminAuth";
 import {
   agoText, apiStats, backups, BARS, dataFreshness, fmtBytes, health, helper, keys, labels, STALE_HEARTBEAT_MS, FUNNEL, type Level,
 } from "@/lib/admin";
+import { ApiCalls } from "./ApiCalls";
 import { AutoRefresh } from "./AutoRefresh";
 import s from "./admin.module.css";
 
@@ -16,7 +17,7 @@ export const metadata = { title: "Admin · NomBot", robots: { index: false, foll
 
 const SECTIONS = [
   ["health", "Health"], ["helper", "Linux helper"], ["data", "Data"], ["labels", "Cause labels"],
-  ["api", "API and MCP"], ["keys", "Keys and apps"], ["backups", "Backups"],
+  ["api", "API and MCP"], ["calls", "API calls"], ["keys", "Keys and apps"], ["backups", "Backups"],
 ] as const;
 
 export default function AdminPage() {
@@ -49,6 +50,7 @@ async function Gate() {
       <Suspense fallback={wait("data")}><DataSection /></Suspense>
       <Suspense fallback={wait("labels")}><LabelsSection /></Suspense>
       <Suspense fallback={wait("API")}><ApiSection /></Suspense>
+      <Section id="calls" title="API calls" aside="every keyed call, newest first, kept 90 days"><ApiCalls /></Section>
       <Suspense fallback={wait("keys")}><KeysSection /></Suspense>
       <Suspense fallback={wait("backups")}><BackupsSection /></Suspense>
       <p className={s.foot}>Live checks cache 30 s, counts 60 s, sampled stats 10 min. Not linked from the site.</p>

@@ -12,6 +12,7 @@ import { promisify } from "node:util";
 import { db } from "./db";
 import { memo } from "./memo";
 import { ENDPOINTS, MCP_TOOLS } from "./apiDocs";
+import { CALL_TZ, fmtCallTime } from "./callTime";
 
 const run = promisify(execFile);
 export type Level = "ok" | "warn" | "bad" | "off";
@@ -343,6 +344,86 @@ async function routeExists(path: string) {
   const file = join(process.cwd(), "app", ...path.split("/").filter(Boolean).map((p) => p.replace(/^\{(\w+)\}$/, "[$1]")), "route.ts");
   return stat(file).then(() => true, () => false);
 }
+
+// ---------- 5b. API calls (per-call log, lib/apiLog.ts, migration 062) ----------
+// Live, not cached: the tab polls every 5 s while live tail is on. Every filter is a bound parameter.
+export const CALL_RANGES = { "15m": "15 minutes", "1h": "1 hour", "24h": "24 hours", "7d": "7 days", "30d": "30 days", "90d": "90 days" } as const;
+export type CallFilters = {
+  key?: string; app?: string; route?: string; tool?: string; status?: string;
+  range?: string; from?: string; to?: string; page?: number; size?: number;
+};
+export type CallRow = {
+  id: number; at: string; key: string | null; app: string | null; route: string; path: string; method: string;
+  tool: string | null; status: number; ms: number | null; rows: number | null; ua: string | null; ip: string | null;
+};
+export type CallSummary = { perMinute: { minute: string; n: number; errors: number }[]; topApps: { app: string; key: string | null; n: number }[]; today: number };
+export type CallFacets = { keys: string[]; apps: string[]; routes: string[]; tools: string[] };
+
+const LOCAL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
+function callWhere(f: CallFilters) {
+  const where: string[] = [], params: unknown[] = [];
+  const add = (sql: string, v: unknown) => { params.push(v); where.push(sql.replace("?", `$${params.length}`)); };
+  if (f.key === "(none)") where.push("key_name IS NULL"); else if (f.key) add("key_name = ?", f.key);
+  if (f.app === "(none)") where.push("app IS NULL"); else if (f.app) add("app = ?", f.app);
+  if (f.route) add("route = ?", f.route);
+  if (f.tool) add("mcp_tool = ?", f.tool);
+  if (f.status && /^[1-5]xx$/.test(f.status)) add("status / 100 = ?", Number(f.status[0]));
+  // from / to: wall-clock time in New York (datetime-local inputs), converted by Postgres.
+  if (f.from && LOCAL_TIME.test(f.from)) add(`at >= (?::timestamp AT TIME ZONE '${CALL_TZ}')`, f.from);
+  if (f.to && LOCAL_TIME.test(f.to)) add(`at < (?::timestamp AT TIME ZONE '${CALL_TZ}')`, f.to);
+  const range = CALL_RANGES[(f.range ?? "") as keyof typeof CALL_RANGES];
+  if (range && !f.from && !f.to) where.push(`at > now() - interval '${range}'`);
+  return { sql: where.length ? `WHERE ${where.join(" AND ")}` : "", params };
+}
+
+type RawCall = { id: string; at: Date; key_name: string | null; app: string | null; route: string; path: string; method: string; mcp_tool: string | null; status: number; ms: number | null; rows_returned: number | null; user_agent: string | null; client_ip: string | null };
+const toCall = (r: RawCall): CallRow => ({
+  id: Number(r.id), at: new Date(r.at).toISOString(), key: r.key_name, app: r.app, route: r.route, path: r.path, method: r.method,
+  tool: r.mcp_tool, status: r.status, ms: r.ms, rows: r.rows_returned, ua: r.user_agent, ip: r.client_ip,
+});
+const CALL_COLS = "id, at, key_name, app, route, path, method, mcp_tool, status, ms, rows_returned, user_agent, host(client_ip) AS client_ip";
+
+export async function apiCalls(f: CallFilters) {
+  const w = callWhere(f);
+  const size = Math.min(200, Math.max(10, f.size ?? 50)), page = Math.max(0, f.page ?? 0);
+  const [list, [{ n }]] = await Promise.all([
+    rows<RawCall>(`SELECT ${CALL_COLS} FROM api_calls ${w.sql} ORDER BY at DESC, id DESC LIMIT ${size} OFFSET ${page * size}`, w.params),
+    rows<{ n: string }>(`SELECT count(*) AS n FROM api_calls ${w.sql}`, w.params),
+  ]);
+  return { rows: list.map(toCall), total: Number(n), page, size };
+}
+
+// CSV export of the filtered view, newest first, up to 50,000 rows.
+export async function apiCallsCsv(f: CallFilters) {
+  const w = callWhere(f);
+  const list = (await rows<RawCall>(`SELECT ${CALL_COLS} FROM api_calls ${w.sql} ORDER BY at DESC, id DESC LIMIT 50000`, w.params)).map(toCall);
+  const cell = (v: unknown) => { const t = v == null ? "" : String(v); return /[",\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+  const head = ["at_utc", "at_new_york", "key_name", "app", "method", "route", "mcp_tool", "status", "ms", "rows_returned", "path", "user_agent", "client_ip"];
+  const lines = list.map((r) => [r.at, fmtCallTime(r.at), r.key, r.app, r.method, r.route, r.tool, r.status, r.ms, r.rows, r.path, r.ua, r.ip].map(cell).join(","));
+  return [head.join(","), ...lines].join("\r\n") + "\r\n";
+}
+
+// Calls per minute over the last hour, and top apps today (New York day).
+export async function callSummary(): Promise<CallSummary> {
+  const [perMinute, topApps] = await Promise.all([
+    rows<{ minute: Date; n: string; errors: string }>(`SELECT date_trunc('minute', at) AS minute, count(*) AS n, count(*) FILTER (WHERE status >= 400) AS errors
+      FROM api_calls WHERE at > now() - interval '60 minutes' GROUP BY 1 ORDER BY 1`),
+    rows<{ app: string; key: string | null; n: string }>(`SELECT coalesce(app, '(none)') AS app, key_name AS key, count(*) AS n FROM api_calls
+      WHERE at >= date_trunc('day', now() AT TIME ZONE '${CALL_TZ}') AT TIME ZONE '${CALL_TZ}' GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 8`),
+  ]);
+  const top = topApps.map((r) => ({ app: r.app, key: r.key, n: Number(r.n) }));
+  return {
+    perMinute: perMinute.map((r) => ({ minute: new Date(r.minute).toISOString(), n: Number(r.n), errors: Number(r.errors) })),
+    topApps: top, today: top.reduce((s, r) => s + r.n, 0),
+  };
+}
+
+// Values for the filter menus, from the last 90 days.
+export const callFacets = () => cached<CallFacets>(minute, "callFacets", async () => {
+  const col = (c: string) => rows<{ v: string }>(`SELECT DISTINCT ${c} AS v FROM api_calls WHERE ${c} IS NOT NULL ORDER BY 1 LIMIT 200`).then((r) => r.map((x) => x.v));
+  const [keys, apps, routes, tools] = await Promise.all([col("key_name"), col("app"), col("route"), col("mcp_tool")]);
+  return { keys, apps, routes, tools };
+});
 
 // ---------- 6. Keys and connected apps ----------
 export type KeyRow = { id: number; name: string; prefix: string; scopes: string[]; rate: number; created: string; lastUsed: string | null; calls30: number; revoked: boolean; unused: boolean };

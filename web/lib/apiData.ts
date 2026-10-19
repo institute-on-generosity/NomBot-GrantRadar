@@ -5,6 +5,7 @@
 // indexes; the rest use the tables' own indexes. Shapes are documented in lib/apiDocs.ts.
 import { db } from "./db";
 import { keyed, apiError } from "./apiAuth";
+import { countRows, withRows } from "./apiLog";
 import { FUNDER_CLASS } from "./orgFunding";
 import { LABEL_SLUGS, isLabel } from "./labels";
 
@@ -553,7 +554,7 @@ export function listRoute<C>(route: string, fn: (p: In, ctx: C) => Promise<unkno
     const p: In = Object.fromEntries(new URL(request.url).searchParams);
     try {
       const out = await fn(p, ctx);
-      return out == null ? apiError(404, "not_found", notFound) : Response.json(out);
+      return out == null ? apiError(404, "not_found", notFound) : withRows(Response.json(out), countRows(out));
     } catch (e) {
       if (e instanceof BadParam) return apiError(400, "bad_param", e.message);
       throw e;

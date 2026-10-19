@@ -11,6 +11,8 @@ Full reference: **`/api/docs`** (human) and **`/api/openapi.json`** (OpenAPI 3.1
 | **Auth** | `Authorization: Bearer <YOUR_KEY>` on every call (REST and MCP). Never in the URL. |
 | **Your rate limit** | **120 requests per minute** per key |
 | **Methods** | `GET` for REST, `POST` for MCP. Nothing you send changes the data. |
+| **Name your app** | Optional `X-App` header, e.g. `X-App: muneeb-rag`. Helps us tell your apps apart |
+| **Call log** | Each call is logged with time, endpoint or MCP tool, status, key name and app, kept **90 days**. Never the key itself |
 
 Your key looks like `nb_live_…`. We keep only a fingerprint of it, so we can't resend it. Store it like a password.
 
@@ -25,6 +27,7 @@ import os, requests
 BASE = "https://thes-macbook-air.tail3090cf.ts.net"
 S = requests.Session()
 S.headers["Authorization"] = f"Bearer {os.environ['NOMBOT_KEY']}"
+S.headers["X-App"] = "muneeb-rag"  # optional: name your app
 
 def get(path, **params):
     r = S.get(BASE + path, params=params, timeout=60)
@@ -190,6 +193,7 @@ print(resp.output_text)
 
 - The chat apps at **claude.ai** and **chatgpt.com** add custom connectors through OAuth sign-in, which NomBot doesn't offer yet. Use Claude Code, Claude Desktop or the APIs above.
 - List tools take `cursor` too: the model passes `next_cursor` back for more rows.
+- Add `X-App` as a second header to name the app, e.g. `--header "X-App: muneeb-claude"`. Without it, the call log shows the MCP client's own name.
 
 ## 6. Data caveats
 

@@ -1,5 +1,5 @@
 // Partner API docs: public (proxy.ts lets /api/docs through the site password), static, built from lib/apiDocs.ts.
-import { PUBLIC_ENDPOINTS as ENDPOINTS, ERRORS, PUBLIC_MCP_TOOLS as MCP_TOOLS } from "@/lib/apiDocs";
+import { APP_HEADER, CALL_LOG_NOTE, PUBLIC_ENDPOINTS as ENDPOINTS, ERRORS, PUBLIC_MCP_TOOLS as MCP_TOOLS } from "@/lib/apiDocs";
 
 export const metadata = { title: "API · NomBot", description: "Keyed, read-only API and remote MCP server for NomBot's nonprofit, grant, finance, giving and policy data and research." };
 
@@ -85,12 +85,12 @@ export default function ApiDocs() {
         <ol className="apidoc-steps">
           <li>Ask your Institute on Generosity contact for a key. It looks like <code>nb_live_…</code>. We keep only a fingerprint of it and can&apos;t send it again, so store it like a password.</li>
           <li>Set the base URL you were given and your key.</li>
-          <li>Call any endpoint with the key in the <code>Authorization</code> header.</li>
+          <li>Call any endpoint with the key in the <code>Authorization</code> header. Optional: name your app with <code>X-App</code>, e.g. <code>X-App: muneeb-rag</code>.</li>
         </ol>
         <Code>{`export NOMBOT="https://<host>"     # the address we sent you
 export NOMBOT_KEY="nb_live_..."
 
-curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&state=WV"`}</Code>
+curl -H "Authorization: Bearer $NOMBOT_KEY" -H "X-App: muneeb-rag" "$NOMBOT/api/v1/search?q=food+bank&state=WV"`}</Code>
       </section>
 
       <section id="auth">
@@ -98,6 +98,8 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&s
         <ul className="apidoc-list">
           <li><b>Auth:</b> <code>Authorization: Bearer nb_live_…</code> on every request, REST and MCP alike. Keys never go in the URL.</li>
           <li><b>Rate limit:</b> 60 requests per minute per key unless agreed otherwise. Responses carry <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code> and <code>X-RateLimit-Reset</code> (seconds). Over the limit you get 429 with <code>Retry-After</code>.</li>
+          <li><b>Name your app:</b> optional <code>X-App</code> header on any request, REST or MCP, e.g. <code>X-App: {APP_HEADER.example}</code>, so we can tell your apps apart in the call log. Up to 60 characters.</li>
+          <li><b>Call log:</b> {CALL_LOG_NOTE}</li>
           <li><b>Read-only:</b> all endpoints are GET (MCP uses POST for JSON-RPC). Nothing you send changes the data.</li>
           <li><b>No AI in the loop:</b> no endpoint or MCP tool calls a language model. Search ranks by meaning with a local embedding model plus keyword match, so results are fast and repeatable.</li>
           <li><b>Stable shapes:</b> fields may be added under <code>/api/v1</code>, never renamed or removed.</li>

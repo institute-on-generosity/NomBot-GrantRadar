@@ -7,6 +7,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticate, record, baseUrl, type Auth } from "@/lib/apiAuth";
+import { countRows, describe, logCall, rememberMcpClient, requestKey, clientIp } from "@/lib/apiLog";
 import { apiSearch, apiOrg, apiResearchList, apiResearch, SECTION_KEYS } from "@/lib/api";
 import { answer, answerBrief } from "@/lib/answer";
 import { DEFAULT_SPEC, normalizeSpec, specSchema } from "@/lib/answerSpec";
@@ -19,7 +20,10 @@ const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: 
 type Result = { content: { type: "text"; text: string }[]; isError?: boolean };
 class BadInput extends Error {} // shown to the caller as a tool error
 
-function server(auth: Auth, base: string) {
+// What the tool call did, for the per-call log (lib/apiLog.ts): its own status (a tool error is still HTTP 200) and rows.
+type CallOutcome = { status: number | null; rows: number | null };
+
+function server(auth: Auth, base: string, outcome: CallOutcome) {
   const s = new McpServer(
     { name: "nombot", title: "NomBot (Institute on Generosity)", version: "1.0.0" },
     { instructions: "Public IRS data on US nonprofits and foundations: search organizations in plain language, look one up by EIN (financials, leaders, foundation grants), read verified research findings, and page through raw rows (grants, federal awards, finances by year, household giving, cause labels, bills, Federal Register, news). List tools return next_cursor: pass it back as cursor for the next page. Amounts are US dollars. Cite the sources and urls returned." },
@@ -29,21 +33,23 @@ function server(auth: Auth, base: string) {
   const run = (tool: string, fn: () => Promise<unknown>) => async (): Promise<Result> => {
     const t0 = performance.now();
     const ms = () => performance.now() - t0;
+    const done = (status: number) => { outcome.status = status; record(auth.key.id, `mcp:${tool}`, status, ms()); };
     try {
       const out = await fn();
       if (out == null) {
-        record(auth.key.id, `mcp:${tool}`, 404, ms());
+        done(404);
         return { content: [{ type: "text", text: "Not found." }], isError: true };
       }
-      record(auth.key.id, `mcp:${tool}`, 200, ms());
+      done(200);
+      outcome.rows = countRows(out);
       return { content: [{ type: "text", text: JSON.stringify(out) }] };
     } catch (e) {
       if (e instanceof BadInput || e instanceof BadParam) {
-        record(auth.key.id, `mcp:${tool}`, 400, ms());
+        done(400);
         return { content: [{ type: "text", text: e.message }], isError: true };
       }
       console.error(`mcp ${tool} failed`, e);
-      record(auth.key.id, `mcp:${tool}`, 500, ms());
+      done(500);
       return { content: [{ type: "text", text: "Something went wrong on our side. Try again." }], isError: true };
     }
   };
@@ -231,13 +237,31 @@ function server(auth: Auth, base: string) {
   return s;
 }
 
+type RpcMessage = { method?: unknown; params?: { name?: unknown; clientInfo?: { name?: unknown } } };
+
 async function handle(request: Request) {
+  const at = new Date(), start = performance.now();
+  const keyed = request.headers.has("authorization");
+  // The JSON-RPC body, read from a copy (the transport reads the original): method, tool name, client name.
+  const body: unknown = keyed && request.method === "POST" ? await request.clone().json().catch(() => null) : null;
+  const messages = (Array.isArray(body) ? body : body ? [body] : []) as RpcMessage[];
+  const tool = messages.map((m) => (m.method === "tools/call" && typeof m.params?.name === "string" ? m.params.name : typeof m.method === "string" ? m.method : "?"))
+    .join(",").slice(0, 100) || null;
+  const log = (status: number, rows: number | null = null) => {
+    if (keyed) logCall({ ...describe(request, requestKey.get(request) ?? null), at, route: "/mcp", mcpTool: tool, status, ms: performance.now() - start, rows });
+  };
+
   const auth = await authenticate(request);
-  if (auth instanceof Response) return auth;
-  const s = server(auth, baseUrl(request));
+  if (auth instanceof Response) { log(auth.status); return auth; }
+  // initialize carries clientInfo: remember it so this client's later calls (no clientInfo) show its name as the app.
+  const init = messages.find((m) => m.method === "initialize");
+  if (init) rememberMcpClient(auth.key.id, clientIp(request), typeof init.params?.clientInfo?.name === "string" ? init.params.clientInfo.name : null);
+  const outcome: CallOutcome = { status: null, rows: null };
+  const s = server(auth, baseUrl(request), outcome);
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   await s.connect(transport);
   const res = await transport.handleRequest(request);
+  log(outcome.status ?? res.status, outcome.rows);
   for (const [k, v] of Object.entries(auth.headers)) res.headers.set(k, v);
   return res;
 }

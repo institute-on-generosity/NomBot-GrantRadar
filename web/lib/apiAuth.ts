@@ -6,6 +6,7 @@
 // per app, so it is exact there; behind several processes each one counts on its own).
 import { createHash, randomBytes } from "node:crypto";
 import { db } from "./db";
+import { describe, logCall, requestKey, rowsOf } from "./apiLog";
 
 export type ApiKey = { id: number; name: string; scopes: string[]; rate_per_min: number };
 // Read-only scopes a key can hold: "read" (public data, /api/v1/* and the MCP data tools) and "iog_internal"
@@ -62,6 +63,7 @@ export async function authenticate(request: Request, scope = "read"): Promise<Au
     return apiError(503, "unavailable", "The API is unavailable right now. Try again shortly.");
   }
   if (!key) return apiError(401, "invalid_key", "This API key is not recognized.", challenge);
+  requestKey.set(request, { id: key.id, name: key.name });
   if (key.revoked) return apiError(403, "revoked_key", "This API key has been revoked.");
   if (!key.scopes.includes(scope)) return apiError(403, "insufficient_scope", `This API key lacks the "${scope}" scope.`);
   const r = rate(key);
@@ -96,8 +98,12 @@ export function record(keyId: number, route: string, status: number, ms = 0) {
 // scope: what the key must hold ("read" for the public-data API, "iog_internal" for /api/v1/iog/*).
 export function keyed<R extends Request, C>(route: string, handler: (request: R, ctx: C, auth: Auth) => Promise<Response>, scope = "read") {
   return async (request: R, ctx: C) => {
+    const at = new Date(), start = performance.now();
     const auth = await authenticate(request, scope);
-    if (auth instanceof Response) return auth;
+    if (auth instanceof Response) {
+      logKeyed(request, route, auth, at, start);
+      return auth;
+    }
     let res: Response;
     const t0 = performance.now();
     try {
@@ -107,10 +113,18 @@ export function keyed<R extends Request, C>(route: string, handler: (request: R,
       res = apiError(500, "server_error", "Something went wrong on our side.");
     }
     record(auth.key.id, route, res.status, performance.now() - t0);
+    logKeyed(request, route, res, at, start);
     for (const [k, v] of Object.entries(auth.headers)) res.headers.set(k, v);
     if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", "no-store");
     return res;
   };
+}
+
+// One api_calls row (lib/apiLog.ts) per call that sent an Authorization header, including refused ones.
+// Keyless calls (401 missing_key, the dashboard's health probes) are not logged.
+function logKeyed(request: Request, route: string, res: Response, at: Date, start: number) {
+  if (!request.headers.has("authorization")) return;
+  logCall({ ...describe(request, requestKey.get(request) ?? null), at, route, mcpTool: null, status: res.status, ms: performance.now() - start, rows: rowsOf(res) });
 }
 
 // Public origin for absolute links: PUBLIC_BASE_URL, else the forwarded host (Cloudflare tunnel), else the request.

@@ -446,6 +446,15 @@ export const ENDPOINTS: Endpoint[] = [
   },
 ];
 
+// Optional X-App request header: the caller names its app, shown on IoG's API call log (lib/apiLog.ts).
+export const APP_HEADER = {
+  name: "X-App",
+  desc: "Optional. Name your app, e.g. X-App: muneeb-rag, so IoG can tell your apps apart in the call log. Letters, digits and . _ : / @ + ( ) - only, up to 60 characters.",
+  example: "muneeb-rag",
+};
+// What the call log keeps (lib/apiLog.ts, api_calls). Shown on /api/docs and in the OpenAPI description.
+export const CALL_LOG_NOTE = "Each call is logged with its time, endpoint or MCP tool, status, duration, query string, key name, app, user agent and IP, and kept for 90 days. The key itself, passwords and the Authorization header are never logged.";
+
 export const ERRORS = [
   { status: 400, code: "bad_ein", when: "The EIN isn't 9 digits." },
   { status: 400, code: "bad_param", when: "A parameter is out of range or malformed (the message names it), or the cursor was edited." },
@@ -493,7 +502,7 @@ export function openapi(server: string, includeInternal = false) {
     openapi: "3.1.0",
     info: {
       title: "NomBot API", version: "1.0.0",
-      description: "Read-only access to public IRS data on US nonprofits and foundations (organizations, grants, finances by year), federal awards, IRS household giving, graded cause labels, bills, Federal Register documents and sector news, plus NomBot's verified research findings. List endpoints page with limit and cursor. Institute on Generosity. Human docs: /api/docs. Remote MCP server: POST /mcp with the same key.",
+      description: "Read-only access to public IRS data on US nonprofits and foundations (organizations, grants, finances by year), federal awards, IRS household giving, graded cause labels, bills, Federal Register documents and sector news, plus NomBot's verified research findings. List endpoints page with limit and cursor. Institute on Generosity. Human docs: /api/docs. Remote MCP server: POST /mcp with the same key. Optional header X-App names your app (e.g. X-App: muneeb-rag). " + CALL_LOG_NOTE,
     },
     servers: [{ url: server }],
     security: [{ bearer: [] }],
@@ -506,8 +515,9 @@ export function openapi(server: string, includeInternal = false) {
         operationId: e.id.replace(/-(\w)/g, (_, c) => c.toUpperCase()),
         summary: e.title, description: e.summary,
         ...(e.scope ? { security: [{ bearer: [e.scope] }], "x-required-scope": e.scope, tags: ["IoG internal"] } : {}),
-        parameters: e.params.map((p) => ({ name: p.name, in: p.in, required: p.in === "path" || !!p.required, description: p.desc, schema: { type: p.type },
+        parameters: [...e.params.map((p) => ({ name: p.name, in: p.in, required: p.in === "path" || !!p.required, description: p.desc, schema: { type: p.type },
           ...(p.example == null ? {} : { example: p.type === "integer" ? Number(p.example) : p.type === "boolean" ? p.example === "true" : p.example }) })),
+          { name: APP_HEADER.name, in: "header", required: false, description: APP_HEADER.desc, schema: { type: "string" }, example: APP_HEADER.example }],
         responses: {
           200: { description: "OK", content: { "application/json": { schema: schemaFor(e.example), example: e.example } } },
           ...Object.fromEntries([...new Set(ERRORS.map((x) => x.status))].map((s) => [String(s), { description: ERRORS.filter((x) => x.status === s).map((x) => `${x.code}: ${x.when}`).join(" "), content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } }])),
