@@ -17,6 +17,7 @@ import { LOADED_STATES } from "./filters";
 import { money } from "../components/money";
 import { orgName } from "../components/text";
 import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
+import { fedProgram, type FedProgram } from "./fedPrograms";
 
 export type Num = { value: string; label: string; note?: string };
 export type Row = Record<string, string | number | boolean | null>;
@@ -124,7 +125,8 @@ class Ctx {
 // A cause as SQL: a join and/or WHERE terms on the alias's EIN and NTEE columns. tier: the label's tier column.
 // all: a subject with no cause restriction (e.g. "organizations under $1M", where only the filters apply).
 type C = Cause & { all?: boolean; via?: string }; // via: the cause_terms / NTEE name a plain-English cause matched
-type CauseSql = { join: string; where: string[]; tier: string | null; kind: "label" | "ntee" | "keyword" | "all"; primaryOnly?: boolean };
+// kind program: a named federal program (federal_awards only, lib/fedPrograms), matched on the assistance listing.
+type CauseSql = { join: string; where: string[]; tier: string | null; kind: "label" | "ntee" | "keyword" | "all" | "program"; primaryOnly?: boolean; program?: FedProgram };
 function tsq(keywords: string[]): string {
   return keywords.map((k) => k.split(/[^a-z0-9]+/).filter(Boolean).join(" <-> ")).filter(Boolean).map((k) => `(${k})`).join(" | ");
 }
@@ -423,6 +425,7 @@ LEFT JOIN (SELECT year, sum(value)::float8 AS soi FROM benchmarks WHERE source I
 
 async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<string> {
   if (!c || cs.kind === "all") return c?.all ? `All causes, ${c.name}.` : "All causes.";
+  if (cs.kind === "program") return `Federal program: ${cs.program!.name}, assistance listing${cs.program!.cfda.length > 1 ? "s" : ""} ${cs.program!.cfda.map((n) => n.replace("%", "*")).join(", ")} (matched to "${c.name}"). Every award under the program counts, whoever the recipient, not recipients' NTEE codes or labels.`;
   const via = c.via ? ` Matched to codes through our cause taxonomy (term "${c.via}").` : "";
   if (cs.kind === "label") {
     const g = (await grades())[c.label!];
@@ -726,7 +729,10 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // panel (deficits, cash, government reliance by year or revenue size; 056); median months of cash in org counts.
 // v26: two-cause top funders / recipients (both ranked lists and their overlap), readable foundation names
 // (orgName), and a guard that names any spec cause no query restricted to.
-const answerMemo = memo<Answer>("answer:v26", 500, 6 * 3600_000);
+// v27: housing_homelessness label (generosity-data org_labels, graded g1).
+// v28: causes that name a federal program (Head Start, AmeriCorps ...) match its assistance listings on federal
+// awards (lib/fedPrograms); a cause that matched nothing is unanswerable, never "$0".
+const answerMemo = memo<Answer>("answer:v28", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -746,6 +752,12 @@ async function compute(question: string, s: Spec, cube: boolean): Promise<Answer
     out = { status: "unanswerable", headline: e.message, numbers: [], bullets: [], chart: null, rows: [], causeNote: "", method: "", caveats: [], coverage: [], sources: [], searchQuery: null };
     if (e.missing) missing.push(e.missing);
   }
+  // Never "$0" as fact for a cause: a cause filter that matched no rows in this source means the cause couldn't be
+  // matched there, not that the money is zero (Oct 19, "Head Start providers" as NTEE P23 on federal awards).
+  if (out.status !== "unanswerable" && s.causes.some((c) => !(c as C).all) && out.numbers[0]?.value === "$0") {
+    const names = s.causes.map((c) => c.name).join(" or ");
+    out = { status: "unanswerable", headline: `Nothing in ${SOURCE_WORDS[s.source]} matched ${names}. That means the cause couldn't be matched in this source, not that the money is $0.`, numbers: [], bullets: [], chart: null, rows: [], causeNote: out.causeNote, method: "", caveats: [], coverage: [], sources: [], searchQuery: null };
+  }
   const premise = out.status === "unanswerable" ? null : checkPremise(s, out);
   delete out.change; delete out.versus;
   if (out.status !== "unanswerable") honorGuard(ctx, s, out, missing);
@@ -760,6 +772,8 @@ async function compute(question: string, s: Spec, cube: boolean): Promise<Answer
   const basis = /Approximate keyword set/.test(out.causeNote) ? "keywords" : /NTEE codes /.test(out.causeNote) ? "codes" : null;
   return { ...out, question, spec: s, status, missing, premise, basis, queries: ctx.queries, ms: Date.now() - t0 };
 }
+
+const SOURCE_WORDS: Record<Spec["source"], string> = { foundation_grants: "foundation grants", charity_grants: "charity grants (Schedule I)", federal_awards: "federal awards", government_grants: "government grants on Form 990", contributions: "contributions on Form 990", revenue: "revenue on Form 990", household_giving: "household giving", foundation_finances: "foundation finances" };
 
 // "Individual giving isn't in our IRS data"; "Payout rates and Board members aren't ...". A note the router wrote
 // as a full sentence ("Our grant data covers 2022-2025 only, so ...") is its own headline, never suffixed.
@@ -2300,9 +2314,12 @@ function fedYears(s: Spec) {
   return { from, to, note: asked ? `Federal awards here cover fiscal years ${FA_FIRST}–${FA_LAST}.` : null };
 }
 // WHERE terms on federal_awards (alias fa, with orgs o joined) for a cause, place and years.
+// A cause that names a federal program (Head Start, AmeriCorps ...) matches the program's assistance listings,
+// any recipient; other causes match linked recipients' NTEE code or label.
 function fedWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, sfx = "") {
-  const cs = causeSql(c, p, "fa.recipient_ein", "o.ntee_cd", sfx, true);
-  const w = [`fa.fiscal_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`, ...(c && !c.all ? ["fa.recipient_ein IS NOT NULL"] : []), ...cs.where];
+  const prog = c && !c.all ? fedProgram(c) : null;
+  const cs: CauseSql = prog ? (p.cause(c), { join: "", where: [`fa.cfda_number LIKE ANY(${p.add(prog.cfda)}::text[])`], tier: null, kind: "program", program: prog }) : causeSql(c, p, "fa.recipient_ein", "o.ntee_cd", sfx, true);
+  const w = [`fa.fiscal_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`, ...(c && !c.all && !prog ? ["fa.recipient_ein IS NOT NULL"] : []), ...cs.where];
   if (pl.county) { w.push(`fa.pop_county_fips = ${p.add(pl.county.fips)}`); pl.used.add("county"); }
   else if (pl.states.length) w.push(`fa.pop_state = ANY(${p.add(pl.states)}::text[])`);
   if (pl.region) { w.push(`fa.pop_county_fips = ANY(${p.add(pl.region.fips)}::char(5)[])`); pl.used.add("region"); }
@@ -2323,10 +2340,14 @@ async function federal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const forX = c ? ` for ${c.name}` : "";
   const inX = pl.label !== "the US" ? ` in ${pl.label}` : "";
   const nm = (x: string) => orgName(x);
-  const base = { searchQuery: searchFor(s, pl), sources: [SRC.fed, ...(c?.label ? [SRC.labels] : []), ...(c?.ntee.length ? [SRC.ntee] : [])] };
+  const prog = c ? fedProgram(c) : null;
+  const base = { searchQuery: searchFor(s, pl), sources: [SRC.fed, ...(!prog && c?.label ? [SRC.labels] : []), ...(!prog && c?.ntee.length ? [SRC.ntee] : [])] };
+  // A cause no award matched: say so, never "$0" as if the money were zero (Oct 19: "Head Start providers" as
+  // NTEE P23 found $0 for a $33B program).
+  const noMatch = (cc: C) => new Unanswerable(`No federal awards matched ${cc.name}${inX}, FY${yr}: ${fedProgram(cc) ? `no award under ${fedProgram(cc)!.name}` : "it isn't a federal program we can name, and no linked recipient in that cause has an award"}. That means the cause couldn't be matched in federal awards, not that the money is $0.`);
   const finish = async (o: Omit<Out, "caveats" | "causeNote" | "searchQuery" | "sources">, cs: CauseSql, extra: string[] = [], moreSources: { label: string; url: string }[] = []): Promise<Out> => {
     const note = await causeNote(c, cs, caveats);
-    if (c) caveats.push("Causes count only recipients linked to an IRS-registered organization (by name and place), so cause totals run low.");
+    if (c && !prog) caveats.push("Causes count only recipients linked to an IRS-registered organization (by name and place), so cause totals run low.");
     return { ...o, ...base, sources: [...base.sources, ...moreSources], causeNote: note, caveats: [...extra, ...caveats, ...FED_CAVEATS, await fedLinkNote()] };
   };
   const metric = s.metric === "breakdown" && s.by === "state" && !s.measure ? "by_state" : s.metric === "grant_size" && s.by ? "breakdown" : s.metric;
@@ -2345,6 +2366,7 @@ GROUP BY GROUPING SETS ((fa.fiscal_year), ()) ORDER BY 1 NULLS LAST`, p);
       };
       const [all, ...ms] = await Promise.all([byYear(null, `All federal awards to nonprofits${inX}, by fiscal year`), ...causes.map((cc) => (cc ? byYear(cc, `Federal awards to ${cc.name}${inX}, by fiscal year`) : null))]);
       const m0 = ms[0] ?? all;
+      causes.forEach((cc, i) => { if (cc && !ms[i]?.total.awards) throw noMatch(cc); });
       const val = (m: typeof all, cc: C | null) => (cc?.label ? m.total.primary_usd : m.total.usd);
       const yv = (m: typeof all, yy: number, cc: C | null) => { const r = m.years.find((x) => x.year === yy); return r ? (cc?.label ? r.primary_usd : r.usd) : 0; };
       const v0 = val(m0, c);
@@ -2361,7 +2383,7 @@ FROM x JOIN flag_year f ON f.ein = x.recipient_ein AND f.tax_year = 2024 AND f.f
       const rows: Row[] = causes.flatMap((cc, i) => (ms[i] ?? all).years.map((r) => ({ cause: cc?.name ?? "all", fiscal_year: r.year, usd: r.usd, primary_usd: cc?.label ? r.primary_usd : null, awards: r.awards, recipients: r.orgs })));
       const chartRows = causes.flatMap((cc, i) => (ms[i] ?? all).years.map((r) => ({ year: `FY${r.year}`, series: cc?.name ?? "All causes", amount: +((cc?.label ? r.primary_usd : r.usd) / u.div).toFixed(3) })));
       const chart = { title: `Federal awards to nonprofits${forX}${inX}, by fiscal year`, sub: u.title, spec: vbar(chartRows, "year", "amount", "Fiscal year", u.title, u.fmt, causes.length > 1 ? "series" : undefined) };
-      const method = `Sum of net federal obligations (grants and cooperative agreements, USAspending.gov) to nonprofit and private-college recipients, fiscal years ${yr}, placed by place of performance${c ? ", for recipients linked to an org in the cause set" : ""}.`;
+      const method = `Sum of net federal obligations (grants and cooperative agreements, USAspending.gov) to nonprofit and private-college recipients, fiscal years ${yr}, placed by place of performance${prog ? `, under ${prog.name} (assistance listings ${prog.cfda.join(", ")})` : c ? ", for recipients linked to an org in the cause set" : ""}.`;
       const cs = ms[0]?.cs ?? cs0!;
       if (metric === "compare" && causes.length === 2 && ms[1]) {
         const v1 = val(ms[1], causes[1]);
@@ -2424,7 +2446,7 @@ FROM ${fw.from} WHERE ${and([...fw.where, dim[by][1]])} GROUP BY 1`, p);
         const pop = place.get(r.k)?.pop ?? 0;
         return { k: r.k, name: nameOf(r), usd: r.usd, n: r.n, orgs: r.orgs, pop, v: s.measure === "average_grant" ? r.usd / Math.max(1, r.n) : s.measure === "grants" ? r.n : perX ? (pop ? r.usd / pop / nYears : 0) : r.usd };
       }).filter((g) => !perX || g.pop > 0);
-      if (!groups.length) throw new Unanswerable(`No federal awards to nonprofits found${forX}${inX}.`);
+      if (!groups.length) throw c ? noMatch(c) : new Unanswerable(`No federal awards to nonprofits found${inX}.`);
       const total = groups.reduce((a2, g) => a2 + g.usd, 0);
       const ranked = [...groups].sort((a2, z) => (s.order === "least" ? a2.v - z.v : z.v - a2.v) || String(a2.k).localeCompare(String(z.k)));
       const shown = by === "year" ? [...groups].sort((a2, z) => Number(a2.k) - Number(z.k)) : ranked.slice(0, 12);
@@ -2448,7 +2470,7 @@ FROM ${fw.from} WHERE ${and([...fw.where, dim[by][1]])} GROUP BY 1`, p);
       const p = new P();
       const fw = fedWhere(c, p, pl, y);
       // fed_award_size_hist (generosity-data 046) unless the cause is keywords or a long NTEE code, or a county.
-      const hist = ctx.cube && !pl.county && !pl.region && cubeCause(c);
+      const hist = ctx.cube && !pl.county && !pl.region && !prog && cubeCause(c);
       let r: { n: number; avg: number; median: number; p90: number }, med$: string, p90$: string, approx = false;
       if (hist) {
         const ph = new P();
@@ -2474,7 +2496,7 @@ FROM ${fw.from} WHERE ${and([...fw.where, dim[by][1]])} GROUP BY 1`, p);
        percentile_cont(0.9) WITHIN GROUP (ORDER BY fa.amount)::float8 AS p90 FROM ${fw.from} WHERE ${and([...fw.where, "fa.amount > 0"])}`, p);
         med$ = money(r?.median ?? 0); p90$ = money(r?.p90 ?? 0);
       }
-      if (!r?.n) throw new Unanswerable(`No federal awards to nonprofits found${forX}${inX}.`);
+      if (!r?.n) throw c ? noMatch(c) : new Unanswerable(`No federal awards to nonprofits found${inX}.`);
       return finish({ headline: `The median federal award to a nonprofit${forX}${inX} is ${med$} a year, the average ${money(r.avg)}, FY${yr}`,
         numbers: [{ value: med$, label: "median award-year" }, { value: money(r.avg), label: "average" }, { value: int(r.n), label: "award-years" }],
         bullets: [`One in ten is ${b(p90$)} or more`], chart: null, rows: [{ award_years: r.n, median: r.median, average: r.avg, p90: r.p90 }],

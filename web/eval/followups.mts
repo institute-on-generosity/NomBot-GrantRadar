@@ -23,6 +23,8 @@ const threads: [string, string[]][] = [
   ["How much do households in Ohio deduct for charity?", []],
   ["Are foundations paying out more than 5%?", []],
   ["What share of food banks ran deficits each year?", []],
+  ["How much federal grant money went to Head Start providers?", ["Which states get the most money for Head Start providers per resident?"]],
+  ["Which federal agencies give the most to nonprofits in Ohio?", []],
 ];
 
 let fails = 0;

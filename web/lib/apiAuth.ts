@@ -8,6 +8,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { db } from "./db";
 
 export type ApiKey = { id: number; name: string; scopes: string[]; rate_per_min: number };
+// Read-only scopes a key can hold: "read" (public data, /api/v1/* and the MCP data tools) and "iog_internal"
+// (IoG internal documents, /api/v1/iog/* and the MCP IoG tools). There are no write or admin scopes.
+export const SCOPES = ["read", "iog_internal"] as const;
 
 export const KEY_PREFIX = "nb_live_";
 export const hashKey = (secret: string) => createHash("sha256").update(secret).digest("hex");
@@ -71,28 +74,39 @@ export async function authenticate(request: Request, scope = "read"): Promise<Au
 }
 
 // Daily counts per key, route and status, plus last_used_at. Fire and forget: never slows or fails a call.
-export function record(keyId: number, route: string, status: number) {
+// ms: handler time, summed and maxed per row (migration 061) for the /admin dashboard. Status 400 and up also
+// goes to api_errors (newest 1,000 kept).
+let errorWrites = 0;
+export function record(keyId: number, route: string, status: number, ms = 0) {
+  const r = route.slice(0, 100), t = Math.max(0, Math.round(ms));
   db.query(
     `WITH u AS (UPDATE api_keys SET last_used_at = now() WHERE id = $1)
-     INSERT INTO api_usage (key_id, day, route, status) VALUES ($1, current_date, $2, $3)
-     ON CONFLICT (key_id, day, route, status) DO UPDATE SET n = api_usage.n + 1`,
-    [keyId, route.slice(0, 100), status],
+     INSERT INTO api_usage (key_id, day, route, status, ms_sum, ms_max) VALUES ($1, current_date, $2, $3, $4, $4)
+     ON CONFLICT (key_id, day, route, status) DO UPDATE SET n = api_usage.n + 1, ms_sum = api_usage.ms_sum + $4, ms_max = greatest(api_usage.ms_max, $4)`,
+    [keyId, r, status, t],
   ).catch((e) => console.error("api usage write failed", e.message));
+  if (status >= 400) {
+    db.query("INSERT INTO api_errors (key_id, route, status, ms) VALUES ($1, $2, $3, $4)", [keyId, r, status, t])
+      .then(() => { if (++errorWrites % 100 === 0) return db.query("DELETE FROM api_errors WHERE id < (SELECT min(id) FROM (SELECT id FROM api_errors ORDER BY id DESC LIMIT 1000) k)"); })
+      .catch((e) => console.error("api error log failed", e.message));
+  }
 }
 
 // Wraps a read-only REST handler: auth, rate limit, usage, rate headers, JSON 500 on a crash.
-export function keyed<R extends Request, C>(route: string, handler: (request: R, ctx: C, auth: Auth) => Promise<Response>) {
+// scope: what the key must hold ("read" for the public-data API, "iog_internal" for /api/v1/iog/*).
+export function keyed<R extends Request, C>(route: string, handler: (request: R, ctx: C, auth: Auth) => Promise<Response>, scope = "read") {
   return async (request: R, ctx: C) => {
-    const auth = await authenticate(request);
+    const auth = await authenticate(request, scope);
     if (auth instanceof Response) return auth;
     let res: Response;
+    const t0 = performance.now();
     try {
       res = await handler(request, ctx, auth);
     } catch (e) {
       console.error(`${route} failed`, e);
       res = apiError(500, "server_error", "Something went wrong on our side.");
     }
-    record(auth.key.id, route, res.status);
+    record(auth.key.id, route, res.status, performance.now() - t0);
     for (const [k, v] of Object.entries(auth.headers)) res.headers.set(k, v);
     if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", "no-store");
     return res;

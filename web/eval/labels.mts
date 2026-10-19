@@ -1,4 +1,4 @@
-// Cause-label checks (climate, women_girls, substance_use; generosity-data migration 032): the question parse sets the label
+// Cause-label checks (climate, women_girls, substance_use, housing_homelessness; generosity-data migration 032): the question parse sets the label
 // only when the question names the cause, the filter edits work, search keeps only labeled orgs, and the
 // API returns labels. No Claude calls unless --llm (then ~10 parses with PARSE_MODEL; tokens are printed).
 //   npm run test:labels          rules, filters, search, API
@@ -22,11 +22,15 @@ const CASES: [string, string | null][] = [
   ["addiction recovery nonprofits in Ohio", "substance_use"],
   ["opioid overdose prevention groups in West Virginia", "substance_use"],
   ["sober living homes in Kentucky under $500K", "substance_use"],
+  ["homeless shelters in Louisville", "housing_homelessness"],
+  ["affordable housing nonprofits in Ohio", "housing_homelessness"],
+  ["eviction prevention groups in Texas under $1M", "housing_homelessness"],
   ["food banks in West Virginia", null],
   ["boys and girls clubs in Ohio", null],
   ["environmental education in Oregon", null],
   ["youth mentoring in Kentucky under $500K", null],
   ["disaster recovery groups in Louisiana", null],
+  ["animal shelters for homeless pets in Ohio", null],
 ];
 
 let fails = 0;
@@ -68,13 +72,13 @@ check(applyOverrides(base, { label: "bogus" }).label === "climate", "unknown lab
 
 // 4. Search: every result carries the label, primary only by default; partial adds orgs.
 const labeled = async (label: string, partial: boolean) => {
-  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery" }[label] ?? label, label, labelPartial: partial, limit: 50 });
+  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery", housing_homelessness: "homeless shelter" }[label] ?? label, label, labelPartial: partial, limit: 50 });
   const eins = r.results.map((x) => x.ein.replace("-", ""));
   const { rows } = await db.query("SELECT ein, tier FROM org_labels WHERE label = $1 AND ein = ANY($2)", [label, eins]);
   const tier = new Map(rows.map((x) => [x.ein.trim(), x.tier]));
   return { r, all: eins.every((e) => tier.has(e)), primaryOnly: eins.every((e) => tier.get(e) === "primary") };
 };
-for (const label of ["climate", "women_girls", "substance_use"]) {
+for (const label of ["climate", "women_girls", "substance_use", "housing_homelessness"]) {
   const p = await labeled(label, false), a = await labeled(label, true);
   check(p.r.total > 0 && p.all && p.primaryOnly && p.r.results.every((x) => x.label?.tier === "primary"), `search label=${label}: ${p.r.total} primary orgs, all labeled primary`);
   check(a.all && a.r.total > p.r.total, `search label=${label} + partial: ${a.r.total} orgs (> ${p.r.total}), all labeled`);
@@ -91,6 +95,8 @@ const org = await apiOrg("261797336", "http://x"); // Climate Central
 check(!("error" in org) && org.org.labels.some((l) => l.label === "climate" && l.tier === "primary" && Boolean(l.why)), "api org Climate Central: climate, primary, with why");
 const su = await apiOrg("237013149", "http://x"); // Phoenix House Foundation
 check(!("error" in su) && su.org.labels.some((l) => l.label === "substance_use" && l.tier === "primary" && Boolean(l.why)), "api org Phoenix House Foundation: substance_use, primary, with why");
+const hh = await apiOrg("042516093", "http://x"); // Pine Street Inn (Boston)
+check(!("error" in hh) && hh.org.labels.some((l) => l.label === "housing_homelessness" && l.tier === "primary" && Boolean(l.why)), "api org Pine Street Inn: housing_homelessness, primary, with why");
 const none = await apiOrg("341877332", "http://x"); // Mid-Ohio Youth Mentoring
 check(!("error" in none) && none.org.labels.length === 0, "api org without labels: empty list");
 

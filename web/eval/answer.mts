@@ -16,6 +16,7 @@ const women = { name: "women and girls", label: "women_girls" as const, ntee: []
 const shelters = { name: "animal shelters", label: null, ntee: ["D20"], keywords: [] };
 const opioid = { name: "opioid addiction", label: null, ntee: [], keywords: ["opioid", "opioids"] };
 const substance = { name: "substance use and addiction", label: "substance_use" as const, ntee: [], keywords: [] };
+const housing = { name: "housing and homelessness", label: "housing_homelessness" as const, ntee: [], keywords: [] };
 const one = async (sql: string, params: unknown[] = []) => Number(Object.values((await db.query(sql, params)).rows[0])[0]);
 
 // Independent checks: base tables, the miner's CLEAN filter written out again.
@@ -58,6 +59,8 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "opioid (keyword set) $", s: spec({ causes: [opioid] }) },
   { name: "substance use OH (any tier)", s: spec({ causes: [substance], states: ["OH"] }),
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_state='OH' AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='substance_use')`)] },
+  { name: "housing & homelessness CA (any tier)", s: spec({ causes: [housing], states: ["CA"] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_state='CA' AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='housing_homelessness')`)] },
   { name: "gov-reliant human services, KY", s: spec({ metric: "count_orgs", causes: [{ name: "human services", label: null, ntee: ["P"], keywords: [] }], states: ["KY"], condition: "gov_reliant" }) },
   { name: "low cash, Cook County", s: spec({ metric: "count_orgs", county: "Cook County", states: ["IL"], condition: "low_cash" }) },
   { name: "gov grants top funders (partial)", s: spec({ metric: "top_funders", source: "government_grants", causes: [climate] }) },
@@ -74,6 +77,14 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "federal $ by county poverty", s: spec({ source: "federal_awards", metric: "breakdown", by: "county_poverty" }),
     check: async (a) => [Number(a.rows.at(-1)!.usd), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND pop_county_fips IN (SELECT county_fips FROM county_acs WHERE level='county' AND poverty_rate >= 20)`)] },
   { name: "federal top recipients, food banks", s: spec({ source: "federal_awards", metric: "top_recipients", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }) },
+  // A cause that names a federal program matches its assistance listings, any recipient (lib/fedPrograms); a cause
+  // with no federal match is unanswerable, never "$0" (Oct 19: Head Start as NTEE P23 read $0).
+  { name: "federal Head Start (93.600 + 93.356), NTEE ignored", s: spec({ source: "federal_awards", causes: [{ name: "Head Start providers", label: null, ntee: ["P23"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(amount) FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND cfda_number IN ('93.600', '93.356')`)] },
+  { name: "federal Head Start per resident, top state", s: spec({ source: "federal_awards", metric: "by_state", perResident: true, causes: [{ name: "Head Start", label: null, ntee: [], keywords: ["head start"] }] }),
+    check: async (a) => [Number(a.rows[0].value), await one(`SELECT sum(amount) / (SELECT sum(population) FROM county_need WHERE state=$1 AND county_fips<>'00000') / 4 FROM federal_awards WHERE fiscal_year BETWEEN 2022 AND 2025 AND pop_state=$1 AND cfda_number IN ('93.600', '93.356')`, [a.rows[0].key])] },
+  { name: "federal cause with no match: unanswerable, no $0", s: spec({ source: "federal_awards", causes: [{ name: "zither makers", label: null, ntee: ["P23"], keywords: [] }] }),
+    check: async (a) => [a.status === "unanswerable" && !/^\$0|awarded \$0/.test(a.headline) && /couldn't be matched/.test(a.headline) ? 1 : 0, 1] },
   { name: "federal $ by program, Cook County", s: spec({ source: "federal_awards", metric: "breakdown", by: "program", county: "Cook County", states: ["IL"] }) },
   // Census ACS 5-year (county_acs): per person in poverty and counties grouped by poverty rate
   { name: "states most foundation $ per person in poverty", s: spec({ metric: "by_state", perPoverty: true }),

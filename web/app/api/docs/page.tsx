@@ -1,7 +1,7 @@
 // Partner API docs: public (proxy.ts lets /api/docs through the site password), static, built from lib/apiDocs.ts.
-import { ENDPOINTS, ERRORS, MCP_TOOLS } from "@/lib/apiDocs";
+import { PUBLIC_ENDPOINTS as ENDPOINTS, ERRORS, PUBLIC_MCP_TOOLS as MCP_TOOLS } from "@/lib/apiDocs";
 
-export const metadata = { title: "API · NomBot", description: "Keyed, read-only API and remote MCP server for NomBot's nonprofit data and research." };
+export const metadata = { title: "API · NomBot", description: "Keyed, read-only API and remote MCP server for NomBot's nonprofit, grant, finance, giving and policy data and research." };
 
 const CLAUDE_CODE = `claude mcp add --transport http nombot "$NOMBOT/mcp" \\
   --header "Authorization: Bearer $NOMBOT_KEY"`;
@@ -69,11 +69,12 @@ export default function ApiDocs() {
       <p className="apidoc-kicker">For developers</p>
       <h1 className="pagetitle">NomBot API</h1>
       <p className="apidoc-lede">
-        Read-only JSON access to public IRS data on 1.97 million US nonprofits and 138,734 private foundations, plus NomBot&apos;s verified research findings.
+        Read-only JSON access to public IRS data on 1.97 million US nonprofits and 138,734 private foundations: profiles, grant rows (990-PF and Schedule I),
+        finances by year, federal awards, household giving by place, graded cause labels, plus bills, Federal Register documents, sector news and NomBot&apos;s verified research findings.
         The same data is also a remote <b>MCP server</b> for Claude, ChatGPT and other AI tools. Every call needs an API key.
       </p>
       <nav className="apidoc-toc" aria-label="On this page">
-        <a href="#start">Quick start</a><a href="#auth">Keys and limits</a>
+        <a href="#start">Quick start</a><a href="#auth">Keys and limits</a><a href="#paging">Pagination</a>
         {ENDPOINTS.map((e) => <a key={e.id} href={`#${e.id}`}>{e.title}</a>)}
         <a href="#mcp">MCP</a><a href="#data">About the data</a>
         <a href="/api/openapi.json">openapi.json</a>
@@ -109,6 +110,21 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&s
         </table>
       </section>
 
+      <section id="paging">
+        <h2>Pagination</h2>
+        <p className="apidoc-p">
+          List endpoints (grants, federal awards, household giving, label organizations, bills, Federal Register, news) return <code>results</code>, <code>count</code>,
+          {" "}<code>has_more</code> and <code>next_cursor</code>. Pass <code>next_cursor</code> back as <code>cursor</code>, with the same filters, for the next page.
+          Pages are keyset, newest first, so page 500 is as fast as page 1 and rows don&apos;t shift while you walk. Add <code>totals=true</code> on grants and federal awards for a count and dollar sum.
+        </p>
+        <Code>{`cursor=""
+while :; do
+  page=$(curl -s -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/grants?funder_ein=924018392&limit=500&cursor=$cursor")
+  echo "$page" | jq -c '.results[]'
+  cursor=$(echo "$page" | jq -r '.next_cursor // empty'); [ -z "$cursor" ] && break
+done`}</Code>
+      </section>
+
       {ENDPOINTS.map((e) => (
         <section key={e.id} id={e.id}>
           <h2>{e.title}</h2>
@@ -134,7 +150,7 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&s
         <h2>MCP server</h2>
         <p className="apidoc-route"><span className="apidoc-method">POST</span><code>/mcp</code></p>
         <p className="apidoc-p">
-          A remote MCP server (Streamable HTTP, JSON-RPC, no sessions) with four read-only tools. It uses the same key and rate limit as the REST API.
+          A remote MCP server (Streamable HTTP, JSON-RPC, no sessions) with {MCP_TOOLS.length} read-only tools. It uses the same key and rate limit as the REST API.
           Tool results are the same JSON as the matching endpoint.
         </p>
         <table className="apidoc-table">
@@ -156,9 +172,15 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/search?q=food+bank&s
         <h2>About the data</h2>
         <ul className="apidoc-list">
           <li><b>Sources:</b> IRS Exempt Organizations Business Master File, IRS SOI financial extracts, IRS Form 990, 990-EZ and 990-PF e-file returns, NCCS cause codes. Every record links to its source.</li>
-          <li><b>Grants</b> come from private foundations&apos; 990-PF filings, IRS release years 2023 to 2026. About 66% of grants (58% of grant dollars) are linked to a recipient EIN, so totals per organization run low. Schedule I grants from public charities and federal awards (USAspending) are separate fields with their own notes.</li>
+          <li><b>Grants</b> come from private foundations&apos; 990-PF filings, tax years 2012 to 2025. About 64% of grants (59% of grant dollars) are linked to a recipient EIN, so totals per organization run low. Schedule I grants from public charities name recipients for about 93% of what filers report (2022 to 2024), and federal awards (USAspending) are separate, with their own notes. The sources overlap, so don&apos;t add them.</li>
+          <li><b>Before 2020:</b> e-filing was optional, so years before 2020 hold only e-filed returns (2019 foundation grant dollars are about 62% of the IRS SOI total). Compare trends from 2020 on, or read the caveat.</li>
           <li><b>Health signals</b> follow fixed, published rules (Income, Bottom line, Cash, Debts, Donations, Board, Insiders). They are prompts for questions, not verdicts.</li>
           <li><b>Research findings</b> are computed by SQL over the same tables, checked before they are published, and refreshed nightly. Each one carries its method, caveats and SQL.</li>
+          <li><b>Finances by year</b> come from 990-PF returns (foundations) and Form 990 or 990-EZ returns (other nonprofits), e-filed only. Before tax year 2020 many paper filers are missing.</li>
+          <li><b>Federal awards</b> are USAspending grants and cooperative agreements to nonprofits and private colleges, fiscal years 2022 to 2025. Place of performance can differ from the recipient&apos;s address.</li>
+          <li><b>Household giving</b> is IRS SOI individual tax data: the charitable deductions itemizers claim, by state, county, ZIP and income. Not all giving, and no cause or recipient.</li>
+          <li><b>Policy and news:</b> Congress.gov bills (current Congress), Federal Register documents (from October 2025) and GDELT sector headlines (from June 2026). Keyword search only, no EIN links. Refreshed by hand for now, a daily schedule is planned, so check the newest date in each response.</li>
+          <li><b>Place:</b> grants and finances are placed by the organization&apos;s mailing address, usually its headquarters, not where it serves.</li>
           <li><b>Freshness:</b> loaded from the newest IRS releases. A monthly refresh is planned.</li>
         </ul>
       </section>

@@ -26,6 +26,7 @@ const run = async (e: Expect) => {
   const a = await answer(e.q, r.spec);
   const want = e.status ?? (e.missing ? "any" : "answered");
   if (want === "answered" && a.status === "unanswerable") bad.push(`unanswerable: ${a.headline}`);
+  if (want === "unanswerable" && a.status !== "unanswerable") bad.push(`status ${a.status}, want unanswerable: ${a.headline}`);
   if ((want === "ok" || want === "partial") && a.status !== want) bad.push(`status ${a.status}, want ${want}${a.missing.length ? ` (missing: ${a.missing.map((m) => m.what).join(", ")})` : ""}`);
   if (/NaN|undefined|Infinity|null/.test(a.headline + a.numbers.map((n) => n.value).join(" "))) bad.push(`broken number: ${a.headline}`);
   // headlineHas: the answer covers every part asked (a two-cause question names both causes).

@@ -12,6 +12,7 @@ import { memo } from "./memo";
 import { ROUTER_SYSTEM } from "./answerRoute";
 import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
+import { fedProgram } from "./fedPrograms";
 
 export type Turn = { question: string; spec: Spec };
 export type Resolved =
@@ -117,6 +118,10 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   const forX = cause ? ` for ${cause}` : "";
   const money = moneyOf(s);
   const fed = s.source === "federal_awards";
+  // A cause that names a federal program (Head Start): federal answers match the program, so a split by program
+  // says nothing, and other sources need the program's name as keywords (its codes, e.g. P23, can match nothing).
+  const prog = fed && c ? fedProgram(c) : null;
+  const elsewhere = prog && c ? { causes: [{ ...c, label: null, ntee: [], keywords: c.keywords.length ? c.keywords : [prog.name.replace(/^the /, "").toLowerCase()] }] } : {};
   const flag = !pf && !fed; // Form 990 lines: government grants, contributions, revenue
   const ACS = ["county_poverty", "county_income", "county_race", "county_age"];
   const next: Record<string, () => void> = {
@@ -177,7 +182,7 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
         add(`Which nonprofits get the most federal money${forX}?`, { metric: "top_recipients" });
         add(`Is federal money for nonprofits${of ? ` for${of}` : ""} growing?`, { metric: "trend" });
         if (!s.states.length && !s.county) add(`Which states get the most federal money${forX} per resident?`, { metric: "by_state", perResident: true, order: "most" });
-        add(`Which federal programs fund nonprofits most${forX}?`, { metric: "breakdown", by: "program" });
+        if (!prog) add(`Which federal programs fund nonprofits most${forX}?`, { metric: "breakdown", by: "program" });
       }
       if (pf) add(`Who gets the most money${forX}?`, { metric: "top_recipients" });
       if (pf) add(`How much money${forX} is general support?`, { metric: "general_support" });
@@ -223,7 +228,7 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   // A thread that compares two causes keeps comparing them.
   if (s.causes.length === 2 && s.metric !== "compare") add(describeSpec(normalizeSpec({ ...s, metric: "compare", premise: null })), { metric: "compare" });
   if (s.causes.length === 2 && s.metric === "compare") add(`Is money for ${s.causes[0].name} or ${s.causes[1].name} growing faster?`, { metric: "trend" });
-  if (s.source !== "foundation_grants" && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants" });
+  if (s.source !== "foundation_grants" && ["total", "trend", "top_recipients"].includes(s.metric)) add(`What about foundation money${forX}?`, { source: "foundation_grants", ...elsewhere });
   if (s.source === "foundation_grants" && c && ["total", "trend"].includes(s.metric)) add(`What about donor-advised fund money${forX}?`, { source: "charity_grants", charityFunder: "daf_sponsor" });
   return out.filter((o) => onTopic(o.spec, history));
 }
@@ -277,7 +282,7 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 
 const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: llmSpecSchema });
 
-const cached = memo<Resolved>("follow-up:v5", 1000, 24 * 3600_000); // v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v6", 1000, 24 * 3600_000); // v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());

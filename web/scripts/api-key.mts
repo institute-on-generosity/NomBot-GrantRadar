@@ -2,6 +2,8 @@
 // only its sha256 is stored, so a lost key can't be recovered: revoke it and make a new one.
 //
 //   npm run api-key -- create "Candid research team" [--rate=60] [--scopes=read]
+//   npm run api-key -- create "IoG staff" --scopes=read,iog_internal
+//   npm run api-key -- scopes <id|prefix> read,iog_internal   replace a key's scopes (read-only scopes only)
 //   npm run api-key -- list
 //   npm run api-key -- usage [id]          daily calls per route and status, newest 14 days
 //   npm run api-key -- revoke <id|prefix>
@@ -11,11 +13,18 @@ import { join } from "node:path";
 try { process.loadEnvFile(join(import.meta.dirname, "..", ".env.local")); } catch { /* no .env.local */ }
 
 const { db } = await import("../lib/db");
-const { newSecret } = await import("../lib/apiAuth");
+const { newSecret, SCOPES } = await import("../lib/apiAuth");
 
 const [cmd, ...rest] = process.argv.slice(2);
 const flags = Object.fromEntries(rest.filter((a) => a.startsWith("--")).map((a) => a.slice(2).split("=") as [string, string]));
 const args = rest.filter((a) => !a.startsWith("--"));
+// Scopes are read-only: "read" (public data) and "iog_internal" (IoG internal documents). Unknown ones are refused.
+const parseScopes = (v: string | undefined) => {
+  const scopes = [...new Set((v ?? "").split(",").map((s) => s.trim()).filter(Boolean))];
+  const bad = scopes.filter((s) => !(SCOPES as readonly string[]).includes(s));
+  if (!scopes.length || bad.length) throw new Error(`Scopes must be a comma list of: ${SCOPES.join(", ")}${bad.length ? ` (unknown: ${bad.join(", ")})` : ""}`);
+  return scopes;
+};
 const which = (v: string | undefined) => {
   if (!v) throw new Error("Give a key id or prefix.");
   return /^\d+$/.test(v) ? { where: "id = $1", value: Number(v) } : { where: "key_prefix = $1", value: v };
@@ -27,7 +36,7 @@ try {
     if (!name) throw new Error('Name the partner: npm run api-key -- create "Partner name"');
     const rate = Number(flags.rate ?? 60);
     if (!Number.isInteger(rate) || rate < 1) throw new Error("--rate must be a whole number of requests per minute");
-    const scopes = (flags.scopes ?? "read").split(",").map((s) => s.trim()).filter(Boolean);
+    const scopes = parseScopes(flags.scopes ?? "read");
     const k = newSecret();
     const { rows: [r] } = await db.query(
       "INSERT INTO api_keys (name, key_prefix, key_hash, scopes, rate_per_min) VALUES ($1, $2, $3, $4, $5) RETURNING id",
@@ -35,6 +44,13 @@ try {
     console.log(`Key ${r.id} for ${name} (${scopes.join(",")}, ${rate}/min).`);
     console.log(`\n  ${k.secret}\n`);
     console.log("Shown once. Send it to the partner over a private channel; it can't be shown again.");
+  } else if (cmd === "scopes") {
+    const w = which(args[0]);
+    const scopes = parseScopes(args[1] ?? flags.scopes);
+    const { rows } = await db.query(
+      `UPDATE api_keys SET scopes = $2 WHERE ${w.where} RETURNING id, name, scopes, revoked_at IS NOT NULL AS revoked`, [w.value, scopes]);
+    if (!rows.length) throw new Error("No such key.");
+    for (const r of rows) console.log(`Key ${r.id} (${r.name}) now has scopes ${r.scopes.join(",")}${r.revoked ? " (revoked)" : ""}. Running servers pick it up within 10 seconds.`);
   } else if (cmd === "list") {
     const { rows } = await db.query(
       `SELECT k.id, k.name, k.key_prefix, k.scopes, k.rate_per_min, k.created_at::date AS created, k.last_used_at, k.revoked_at,
@@ -61,7 +77,7 @@ try {
     if (!rows.length) throw new Error("No such key.");
     for (const r of rows) console.log(`${cmd === "revoke" ? "Revoked" : "Deleted"} key ${r.id} (${r.name}). Running servers stop accepting it within 10 seconds.`);
   } else {
-    console.log("Usage: npm run api-key -- create <name> [--rate=60] [--scopes=read] | list | usage [id] | revoke <id|prefix> | delete <id|prefix>");
+    console.log(`Usage: npm run api-key -- create <name> [--rate=60] [--scopes=read] | scopes <id|prefix> <scopes> | list | usage [id] | revoke <id|prefix> | delete <id|prefix>\nScopes (read-only): ${SCOPES.join(", ")}`);
     process.exitCode = cmd ? 1 : 0;
   }
 } catch (e) {

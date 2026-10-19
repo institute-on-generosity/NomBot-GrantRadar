@@ -17,7 +17,7 @@ export type Filters = {
   topic: string;        // what the organizations do, for display
   placeLabel?: string;  // the place as the user said it ("Appalachia"), for display
   appalachia?: boolean; // only orgs in the ARC region (by ZIP -> county), not whole states
-  label?: LabelSlug;     // graded cause label (climate, women_girls, substance_use): a hard filter on org_labels
+  label?: LabelSlug;     // graded cause label (climate, women_girls, substance_use, housing_homelessness): a hard filter on org_labels
   labelPartial?: boolean; // also orgs where the cause is one named goal among others (default: primary only)
 };
 
@@ -39,7 +39,7 @@ const SYSTEM = `You turn a plain-language US nonprofit search into database filt
 - placeLabel: the place as the user said it ("Appalachia", "Kentucky"), or null.
 - appalachia: true only when the user names Appalachia or Appalachian (the region), else false.
 - ntee: an NTEE prefix ONLY when the main cause clearly maps: food banks/pantries K3, animals D, arts A, education B, environment C, health E, mental health F, employment J, housing L, youth development O, human services P. Otherwise null.
-- label: "climate" when the user asks for organizations working on climate change or clean energy; "women_girls" when they ask for organizations serving women and/or girls (not co-ed groups like Boys & Girls Clubs); "substance_use" when they ask for organizations working on addiction, alcohol or drug use, opioids, overdose, sober living or recovery from addiction. Only when the question clearly names that cause, else null.
+- label: "climate" when the user asks for organizations working on climate change or clean energy; "women_girls" when they ask for organizations serving women and/or girls (not co-ed groups like Boys & Girls Clubs); "substance_use" when they ask for organizations working on addiction, alcohol or drug use, opioids, overdose, sober living or recovery from addiction. "housing_homelessness" when they ask for organizations working on homelessness or housing people: shelters for homeless people, affordable or supportive housing, rental assistance, eviction prevention, Habitat for Humanity (not animal shelters, domestic violence shelters alone or sober living). Only when the question clearly names that cause, else null.
 - requirements: specific activities the organization MUST do beyond its main cause (e.g. "that do workforce training"). Each gets 4-8 lowercase words or short phrases likely to appear in IRS mission text. Empty if none.`;
 
 const schema = z.object({
@@ -60,7 +60,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse:v8", 1000, 24 * 3600_000); // bump the name when Filters changes shape
+const cached = memo<Filters>("parse:v9", 1000, 24 * 3600_000); // bump the name when Filters changes shape
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }

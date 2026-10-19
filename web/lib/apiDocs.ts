@@ -1,7 +1,8 @@
 // What the partner API offers, in one place: the /api/docs page and /api/openapi.json are both built from it.
-// Examples are real responses (Oct 16, 2026), trimmed to a few fields and rows.
-export type Param = { name: string; in: "query" | "path"; type: "string" | "integer"; required?: boolean; example?: string; desc: string };
-export type Endpoint = { id: string; method: "GET"; path: string; title: string; summary: string; params: Param[]; curl: string; example: unknown; mcpTool: string };
+// Examples are real responses (Oct 16 and Oct 19, 2026), trimmed to a few fields and rows.
+export type Param = { name: string; in: "query" | "path"; type: "string" | "integer" | "boolean"; required?: boolean; example?: string; desc: string };
+export type Endpoint = { id: string; method: "GET"; path: string; title: string; summary: string; params: Param[]; curl: string; example: unknown; mcpTool: string; scope?: string };
+// scope: set on IoG internal endpoints, which need a key with that scope (iog_internal). Others need read.
 
 export const ENDPOINTS: Endpoint[] = [
   {
@@ -13,7 +14,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "city", in: "query", type: "string", example: "Mansfield", desc: "City names, comma separated (up to 10)." },
       { name: "max_revenue", in: "query", type: "integer", example: "500000", desc: "Only organizations with revenue at or below this, in dollars." },
       { name: "ntee", in: "query", type: "string", example: "O", desc: "NTEE cause code prefix, e.g. K (food) or K31 (food banks)." },
-      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls or substance_use. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls, substance_use or housing_homelessness. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) keeps organizations whose main work is the cause. all also adds partial ones, where it is one named goal or program among broader work." },
       { name: "limit", in: "query", type: "integer", example: "10", desc: "Results to return, 1 to 50. Default 10." },
     ],
@@ -37,7 +38,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls), each with label, name, tier (primary or partial) and why.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness), each with label, name, tier (primary or partial) and why.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -156,15 +157,303 @@ export const ENDPOINTS: Endpoint[] = [
       chart: null, queries: [{ title: "Foundation grants to climate, by tax year", sql: "SELECT ..." }], ms: 250,
     },
   },
+  // ---------- row-level data (lib/apiData.ts). Lists page with limit and cursor (pass next_cursor back unchanged). ----------
+  {
+    id: "grants", method: "GET", path: "/api/v1/grants", title: "List grants", mcpTool: "search_grants",
+    summary: "Grant rows, newest tax year first. source=foundation (default): private foundations' 990-PF grants. source=charity: grants public charities list on Form 990 Schedule I, with the funder's type (donor-advised fund sponsor, community foundation, United Way, other), lines that name no recipient left out. Tax years 2012 to 2025. Place is the recipient's mailing address, not where the money is spent. Grants to individuals withhold the person's name and ZIP. totals=true adds the count and dollar sum for the filters.",
+    params: [
+      { name: "source", in: "query", type: "string", example: "foundation", desc: "foundation (990-PF, default) or charity (Schedule I)." },
+      { name: "funder_ein", in: "query", type: "string", example: "924018392", desc: "Only grants this funder made." },
+      { name: "recipient_ein", in: "query", type: "string", example: "810777076", desc: "Only grants linked to this recipient." },
+      { name: "year_from", in: "query", type: "integer", example: "2022", desc: "First tax year, 2012 to 2025. Default 2012." },
+      { name: "year_to", in: "query", type: "integer", example: "2024", desc: "Last tax year. Default 2025." },
+      { name: "state", in: "query", type: "string", example: "WV", desc: "Recipient's state." },
+      { name: "county", in: "query", type: "string", example: "54039", desc: "Recipient's county, 5-digit FIPS (by ZIP code)." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Recipient's graded cause label: climate, women_girls, substance_use or housing_homelessness." },
+      { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) or all (adds partial)." },
+      { name: "amount_min", in: "query", type: "integer", example: "50000", desc: "Only grants of at least this many dollars." },
+      { name: "funder_type", in: "query", type: "string", example: "daf_sponsor", desc: "With source=charity: daf_sponsor, community_foundation, united_way or other." },
+      { name: "totals", in: "query", type: "boolean", example: "true", desc: "Also return totals.count and totals.amount for the filters (capped at 8 seconds)." },
+      { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" \\\n  "$NOMBOT/api/v1/grants?state=WV&year_from=2024&year_to=2024&amount_min=50000&limit=1"`,
+    example: {
+      filters: { source: "foundation", funder_ein: null, recipient_ein: null, year_from: 2024, year_to: 2024, state: "WV", county: null, label: null, label_tier: null, amount_min: 50000, funder_type: null, limit: 1 },
+      results: [{
+        id: 11426378, source: "foundation", tax_year: 2024,
+        funder: { ein: "924018392", name: "WEST VIRGINIA FIRST FOUNDATION INC" },
+        recipient: { ein: "810777076", name: "POLLEN8 WV INC", individual: false, city: "SOUTH CHARLESTON", state: "WV", zip: "25303", county_fips: "54039", county_name: "Kanawha County", status: null },
+        amount: 90000, relationship: null, purpose: "TRANSITIONAL/RECOVERY", match: { method: "zip", score: 0.727 },
+        filing_url: "https://projects.propublica.org/nonprofits/organizations/924018392/202641349349102084/full",
+      }],
+      count: 1, has_more: true, next_cursor: "WzIwMjQsMTE0MjYzNzhd",
+      notes: ["Grants private foundations list on Form 990-PF Part XV, tax years 2012-2025. ...", "Tax years before 2020 cover e-filed returns only ..."],
+    },
+  },
+  {
+    id: "federal-awards", method: "GET", path: "/api/v1/federal-awards", title: "List federal awards", mcpTool: "get_federal_awards",
+    summary: "Direct federal grants and cooperative agreements to nonprofits and private colleges (USAspending), newest fiscal year first. Federal fiscal years 2022 to 2025 (October to September). amount is the net obligation that year, so it can be negative. state and county are the place of performance, and recipient_state is the recipient's address.",
+    params: [
+      { name: "recipient_ein", in: "query", type: "string", example: "231352685", desc: "Only awards linked to this EIN (about 85% of awards are linked)." },
+      { name: "agency", in: "query", type: "string", example: "075", desc: "3-digit agency code (075 is Health and Human Services) or part of the agency or sub-agency name." },
+      { name: "assistance_listing", in: "query", type: "string", example: "93.866", desc: "Assistance listing (CFDA) number, or its 2-digit prefix (93) for all of an agency's listings." },
+      { name: "fiscal_year_from", in: "query", type: "integer", example: "2024", desc: "First fiscal year, 2022 to 2025." },
+      { name: "fiscal_year_to", in: "query", type: "integer", example: "2025", desc: "Last fiscal year." },
+      { name: "state", in: "query", type: "string", example: "PA", desc: "Place of performance state." },
+      { name: "county", in: "query", type: "string", example: "42101", desc: "Place of performance county, 5-digit FIPS." },
+      { name: "recipient_state", in: "query", type: "string", example: "PA", desc: "Recipient's address state." },
+      { name: "recipient_kind", in: "query", type: "string", example: "private_college", desc: "nonprofit_501c3, nonprofit_other or private_college." },
+      { name: "q", in: "query", type: "string", example: "dementia", desc: "Words in the description, program title or recipient name." },
+      { name: "amount_min", in: "query", type: "integer", example: "1000000", desc: "Only award-years of at least this many dollars." },
+      { name: "totals", in: "query", type: "boolean", example: "true", desc: "Also return totals.count and totals.amount for the filters." },
+      { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" \\\n  "$NOMBOT/api/v1/federal-awards?recipient_ein=231352685&assistance_listing=93.866&limit=1"`,
+    example: {
+      filters: { recipient_ein: "231352685", agency: null, assistance_listing: "93.866", fiscal_year_from: 2022, fiscal_year_to: 2025, state: null, county: null, recipient_state: null, recipient_kind: null, q: null, amount_min: null, limit: 1 },
+      results: [{
+        id: 408907, award_key: "ASST_NON_P30AG064105_075", fain: "P30AG064105", fiscal_year: 2025,
+        agency: { code: "075", name: "Department of Health and Human Services", sub_agency: "National Institutes of Health" },
+        assistance_listing: { number: "93.866", title: "AGING RESEARCH" }, assistance_type: "04",
+        recipient: { ein: "231352685", uei: "GM1XX56LEP58", name: "TRUSTEES OF THE UNIVERSITY OF PENNSYLVANIA, THE", city: "PHILADELPHIA", state: "PA", zip: "19104", kind: "private_college" },
+        place_of_performance: { scope: "STATE-WIDE", state: "PA", county_fips: null },
+        amount: 0, actions: 1, description: "TRANSFORMING RESIDENTIAL PALLIATIVE CARE FOR PERSONS WITH DEMENTIA ...",
+        match: { method: "exact", score: 1 }, url: "https://www.usaspending.gov/award/ASST_NON_P30AG064105_075",
+      }],
+      count: 1, has_more: true, next_cursor: "WzIwMjUsNDA4OTA3XQ", notes: ["Direct federal grants and cooperative agreements ..."],
+    },
+  },
+  {
+    id: "foundation-finances", method: "GET", path: "/api/v1/foundations/{ein}/finances", title: "Foundation finances by year", mcpTool: "get_finances",
+    summary: "A private foundation's Form 990-PF finances, one row per tax year (newest return for the year): assets, revenue, expenses, grants paid, qualifying distributions, distributable amount, payout_rate (qualifying distributions over net investment assets, the 5% rule's measure), grant_rate and meets_distributable. 404 when the EIN has no 990-PF loaded.",
+    params: [{ name: "ein", in: "path", type: "string", required: true, example: "13-1684331", desc: "9-digit EIN. Dashes are fine." }],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/foundations/131684331/finances"`,
+    example: {
+      ein: "131684331", name: "THE FORD FOUNDATION", years: 3,
+      results: [{
+        tax_year: 2024, tax_period_end: "2024-12-31", amended: false, private_operating: false, charitable_trust: false,
+        fmv_assets: 17482000476, book_assets: 17484692219, net_assets: 14899612523, total_revenue: 1147097733, total_expenses: 1043691402,
+        grants_paid: 840817348, qualifying_distributions: 1102547617, net_investment_assets: 16033542268, distributable_amount: 814928501,
+        excess_carryover: 962048816, payout_rate: 0.0688, grant_rate: 0.0481, meets_distributable: true,
+        filing_url: "https://projects.propublica.org/nonprofits/organizations/131684331/202513219349106006/full",
+      }],
+      notes: ["One row per tax year from the foundation's Form 990-PF ..."],
+    },
+  },
+  {
+    id: "org-finances", method: "GET", path: "/api/v1/orgs/{ein}/finances", title: "Nonprofit finances by year", mcpTool: "get_finances",
+    summary: "A nonprofit's Form 990 or 990-EZ finance panel, one row per tax year: revenue, expenses, surplus, contributions, program revenue, government grants, cash, months of cash, assets, liabilities, net assets, and flags (deficit, low_cash under 3 months, negative_net_assets, deficit_streak). source prior_year rows fill a missing year from the next return's prior-year column.",
+    params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/orgs/341877332/finances"`,
+    example: {
+      ein: "341877332", name: "MID-OHIO YOUTH MENTORING INC", years: 2,
+      results: [{
+        tax_year: 2024, form: "990", source: "filing", revenue: 327923, expenses: 255813, surplus: 72110, contributions: 179730, program_revenue: 0,
+        government_grants: null, cash: 101420, months_cash: 4.76, total_assets: 414989, total_liabilities: 2168, net_assets: 412821, unrestricted_net_assets: 412821,
+        deficit: false, low_cash: false, negative_net_assets: false, deficit_streak: 0, revenue_band: 2, state: "OH", county_fips: "39139", ntee: "O31", subsection: "03",
+        filing_url: "https://projects.propublica.org/nonprofits/organizations/341877332/202512999349300001/full",
+      }],
+      notes: ["One row per tax year from Form 990 or 990-EZ. ..."],
+    },
+  },
+  {
+    id: "household-giving", method: "GET", path: "/api/v1/household-giving", title: "Household giving", mcpTool: "get_household_giving",
+    summary: "IRS Statistics of Income individual returns: returns, AGI, itemizers and the itemized charitable deduction, by state or county (tax years 2013 to 2023) or ZIP code (2013 to 2022), newest year first. Itemizers only, and itemizing fell by about 60% from 2018. by_agi=true splits rows by income class. Dollars, not thousands.",
+    params: [
+      { name: "level", in: "query", type: "string", example: "county", desc: "state (default), county or zip." },
+      { name: "state", in: "query", type: "string", example: "WV", desc: "Two-letter state code." },
+      { name: "county", in: "query", type: "string", example: "54011", desc: "With level=county: 5-digit county FIPS." },
+      { name: "zip", in: "query", type: "string", example: "25701", desc: "With level=zip: 5-digit ZIP." },
+      { name: "year_from", in: "query", type: "integer", example: "2022", desc: "First tax year. Default 2013." },
+      { name: "year_to", in: "query", type: "integer", example: "2023", desc: "Last tax year. Default 2023 (2022 for ZIPs)." },
+      { name: "by_agi", in: "query", type: "boolean", example: "false", desc: "One row per income class (8 classes for states and counties, 6 for ZIPs)." },
+      { name: "limit", in: "query", type: "integer", example: "100", desc: "Rows per page, 1 to 1,000. Default 100." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/household-giving?state=WV&year_from=2022&year_to=2022"`,
+    example: {
+      filters: { level: "state", state: "WV", county: null, zip: null, year_from: 2022, year_to: 2022, by_agi: false, limit: 100 },
+      results: [{
+        tax_year: 2022, level: "state", state: "WV", returns: 775900, agi: 50575539000, itemizers: 26320, itemized: 987009000, charity_n: 19620, charity_usd: 303663000,
+        nonitem_charity_n: null, nonitem_charity_usd: null, share_itemizing: 0.0339, share_claiming_charity: 0.0253, avg_charity_deduction: 15477,
+      }],
+      count: 1, has_more: false, next_cursor: null, notes: ["IRS Statistics of Income individual returns by state and county ..."],
+    },
+  },
+  {
+    id: "labels", method: "GET", path: "/api/v1/labels", title: "List cause labels", mcpTool: "list_cause_labels",
+    summary: "The graded cause labels (climate, women_girls, substance_use, housing_homelessness): definition, what's in and out, org counts per tier, and grades. primary_precision and partial_in_label_precision are the share a judge model agreed with on a random sample (with 95% intervals). recall_estimate is the share of relevant organizations the label found.",
+    params: [],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/labels"`,
+    example: {
+      count: 3,
+      results: [{
+        label: "climate", name: "Climate", definition: "Organizations whose stated work addresses climate change: cutting greenhouse gas emissions ...",
+        includes: "Climate advocacy and policy groups (Clean Air Task Force, 350.org, ...", excludes: "Land, wildlife, ocean or water conservation, parks, ...",
+        mixed_rule: "primary = climate or clean energy is the main stated purpose ...", version: "2026-10-16.9",
+        orgs: { primary: 1327, partial: 1462 },
+        grades: { classifier: "claude-haiku-5-5", judge: "claude-opus-5-5", primary_precision: 0.953, primary_sample: { estimate: 0.955, low: 0.875, high: 0.984, sample: 66 },
+          partial_in_label_precision: 0.948, partial_exact_tier: 0.821, partial_sample: { estimate: 0.955, low: 0.875, high: 0.984, sample: 66 }, recall_estimate: 0.892 },
+        api_path: "/api/v1/labels/climate/orgs",
+      }],
+      notes: ["Graded cause labels for causes no NTEE code captures. ..."],
+    },
+  },
+  {
+    id: "label-orgs", method: "GET", path: "/api/v1/labels/{label}/orgs", title: "Organizations with a label", mcpTool: "list_cause_labels",
+    summary: "Organizations carrying one cause label, by EIN, with tier, score, method and the one-line why.",
+    params: [
+      { name: "label", in: "path", type: "string", required: true, example: "climate", desc: "climate, women_girls, substance_use or housing_homelessness." },
+      { name: "tier", in: "query", type: "string", example: "primary", desc: "primary (default), partial or all." },
+      { name: "state", in: "query", type: "string", example: "CO", desc: "Organization's state." },
+      { name: "ntee", in: "query", type: "string", example: "C", desc: "NTEE code prefix." },
+      { name: "limit", in: "query", type: "integer", example: "100", desc: "Rows per page, 1 to 1,000. Default 100." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/labels/climate/orgs?state=CO&limit=1"`,
+    example: {
+      filters: { label: "climate", tier: "primary", state: "CO", ntee: null, limit: 1 },
+      results: [{
+        ein: "043116623", name: "ICLEI LOCAL GOVERNMENTS FOR SUSTAINABILITY USA INC", city: "DENVER", state: "CO", ntee: "C010", revenue: 4053847,
+        tier: "primary", score: 0.92, method: "llm:claude-sonnet-5-5", why: "Mission and programs center on climate protection, greenhouse gas inventories and adaptation for local governments.",
+        version: "2026-10-16.9", api_path: "/api/v1/org/043116623",
+      }],
+      count: 1, has_more: true, next_cursor: "WyIwNDMxMTY2MjMiXQ",
+    },
+  },
+  {
+    id: "bills", method: "GET", path: "/api/v1/congress/bills", title: "Search bills in Congress", mcpTool: "search_policy",
+    summary: "Bills and resolutions of the current (119th) Congress from Congress.gov, latest action first. Refreshed by hand for now (a daily schedule is planned). Keyword search over the title and latest action. Committees, sponsors and bill text are not loaded yet, and bills carry no EIN links.",
+    params: [
+      { name: "q", in: "query", type: "string", example: "\"charitable deduction\"", desc: "Keywords. Quotes for a phrase, -word to exclude." },
+      { name: "congress", in: "query", type: "integer", example: "119", desc: "Congress number." },
+      { name: "bill_type", in: "query", type: "string", example: "hr", desc: "hr, s, hres, sres, hjres, sjres, hconres or sconres." },
+      { name: "chamber", in: "query", type: "string", example: "House", desc: "Chamber of origin: House or Senate." },
+      { name: "introduced_from", in: "query", type: "string", example: "2026-01-01", desc: "Introduced on or after, YYYY-MM-DD." },
+      { name: "introduced_to", in: "query", type: "string", example: "2026-12-31", desc: "Introduced on or before." },
+      { name: "action_from", in: "query", type: "string", example: "2026-09-01", desc: "Latest action on or after." },
+      { name: "action_to", in: "query", type: "string", example: "2026-10-15", desc: "Latest action on or before." },
+      { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/congress/bills?q=%22charitable+deduction%22&limit=1"`,
+    example: {
+      filters: { q: "\"charitable deduction\"", congress: null, bill_type: null, chamber: null, introduced_from: null, introduced_to: null, action_from: null, action_to: null, limit: 1 },
+      results: [{
+        id: "119-hr-9173", congress: 119, bill_type: "hr", number: 9173, title: "Charitable Deductions for Digital Asset Donations Act", chamber: "House",
+        introduced: "2026-06-08", latest_action: { date: "2026-06-08", text: "Referred to the House Committee on Ways and Means." },
+        updated_at: "2026-09-23T07:00:00.000Z", url: "https://www.congress.gov/bill/119th-congress/house-bill/9173",
+      }],
+      count: 1, has_more: false, next_cursor: null, notes: ["Bills and resolutions of the current (119th) Congress ..."],
+    },
+  },
+  {
+    id: "federal-register", method: "GET", path: "/api/v1/federal-register", title: "Search the Federal Register", mcpTool: "search_policy",
+    summary: "Federal Register documents from October 2025 on (rules, proposed rules, notices, presidential documents), newest first. Refreshed by hand for now (a daily schedule is planned). Keyword search over title and abstract. funding_only keeps notices of funding opportunity.",
+    params: [
+      { name: "q", in: "query", type: "string", example: "nonprofit", desc: "Keywords. Quotes for a phrase, -word to exclude." },
+      { name: "type", in: "query", type: "string", example: "Notice", desc: "Rule, Proposed Rule, Notice or Presidential Document." },
+      { name: "agency", in: "query", type: "string", example: "Education", desc: "An agency name contains this." },
+      { name: "date_from", in: "query", type: "string", example: "2026-06-01", desc: "Published on or after, YYYY-MM-DD." },
+      { name: "date_to", in: "query", type: "string", example: "2026-10-14", desc: "Published on or before." },
+      { name: "funding_only", in: "query", type: "boolean", example: "true", desc: "Only notices of funding opportunity." },
+      { name: "significant", in: "query", type: "boolean", example: "true", desc: "Only (or, with false, no) significant rules under EO 12866." },
+      { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/federal-register?funding_only=true&agency=Education&limit=1"`,
+    example: {
+      filters: { q: null, type: null, agency: "Education", date_from: null, date_to: null, funding_only: true, significant: null, limit: 1 },
+      results: [{
+        document_number: "2026-19240", title: "Notice Announcing Impact Aid Discretionary Construction Grant Program Competition", type: "Notice", action: "Notice.",
+        abstract: "The Employment and Training Administration at the U.S. Department of Labor (DOL) is soliciting applications ...", agencies: ["Education Department"],
+        published: "2026-09-21", significant: null, funding_notice: true,
+        url: "https://www.federalregister.gov/documents/2026/09/21/2026-19240/notice-announcing-impact-aid-discretionary-construction-grant-program-competition",
+      }],
+      count: 1, has_more: true, next_cursor: "WyIyMDI2LTA5LTIxIiwiMjAyNi0xOTI0MCJd", notes: ["Federal Register documents ..."],
+    },
+  },
+  {
+    id: "news", method: "GET", path: "/api/v1/news", title: "Search sector news", mcpTool: "search_policy",
+    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed by hand for now (a daily schedule is planned): check the newest seen_at.",
+    params: [
+      { name: "q", in: "query", type: "string", example: "layoffs", desc: "Keywords in the headline." },
+      { name: "topic", in: "query", type: "string", example: "nonprofit cuts", desc: "nonprofit, philanthropy, foundation grants, donations, nonprofit cuts or giving." },
+      { name: "outlet", in: "query", type: "string", example: "apnews.com", desc: "News site (domain) contains this. domain works too." },
+      { name: "country", in: "query", type: "string", example: "United States", desc: "Source country." },
+      { name: "date_from", in: "query", type: "string", example: "2026-10-01", desc: "Seen on or after, YYYY-MM-DD." },
+      { name: "date_to", in: "query", type: "string", example: "2026-10-19", desc: "Seen on or before." },
+      { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
+      { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/news?topic=nonprofit+cuts&limit=20"`,
+    example: {
+      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, limit: 20 },
+      results: [], count: 0, has_more: false, next_cursor: null,
+      notes: ["News about philanthropy and the nonprofit sector from GDELT ...", "Two GDELT feeds: its search API ... and its raw crawl files ..."],
+    },
+  },
+  // ---------- IoG internal (scope iog_internal): keys without it get 403 insufficient_scope ----------
+  {
+    id: "iog-guides", method: "GET", path: "/api/v1/iog/guides", title: "List IoG Giving Guides", mcpTool: "get_iog_guide", scope: "iog_internal",
+    summary: "IoG internal (scope iog_internal). The Institute on Generosity's Giving Guides, GG2026 edition: slug, title, edition, reading notes, size in words and passages, and the Google Doc link (IoG staff access). No guide text here. Internal course material: do not publish or share outside IoG.",
+    params: [],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/iog/guides"`,
+    example: {
+      collection: "giving_guides", note: "IoG internal. ...", count: 13,
+      guides: [{
+        slug: "conducting-a-site-visit", title: "Giving Guide: Conducting a Site Visit", guide: "Conducting a Site Visit", edition: "GG2026, July 2026",
+        notes: null, words: 3458, chunks: 8, modified: "2026-08-04T20:58:44.617Z", source_url: "https://docs.google.com/document/d/.../edit",
+        api_url: "https://<host>/api/v1/iog/guides/conducting-a-site-visit",
+      }],
+    },
+  },
+  {
+    id: "iog-guide", method: "GET", path: "/api/v1/iog/guides/{slug}", title: "Get an IoG Giving Guide", mcpTool: "get_iog_guide", scope: "iog_internal",
+    summary: "IoG internal (scope iog_internal). One Giving Guide in full: text as Markdown (# section, ## subsection, - list item, | table row |) and the same text split into sections, each with heading, level and path.",
+    params: [{ name: "slug", in: "path", type: "string", required: true, example: "conducting-a-site-visit", desc: "Guide slug from /api/v1/iog/guides." }],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/iog/guides/conducting-a-site-visit"`,
+    example: {
+      note: "IoG internal. ...",
+      guide: {
+        slug: "conducting-a-site-visit", title: "Giving Guide: Conducting a Site Visit", guide: "Conducting a Site Visit", edition: "GG2026, July 2026",
+        notes: null, words: 3458, modified: "2026-08-04T20:58:44.617Z", source_url: "https://docs.google.com/document/d/.../edit",
+        sections: [{ level: 1, heading: "Before the Visit", path: ["Before the Visit"], text: "..." }, { level: 2, heading: "Setting Up the Visit", path: ["Before the Visit", "Setting Up the Visit"], text: "..." }],
+        text: "# Overview\n\n...",
+      },
+    },
+  },
+  {
+    id: "iog-search", method: "GET", path: "/api/v1/iog/search", title: "Search IoG Giving Guides", mcpTool: "search_iog_guides", scope: "iog_internal",
+    summary: "IoG internal (scope iog_internal). Passages from the Giving Guides that best match a question, by keyword (Postgres full text, any of the words, section names weigh more) and by meaning (the same local embedding model as /api/v1/search), fused by reciprocal rank. Each passage is about 300 to 600 words with its guide, section path and Google Doc link. LLM-free.",
+    params: [
+      { name: "q", in: "query", type: "string", required: true, example: "how to do a site visit", desc: "Question or topic in plain words, up to 300 characters." },
+      { name: "guide", in: "query", type: "string", example: "philanthropic-risk", desc: "Only this guide (slug)." },
+      { name: "limit", in: "query", type: "integer", example: "5", desc: "Passages to return, 1 to 20. Default 5." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/iog/search?q=how+to+do+a+site+visit&limit=3"`,
+    example: {
+      query: { q: "how to do a site visit", guide: null, limit: 3 }, model: "local:nomic-embed-text-v1.5-fp32@512", note: "IoG internal. ...", count: 3,
+      results: [{
+        guide: { slug: "conducting-a-site-visit", title: "Giving Guide: Conducting a Site Visit", name: "Conducting a Site Visit", edition: "GG2026, July 2026" },
+        section: "Before the Visit > Setting Up the Visit", heading_path: ["Before the Visit", "Setting Up the Visit"], position: 1,
+        text: "...", source_url: "https://docs.google.com/document/d/.../edit",
+        score: 0.03279, similarity: 0.8089, matched: { keyword_rank: 1, vector_rank: 1 },
+      }],
+    },
+  },
 ];
 
 export const ERRORS = [
   { status: 400, code: "bad_ein", when: "The EIN isn't 9 digits." },
+  { status: 400, code: "bad_param", when: "A parameter is out of range or malformed (the message names it), or the cursor was edited." },
   { status: 401, code: "missing_key", when: "No Authorization: Bearer header." },
   { status: 401, code: "invalid_key", when: "The key is unknown or mistyped." },
   { status: 403, code: "revoked_key", when: "The key was revoked." },
-  { status: 403, code: "insufficient_scope", when: "The key lacks the read scope." },
-  { status: 404, code: "not_found", when: "No organization or finding with that id." },
+  { status: 403, code: "insufficient_scope", when: "The key lacks the scope the endpoint needs." },
+  { status: 404, code: "not_found", when: "No organization, finding, finances or label with that id." },
   { status: 429, code: "rate_limited", when: "Over the key's per-minute limit. Wait Retry-After seconds." },
   { status: 500, code: "server_error", when: "Our bug. Try again, then tell us." },
 ];
@@ -174,7 +463,22 @@ export const MCP_TOOLS = [
   { name: "get_organization", desc: "Same as GET /api/v1/org/{ein}. Argument: ein." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },
+  { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec. The calling AI fills the structured question, so no Claude call on our side." },
+  { name: "search_grants", desc: "Same as GET /api/v1/grants. Arguments: source, funder_ein, recipient_ein, year_from, year_to, state, county, label, label_tier, amount_min, funder_type, totals, limit, cursor." },
+  { name: "get_federal_awards", desc: "Same as GET /api/v1/federal-awards. Arguments: recipient_ein, agency, assistance_listing, fiscal_year_from, fiscal_year_to, state, county, recipient_kind, q, totals, limit, cursor." },
+  { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },
+  { name: "get_household_giving", desc: "Same as GET /api/v1/household-giving. Arguments: level, state, county, zip, year_from, year_to, by_agi, limit, cursor." },
+  { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, state, ntee, limit, cursor." },
+  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, source, agency, type, funding_only, topic, outlet, date_from, date_to, limit." },
+  { name: "search_iog_guides", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. Same as GET /api/v1/iog/search. Arguments: q, guide, limit." },
+  { name: "get_iog_guide", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. No slug: GET /api/v1/iog/guides. With slug: GET /api/v1/iog/guides/{slug}." },
 ];
+
+// What the public /api/docs page and /api/openapi.json show: endpoints and MCP tools that need only the read scope.
+// IoG internal ones (scope set, /api/v1/iog/*) stay out of public docs. Keys with that scope get them from IoG directly.
+export const PUBLIC_ENDPOINTS = ENDPOINTS.filter((e) => !e.scope);
+const INTERNAL_TOOLS = new Set(ENDPOINTS.filter((e) => e.scope).map((e) => e.mcpTool));
+export const PUBLIC_MCP_TOOLS = MCP_TOOLS.filter((t) => !INTERNAL_TOOLS.has(t.name));
 
 const schemaFor = (v: unknown): Record<string, unknown> => {
   if (v === null) return {}; // null in the example: type not shown
@@ -183,13 +487,13 @@ const schemaFor = (v: unknown): Record<string, unknown> => {
   return { type: typeof v === "number" ? (Number.isInteger(v) ? "integer" : "number") : typeof v };
 };
 
-export function openapi(server: string) {
+export function openapi(server: string, includeInternal = false) {
   const errorSchema = { type: "object", properties: { error: { type: "object", properties: { code: { type: "string" }, message: { type: "string" }, docs: { type: "string" } } } } };
   return {
     openapi: "3.1.0",
     info: {
       title: "NomBot API", version: "1.0.0",
-      description: "Read-only access to public IRS data on US nonprofits and foundations, and NomBot's verified research findings. Institute on Generosity. Human docs: /api/docs. Remote MCP server: POST /mcp with the same key.",
+      description: "Read-only access to public IRS data on US nonprofits and foundations (organizations, grants, finances by year), federal awards, IRS household giving, graded cause labels, bills, Federal Register documents and sector news, plus NomBot's verified research findings. List endpoints page with limit and cursor. Institute on Generosity. Human docs: /api/docs. Remote MCP server: POST /mcp with the same key.",
     },
     servers: [{ url: server }],
     security: [{ bearer: [] }],
@@ -197,11 +501,13 @@ export function openapi(server: string) {
       securitySchemes: { bearer: { type: "http", scheme: "bearer", description: "API key, nb_live_..." } },
       schemas: { Error: errorSchema },
     },
-    paths: Object.fromEntries(ENDPOINTS.map((e) => [e.path, {
+    paths: Object.fromEntries((includeInternal ? ENDPOINTS : PUBLIC_ENDPOINTS).map((e) => [e.path, {
       get: {
         operationId: e.id.replace(/-(\w)/g, (_, c) => c.toUpperCase()),
         summary: e.title, description: e.summary,
-        parameters: e.params.map((p) => ({ name: p.name, in: p.in, required: p.in === "path" || !!p.required, description: p.desc, schema: { type: p.type }, example: p.example })),
+        ...(e.scope ? { security: [{ bearer: [e.scope] }], "x-required-scope": e.scope, tags: ["IoG internal"] } : {}),
+        parameters: e.params.map((p) => ({ name: p.name, in: p.in, required: p.in === "path" || !!p.required, description: p.desc, schema: { type: p.type },
+          ...(p.example == null ? {} : { example: p.type === "integer" ? Number(p.example) : p.type === "boolean" ? p.example === "true" : p.example }) })),
         responses: {
           200: { description: "OK", content: { "application/json": { schema: schemaFor(e.example), example: e.example } } },
           ...Object.fromEntries([...new Set(ERRORS.map((x) => x.status))].map((s) => [String(s), { description: ERRORS.filter((x) => x.status === s).map((x) => `${x.code}: ${x.when}`).join(" "), content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } }])),

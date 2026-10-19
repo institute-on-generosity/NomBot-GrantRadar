@@ -295,7 +295,7 @@ function filterChips(f: Filters, p: Params): Chip[] {
         ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c })),
         ...LABEL_SLUGS.map((l) => ({ label: labelName(l), href: go({ label: l, tier: "" }), on: f.label === l, note: "Graded label, any IRS code" }))],
     },
-    // Graded cause labels (climate, women and girls, substance use): shown when the question names one or the user picks it.
+    // Graded cause labels (climate, women and girls, substance use, housing and homelessness): shown when the question names one or the user picks it.
     // Primary: the cause is the org's main work. Partial adds orgs where it's one named goal among others.
     ...(f.label ? [{
       key: "label", kind: "set", label: `${labelName(f.label)}${f.labelPartial ? " (main or partial focus)" : " (main focus)"}`,
