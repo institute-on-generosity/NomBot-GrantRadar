@@ -190,6 +190,27 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   { name: "median months of cash, nonprofits under $1M (x100)", s: spec({ metric: "count_orgs", condition: "low_cash", recipientSize: { min: null, max: 1e6 } }),
     check: async (a) => [Math.round(Number(a.rows[0].median_months_cash) * 100), Math.round(100 * await one(`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY n.cash * 12.0 / n.cy_expenses) FROM (SELECT DISTINCT ON (f.ein) f.* FROM filing_flag f JOIN orgs o ON o.ein = f.ein
       WHERE coalesce(o.foundation, '') NOT IN ('02','03','04') AND o.ein IN (SELECT ein FROM recipient_profile WHERE band BETWEEN 1 AND 3) ORDER BY f.ein, f.tax_year DESC, f.object_id DESC) n WHERE n.cy_expenses > 0 AND n.cash IS NOT NULL`))] },
+  // Two causes asked separately (Oct 19): both ranked lists and the overlap, never the first cause alone.
+  { name: "two-cause top funders: women & girls #1 (primary)", s: spec({ metric: "top_funders", causes: [climate, women] }),
+    check: async (a) => { const r = a.rows.find((x) => x.cause === "women and girls" && x.rank === 1)!;
+      return [Number(r.primary_usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='women_girls' AND tier='primary')`, [r.funder_ein])]; } },
+  { name: "two-cause top funders: funders in both top 50", s: spec({ metric: "top_funders", causes: [climate, women] }),
+    check: async (a) => [a.rows.filter((r) => r.cause === "climate" && r.top_50_in_both).length, await one(`WITH t AS (${["climate", "women_girls"].map((l) => `SELECT '${l}' AS label, g.funder_ein, sum(g.amount) AS usd ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024
+        AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label = '${l}' AND tier = 'primary') GROUP BY 2`).join(" UNION ALL ")}),
+      r AS (SELECT *, row_number() OVER (PARTITION BY label ORDER BY usd DESC, funder_ein) AS rk FROM t)
+      SELECT count(*) FROM r a JOIN r z ON z.funder_ein = a.funder_ein AND z.label = 'women_girls' AND z.rk <= 50 WHERE a.label = 'climate' AND a.rk <= 50`)] },
+  { name: "two-cause top funders: both causes in the headline", s: spec({ metric: "top_funders", causes: [climate, women] }),
+    check: async (a) => [/climate/.test(a.headline) && /women and girls/.test(a.headline) && a.status === "ok" ? 1 : 0, 1] },
+  { name: "two-cause top recipients: climate #1 $", s: spec({ metric: "top_recipients", causes: [climate, women] }),
+    check: async (a) => { const r = a.rows.find((x) => x.cause === "climate" && x.rank === 1)!;
+      return [Number(r.usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein=$1 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='climate')`, [r.ein])]; } },
+  { name: "two-cause top recipients: women & girls list present", s: spec({ metric: "top_recipients", causes: [climate, women] }),
+    check: async (a) => [a.rows.filter((r) => r.cause === "women and girls").length >= 10 && /women and girls/.test(a.headline) ? 1 : 0, 1] },
+  // The cause guard: a second cause an answer can't split by is a visible "not included" note, status partial.
+  { name: "guard: grant size with two causes names the second", s: spec({ metric: "grant_size", causes: [climate, women] }),
+    check: async (a) => [a.status === "partial" && a.missing.some((m) => /women and girls/i.test(m.what)) && /women and girls/i.test(a.headline) ? 1 : 0, 1] },
+  { name: "guard: gov grants top recipients with two causes", s: spec({ metric: "top_recipients", source: "government_grants", causes: [climate, women] }),
+    check: async (a) => [a.status === "partial" && a.missing.some((m) => /women and girls/i.test(m.what)) ? 1 : 0, 1] },
 ];
 
 let fail = 0;

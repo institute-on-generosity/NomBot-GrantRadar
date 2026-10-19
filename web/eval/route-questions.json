@@ -16,6 +16,8 @@
   {"q": "what share of grants to human services is general operating support", "metric": ["general_support"]},
   {"q": "how concentrated is foundation funding for climate", "metric": ["concentration"], "label": "climate"},
   {"q": "which foundations fund both climate and women and girls", "metric": ["overlap_funders"]},
+  {"q": "which foundations are funding climate and which ones are for women?", "metric": ["top_funders"], "label": "climate"},
+  {"q": "Who are the top recipients of foundation money for climate, and for women and girls?", "metric": ["top_recipients"], "label": "climate"},
   {"q": "how many human services nonprofits in Kentucky rely on government grants", "metric": ["count_orgs"], "condition": "gov_reliant", "states": ["KY"]},
   {"q": "How much do donor-advised funds give to climate?", "metric": ["total"], "source": "charity_grants", "charityFunder": "daf_sponsor", "label": "climate"},
   {"q": "Which federal agencies give the most to nonprofits in Ohio?", "metric": ["top_funders", "breakdown"], "source": "federal_awards", "states": ["OH"]},

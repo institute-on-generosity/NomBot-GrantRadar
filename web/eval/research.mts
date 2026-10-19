@@ -10,7 +10,7 @@ const { routeQuestion } = await import("../lib/answerRoute");
 const { answer } = await import("../lib/answer");
 const { candidateFollowUps, pickFollowUps } = await import("../lib/followUp");
 type Spec = import("../lib/answerSpec").Spec;
-type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; premiseHolds?: boolean; [k: string]: unknown };
+type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; headlineHas?: string; premiseHolds?: boolean; [k: string]: unknown };
 const routeEval = "./route.mts"; // shared route checks (eval/route.mts); a variable path keeps tsc from resolving .mts
 const { check } = (await import(routeEval)) as { check: (e: Expect, research: boolean, s: Spec | null) => string[] };
 
@@ -28,6 +28,8 @@ const run = async (e: Expect) => {
   if (want === "answered" && a.status === "unanswerable") bad.push(`unanswerable: ${a.headline}`);
   if ((want === "ok" || want === "partial") && a.status !== want) bad.push(`status ${a.status}, want ${want}${a.missing.length ? ` (missing: ${a.missing.map((m) => m.what).join(", ")})` : ""}`);
   if (/NaN|undefined|Infinity|null/.test(a.headline + a.numbers.map((n) => n.value).join(" "))) bad.push(`broken number: ${a.headline}`);
+  // headlineHas: the answer covers every part asked (a two-cause question names both causes).
+  if (e.headlineHas && !new RegExp(e.headlineHas, "i").test(a.headline)) bad.push(`headline doesn't mention "${e.headlineHas}": ${a.headline}`);
   if (e.headlineNot && new RegExp(e.headlineNot, "i").test(a.headline + " " + a.causeNote)) bad.push(`headline/cause note mentions "${e.headlineNot}"`);
   // Premise check (spec.premise): holds or not as expected, and a false premise is corrected first thing.
   if (e.premiseHolds !== undefined) {

@@ -110,7 +110,9 @@ export function normalizeSpec(s: Spec): Spec {
   return {
     ...s,
     causes: s.causes.slice(0, 2).map((c) => ({
-      name: c.name.trim().slice(0, 60) || "this cause",
+      // A graded label's name mid-sentence: "Climate" -> "climate" (the router capitalizes sometimes). Other
+      // names keep their case ("Black-led organizations", "Head Start").
+      name: (c.label ? c.name.trim().replace(/^[A-Z](?=[^A-Z]*$)/, (m) => m.toLowerCase()) : c.name.trim()).slice(0, 60) || "this cause",
       label: c.label,
       ntee: [...new Set(c.ntee.map((n) => n.toUpperCase().trim()).filter((n) => /^[A-Z][0-9A-Z]{0,4}$/.test(n)))].slice(0, 8),
       keywords: words(c.keywords),
