@@ -732,7 +732,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v27: housing_homelessness label (generosity-data org_labels, graded g1).
 // v28: causes that name a federal program (Head Start, AmeriCorps ...) match its assistance listings on federal
 // awards (lib/fedPrograms); a cause that matched nothing is unanswerable, never "$0".
-const answerMemo = memo<Answer>("answer:v28", 500, 6 * 3600_000);
+// v29: ai_tech_learning_work label (tech and AI skills, graded g2).
+const answerMemo = memo<Answer>("answer:v29", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);

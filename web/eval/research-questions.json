@@ -10,6 +10,7 @@
   { "q": "Which federal agencies gave nonprofits the most in 2024?", "metric": ["top_funders", "breakdown"], "source": "federal_awards" },
   { "q": "Is foundation money for housing growing faster than foundation giving overall?", "metric": ["trend"], "label": "housing_homelessness" },
   { "q": "Who are the biggest foundation funders of homelessness work in Washington State?", "metric": ["top_funders"], "label": "housing_homelessness", "states": ["WA"] },
+  { "q": "Is foundation money for coding and digital skills programs growing?", "metric": ["trend"], "label": "ai_tech_learning_work" },
   { "q": "Who are the biggest foundation funders of civil rights and racial justice work?", "metric": ["top_funders"] },
   { "q": "How concentrated is donor-advised fund giving among the biggest sponsors?", "metric": ["top_funders"], "source": "charity_grants" },
   { "q": "What's the typical grant from a community foundation?", "metric": ["grant_size"], "source": "charity_grants", "charityFunder": "community_foundation" },
