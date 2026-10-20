@@ -7,6 +7,8 @@
 //                plus Schedule I money reported but not itemized (charity_filers.not_itemized_usd, generosity-data 050)
 // Schedule I lines that name no recipient ("SEE ATTACHED", "VARIOUS": is_placeholder_recipient()) are never grants to
 // or from a named organization here. They count in the filer's not-itemized amount instead.
+// Non-cash transfers between related organizations (restructurings, mergers, transfers of assets) and a few hand-checked
+// reporting errors (grant_transfers, generosity-data 067) are left out of grants received and given and shown on their own.
 // Every query runs on an index on the EIN column (recipient_ein partial indexes, funder_ein indexes). Grants given
 // read per-funder rollups (generosity-data 051: org_given_year, org_given_top), refreshed by refresh_research_layer().
 import { db } from "./db";
@@ -14,6 +16,9 @@ import { db } from "./db";
 export type YearTotal = { year: number; n: number; total: number };
 export type Funder = { ein: string; name: string; n: number; total: number; latest: number; kind?: string | null };
 export type Recipient = { ein: string | null; name: string; city: string | null; state: string | null; n: number; total: number; latest: number };
+export type Transfer = { id: number; year: number; ein: string | null; name: string; amount: number; cash: number; noncash: number; kind: "transfer" | "error"; reason: string };
+// Schedule I lines left out of grant totals (generosity-data 067, grant_transfers), as SQL to AND onto a charity_grants alias.
+export const NOT_TRANSFER = (alias: string) => `NOT EXISTS (SELECT 1 FROM grant_transfers t WHERE t.source = 'si' AND t.id = ${alias}.id)`;
 
 export const FUNDER_CLASS: Record<string, string> = {
   daf_sponsor: "Donor-advised fund sponsor",
@@ -32,7 +37,7 @@ const count = (ys: YearTotal[]) => ys.reduce((a, y) => a + y.n, 0);
 
 export async function orgFunding(ein: string) {
   const q = <T,>(sql: string) => db.query(sql, [ein]).then((r) => r.rows as T[]);
-  const [pfYears, pfTop, ciYears, ciClass, ciTop, fedYears, fedAgency, fedProgram, fedPlace, fedAwards, siYears, siTop, pfGivenYears, pfGivenTop] = await Promise.all([
+  const [pfYears, pfTop, ciYears, ciClass, ciTop, fedYears, fedAgency, fedProgram, fedPlace, fedAwards, siYears, siTop, pfGivenYears, pfGivenTop, xfer] = await Promise.all([
     q<{ year: number; n: number; total: string }>(
       `SELECT tax_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM grants
         WHERE recipient_ein = $1 AND tax_year IS NOT NULL GROUP BY 1 ORDER BY 1 DESC`),
@@ -41,17 +46,19 @@ export async function orgFunding(ein: string) {
          FROM grants g JOIN funders f ON f.ein = g.funder_ein
         WHERE g.recipient_ein = $1 GROUP BY 1 ORDER BY total DESC NULLS LAST LIMIT ${TOP + 1}`),
     q<{ year: number; n: number; total: string }>(
-      `SELECT tax_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM charity_grants
-        WHERE recipient_ein = $1 AND funder_ein <> $1 AND tax_year IS NOT NULL AND NOT is_placeholder_recipient(recipient_name) GROUP BY 1 ORDER BY 1 DESC`),
+      `SELECT c.tax_year AS year, count(*)::int AS n, sum(c.amount)::bigint AS total FROM charity_grants c
+        WHERE c.recipient_ein = $1 AND c.funder_ein <> $1 AND c.tax_year IS NOT NULL AND NOT is_placeholder_recipient(c.recipient_name) AND ${NOT_TRANSFER("c")}
+        GROUP BY 1 ORDER BY 1 DESC`),
     q<{ kind: string; n: number; total: string; funders: number }>(
       `SELECT coalesce(fp.funder_class, 'other') AS kind, count(*)::int AS n, sum(c.amount)::bigint AS total, count(DISTINCT c.funder_ein)::int AS funders
          FROM charity_grants c LEFT JOIN charity_funder_profile fp ON fp.ein = c.funder_ein
-        WHERE c.recipient_ein = $1 AND c.funder_ein <> $1 AND NOT is_placeholder_recipient(c.recipient_name) GROUP BY 1 ORDER BY total DESC NULLS LAST`),
+        WHERE c.recipient_ein = $1 AND c.funder_ein <> $1 AND NOT is_placeholder_recipient(c.recipient_name) AND ${NOT_TRANSFER("c")} GROUP BY 1 ORDER BY total DESC NULLS LAST`),
     q<{ ein: string; name: string; n: number; total: string; latest: number; kind: string | null }>(
       `SELECT c.funder_ein AS ein, coalesce(min(o.name), min(fp.name)) AS name, min(fp.funder_class) AS kind,
               count(*)::int AS n, sum(c.amount)::bigint AS total, max(c.tax_year) AS latest
          FROM charity_grants c LEFT JOIN charity_funder_profile fp ON fp.ein = c.funder_ein LEFT JOIN orgs o ON o.ein = c.funder_ein
-        WHERE c.recipient_ein = $1 AND c.funder_ein <> $1 AND NOT is_placeholder_recipient(c.recipient_name) GROUP BY 1 ORDER BY total DESC NULLS LAST LIMIT ${TOP + 1}`),
+        WHERE c.recipient_ein = $1 AND c.funder_ein <> $1 AND NOT is_placeholder_recipient(c.recipient_name) AND ${NOT_TRANSFER("c")}
+        GROUP BY 1 ORDER BY total DESC NULLS LAST LIMIT ${TOP + 1}`),
     q<{ year: number; n: number; total: string }>(
       `SELECT fiscal_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM federal_awards
         WHERE recipient_ein = $1 GROUP BY 1 ORDER BY 1 DESC`),
@@ -67,25 +74,40 @@ export async function orgFunding(ein: string) {
          FROM federal_awards WHERE recipient_ein = $1 GROUP BY 1 ORDER BY total DESC NULLS LAST`),
     q<{ awards: number }>(`SELECT count(DISTINCT award_key)::int AS awards FROM federal_awards WHERE recipient_ein = $1`),
     // Schedule I given: lines naming a recipient, the return's own Part IX line 1 total (grants to domestic
-    // organizations) and what's reported but not itemized (line 1 minus named lines, placeholders inside it)
-    q<{ year: number; n: number; total: string; line1: string | null; not_itemized: string | null }>(
-      `SELECT year, coalesce(y.n, 0) AS n, coalesce(y.total, 0) AS total, f.line1, f.not_itemized FROM
+    // organizations), what's reported but not itemized (line 1 minus named lines, placeholders inside it) and
+    // transfers to related organizations left out of the listed total (generosity-data 067)
+    q<{ year: number; n: number; total: string; line1: string | null; not_itemized: string | null; transfers: string }>(
+      `SELECT year, coalesce(y.n, 0) AS n, coalesce(y.total, 0) AS total, f.line1, f.not_itemized, coalesce(t.transfers, 0) AS transfers FROM
          (SELECT year, n, total FROM org_given_year WHERE ein = $1 AND source = 'si') y
          FULL JOIN (SELECT tax_year AS year, sum(grants_domestic)::bigint AS line1, sum(not_itemized_usd)::bigint AS not_itemized
                       FROM charity_filers WHERE ein = $1 GROUP BY 1) f USING (year)
-        WHERE coalesce(y.n, 0) > 0 OR coalesce(f.not_itemized, 0) > 0
+         FULL JOIN (SELECT tax_year AS year, sum(amount)::bigint AS transfers FROM grant_transfers WHERE funder_ein = $1 GROUP BY 1) t USING (year)
+        WHERE coalesce(y.n, 0) > 0 OR coalesce(f.not_itemized, 0) > 0 OR coalesce(t.transfers, 0) > 0
         ORDER BY year DESC`),
     givenTop(ein, "si"),
     q<{ year: number; n: number; total: string }>(
       `SELECT year, n, total FROM org_given_year WHERE ein = $1 AND source = 'pf' ORDER BY 1 DESC`),
     givenTop(ein, "pf"),
+    // Transfers to or from this organization left out of grant totals (generosity-data 067)
+    q<{ id: string; year: number; funder_ein: string; funder: string | null; recipient_ein: string | null; recipient: string; amount: string; cash: string | null; noncash: string | null; kind: "transfer" | "error"; reason: string }>(
+      `SELECT t.id, t.tax_year AS year, t.funder_ein, coalesce(o.name, fp.name) AS funder, t.recipient_ein, coalesce(r.name, t.recipient_name) AS recipient,
+              t.amount, t.cash, t.noncash, t.kind, t.reason
+         FROM grant_transfers t LEFT JOIN orgs o ON o.ein = t.funder_ein LEFT JOIN charity_funder_profile fp ON fp.ein = t.funder_ein
+         LEFT JOIN orgs r ON r.ein = t.recipient_ein
+        WHERE t.source = 'si' AND (t.funder_ein = $1 OR t.recipient_ein = $1) ORDER BY t.amount DESC`),
   ]);
 
   const funders = (rows: typeof ciTop) => rows.slice(0, TOP).map((r) => ({ ein: r.ein, name: r.name, n: r.n, total: num(r.total), latest: Number(r.latest), kind: r.kind ?? null }));
   const recipients = (rows: typeof siTop): Recipient[] => rows.slice(0, TOP).map((r) => ({ ein: r.ein, name: r.name, city: r.city, state: r.state, n: r.n, total: num(r.total), latest: Number(r.latest) }));
 
   const pfY = years(pfYears), ciY = years(ciYears), fedY = years(fedYears), pfgY = years(pfGivenYears);
-  const siY = siYears.map((r) => ({ year: Number(r.year), n: r.n, total: num(r.total), line1: r.line1 == null ? null : num(r.line1), notItemized: num(r.not_itemized) }));
+  const siY = siYears.map((r) => ({ year: Number(r.year), n: r.n, total: num(r.total), line1: r.line1 == null ? null : num(r.line1), notItemized: num(r.not_itemized), transfers: num(r.transfers) }));
+  const transfer = (r: (typeof xfer)[number], side: "funder" | "recipient"): Transfer => ({
+    id: Number(r.id), year: Number(r.year), ein: side === "funder" ? r.funder_ein : r.recipient_ein, name: (side === "funder" ? r.funder : r.recipient) ?? r.funder_ein,
+    amount: num(r.amount), cash: num(r.cash), noncash: num(r.noncash), kind: r.kind, reason: r.reason,
+  });
+  const xIn = xfer.filter((r) => r.recipient_ein === ein && r.funder_ein !== ein).map((r) => transfer(r, "funder"));
+  const xOut = xfer.filter((r) => r.funder_ein === ein).map((r) => transfer(r, "recipient"));
   return {
     foundations: pfY.length ? { total: sum(pfY), n: count(pfY), years: pfY, top: funders(pfTop.map((r) => ({ ...r, kind: null }))), more: pfTop.length > TOP } : null,
     charities: ciY.length
@@ -106,10 +128,12 @@ export async function orgFunding(ein: string) {
       : null,
     given: {
       scheduleI: siY.length
-        ? { total: sum(siY), n: count(siY), notItemized: siY.reduce((a, y) => a + y.notItemized, 0), years: siY, top: recipients(siTop), more: siTop.length > TOP }
+        ? { total: sum(siY), n: count(siY), notItemized: siY.reduce((a, y) => a + y.notItemized, 0), transfers: siY.reduce((a, y) => a + y.transfers, 0), years: siY, top: recipients(siTop), more: siTop.length > TOP }
         : null,
       foundation: pfgY.length ? { total: sum(pfgY), n: count(pfgY), years: pfgY, top: recipients(pfGivenTop), more: pfGivenTop.length > TOP } : null,
     },
+    // Schedule I transfers between related organizations, left out of every total above
+    transfers: xIn.length || xOut.length ? { received: xIn, given: xOut } : null,
   };
 }
 
@@ -118,7 +142,7 @@ export async function orgFunding(ein: string) {
 type RecipientRow = { ein: string | null; name: string; city: string | null; state: string | null; n: number; total: string; latest: number };
 const GIVEN_LINES = {
   si: `SELECT c.recipient_ein, c.recipient_name, c.recipient_city, c.recipient_state, c.amount, c.tax_year FROM charity_grants c
-        WHERE c.funder_ein = $1 AND NOT is_placeholder_recipient(c.recipient_name)`,
+        WHERE c.funder_ein = $1 AND NOT is_placeholder_recipient(c.recipient_name) AND ${NOT_TRANSFER("c")}`,
   pf: `SELECT g.recipient_ein, g.recipient_name, g.recipient_city, g.recipient_state, g.amount, g.tax_year FROM grants g WHERE g.funder_ein = $1`,
 };
 async function givenTop(ein: string, source: "si" | "pf"): Promise<RecipientRow[]> {
@@ -140,5 +164,6 @@ export const FUNDING_NOTES = {
   charities: "Grants public charities list on Form 990 Schedule I (over $5,000 per recipient), linked to this EIN. Tax years. A multi-year grant can appear as installments in several years.",
   federal: "Direct federal grants and cooperative agreements from USAspending, by federal fiscal year (October to September), not tax year. Net obligations, so a year can be negative. Linked by name and place.",
   given: "What this organization reported paying. Schedule I lists grants over $5,000 per recipient. Not itemized is the return's Part IX line 1 total minus the grants listed by name, including lines such as \"SEE ATTACHED\" or \"VARIOUS\" that name no recipient. That money has no recipient, so NomBot's totals by cause and place leave it out.",
+  transfers: "Schedule I lines that move assets between related organizations (a restructuring, merger, dissolution or a transfer to a subsidiary, parent or supporting organization), mostly non-cash, plus a few amounts that are clearly reporting errors. They are real lines on the return but not grantmaking, so NomBot leaves them out of grants received, grants given and every total by cause and place, and lists them here.",
   overlap: "The sources overlap. A donor-advised fund grant can start as a foundation grant to the sponsor, and federal money passed through a charity shows in both. Do not add the columns together.",
 };

@@ -408,6 +408,16 @@ const niMemo = memo<NotItemized>("answer-not-itemized:v1", 8, 3600_000);
 
 // Years before e-filing was required: measured filers and dollars per tax year (org_given_year), and our
 // 990-PF totals against IRS SOI's estimate where the benchmarks table has it (generosity-data 053).
+// Schedule I lines that move assets between related organizations (restructurings, mergers, transfers of assets: the
+// UL to ULSE stock transfer, $7.6B in 2021) and a few clear reporting errors (generosity-data 067, grant_transfers).
+// Left out of charity_grant_clean; national totals say how much, counting only lines the total would otherwise hold.
+type Transfers = { usd: number; n: number };
+async function transfersOut(ctx: Ctx, cls: string | null, y: { from: number; to: number }): Promise<Transfers> {
+  const p = new P();
+  const sql = `SELECT coalesce(sum(amount), 0)::float8 AS usd, count(*)::int AS n FROM grant_transfers
+  WHERE source = 'si' AND in_scope AND NOT to_grantmaker AND tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}${cls ? ` AND funder_class = ${p.add(cls)}` : ""}`;
+  return (await ctx.q<Transfers>("Schedule I transfers between related organizations left out of the total", sql, p))[0];
+}
 const earlyMemo = memo<string>("answer-early-coverage:v1", 4, 3600_000);
 const earlyCoverage = (kind: "pf" | "charity", from: number) => earlyMemo(`${kind}:${from}`, async () => {
   const src = kind === "pf" ? "pf" : "si";
@@ -735,7 +745,9 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // awards (lib/fedPrograms); a cause that matched nothing is unanswerable, never "$0".
 // v29: ai_tech_learning_work label (tech and AI skills, graded g2).
 // v30: a cause narrower than its label ("AI literacy", "opioids") is counted and named as the label (closestLabel).
-const answerMemo = memo<Answer>("answer:v30", 500, 6 * 3600_000);
+// v31: Schedule I transfers between related organizations out of charity_grant_clean (generosity-data 067), national
+// charity_grants totals say how much was left out.
+const answerMemo = memo<Answer>("answer:v31", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -933,6 +945,7 @@ const SI_CAVEATS = (lr: { grants: number; dollars: number }, cls: string | null,
   ...(cls === "community_foundation" ? ["Community foundation = \"Community Foundation\", \"Community Fund\" or \"Community Trust\" in the name, or NTEE code T31 when DAF grants aren't most of its giving."] : []),
   ...(cls == null || cls === "daf_sponsor" || cls === "community_foundation" ? ["Schedule I doesn't say which grants a donor advised. DAF sponsors' grants are mostly DAF grants, and community foundations' mix DAF and their own grants."] : []),
   "Grants to another DAF sponsor, community foundation or United Way are left out, so the money isn't counted twice.",
+  "Lines that move assets between related organizations (a restructuring, merger or transfer to a subsidiary, parent or supporting organization, mostly non-cash) are left out: they aren't grantmaking. The largest was Underwriters Laboratories' $7.6B stock transfer to ULSE in 2021.",
   ...(cls == null || cls === "other" ? ["Amounts include goods given in kind (food banks, donated supplies) at the value the filer reports."] : []),
   `Recipients are identified for ${pct(lr.grants)} of 2022–24 Schedule I grants (${pct(lr.dollars)} of those dollars). Cause totals count only identified recipients.`,
 ];
@@ -1076,6 +1089,10 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     : ` Another ${money(ni.usd)} (all states, all causes) was reported in these years without naming recipients, so it can't be counted by ${causes[0] ? "cause or place" : "place"} and is left out.`;
   const caveats: string[] = [];
   const notes = await Promise.all(causes.map((c, i) => causeNote(c, ms[i]?.cs ?? causeSql(null, new P(), "", ""), caveats)));
+  // Transfers between related organizations: named beside a national all-causes total when any fall in the years.
+  const xf = pl.g.kind === "charity" && national && !causes[0] && !hasFilt(pl.f) ? await transfersOut(ctx, pl.g.cls, y) : null;
+  const xfShown = !!xf && xf.usd > 0;
+  const xfMethod = xfShown ? ` It excludes ${money(xf!.usd)} of non-cash transfers between related organizations (${int(xf!.n)} Schedule I line${xf!.n === 1 ? "" : "s"}: restructurings, mergers, transfers of assets to a subsidiary, parent or supporting organization, and clear reporting errors), which aren't grantmaking.` : "";
   if (y.note) caveats.push(y.note);
   if (y.partial) caveats.push(`${G_LAST} returns are still arriving, so ${G_LAST} is incomplete.`);
   caveats.push(...gcav);
@@ -1122,7 +1139,8 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       chart: { title: `${cap(pl.g.grants)} to ${where}, by tax year`, sub: u.title, spec: inf ? inflToggle(barSpec, "amount", inf) : barSpec },
       rows: den.years.map((r) => ({ tax_year: r.year, grants_usd: r.usd, ...(inf ? { [`grants_usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, r.usd, r.year!)) } : {}), grants: r.n, linked_usd: r.linked_usd })),
       causeNote: notes[0], coverage: [...coverage, ...(bench?.coverage ?? [])], caveats,
-      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}${inf ? inflMethod(inf) : ""}${bench?.method ?? ""}`,
+      method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${xfMethod}${niMethod}${inf ? inflMethod(inf) : ""}${bench?.method ?? ""}`,
+        ...(xfShown ? [`Excludes ${b(money(xf!.usd))} of non-cash transfers between related organizations`] : []),
       sources: [pl.g.src, ...(inf ? [SRC_CPI] : []), ...(bench?.sources ?? [])], searchQuery: null,
       ...(growth != null ? { change: { subject: `${pl.g.money} to organizations in ${where}`, g: growth, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
     };

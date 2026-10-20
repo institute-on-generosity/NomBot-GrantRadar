@@ -137,7 +137,7 @@ export const GRANT_YEARS = [2012, 2025] as const;
 export const FUNDER_TYPES = ["daf_sponsor", "community_foundation", "united_way", "other"] as const;
 export const GRANT_NOTES = {
   foundation: "Grants private foundations list on Form 990-PF Part XV, tax years 2012-2025. recipient.ein is NomBot's link to a recipient (by reported EIN, name and address). About 64% of grants (59% of dollars) are linked. The place is the recipient's mailing address (usually headquarters), not where the money is spent. Grants to individuals keep amount and place but withhold the person's name and ZIP.",
-  charity: "Grants public charities list on Form 990 Schedule I (over $5,000 per recipient), tax years 2012-2025. Lines that name no recipient (\"SEE ATTACHED\", \"VARIOUS\") are left out. About 93% of Schedule I dollars are itemized by recipient (2022-24). funder_type: daf_sponsor, community_foundation, united_way, other.",
+  charity: "Grants public charities list on Form 990 Schedule I (over $5,000 per recipient), tax years 2012-2025. Lines that name no recipient (\"SEE ATTACHED\", \"VARIOUS\") are left out. Lines that move assets between related organizations (restructurings, mergers, transfers of assets) are listed with transfer set and left out of NomBot's totals. About 93% of Schedule I dollars are itemized by recipient (2022-24). funder_type: daf_sponsor, community_foundation, united_way, other.",
   years: "Tax years before 2020 cover e-filed returns only (e-filing became mandatory for tax years from mid-2019), so earlier years hold fewer grants. Tax year 2025 is partial.",
 };
 
@@ -182,9 +182,10 @@ export async function apiGrants(p: In) {
     ? `SELECT c.id, c.tax_year, c.funder_ein, coalesce(o.name, fp.name) AS funder_name, coalesce(fp.funder_class, 'other') AS funder_type,
               c.recipient_ein, c.recipient_name, c.recipient_city, c.recipient_state, c.recipient_zip, c.recipient_country,
               z.county_fips, z.county_name, c.amount, c.cash, c.noncash, c.noncash_desc, c.purpose, c.irc_section, c.reported_ein,
-              c.match_method, c.match_score, c.object_id
+              c.match_method, c.match_score, c.object_id, t.kind AS transfer_kind, t.reason AS transfer_reason
          FROM (SELECT c.* FROM charity_grants c ${q.clause} ORDER BY c.tax_year DESC, c.id DESC LIMIT ${lim}) c
          LEFT JOIN charity_funder_profile fp ON fp.ein = c.funder_ein LEFT JOIN orgs o ON o.ein = c.funder_ein
+         LEFT JOIN grant_transfers t ON t.source = 'si' AND t.id = c.id
          LEFT JOIN zip_regions z ON z.zip5 = left(c.recipient_zip, 5)::char(5)
         ORDER BY c.tax_year DESC, c.id DESC`
     : `SELECT g.id, g.tax_year, g.funder_ein, f.name AS funder_name, g.recipient_ein, g.recipient_name, g.recipient_city, g.recipient_state,
@@ -211,7 +212,11 @@ export async function apiGrants(p: In) {
         county_fips: r.county_fips, county_name: r.county_name, ...(source === "charity" ? { country: r.recipient_country, reported_ein: r.reported_ein } : { status: r.recipient_status }),
       },
       amount: num(r.amount),
-      ...(source === "charity" ? { cash: num(r.cash), noncash: num(r.noncash), noncash_desc: r.noncash_desc, irc_section: r.irc_section } : { relationship: r.relationship }),
+      ...(source === "charity"
+        ? { cash: num(r.cash), noncash: num(r.noncash), noncash_desc: r.noncash_desc, irc_section: r.irc_section,
+            // Left out of NomBot's totals: a transfer between related organizations or a clear reporting error (generosity-data 067)
+            transfer: r.transfer_kind ? { kind: r.transfer_kind, reason: r.transfer_reason } : null }
+        : { relationship: r.relationship }),
       purpose: r.purpose,
       match: r.recipient_ein ? { method: r.match_method, score: num(r.match_score) } : null,
       filing_url: filing(r.funder_ein, r.object_id),

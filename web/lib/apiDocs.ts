@@ -85,8 +85,11 @@ export const ENDPOINTS: Endpoint[] = [
         //   by_agency: [{ agency: "Department of Health and Human Services", awards: 2928, total: 2730316350 }],
         //   top_programs: [{ assistance_listing: "93.866", title: "AGING RESEARCH", agency: "...", awards: 264, total: 356384694 }], place_of_performance: [{ place: "PA", total: 3226858723 }], note: "..." }
         federal_awards: null,
-        // e.g. University of Pennsylvania: { count: 283, total: 49688062, not_itemized: 1356315, by_year: [{ tax_year: 2024, count: 127, total: 18114947, not_itemized: 730743, part_ix_line1: 18845690 }], top_recipients: [...], note: "..." }
+        // e.g. University of Pennsylvania: { count: 283, total: 49688062, not_itemized: 1356315, transfers: 0, by_year: [{ tax_year: 2024, count: 127, total: 18114947, not_itemized: 730743, transfers: 0, part_ix_line1: 18845690 }], top_recipients: [...], note: "..." }
         charity_grants_given: null,
+        // Schedule I lines moving assets between related organizations (and clear reporting errors), left out of every total.
+        // e.g. Underwriters Laboratories (36-1892375): { received: [], given: [{ id: 3743650, tax_year: 2021, to: { ein: "301211139", name: "ULSE INC" }, amount: 7632896943, cash: 0, noncash: 7632896943, kind: "transfer", reason: "..." }], note: "..." }
+        schedule_i_transfers: null,
         funding_overlap_note: "The sources overlap. A donor-advised fund grant can start as a foundation grant to the sponsor, ...",
         foundation: null,
         sources: [{ label: "Form 990 (2024)", detail: "Mission and programs, from the organization's IRS e-filed return", url: "https://projects.propublica.org/..." }],

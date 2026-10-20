@@ -154,9 +154,19 @@ export async function apiOrg(einRaw: string, base: string) {
         ? {
             count: fund.given.scheduleI.n, total: fund.given.scheduleI.total,
             not_itemized: fund.given.scheduleI.notItemized,
-            by_year: fund.given.scheduleI.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total, not_itemized: y.notItemized, part_ix_line1: y.line1 })),
+            transfers: fund.given.scheduleI.transfers,
+            by_year: fund.given.scheduleI.years.map((y) => ({ tax_year: y.year, count: y.n, total: y.total, not_itemized: y.notItemized, transfers: y.transfers, part_ix_line1: y.line1 })),
             top_recipients: top10(fund.given.scheduleI.top).map((r) => ({ ein: r.ein, name: r.name, city: r.city, state: r.state, grants: r.n, total: r.total, latest_year: r.latest })),
             note: FUNDING_NOTES.given,
+          }
+        : null,
+      // Schedule I transfers between related organizations (restructurings, mergers, transfers of assets) and clear
+      // reporting errors: left out of the totals above and of every NomBot total (generosity-data 067)
+      schedule_i_transfers: fund.transfers
+        ? {
+            received: fund.transfers.received.map((x) => ({ id: x.id, tax_year: x.year, from: { ein: x.ein, name: x.name }, amount: x.amount, cash: x.cash, noncash: x.noncash, kind: x.kind, reason: x.reason })),
+            given: fund.transfers.given.map((x) => ({ id: x.id, tax_year: x.year, to: { ein: x.ein, name: x.name }, amount: x.amount, cash: x.cash, noncash: x.noncash, kind: x.kind, reason: x.reason })),
+            note: FUNDING_NOTES.transfers,
           }
         : null,
       funding_overlap_note: FUNDING_NOTES.overlap,

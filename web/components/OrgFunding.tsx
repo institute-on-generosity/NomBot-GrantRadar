@@ -1,14 +1,14 @@
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { titleCase } from "@/components/text";
-import { orgFunding, FUNDING_NOTES, FUNDER_CLASS, type Funder, type Recipient, type YearTotal } from "@/lib/orgFunding";
+import { orgFunding, FUNDING_NOTES, FUNDER_CLASS, type Funder, type Recipient, type Transfer, type YearTotal } from "@/lib/orgFunding";
 
 // Grants received (990-PF foundations, Schedule I charities, federal awards) and grants given, for one org page.
 // Async server component: the org page streams it in its own Suspense so the profile shows first.
 export async function OrgFunding({ ein }: { ein: string }) {
   const f = await orgFunding(ein.replace(/\D/g, ""));
-  const received = [f.foundations, f.charities, f.federal].some(Boolean);
-  const given = f.given.scheduleI || f.given.foundation;
+  const received = [f.foundations, f.charities, f.federal].some(Boolean) || !!f.transfers?.received.length;
+  const given = !!(f.given.scheduleI || f.given.foundation || f.transfers?.given.length);
   if (!received && !given) return null;
   return (
     <>
@@ -61,6 +61,25 @@ function RecipientRow({ x }: { x: Recipient }) {
       <span><OrgName ein={x.ein} name={x.name} /><small>{[place, plural(x.n, "grant"), `latest ${x.latest}`].filter(Boolean).join(" · ")}</small></span>
       <span>{money(x.total)}</span>
     </li>
+  );
+}
+
+// Schedule I transfers between related organizations (generosity-data 067): listed, never in a total.
+function Transfers({ items, side }: { items: Transfer[]; side: "from" | "to" }) {
+  const total = items.reduce((a, x) => a + x.amount, 0);
+  return (
+    <div className="fund-block">
+      <h3>Transfers {side} related organizations <small>Schedule I, {plural(items.length, "line")}, {money(total)}, left out of the totals above</small></h3>
+      <ul className="people fund-list">
+        {items.map((x) => (
+          <li key={x.id}>
+            <span>{x.ein ? <OrgName ein={x.ein} name={x.name} /> : <b>{titleCase(x.name)}</b>}<small>{[x.kind === "error" ? "Likely reporting error" : x.noncash >= x.amount / 2 ? "Mostly non-cash" : "Cash", `tax year ${x.year}`, x.reason].join(" · ")}</small></span>
+            <span>{money(x.amount)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="note-small">{FUNDING_NOTES.transfers}</p>
+    </div>
   );
 }
 
@@ -139,6 +158,7 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
           <p className="note-small">{FUNDING_NOTES.federal}</p>
         </div>
       )}
+      {!!f.transfers?.received.length && <Transfers items={f.transfers.received} side="from" />}
       <p className="note-small">{FUNDING_NOTES.overlap}</p>
     </section>
   );
@@ -151,11 +171,11 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
       <h2>Grants given</h2>
       {si && (
         <div className="fund-block first">
-          <h3>Schedule I grants <small>{si.n > 0 ? <>{plural(si.n, "grant")}, {money(si.total)}{si.notItemized > 0 && <>, plus {money(si.notItemized)} not itemized</>}</> : <>{money(si.notItemized)} reported, none itemized by recipient</>}, {span(si.years)}</small></h3>
+          <h3>Schedule I grants <small>{si.n > 0 ? <>{plural(si.n, "grant")}, {money(si.total)}{si.notItemized > 0 && <>, plus {money(si.notItemized)} not itemized</>}</> : si.notItemized > 0 ? <>{money(si.notItemized)} reported, none itemized by recipient</> : <>no grants listed</>}{si.transfers > 0 && <>, {money(si.transfers)} of transfers left out</>}, {span(si.years)}</small></h3>
           <table className="fund-years">
-            <thead><tr><th>Tax year</th><th className="n">Grants listed</th><th className="n">Listed total</th>{si.notItemized > 0 && <th className="n" title="Reported but not listed by recipient: Part IX line 1 minus the grants listed by name, including lines such as SEE ATTACHED or VARIOUS">Not itemized</th>}<th className="n" title="Form 990 Part IX line 1, grants to domestic organizations">Return total (Part IX)</th></tr></thead>
+            <thead><tr><th>Tax year</th><th className="n">Grants listed</th><th className="n">Listed total</th>{si.notItemized > 0 && <th className="n" title="Reported but not listed by recipient: Part IX line 1 minus the grants listed by name, including lines such as SEE ATTACHED or VARIOUS">Not itemized</th>}{si.transfers > 0 && <th className="n" title="Transfers between related organizations, left out of the listed total">Transfers</th>}<th className="n" title="Form 990 Part IX line 1, grants to domestic organizations">Return total (Part IX)</th></tr></thead>
             <tbody>
-              {si.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td>{si.notItemized > 0 && <td className="n">{y.notItemized > 0 ? money(y.notItemized) : "–"}</td>}<td className="n">{y.line1 == null ? "–" : money(y.line1)}</td></tr>)}
+              {si.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td>{si.notItemized > 0 && <td className="n">{y.notItemized > 0 ? money(y.notItemized) : "–"}</td>}{si.transfers > 0 && <td className="n">{y.transfers > 0 ? money(y.transfers) : "–"}</td>}<td className="n">{y.line1 == null ? "–" : money(y.line1)}</td></tr>)}
             </tbody>
           </table>
           {si.top.length > 0 && <>
@@ -177,6 +197,7 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
           <More items={pf.top} noun="recipients" extra={pf.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
         </div>
       )}
+      {!!f.transfers?.given.length && <Transfers items={f.transfers.given} side="to" />}
       <p className="note-small">{FUNDING_NOTES.given} Totals are summed across all listed years.</p>
     </section>
   );

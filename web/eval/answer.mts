@@ -24,13 +24,15 @@ const one = async (sql: string, params: unknown[] = []) => Number(Object.values(
 const CLEAN = `FROM grants g LEFT JOIN orgs o ON o.ein = g.recipient_ein
   WHERE g.amount > 0 AND g.recipient_kind IS NULL AND coalesce(o.foundation, '') NOT IN ('02','03','04')`;
 // Schedule I grants (charity_grants), written out on the base table: US recipients, no foreign address,
-// no private-foundation recipients, no placeholder lines ("SEE ATTACHED", generosity-data 050), no grants to
+// no private-foundation recipients, no placeholder lines ("SEE ATTACHED", generosity-data 050), no transfers
+// between related organizations (grant_transfers, 067), no grants to
 // other grantmakers (DAF sponsors, community foundations, United Ways). charity_funder_profile only supplies
 // each funder's class.
 const US_ST = `'^(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|PR|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])$'`;
 const CG = (cls: string | null) => `FROM charity_grants c ${cls ? `JOIN charity_funder_profile fp ON fp.ein = c.funder_ein AND fp.funder_class = '${cls}'` : ""} LEFT JOIN orgs o ON o.ein = c.recipient_ein
   WHERE c.amount > 0 AND c.recipient_country IS NULL AND c.recipient_state ~ ${US_ST} AND coalesce(o.foundation, '') NOT IN ('02','03','04')
     AND NOT is_placeholder_recipient(c.recipient_name)
+    AND NOT EXISTS (SELECT 1 FROM grant_transfers t WHERE t.source = 'si' AND t.id = c.id)
     AND c.funder_ein IN (SELECT ein FROM charity_filers)
     AND coalesce(c.recipient_ein, '') NOT IN (SELECT ein FROM charity_funder_profile WHERE funder_class IN ('daf_sponsor','community_foundation','united_way'))`;
 const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answer>>) => Promise<[number, number]> }[] = [
