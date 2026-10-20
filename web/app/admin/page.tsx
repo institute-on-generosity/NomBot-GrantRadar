@@ -188,7 +188,7 @@ async function HelperSection() {
             <ul className={s.list}>{p.jobs.map((j) => (
               <li key={j.pid}><Pill>{j.kind}</Pill> <span className={s.mono}>{j.cmd}</span> <span className={s.muted}>{Math.round(j.elapsed_s / 60)} min</span></li>
             ))}</ul>
-          ) : <p className={s.note}>{p ? "No rsync or embedding jobs running" : "No heartbeat yet"}</p>}
+          ) : <p className={s.note}>{p ? "No helper jobs running" : "No heartbeat yet"}</p>}
         </div>
       </div>
     </Section>
