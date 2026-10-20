@@ -17,6 +17,7 @@ import { LOADED_STATES } from "./filters";
 import { money } from "../components/money";
 import { orgName } from "../components/text";
 import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
+import { LABELS, LABEL_SCOPE, labelPhrase, narrowerThanLabel, type LabelSlug } from "./labels";
 import { fedProgram, type FedProgram } from "./fedPrograms";
 
 export type Num = { value: string; label: string; note?: string };
@@ -733,7 +734,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v28: causes that name a federal program (Head Start, AmeriCorps ...) match its assistance listings on federal
 // awards (lib/fedPrograms); a cause that matched nothing is unanswerable, never "$0".
 // v29: ai_tech_learning_work label (tech and AI skills, graded g2).
-const answerMemo = memo<Answer>("answer:v29", 500, 6 * 3600_000);
+// v30: a cause narrower than its label ("AI literacy", "opioids") is counted and named as the label (closestLabel).
+const answerMemo = memo<Answer>("answer:v30", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -741,8 +743,33 @@ export function answer(question: string, spec: Spec, opts: { cube?: boolean } = 
   return answerMemo(JSON.stringify(s), () => compute(question, s, true)).then((a) => ({ ...a, question }));
 }
 
-async function compute(question: string, s: Spec, cube: boolean): Promise<Answer> {
+// A cause narrower than the label it routed to ("AI literacy" -> ai_tech_learning_work): the answer counts the
+// whole label, so it runs under the label's own name ("tech and AI skills orgs") and says which cause was asked.
+type Narrowed = { asked: string; name: string; label: LabelSlug };
+function closestLabel(s: Spec): { spec: Spec; narrowed: Narrowed[] } {
+  const narrowed: Narrowed[] = [];
+  const causes = s.causes.map((c) => {
+    if (!c.label || !narrowerThanLabel(c.name, c.label)) return c;
+    const n = { asked: c.name, name: `${labelPhrase(c.label)} orgs`, label: c.label };
+    narrowed.push(n);
+    return { ...c, name: n.name };
+  });
+  return { spec: narrowed.length ? { ...s, causes } : s, narrowed };
+}
+function nameClosest(out: Out, narrowed: Narrowed[]) {
+  for (const n of narrowed.slice().reverse()) {
+    const note = `the closest graded label to ${n.asked}`;
+    const i = out.headline.toLowerCase().indexOf(n.name.toLowerCase());
+    out.headline = i >= 0 ? `${out.headline.slice(0, i + n.name.length)} (${note})${out.headline.slice(i + n.name.length)}` : `${out.headline.replace(/[.\s]+$/, "")}. Counts ${n.name}, ${note}`;
+    out.caveats.unshift(`You asked about ${n.asked}. No graded label covers it alone, so this counts the broader ${LABELS[n.label]} label: ${n.label === "women_girls" ? LABEL_SCOPE[n.label] : `orgs working on ${LABEL_SCOPE[n.label]}`}. It covers more than ${n.asked} alone.`);
+    if (out.method) out.method = `${out.method.replace(/\s+$/, "")} "${cap(n.asked)}" is narrower than the ${LABELS[n.label]} label, so the whole label is counted.`;
+  }
+  if (out.causeNote) out.causeNote = `Closest graded label${narrowed.length > 1 ? "s" : ""}, broader than the question: ${narrowed.map((n) => `"${n.asked}" counted as ${LABELS[n.label]}`).join(", ")}. ${out.causeNote}`;
+}
+
+async function compute(question: string, asked: Spec, cube: boolean): Promise<Answer> {
   const t0 = Date.now();
+  const { spec: s, narrowed } = closestLabel(asked);
   const ctx = new Ctx(cube);
   const missing = [...new Set(s.missing)].map((m) => m === "other" ? { what: s.missingNote || "Part of the question", why: "It isn't in IRS nonprofit filings.", source: "Not in our data", url: "" } : MISSING_TEXT[m]).filter(Boolean);
   let out: Out;
@@ -771,7 +798,8 @@ async function compute(question: string, s: Spec, cube: boolean): Promise<Answer
   // Causes without a graded label are counted by IRS codes or keywords: say so on the answer itself, not only in
   // "How we got this". Keywords is the rougher of the two, so it wins when both appear.
   const basis = /Approximate keyword set/.test(out.causeNote) ? "keywords" : /NTEE codes /.test(out.causeNote) ? "codes" : null;
-  return { ...out, question, spec: s, status, missing, premise, basis, queries: ctx.queries, ms: Date.now() - t0 };
+  if (narrowed.length && status !== "unanswerable") nameClosest(out, narrowed);
+  return { ...out, question, spec: asked, status, missing, premise, basis, queries: ctx.queries, ms: Date.now() - t0 };
 }
 
 const SOURCE_WORDS: Record<Spec["source"], string> = { foundation_grants: "foundation grants", charity_grants: "charity grants (Schedule I)", federal_awards: "federal awards", government_grants: "government grants on Form 990", contributions: "contributions on Form 990", revenue: "revenue on Form 990", household_giving: "household giving", foundation_finances: "foundation finances" };

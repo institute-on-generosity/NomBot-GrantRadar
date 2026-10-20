@@ -1,7 +1,7 @@
 // The structured question behind a research answer (lib/answer.ts). Filled by the router (lib/answerRoute.ts,
 // one cheap Claude call), by Research Buddy's research_answer tool, or directly by MCP / API callers.
 import { z } from "zod";
-import { labelName, labelPhrase } from "./labels";
+import { labelName, labelPhrase, readsAsLabel } from "./labels";
 
 export const METRICS = [
   "total",            // how much money goes to X (with its share and each year)
@@ -113,8 +113,8 @@ export function normalizeSpec(s: Spec): Spec {
     causes: s.causes.slice(0, 2).map((c) => ({
       // A graded label's name mid-sentence: "Climate" -> "climate" (the router capitalizes sometimes). Other
       // names keep their case ("Black-led organizations", "Head Start"). A bare slug ("ai_tech_learning_work") or the
-      // label's own name reads as its name mid-sentence ("tech and AI skills").
-      name: (c.label && (/_/.test(c.name) || c.name.trim().toLowerCase() === labelName(c.label).toLowerCase()) ? labelPhrase(c.label) : c.label ? c.name.trim().replace(/^[A-Z](?=[^A-Z]*$)/, (m) => m.toLowerCase()) : c.name.trim()).slice(0, 60) || "this cause",
+      // label's own name reads as its name mid-sentence ("tech and AI skills"), and so does "women" (women and girls).
+      name: (c.label && (/_/.test(c.name) || c.name.trim().toLowerCase() === labelName(c.label).toLowerCase() || readsAsLabel(c.name, c.label)) ? labelPhrase(c.label) : c.label ? c.name.trim().replace(/^[A-Z](?=[^A-Z]*$)/, (m) => m.toLowerCase()) : c.name.trim()).slice(0, 60) || "this cause",
       label: c.label,
       ntee: [...new Set(c.ntee.map((n) => n.toUpperCase().trim()).filter((n) => /^[A-Z][0-9A-Z]{0,4}$/.test(n)))].slice(0, 8),
       keywords: words(c.keywords),

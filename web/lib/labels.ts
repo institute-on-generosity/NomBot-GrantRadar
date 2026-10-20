@@ -29,3 +29,34 @@ export function namesLabel(question: string, label: LabelSlug): boolean {
 }
 // Rule-based reading (no Claude): the first label the question names.
 export const labelFromText = (question: string): LabelSlug | undefined => LABEL_SLUGS.find((l) => namesLabel(question, l));
+
+// Narrower questions: "AI literacy" routes to ai_tech_learning_work, but the label counts all tech and AI skills
+// orgs, so a headline "$210M to AI literacy" would overstate it. A cause name counts as the label itself only
+// when, after filler words, it is the label's name or one of these whole-scope names; anything else is narrower
+// and the answer names the label it actually counted (lib/answer.ts, closestLabel).
+const WHOLE: Record<LabelSlug, string[]> = {
+  climate: ["climate", "climate change", "climate action", "climate crisis", "climate work", "global warming", "climate and clean energy"],
+  women_girls: ["women and girls", "girls and women", "women", "woman", "womens", "womens and girls", "women girls"],
+  substance_use: ["substance use and addiction", "substance use", "substance abuse", "substance misuse", "substance use disorder", "substance use disorders", "addiction", "addictions", "addiction and recovery", "addiction recovery", "drug and alcohol", "alcohol and drug", "drug and alcohol addiction", "alcohol and drug addiction", "drug and alcohol use", "alcohol and drug use", "substance use and opioid addiction"],
+  housing_homelessness: ["housing and homelessness", "homelessness and housing", "housing", "homelessness", "homeless", "housing and homeless", "unhoused", "people experiencing homelessness", "homeless people"],
+  ai_tech_learning_work: ["tech and ai skills", "ai and tech skills", "tech skills", "technology skills", "tech and ai learning and work", "ai tech learning work", "ai tech learning and work", "tech and ai skills and work"],
+};
+// What each label counts, for the caveat on a narrower question.
+export const LABEL_SCOPE: Record<LabelSlug, string> = {
+  climate: "climate change mitigation, clean energy, adaptation and resilience, and climate policy and advocacy",
+  women_girls: "orgs serving or led for women and girls, across health, economic security, education, safety and rights",
+  substance_use: "prevention, treatment, recovery and harm reduction for alcohol and every kind of drug, not only one substance",
+  housing_homelessness: "homeless services and shelters, affordable and supportive housing, eviction prevention, rental assistance and home ownership",
+  ai_tech_learning_work: "computer science and coding education, digital and AI literacy, tech workforce training, and tech capacity for nonprofits",
+};
+const FILLER = /\b(the|orgs?|organi[sz]ations?|nonprofits?|non-profits?|charities|charity|groups?|causes?|funding|money|grants?|giving|sector|issues?|efforts?|programs?|services?|work|related|focused)\b/g;
+const scopeKey = (s: string) => s.toLowerCase().replace(/[’']s?\b/g, "").replace(/&/g, " and ").replace(/[^a-z0-9 ]+/g, " ").replace(FILLER, " ").replace(/\s+/g, " ").trim();
+// Whole-scope names that read as only part of the label ("women" for women and girls): shown as the label's name.
+const AS_LABEL: Partial<Record<LabelSlug, string[]>> = { women_girls: ["women", "woman", "womens", "girls and women", "womens and girls", "women girls"] };
+export const readsAsLabel = (name: string, label: LabelSlug) => (AS_LABEL[label] ?? []).some((w) => scopeKey(w) === scopeKey(name));
+// True when the cause the user named is narrower than the label it routed to. Deterministic: no model call.
+export function narrowerThanLabel(name: string, label: LabelSlug): boolean {
+  const k = scopeKey(name);
+  if (!k || /_/.test(name)) return false; // a bare slug or empty name is the label itself
+  return k !== scopeKey(LABELS[label]) && !WHOLE[label].some((w) => scopeKey(w) === k);
+}
