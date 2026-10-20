@@ -4,6 +4,7 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg } from "./org";
+import { orgNews, ORG_NEWS_NOTE } from "./orgNews";
 import { TAX_STATUS_NOTE } from "./taxStatus";
 import { orgFunding, FUNDING_NOTES } from "./orgFunding";
 import { isLabel } from "./labels";
@@ -51,6 +52,7 @@ export async function apiOrg(einRaw: string, base: string) {
   if (ein.length !== 9) return { error: "bad_ein" as const };
   const o = await getOrg(ein);
   if (!o) return { error: "not_found" as const };
+  const newsP = orgNews(ein, 5).catch(() => null); // generosity-data 071 (lib/orgNews), awaited below; never fails the org
 
   const [{ rows: leaders }, { rows: [rec] }, { rows: topFunders }, { rows: [given] }, { rows: topRecipients }, { rows: [fdn] }, fund] = await Promise.all([
     // Leaders from the newest filing that lists any (990 Part VII / 990-PF officers)
@@ -85,6 +87,7 @@ export async function apiOrg(einRaw: string, base: string) {
 
   const latest = o.years[0] ?? null;
   const num = (v: unknown) => (v == null ? null : Number(v));
+  const news = await newsP;
   return {
     org: {
       ein: o.ein,
@@ -117,6 +120,8 @@ export async function apiOrg(einRaw: string, base: string) {
             spending: o.flag.spending, board: o.flag.board,
           }
         : null,
+      // Newest headlines that name this org (generosity-data 071); every one: /api/v1/news?ein=
+      news: news ? { total: news.total, results: news.results, all_url: `${base}/api/v1/news?ein=${ein}`, note: ORG_NEWS_NOTE } : null,
       leaders: leaders.map((l) => ({ name: l.name as string, title: l.title as string | null, role: l.role as string | null, hours: num(l.hours), pay: num(l.pay), year: l.tax_year as number })),
       grants_received: {
         count: rec.n, total: Number(rec.total), funders: rec.funders, first_year: rec.first, latest_year: rec.latest,

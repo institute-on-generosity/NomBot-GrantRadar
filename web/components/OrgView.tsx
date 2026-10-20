@@ -15,6 +15,7 @@ import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
 import type { BoardLink } from "@/lib/people";
 import { OrgFunding } from "@/components/OrgFunding";
+import { OrgNews } from "@/components/OrgNews";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -127,6 +128,9 @@ async function Org({ params, searchParams, modal }: Props) {
           <dt>Address</dt><dd>{[o.careOf, o.street && titleCase(o.street), [o.city && titleCase(o.city), o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</dd>
         </dl>
       </section>
+
+      {/* Newest headlines that name this org (generosity-data news_org_links); streams in */}
+      <Suspense fallback={null}><OrgNews ein={o.ein} /></Suspense>
 
       <section>
         <h2>Sources</h2>

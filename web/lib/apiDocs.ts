@@ -38,7 +38,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. news lists the newest headlines (up to 5) that name the org, with total and all_url (/api/v1/news?ein=). Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -67,6 +67,9 @@ export const ENDPOINTS: Endpoint[] = [
           signals: [{ key: "revenue", label: "Income", level: "ok", note: "down 8% from last year", ask: null }, { key: "result", label: "Bottom line", level: "ok", note: "took in 22% more than it spent", ask: null }],
           cash_months: 4.76, program_share: 0.88, debt_share: 0.005, spending: { program: 0.88, admin: 0.087, fundraising: 0.031 }, board: { members: 12, independent: 12 },
         },
+        // Newest headlines that name the org, matched by name. e.g. Gates Foundation (56-2618866): { total: 2, results: [{ id: 2826,
+        //   title: "Warren Buffett Accelerates Charitable Donations, Ends Contributions to Gates Foundation", url: "https://themunicheye.com/...", outlet: "themunicheye.com", seen_at: "2026-07-14T21:00:00.000Z", matched: "Gates Foundation" }, ...], ... }
+        news: { total: 0, results: [], all_url: "https://<host>/api/v1/news?ein=341877332", note: "Headlines that name this organization, matched by name ..." },
         leaders: [{ name: "JAMES R NICHOLSON", title: "EXECUTIVE DI", role: "officer", hours: 40, pay: 65069, year: 2024 }],
         grants_received: {
           count: 5, total: 20200, funders: 3, first_year: 2022, latest_year: 2024,
@@ -411,9 +414,10 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "news", method: "GET", path: "/api/v1/news", title: "Search sector news", mcpTool: "search_policy",
-    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed daily. Keyword search over the headline, or search by meaning with semantic=true. One row per story: copies of the same story under other URLs (same headline, or near identical meaning within 3 days) are hidden, counted in duplicates and named in also_reported_by.",
+    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed daily. Keyword search over the headline, or search by meaning with semantic=true. One row per story: copies of the same story under other URLs (same headline, or near identical meaning within 3 days) are hidden, counted in duplicates and named in also_reported_by. Each row lists orgs: the nonprofits and foundations the headline names (ein, name, matched words), matched strictly by name, so many mentions are missed. ein= keeps the headlines that name one org.",
     params: [
       { name: "q", in: "query", type: "string", example: "layoffs", desc: "Keywords in the headline." },
+      { name: "ein", in: "query", type: "string", example: "56-2618866", desc: "Only headlines that name this org (9-digit EIN, dashes fine)." },
       { name: "topic", in: "query", type: "string", example: "nonprofit cuts", desc: "nonprofit, philanthropy, foundation grants, donations, nonprofit cuts or giving." },
       { name: "outlet", in: "query", type: "string", example: "apnews.com", desc: "News site (domain) contains this. domain works too." },
       { name: "country", in: "query", type: "string", example: "United States", desc: "Source country." },
@@ -426,8 +430,8 @@ export const ENDPOINTS: Endpoint[] = [
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/news?topic=nonprofit+cuts&limit=20"`,
     example: {
-      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, semantic: false, include_duplicates: false, limit: 20 },
-      results: [{ id: 2817, title: "Nonprofit lays off staff after federal grant cut", url: "https://example.com/news/nonprofit-layoffs", seen_at: "2026-10-18T14:00:00.000Z", domain: "example.com", country: "United States", language: "English", topics: ["nonprofit cuts"], duplicates: 3, also_reported_by: ["example.org", "example.net"] }],
+      filters: { q: null, ein: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, semantic: false, include_duplicates: false, limit: 20 },
+      results: [{ id: 2817, title: "Nonprofit lays off staff after federal grant cut", url: "https://example.com/news/nonprofit-layoffs", seen_at: "2026-10-18T14:00:00.000Z", domain: "example.com", country: "United States", language: "English", topics: ["nonprofit cuts"], duplicates: 3, also_reported_by: ["example.org", "example.net"], orgs: [{ ein: "123456789", name: "EXAMPLE COMMUNITY SERVICES INC", matched: "Example Community Services" }] }],
       count: 1, has_more: true, next_cursor: "WyIyMDI2LTEwLTE4VDE0OjAwOjAwLjAwMFoiLCJodHRwczovL2V4YW1wbGUuY29tIl0",
       notes: ["News about philanthropy and the nonprofit sector from GDELT ...", "Two GDELT feeds: its search API ... and its raw crawl files ...", "One row per story: copies of the same story under other URLs ... are hidden ..."],
     },
@@ -516,7 +520,7 @@ export const MCP_TOOLS = [
   { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },
   { name: "get_household_giving", desc: "Same as GET /api/v1/household-giving. Arguments: level, state, county, zip, year_from, year_to, by_agi, limit, cursor." },
   { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, state, ntee, limit, cursor." },
-  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, include_duplicates (news: every copy of a story, default one row per story), date_from, date_to, limit." },
+  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, ein (news that names one org; news only), include_duplicates (news: every copy of a story, default one row per story), date_from, date_to, limit." },
   { name: "search_iog_guides", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. Same as GET /api/v1/iog/search. Arguments: q, guide, limit." },
   { name: "get_iog_guide", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. No slug: GET /api/v1/iog/guides. With slug: GET /api/v1/iog/guides/{slug}." },
 ];

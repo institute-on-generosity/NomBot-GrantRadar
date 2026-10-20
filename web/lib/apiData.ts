@@ -536,14 +536,16 @@ const ALSO_MAX = 10;
 const DUP_NOTE = `One row per story: copies of the same story under other URLs (same headline, or a headline with near identical meaning within 3 days) are hidden. duplicates counts them, also_reported_by lists their other outlets (up to ${ALSO_MAX}, first seen first). include_duplicates=true shows every copy.`;
 const DUP_NOTE_ALL = "include_duplicates=true: every copy of a story is listed. duplicate_of is the id of the story's canonical row (null on the canonical row itself).";
 export const NEWS_TOPICS = ["nonprofit", "philanthropy", "foundation grants", "donations", "nonprofit cuts", "giving"] as const;
+const NEWS_ORGS_NOTE = "orgs: the nonprofits and foundations a headline names, matched by name (curated short names, unique legal and DBA names, shared or generic names only with the org's city or state in the headline). Strict, so many mentions are missed. ein=<EIN> lists the headlines that name one org. Search is by keyword (English stemming, quotes for phrases, -word to exclude), or by meaning with semantic=true.";
 export async function apiNews(p: In) {
-  const f = { q: text(p, "q"), topic: oneOf(p, "topic", NEWS_TOPICS), outlet: text(p, "outlet", 100) ?? text(p, "domain", 100), country: text(p, "country", 50), date_from: day(p, "date_from"), date_to: day(p, "date_to"), semantic: bool(p, "semantic") === true, include_duplicates: bool(p, "include_duplicates") === true, limit: pageSize(p, 50, 500) };
+  const f = { q: text(p, "q"), ein: ein(p, "ein"), topic: oneOf(p, "topic", NEWS_TOPICS), outlet: text(p, "outlet", 100) ?? text(p, "domain", 100), country: text(p, "country", 50), date_from: day(p, "date_from"), date_to: day(p, "date_to"), semantic: bool(p, "semantic") === true, include_duplicates: bool(p, "include_duplicates") === true, limit: pageSize(p, 50, 500) };
   const q = new Sql();
   const dist = await semantic(p, q, "n", f.q);
   if (!f.include_duplicates) q.and("n.duplicate_of IS NULL");
   const after = cursor(p, dist ? ["n", "s"] : ["s", "s"]);
   if (f.q && !dist) tsq(q, "n.search", f.q);
   if (f.topic) q.and(`n.queries @> ARRAY[${q.v(f.topic)}]::text[]`);
+  if (f.ein) q.and(`EXISTS (SELECT 1 FROM news_org_links l WHERE l.news_id = n.id AND l.ein = ${q.v(f.ein)})`);
   if (f.outlet) q.and(`n.domain ILIKE ${q.v(`%${f.outlet}%`)}`);
   if (f.country) q.and(`n.source_country ILIKE ${q.v(f.country)}`);
   if (f.date_from) q.and(`n.seen_at >= ${q.v(f.date_from)}::date`);
@@ -552,6 +554,8 @@ export async function apiNews(p: In) {
   else if (after) q.and(`(n.seen_at, n.url) < (${q.v(after[0])}::timestamptz, ${q.v(after[1])})`);
   const { rows } = await db.query(
     `SELECT n.id, n.url, n.title, n.seen_at, n.domain, n.source_country, n.language, n.queries, n.duplicate_of, n.dup_count,
+            ARRAY(SELECT json_build_object('ein', l.ein, 'name', o.name, 'matched', l.match_text) FROM news_org_links l JOIN orgs o ON o.ein = l.ein
+                   WHERE l.news_id = n.id ORDER BY l.confidence DESC, o.name) AS orgs,
             CASE WHEN n.dup_count > 0 THEN ARRAY(SELECT x.domain FROM news_articles x WHERE x.duplicate_of = n.id AND x.domain IS DISTINCT FROM n.domain
                                                   GROUP BY x.domain ORDER BY min(x.seen_at), x.domain LIMIT ${ALSO_MAX}) END AS also${dist ? `, ${dist} AS dist` : ""}
        FROM news_articles n ${q.clause} ORDER BY ${dist ? `${dist}, n.url` : "n.seen_at DESC, n.url DESC"} LIMIT ${q.v(f.limit + 1)}`, q.params);
@@ -561,27 +565,27 @@ export async function apiNews(p: In) {
     filters: f, ...pg,
     results: pg.results.map((r) => ({
       id: Number(r.id), title: r.title, url: r.url, seen_at: iso(r.seen_at), domain: r.domain, country: r.source_country, language: r.language, topics: r.queries,
-      duplicates: r.dup_count, also_reported_by: r.also ?? [], ...(f.include_duplicates ? { duplicate_of: r.duplicate_of == null ? null : Number(r.duplicate_of) } : {}),
+      duplicates: r.dup_count, also_reported_by: r.also ?? [], orgs: r.orgs ?? [], ...(f.include_duplicates ? { duplicate_of: r.duplicate_of == null ? null : Number(r.duplicate_of) } : {}),
       ...(dist ? { similarity: sim(r.dist) } : {}),
     })),
     notes: [
       "News about philanthropy and the nonprofit sector from GDELT (headlines and links only, no article text). topic is one of: nonprofit, philanthropy, foundation grants, donations, nonprofit cuts, giving. Search covers the headline.",
       "Two GDELT feeds: its search API (up to 250 headlines per topic per day, matched on full text) and its raw crawl files (headline must match the topic, so fewer per day). From June 2026 on, refreshed daily.",
       f.include_duplicates ? DUP_NOTE_ALL : DUP_NOTE,
-      POLICY_NOTE, ...(dist ? [SEMANTIC_NOTE] : []),
+      NEWS_ORGS_NOTE, ...(dist ? [SEMANTIC_NOTE] : []),
     ],
   };
 }
 
 // MCP search_policy: the three sources in one call, a few of each.
 export async function apiPolicy(p: In) {
-  const which = oneOf(p, "source", ["all", "bills", "federal_register", "news"] as const) ?? "all";
+  const which = oneOf(p, "source", ["all", "bills", "federal_register", "news"] as const) ?? (p.ein ? "news" : "all"); // ein: news only
   const lim = String(int(p, "limit", 1, 50) ?? 10);
   const common = { q: p.q, semantic: p.semantic, limit: lim };
   const [bills, fr, news] = await Promise.all([
     which === "all" || which === "bills" ? apiBills({ ...common, action_from: p.date_from, action_to: p.date_to }) : null,
     which === "all" || which === "federal_register" ? apiFederalRegister({ ...common, agency: p.agency, type: p.type, date_from: p.date_from, date_to: p.date_to, funding_only: p.funding_only }) : null,
-    which === "all" || which === "news" ? apiNews({ ...common, topic: p.topic, outlet: p.outlet, date_from: p.date_from, date_to: p.date_to, include_duplicates: p.include_duplicates }) : null,
+    which === "all" || which === "news" ? apiNews({ ...common, ein: p.ein, topic: p.topic, outlet: p.outlet, date_from: p.date_from, date_to: p.date_to, include_duplicates: p.include_duplicates }) : null,
   ]);
   return { source: which, ...(bills ? { bills } : {}), ...(fr ? { federal_register: fr } : {}), ...(news ? { news } : {}) };
 }

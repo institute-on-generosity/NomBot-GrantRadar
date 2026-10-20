@@ -1612,3 +1612,7 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
 .org p.fund-places { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
 .fund-places b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 @media print { .fund-more > summary { display: none; } .fund-more::details-content { content-visibility: visible; display: block; } }
+/* In the news (components/OrgNews.tsx) */
+.org-news { list-style: none; font-size: 14px; }
+.org-news li { display: flex; flex-direction: column; gap: 2px; padding: 9px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
+.org-news span { color: var(--mute); font-size: 13px; }

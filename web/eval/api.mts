@@ -249,6 +249,17 @@ try {
     b = await ok("/api/v1/news?q=donation&limit=5", "news q");
     check(b.results.length > 0, "news: q finds headlines");
   }
+  // News org links (generosity-data 071): ein= filter, orgs on each row, org news
+  check((await get("/api/v1/news?ein=123")).status === 400, "news: bad ein -> 400");
+  const [nk] = await sql("SELECT l.ein, count(*)::int AS n FROM news_org_links l JOIN news_articles a ON a.id = l.news_id AND a.duplicate_of IS NULL GROUP BY l.ein ORDER BY count(*) DESC, l.ein LIMIT 1");
+  check(!!nk, "news_org_links: table has links");
+  if (nk) {
+    b = await ok(`/api/v1/news?ein=${nk.ein}&limit=500`, "news ein");
+    check(b.results.length === nk.n && b.results.every((a: J) => a.orgs.some((o: J) => o.ein === nk.ein && o.name && o.matched)), `news: ein=${nk.ein} gives its ${nk.n} headlines, each listing the org (${b.results.length})`);
+    const og: J = await ok(`/api/v1/org/${nk.ein}`, "org news");
+    check(og.org.news?.total === nk.n && og.org.news.results.length === Math.min(5, nk.n) && og.org.news.all_url.endsWith(`/api/v1/news?ein=${nk.ein}`), `org: news total ${og.org.news?.total} vs SQL ${nk.n}, newest ${Math.min(5, nk.n)} listed`);
+    check(og.org.news.results.every((h: J, i: number) => i === 0 || h.seen_at <= og.org.news.results[i - 1].seen_at), "org: news newest first");
+  }
 
   // semantic=true (generosity-data 064): ranked by meaning, closest first, filters still hold, distance cursor pages on
   check((await get("/api/v1/news?semantic=true")).status === 400, "semantic: no q -> 400");
@@ -334,6 +345,9 @@ try {
   check(!m.isError && m.json.news.results.every((x: J) => !("duplicate_of" in x) && Array.isArray(x.also_reported_by)), "MCP search_policy: news canonical only by default");
   m = await call("search_policy", { q: "nonprofit", source: "news", include_duplicates: true, limit: 50 });
   check(!m.isError && m.json.news.results.every((x: J) => "duplicate_of" in x), "MCP search_policy: include_duplicates shows copies");
+  const [gl] = await sql("SELECT l.ein FROM news_org_links l JOIN news_articles a ON a.id = l.news_id AND a.duplicate_of IS NULL GROUP BY l.ein ORDER BY count(*) DESC, l.ein LIMIT 1");
+  m = await call("search_policy", { ein: gl.ein, limit: 50 });
+  check(!m.isError && m.json.source === "news" && m.json.news.results.length > 0 && m.json.news.results.every((x: J) => x.orgs.some((o: J) => o.ein === gl.ein)), "MCP search_policy: ein gives news naming that org");
   m = await call("search_policy", { q: "AI in schools", semantic: true, source: "bills", limit: 3 });
   check(!m.isError && m.json.bills.results.every((x: J) => typeof x.similarity === "number"), "MCP search_policy: semantic ranks with similarity");
   m = await call("search_grants", { funder_ein: "12" });
