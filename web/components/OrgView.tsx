@@ -16,6 +16,7 @@ import { prettyTitle, type Diligence } from "@/lib/flag";
 import type { BoardLink } from "@/lib/people";
 import { OrgFunding } from "@/components/OrgFunding";
 import { OrgNews } from "@/components/OrgNews";
+import { OrgSimilar } from "@/components/OrgSimilar";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -108,6 +109,9 @@ async function Org({ params, searchParams, modal }: Props) {
       {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} />}
 
       {o.links.length > 0 && <BoardConnections links={o.links} />}
+
+      {/* Nearest orgs by 990 text, with a less-funded toggle (generosity-data org_similar); streams in */}
+      <Suspense fallback={null}><OrgSimilar ein={o.ein} /></Suspense>
 
       <section>
         <h2>Details</h2>

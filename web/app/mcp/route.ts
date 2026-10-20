@@ -1,4 +1,4 @@
-// Remote MCP server (Streamable HTTP, JSON-RPC over POST) for AI tools: search_nonprofits, get_organization, get_tax_status,
+// Remote MCP server (Streamable HTTP, JSON-RPC over POST) for AI tools: search_nonprofits, get_organization, get_tax_status, find_similar_orgs,
 // list_research, get_research, answer_research_question, plus row-level data (lib/apiData.ts): search_grants,
 // get_federal_awards, get_finances, get_household_giving, list_cause_labels, search_policy. Keys with the iog_internal scope also get search_iog_guides and get_iog_guide (lib/apiIog.ts, IoG internal). Same Bearer API key as /api/v1/*. Stateless: a fresh server and transport per
 // request, plain JSON responses (no SSE stream, no sessions). Tools call the same functions as the REST API,
@@ -15,6 +15,7 @@ import { ANSWER_TOOL_DESCRIPTION } from "@/lib/answerTool";
 import { LABEL_SLUGS, type LabelSlug } from "@/lib/labels";
 import { BadParam, apiGrants, apiFederalAwards, apiFoundationFinances, apiOrgFinances, apiHouseholdGiving, apiLabels, apiLabelOrgs, apiPolicy, FUNDER_TYPES, FR_TYPES, NEWS_TOPICS } from "@/lib/apiData";
 import { apiOrgStatus } from "@/lib/taxStatus";
+import { apiSimilar } from "@/lib/similar";
 import { apiIogGuides, apiIogGuide, apiIogSearch, IogBadParam, IOG_SCOPE } from "@/lib/apiIog";
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
@@ -88,6 +89,17 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
     inputSchema: { ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'") },
     annotations: { title: "Get IRS tax status", ...READ_ONLY },
   }, ({ ein }) => run("get_tax_status", () => apiOrgStatus(ein))());
+
+  s.registerTool("find_similar_orgs", {
+    title: "Find similar organizations",
+    description: "Organizations most like one EIN by the meaning of their newest Form 990 mission and program text (precomputed nearest neighbors, cosine similarity 0.80 or above, up to 10, with place, cause, revenue, foundation grants 2022-24 and similarity in words). underfunded=true lists only less-funded peers: active orgs (revenue $50K+) with under $25K in linked foundation grants 2022-24, useful for finding overlooked organizations.",
+    inputSchema: {
+      ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'"),
+      underfunded: z.boolean().optional().describe("Only less-funded peers. Default false"),
+      limit: z.number().int().min(1).max(10).optional().describe("Organizations to return, 1-10 (default 10)"),
+    },
+    annotations: { title: "Find similar organizations", ...READ_ONLY },
+  }, (a) => run("find_similar_orgs", () => apiSimilar(a.ein, a, base))());
 
   s.registerTool("list_research", {
     title: "List research findings",

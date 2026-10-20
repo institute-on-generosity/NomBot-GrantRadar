@@ -49,7 +49,7 @@ const isList = (b: J, path: string) => {
 try {
   // ---------- auth ----------
   const ENDPOINTS = ["/api/v1/search?q=food", "/api/v1/org/341877332", "/api/v1/research", "/api/v1/grants", "/api/v1/federal-awards",
-    "/api/v1/foundations/131684331/finances", "/api/v1/orgs/341877332/finances", "/api/v1/orgs/341877332/status", "/api/v1/household-giving", "/api/v1/labels",
+    "/api/v1/foundations/131684331/finances", "/api/v1/orgs/341877332/finances", "/api/v1/orgs/341877332/status", "/api/v1/orgs/341877332/similar", "/api/v1/household-giving", "/api/v1/labels",
     "/api/v1/labels/climate/orgs", "/api/v1/congress/bills", "/api/v1/federal-register", "/api/v1/news"];
   for (const e of ENDPOINTS) {
     const r = await get(e, null);
@@ -154,6 +154,24 @@ try {
   check(b.org?.tax_status?.pub78?.eligible === Boolean(p78), "org: tax_status.pub78 vs SQL");
   check((await get("/api/v1/orgs/12/status")).status === 400, "tax status bad EIN -> 400");
   check((await get("/api/v1/orgs/000000001/status")).status === 404, "tax status unknown EIN -> 404");
+
+  // ---------- similar organizations (generosity-data 070 org_similar) ----------
+  const [sim] = await sql(`SELECT ein, count(*) FILTER (WHERE list = 'all')::int AS n, count(*) FILTER (WHERE list = 'less_funded')::int AS nl,
+      (array_agg(similar_ein ORDER BY rank) FILTER (WHERE list = 'all'))[1] AS top, max(similarity) FILTER (WHERE list = 'all' AND rank = 1) AS s1
+    FROM org_similar WHERE ein = (SELECT ein FROM org_similar WHERE list = 'less_funded' AND rank = 3 ORDER BY ein LIMIT 1) GROUP BY ein`);
+  b = await ok(`/api/v1/orgs/${sim.ein}/similar`, "similar");
+  check(b.list === "all" && b.count === Math.min(sim.n, 10) && b.results[0]?.ein === sim.top && Math.abs(b.results[0].similarity - sim.s1) < 0.001, "similar: count, top EIN and similarity vs SQL");
+  check(b.results.every((x: J, i: number) => x.rank === i + 1 && x.similarity >= 0.8 && typeof x.similarity_words === "string" && x.url.endsWith(`/org/${x.ein}`)), "similar: ranks, threshold, words, urls");
+  check(b.results.every((x: J, i: number) => i === 0 || x.similarity <= b.results[i - 1].similarity), "similar: best first");
+  b = await ok(`/api/v1/orgs/${sim.ein}/similar?underfunded=true&limit=3`, "similar underfunded");
+  check(b.list === "less_funded" && b.count === 3 && b.results.every((x: J) => x.foundation_grants_2022_2024 < 25000 && (x.revenue ?? 0) >= 50000), "similar underfunded: under $25K foundation grants, revenue $50K+");
+  check(b.notes.length === 2, "similar underfunded: notes");
+  b = await ok(`/api/v1/org/${sim.ein}`, "org (similar)");
+  check(b.org?.similar?.results?.[0]?.ein === sim.top && typeof b.org.similar.underfunded_url === "string", "org: similar field vs SQL");
+  check((await get("/api/v1/orgs/12/similar")).status === 400, "similar bad EIN -> 400");
+  check((await get(`/api/v1/orgs/${sim.ein}/similar?underfunded=maybe`)).status === 400, "similar bad underfunded -> 400");
+  check((await get(`/api/v1/orgs/${sim.ein}/similar?limit=11`)).status === 400, "similar limit 11 -> 400");
+  check((await get("/api/v1/orgs/000000001/similar")).status === 404, "similar unknown EIN -> 404");
 
   // ---------- household giving ----------
   b = await ok("/api/v1/household-giving?state=WV&year_from=2022&year_to=2022", "household state");
@@ -308,7 +326,7 @@ try {
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), { requestInit: { headers: { Authorization: `Bearer ${KEY}` } } }));
   const tools = (await client.listTools()).tools.map((t) => t.name);
-  for (const t of ["search_nonprofits", "get_organization", "list_research", "get_research", "answer_research_question", "search_grants", "get_federal_awards", "get_finances", "get_tax_status", "get_household_giving", "list_cause_labels", "search_policy"])
+  for (const t of ["search_nonprofits", "get_organization", "list_research", "get_research", "answer_research_question", "search_grants", "get_federal_awards", "get_finances", "get_tax_status", "find_similar_orgs", "get_household_giving", "list_cause_labels", "search_policy"])
     check(tools.includes(t), `MCP lists ${t}`);
   const call = async (name: string, args: Record<string, unknown>) => {
     const t = performance.now();
@@ -331,6 +349,8 @@ try {
   check(!m.isError && m.json.status === "revoked" && m.json.revocation.revocation_date === rv.d, "MCP get_tax_status: revoked org vs SQL");
   m = await call("get_organization", { ein: "341877332" });
   check(!m.isError && m.json.org.tax_status?.pub78?.eligible === Boolean(p78), "MCP get_organization: tax_status");
+  m = await call("find_similar_orgs", { ein: sim.ein, underfunded: true, limit: 2 });
+  check(!m.isError && m.json.list === "less_funded" && m.json.results.length === 2, "MCP find_similar_orgs: underfunded");
   m = await call("get_household_giving", { state: "WV", year_from: 2022, year_to: 2022 });
   check(!m.isError && m.json.results[0].charity_usd === h1.usd, "MCP get_household_giving vs SQL");
   m = await call("list_cause_labels", {});

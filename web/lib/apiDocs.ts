@@ -38,7 +38,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. news lists the newest headlines (up to 5) that name the org, with total and all_url (/api/v1/news?ein=). Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. news lists the newest headlines (up to 5) that name the org, with total and all_url (/api/v1/news?ein=). Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status. similar lists up to 10 organizations most like this one by 990 text (results as in /api/v1/orgs/{ein}/similar, with underfunded_url for less-funded peers), or null before the table exists.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -294,6 +294,28 @@ export const ENDPOINTS: Endpoint[] = [
     },
   },
   {
+    id: "org-similar", method: "GET", path: "/api/v1/orgs/{ein}/similar", title: "Similar organizations", mcpTool: "find_similar_orgs",
+    summary: "Up to 10 organizations most like this one by the meaning of their newest Form 990 mission and program text (precomputed nearest neighbors, cosine similarity of nomic-embed-text-v1.5 vectors, rebuilt weekly), best first. Only pairs at 0.80 or above are kept. similarity_words: 0.90+ very similar, 0.85-0.90 similar, 0.80-0.85 somewhat similar (hand-checked: about 9 in 10 pairs at 0.80+ do the same kind of work). underfunded=true lists less-funded peers instead: active organizations (revenue $50K or more) with under $25K in linked private-foundation grants 2022-2024, for finding overlooked organizations. Each result has place, NTEE cause, latest revenue and foundation grants 2022-2024. /api/v1/org/{ein} carries the plain list as similar. 404 for an unknown EIN, an empty list when nothing is close enough.",
+    params: [
+      { name: "ein", in: "path", type: "string", required: true, example: "58-1376648", desc: "9-digit EIN. Dashes are fine." },
+      { name: "underfunded", in: "query", type: "boolean", example: "true", desc: "Only less-funded peers (under $25K in linked foundation grants 2022-2024, revenue $50K+). Default false." },
+      { name: "limit", in: "query", type: "integer", example: "2", desc: "Organizations to return, 1 to 10. Default 10." },
+    ],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/orgs/581376648/similar?underfunded=true&limit=2"`,
+    example: {
+      ein: "581376648", name: "ATLANTA COMMUNITY FOOD BANK INC", list: "less_funded", count: 2,
+      results: [
+        { rank: 1, ein: "582645073", name: "FIRST AFRICAN COMMUNITY DEVELOPMENT CORPORATION", city: "LITHONIA", state: "GA", ntee: { code: "S20", label: "Community Improvement" },
+          revenue: 338693, revenue_year: 2023, foundation_grants_2022_2024: 0, similarity: 0.891, similarity_words: "similar",
+          url: "https://<host>/org/582645073", api_url: "https://<host>/api/v1/org/582645073" },
+        { rank: 2, ein: "472383634", name: "GLENLOCH COMMUNITY OUTREACH INC", city: "ROOPVILLE", state: "GA", ntee: { code: "K31", label: "Food Banks, Food Pantries" },
+          revenue: 60757, revenue_year: null, foundation_grants_2022_2024: 0, similarity: 0.859, similarity_words: "similar",
+          url: "https://<host>/org/472383634", api_url: "https://<host>/api/v1/org/472383634" },
+      ],
+      notes: ["Nearest organizations by the meaning of their newest Form 990 mission and program text ...", "less_funded: the nearest active organizations ..."],
+    },
+  },
+  {
     id: "household-giving", method: "GET", path: "/api/v1/household-giving", title: "Household giving", mcpTool: "get_household_giving",
     summary: "IRS Statistics of Income individual returns: returns, AGI, itemizers and the itemized charitable deduction, by state or county (tax years 2013 to 2023) or ZIP code (2013 to 2022), newest year first. Itemizers only, and itemizing fell by about 60% from 2018. by_agi=true splits rows by income class. Dollars, not thousands.",
     params: [
@@ -512,6 +534,7 @@ export const MCP_TOOLS = [
   { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, label, label_tier, limit." },
   { name: "get_organization", desc: "Same as GET /api/v1/org/{ein}. Argument: ein." },
   { name: "get_tax_status", desc: "Same as GET /api/v1/orgs/{ein}/status. Argument: ein." },
+  { name: "find_similar_orgs", desc: "Same as GET /api/v1/orgs/{ein}/similar. Arguments: ein, underfunded, limit." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },
   { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec, steps included. The calling AI fills the structured question, so no Claude call on our side." },

@@ -10,6 +10,7 @@ import { orgFunding, FUNDING_NOTES } from "./orgFunding";
 import { isLabel } from "./labels";
 import { getInsight } from "./insights";
 import { sectionLabel, SECTIONS } from "./insightMeta";
+import { similarOrgs, SIMILAR_NOTE } from "./similar";
 
 export const API_VERSION = "1";
 
@@ -83,6 +84,7 @@ export async function apiOrg(einRaw: string, base: string) {
     // Schedule I grants received and given, federal awards (lib/orgFunding)
     orgFunding(ein),
   ]);
+  const similar = await similarOrgs(ein, { limit: 10 }); // generosity-data 070 (lib/similar)
   const top10 = <T,>(xs: T[]) => xs.slice(0, 10);
 
   const latest = o.years[0] ?? null;
@@ -178,6 +180,10 @@ export async function apiOrg(einRaw: string, base: string) {
       foundation: fdn
         ? { tax_year: fdn.tax_year, assets: num(fdn.assets), grants_paid: num(fdn.grants_paid), grant_count: fdn.grant_count, invite_only: fdn.invite_only,
             website: fdn.website, apply: { contact: fdn.apply_contact, form: fdn.apply_form, deadlines: fdn.apply_deadlines, restrictions: fdn.apply_restrictions } }
+        : null,
+      // Nearest orgs by 990 mission and program text (generosity-data 070). Less-funded peers: /api/v1/orgs/{ein}/similar?underfunded=true
+      similar: similar
+        ? { results: similar.map((x) => ({ ...x, url: `${base}/org/${x.ein}` })), underfunded_url: `${base}/api/v1/orgs/${ein}/similar?underfunded=true`, note: SIMILAR_NOTE }
         : null,
       sources: o.sources.map((s) => abs(base, { label: s.label, detail: s.detail, url: s.url })),
       url: `${base}/org/${ein}`,
