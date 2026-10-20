@@ -203,7 +203,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
 
   s.registerTool("search_policy", {
     title: "Search policy and news",
-    description: "Search current-Congress bills (Congress.gov), Federal Register documents (from October 2025) and sector news headlines (GDELT), refreshed daily. Keyword search, newest first, by default; semantic=true ranks by meaning instead (closest first, with similarity), better for plain-language topics like 'rural food access'. No EIN links.",
+    description: "Search current-Congress bills (Congress.gov), Federal Register documents (from October 2025) and sector news headlines (GDELT), refreshed daily. Keyword search, newest first, by default; semantic=true ranks by meaning instead (closest first, with similarity), better for plain-language topics like 'rural food access'. News is one row per story (copies under other URLs hidden, their outlets in also_reported_by). No EIN links.",
     inputSchema: {
       q: z.string().max(200).optional().describe("Keywords (quotes for phrases, -word to exclude), or a topic in plain words with semantic=true"),
       semantic: z.boolean().optional().describe("Rank by meaning instead of keyword match and date. Needs q. Default false"),
@@ -213,6 +213,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
       funding_only: z.boolean().optional().describe("Federal Register notices of funding opportunity only"),
       topic: z.enum(NEWS_TOPICS).optional().describe("News topic"),
       outlet: z.string().max(100).optional().describe("News site contains this"),
+      include_duplicates: z.boolean().optional().describe("News: list every copy of a story under other URLs. Default false: one row per story, with also_reported_by"),
       date_from: day, date_to: day,
       limit: z.number().int().min(1).max(50).optional().describe("Per source (default 10)"),
     },

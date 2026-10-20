@@ -402,7 +402,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "news", method: "GET", path: "/api/v1/news", title: "Search sector news", mcpTool: "search_policy",
-    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed daily. Keyword search over the headline, or search by meaning with semantic=true.",
+    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed daily. Keyword search over the headline, or search by meaning with semantic=true. One row per story: copies of the same story under other URLs (same headline, or near identical meaning within 3 days) are hidden, counted in duplicates and named in also_reported_by.",
     params: [
       { name: "q", in: "query", type: "string", example: "layoffs", desc: "Keywords in the headline." },
       { name: "topic", in: "query", type: "string", example: "nonprofit cuts", desc: "nonprofit, philanthropy, foundation grants, donations, nonprofit cuts or giving." },
@@ -411,14 +411,16 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "date_from", in: "query", type: "string", example: "2026-10-01", desc: "Seen on or after, YYYY-MM-DD." },
       { name: "date_to", in: "query", type: "string", example: "2026-10-19", desc: "Seen on or before." },
       { name: "semantic", in: "query", type: "boolean", example: "true", desc: "Rank by meaning instead of keyword and date: closest first, each row with similarity. Needs q. Use plain words, e.g. rural food access." },
+      { name: "include_duplicates", in: "query", type: "boolean", example: "true", desc: "List every copy of a story, each with duplicate_of (the id of its canonical row, null on that row). Default false: one row per story." },
       { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
       { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/news?topic=nonprofit+cuts&limit=20"`,
     example: {
-      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, semantic: false, limit: 20 },
-      results: [], count: 0, has_more: false, next_cursor: null,
-      notes: ["News about philanthropy and the nonprofit sector from GDELT ...", "Two GDELT feeds: its search API ... and its raw crawl files ..."],
+      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, semantic: false, include_duplicates: false, limit: 20 },
+      results: [{ id: 2817, title: "Nonprofit lays off staff after federal grant cut", url: "https://example.com/news/nonprofit-layoffs", seen_at: "2026-10-18T14:00:00.000Z", domain: "example.com", country: "United States", language: "English", topics: ["nonprofit cuts"], duplicates: 3, also_reported_by: ["example.org", "example.net"] }],
+      count: 1, has_more: true, next_cursor: "WyIyMDI2LTEwLTE4VDE0OjAwOjAwLjAwMFoiLCJodHRwczovL2V4YW1wbGUuY29tIl0",
+      notes: ["News about philanthropy and the nonprofit sector from GDELT ...", "Two GDELT feeds: its search API ... and its raw crawl files ...", "One row per story: copies of the same story under other URLs ... are hidden ..."],
     },
   },
   // ---------- IoG internal (scope iog_internal): keys without it get 403 insufficient_scope ----------
@@ -505,7 +507,7 @@ export const MCP_TOOLS = [
   { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },
   { name: "get_household_giving", desc: "Same as GET /api/v1/household-giving. Arguments: level, state, county, zip, year_from, year_to, by_agi, limit, cursor." },
   { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, state, ntee, limit, cursor." },
-  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, date_from, date_to, limit." },
+  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, include_duplicates (news: every copy of a story, default one row per story), date_from, date_to, limit." },
   { name: "search_iog_guides", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. Same as GET /api/v1/iog/search. Arguments: q, guide, limit." },
   { name: "get_iog_guide", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. No slug: GET /api/v1/iog/guides. With slug: GET /api/v1/iog/guides/{slug}." },
 ];

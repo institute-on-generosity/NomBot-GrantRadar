@@ -207,7 +207,7 @@ try {
   isList(b, "news");
   check((await get("/api/v1/news?date_from=yesterday")).status === 400, "news: bad date -> 400");
   check((await get("/api/v1/news?topic=sports")).status === 400, "news: unknown topic -> 400");
-  const [nw] = await sql("SELECT count(*)::int AS n, count(*) FILTER (WHERE 'philanthropy' = ANY(queries))::int AS ph, max(seen_at)::date::text AS newest FROM news_articles");
+  const [nw] = await sql("SELECT count(*)::int AS n, count(*) FILTER (WHERE 'philanthropy' = ANY(queries) AND duplicate_of IS NULL)::int AS ph, count(*) FILTER (WHERE 'philanthropy' = ANY(queries))::int AS ph_all, max(seen_at)::date::text AS newest FROM news_articles");
   check(nw.n > 0, `news: table has rows (${nw.n})`);
   if (nw.n > 0) {
     const np1 = await ok("/api/v1/news?topic=philanthropy&limit=5", "news topic");
@@ -220,7 +220,29 @@ try {
       const r: J = await ok(`/api/v1/news?topic=philanthropy&limit=500${cur ? `&cursor=${cur}` : ""}`);
       n += r.results.length; cur = r.next_cursor; pages++;
     } while (cur && pages < 100);
-    check(n === nw.ph, `news: topic=philanthropy walk ${n} rows vs SQL ${nw.ph}`);
+    check(n === nw.ph, `news: topic=philanthropy walk ${n} canonical rows vs SQL ${nw.ph}`);
+    // Duplicates (generosity-data 065): hidden by default, counted on the canonical row, listed with include_duplicates=true
+    n = 0; cur = null; pages = 0;
+    do {
+      const r: J = await ok(`/api/v1/news?topic=philanthropy&include_duplicates=true&limit=500${cur ? `&cursor=${cur}` : ""}`);
+      n += r.results.length; cur = r.next_cursor; pages++;
+    } while (cur && pages < 100);
+    check(n === nw.ph_all, `news: include_duplicates=true walk ${n} rows vs SQL ${nw.ph_all}`);
+    const [dc] = await sql(`SELECT c.id::int, c.domain, c.dup_count, c.seen_at::date::text AS day,
+        (SELECT count(DISTINCT x.domain) FROM news_articles x WHERE x.duplicate_of = c.id AND x.domain IS DISTINCT FROM c.domain)::int AS outlets
+      FROM news_articles c WHERE c.duplicate_of IS NULL AND c.dup_count > 0 ORDER BY c.dup_count DESC, c.id LIMIT 1`);
+    if (dc) {
+      const walk = async (qs: string) => { const out: J[] = []; let c2: string | null = null, p2 = 0;
+        do { const r: J = await ok(`/api/v1/news?date_from=${dc.day}&date_to=${dc.day}&limit=500${qs}${c2 ? `&cursor=${c2}` : ""}`); out.push(...r.results); c2 = r.next_cursor; p2++; } while (c2 && p2 < 20);
+        return out; };
+      const canon = await walk("");
+      const hit = canon.find((a: J) => a.id === dc.id);
+      check(canon.every((a: J) => !("duplicate_of" in a) && Array.isArray(a.also_reported_by)), "news: default rows are canonical only, each with also_reported_by");
+      check(!!hit && hit.duplicates === dc.dup_count && hit.also_reported_by.length === Math.min(10, dc.outlets) && !hit.also_reported_by.includes(dc.domain),
+        `news: canonical row counts ${dc.dup_count} copies, also_reported_by ${hit?.also_reported_by.length} of ${dc.outlets} outlets (cap 10)`);
+      const all = await walk("&include_duplicates=true");
+      check(all.length > canon.length && all.some((a: J) => a.duplicate_of === dc.id) && all.find((a: J) => a.id === dc.id)?.duplicate_of === null, "news: include_duplicates=true lists the copies with duplicate_of");
+    }
     const dom = (await sql("SELECT domain FROM news_articles WHERE domain IS NOT NULL GROUP BY 1 ORDER BY count(*) DESC LIMIT 1"))[0].domain;
     b = await ok(`/api/v1/news?outlet=${encodeURIComponent(dom)}&date_from=${nw.newest}&limit=20`, "news outlet + date");
     check(b.results.every((a: J) => a.domain.includes(dom) && a.seen_at.slice(0, 10) >= nw.newest), "news: outlet and date filters hold");
@@ -296,6 +318,10 @@ try {
   check(!m.isError && m.json.results.length === lo.n, "MCP list_cause_labels: orgs vs SQL");
   m = await call("search_policy", { q: "charitable", limit: 3 });
   check(!m.isError && m.json.bills.results.length === 3 && Array.isArray(m.json.federal_register.results) && Array.isArray(m.json.news.results), "MCP search_policy: all three sources");
+  m = await call("search_policy", { q: "nonprofit", source: "news", limit: 50 });
+  check(!m.isError && m.json.news.results.every((x: J) => !("duplicate_of" in x) && Array.isArray(x.also_reported_by)), "MCP search_policy: news canonical only by default");
+  m = await call("search_policy", { q: "nonprofit", source: "news", include_duplicates: true, limit: 50 });
+  check(!m.isError && m.json.news.results.every((x: J) => "duplicate_of" in x), "MCP search_policy: include_duplicates shows copies");
   m = await call("search_policy", { q: "AI in schools", semantic: true, source: "bills", limit: 3 });
   check(!m.isError && m.json.bills.results.every((x: J) => typeof x.similarity === "number"), "MCP search_policy: semantic ranks with similarity");
   m = await call("search_grants", { funder_ein: "12" });
