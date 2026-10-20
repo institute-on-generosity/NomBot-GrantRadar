@@ -16,6 +16,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "ntee", in: "query", type: "string", example: "O", desc: "NTEE cause code prefix, e.g. K (food) or K31 (food banks)." },
       { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) keeps organizations whose main work is the cause. all also adds partial ones, where it is one named goal or program among broader work." },
+      { name: "label_subtype", in: "query", type: "string", example: "services", desc: "With label=immigrants_refugees: services (default) = organizations serving immigrants and refugees, policy = immigration policy research and advocacy of any stance (including groups that argue for less immigration), all = both. Each result's label lists its subtypes." },
       { name: "limit", in: "query", type: "integer", example: "10", desc: "Results to return, 1 to 50. Default 10." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" \\\n  "$NOMBOT/api/v1/search?q=youth+mentoring&state=OH&limit=1"`,
@@ -188,6 +189,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "county", in: "query", type: "string", example: "54039", desc: "Recipient's county, 5-digit FIPS (by ZIP code)." },
       { name: "label", in: "query", type: "string", example: "climate", desc: "Recipient's graded cause label: climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) or all (adds partial)." },
+      { name: "label_subtype", in: "query", type: "string", example: "services", desc: "With label=immigrants_refugees: services (default), policy (immigration policy and advocacy, any stance) or all." },
       { name: "amount_min", in: "query", type: "integer", example: "50000", desc: "Only grants of at least this many dollars." },
       { name: "funder_type", in: "query", type: "string", example: "daf_sponsor", desc: "With source=charity: daf_sponsor, community_foundation, united_way or other." },
       { name: "totals", in: "query", type: "boolean", example: "true", desc: "Also return totals.count and totals.amount for the filters (capped at 8 seconds)." },
@@ -341,7 +343,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "labels", method: "GET", path: "/api/v1/labels", title: "List cause labels", mcpTool: "list_cause_labels",
-    summary: "The graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): definition, what's in and out, org counts per tier, and grades. primary_precision and partial_in_label_precision are the share a judge model agreed with on a random sample (with 95% intervals). recall_estimate is the share of relevant organizations the label found.",
+    summary: "The graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): definition, what's in and out, org counts per tier, and grades. primary_precision and partial_in_label_precision are the share a judge model agreed with on a random sample (with 95% intervals). recall_estimate is the share of relevant organizations the label found. immigrants_refugees also lists its subtypes (services, the default for questions and filters, and policy: immigration policy research and advocacy of any stance) with org counts and the sub-type grade.",
     params: [],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/labels"`,
     example: {
@@ -364,6 +366,7 @@ export const ENDPOINTS: Endpoint[] = [
     params: [
       { name: "label", in: "path", type: "string", required: true, example: "climate", desc: "climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health." },
       { name: "tier", in: "query", type: "string", example: "primary", desc: "primary (default), partial or all." },
+      { name: "subtype", in: "query", type: "string", example: "policy", desc: "immigrants_refugees only: services, policy or all (default). Each row lists the org's subtypes." },
       { name: "state", in: "query", type: "string", example: "CO", desc: "Organization's state." },
       { name: "ntee", in: "query", type: "string", example: "C", desc: "NTEE code prefix." },
       { name: "limit", in: "query", type: "integer", example: "100", desc: "Rows per page, 1 to 1,000. Default 100." },
@@ -531,18 +534,18 @@ export const ERRORS = [
 ];
 
 export const MCP_TOOLS = [
-  { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, label, label_tier, limit." },
+  { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, label, label_tier, label_subtype, limit." },
   { name: "get_organization", desc: "Same as GET /api/v1/org/{ein}. Argument: ein." },
   { name: "get_tax_status", desc: "Same as GET /api/v1/orgs/{ein}/status. Argument: ein." },
   { name: "find_similar_orgs", desc: "Same as GET /api/v1/orgs/{ein}/similar. Arguments: ein, underfunded, limit." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },
   { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec, steps included. The calling AI fills the structured question, so no Claude call on our side." },
-  { name: "search_grants", desc: "Same as GET /api/v1/grants. Arguments: source, funder_ein, recipient_ein, year_from, year_to, state, county, label, label_tier, amount_min, funder_type, totals, limit, cursor." },
+  { name: "search_grants", desc: "Same as GET /api/v1/grants. Arguments: source, funder_ein, recipient_ein, year_from, year_to, state, county, label, label_tier, label_subtype, amount_min, funder_type, totals, limit, cursor." },
   { name: "get_federal_awards", desc: "Same as GET /api/v1/federal-awards. Arguments: recipient_ein, agency, assistance_listing, fiscal_year_from, fiscal_year_to, state, county, recipient_kind, q, totals, limit, cursor." },
   { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },
   { name: "get_household_giving", desc: "Same as GET /api/v1/household-giving. Arguments: level, state, county, zip, year_from, year_to, by_agi, limit, cursor." },
-  { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, state, ntee, limit, cursor." },
+  { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, subtype, state, ntee, limit, cursor." },
   { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, ein (news that names one org; news only), include_duplicates (news: every copy of a story, default one row per story), date_from, date_to, limit." },
   { name: "search_iog_guides", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. Same as GET /api/v1/iog/search. Arguments: q, guide, limit." },
   { name: "get_iog_guide", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. No slug: GET /api/v1/iog/guides. With slug: GET /api/v1/iog/guides/{slug}." },

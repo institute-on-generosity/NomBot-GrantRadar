@@ -7,7 +7,7 @@ import { getOrg } from "./org";
 import { orgNews, ORG_NEWS_NOTE } from "./orgNews";
 import { TAX_STATUS_NOTE } from "./taxStatus";
 import { orgFunding, FUNDING_NOTES } from "./orgFunding";
-import { isLabel } from "./labels";
+import { LABEL_SUBTYPES, isLabel } from "./labels";
 import { getInsight } from "./insights";
 import { sectionLabel, SECTIONS } from "./insightMeta";
 import { similarOrgs, SIMILAR_NOTE } from "./similar";
@@ -19,7 +19,7 @@ const abs = <T extends Link>(base: string, s: T): T => (s.url.startsWith("/") ? 
 const plainEin = (e: string) => e.replace(/\D/g, "");
 
 // ---------- search ----------
-export type SearchParams = { q?: string; state?: string | string[]; city?: string | string[]; max_revenue?: number | string; ntee?: string; label?: string; label_tier?: string; limit?: number | string };
+export type SearchParams = { q?: string; state?: string | string[]; city?: string | string[]; max_revenue?: number | string; ntee?: string; label?: string; label_tier?: string; label_subtype?: string; limit?: number | string };
 const list = (v: string | string[] | undefined) => (Array.isArray(v) ? v : (v ?? "").split(",")).map((s) => s.trim()).filter(Boolean);
 
 export function parseSearch(p: SearchParams) {
@@ -33,13 +33,16 @@ export function parseSearch(p: SearchParams) {
   // Graded cause label (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): primary tier only unless label_tier=all.
   const label = isLabel(p.label) ? p.label : null;
   const label_tier = label ? (p.label_tier === "all" ? "all" : "primary") : null;
-  return { q, state, city, max_revenue, ntee, label, label_tier, limit };
+  // A label with sub-types (immigrants_refugees): services (default), policy or all.
+  const st = label ? LABEL_SUBTYPES[label] : undefined;
+  const label_subtype = st ? (p.label_subtype === "policy" || p.label_subtype === "all" || p.label_subtype === "services" ? p.label_subtype : st.default) : null;
+  return { q, state, city, max_revenue, ntee, label, label_tier, label_subtype, limit };
 }
 
 export async function apiSearch(p: SearchParams, base: string) {
   const query = parseSearch(p);
   const res = await search({ q: query.q, states: query.state, cities: query.city, maxRevenue: query.max_revenue ?? undefined, ntee: query.ntee ?? undefined,
-    label: query.label ?? undefined, labelPartial: query.label_tier === "all", limit: query.limit });
+    label: query.label ?? undefined, labelPartial: query.label_tier === "all", labelSub: query.label_subtype ?? undefined, limit: query.limit });
   return {
     query,
     ...res,
@@ -97,7 +100,7 @@ export async function apiOrg(einRaw: string, base: string) {
       address: { street: o.street, city: o.city, state: o.state, zip: o.zip },
       ntee: o.ntee,
       // Graded cause labels: primary (the cause is the main work) or partial (one named goal among others), with why
-      labels: o.labels.map((l) => ({ label: l.label, name: l.name, tier: l.tier, why: l.why })),
+      labels: o.labels.map((l) => ({ label: l.label, name: l.name, tier: l.tier, why: l.why, ...(l.subtypes ? { subtypes: l.subtypes } : {}) })),
       status: o.status,
       // IRS Pub 78 eligibility and automatic revocation, same shape as /api/v1/orgs/{ein}/status
       tax_status: o.tax ? { status: o.tax.status, pub78: o.tax.pub78, revocation: o.tax.revocation, note: TAX_STATUS_NOTE } : null,

@@ -1,7 +1,7 @@
 // The structured question behind a research answer (lib/answer.ts). Filled by the router (lib/answerRoute.ts,
 // one cheap Claude call), by Research Buddy's research_answer tool, or directly by MCP / API callers.
 import { z } from "zod";
-import { labelName, labelPhrase, readsAsLabel } from "./labels";
+import { hasSubtypes, labelName, labelPhrase, readsAsLabel, subtypeFromText } from "./labels";
 
 export const METRICS = [
   "total",            // how much money goes to X (with its share and each year)
@@ -51,9 +51,16 @@ export const causeSchema = z.object({
   keywords: z.array(z.string()).describe("2-6 lowercase words or short phrases that name the cause in mission text, used only when there is no label and no clean NTEE code"),
 });
 
+// Sub-type inside a label that has them (immigrants_refugees): services (default), policy, all. Not in the router's
+// schema (grammar limit): normalizeSpec reads it from the cause name ("immigration policy" = policy).
+export const SUBTYPES = ["services", "policy", "all"] as const;
+const specCauseSchema = causeSchema.extend({
+  subtype: z.enum(SUBTYPES).nullable().optional().describe("immigrants_refugees only: services = orgs serving immigrants and refugees (default), policy = immigration policy research and advocacy of any stance, all = both"),
+});
+
 export const specSchema = z.object({
   metric: z.enum(METRICS),
-  causes: z.array(causeSchema).describe("0 causes = all causes; 2 for compare / overlap_funders"),
+  causes: z.array(specCauseSchema).describe("0 causes = all causes; 2 for compare / overlap_funders"),
   source: z.enum(SOURCES).describe("foundation_grants (990-PF grants, default), charity_grants (Form 990 Schedule I grants by public charities: donor-advised fund sponsors, community foundations, United Ways, others), federal_awards (USAspending federal grants and cooperative agreements to nonprofits, by place of performance, agency and program, fiscal years 2022-2025), government_grants (reported on recipients' Form 990), contributions (all gifts reported on 990), revenue (total revenue), household_giving (IRS SOI individual returns: charitable deductions itemizers claim, by state, county, ZIP and income, tax years 2013-2023; no cause or recipient), foundation_finances (990-PF finances per foundation and year, tax years 2022-2025: payout rate = qualifying distributions / net investment assets against the 5% rule, assets, grants paid; no cause)"),
   yearFrom: z.number().int().nullable(),
   yearTo: z.number().int().nullable(),
@@ -82,13 +89,13 @@ export const specSchema = z.object({
 
 // The spec as Claude fills it in structured outputs (router, follow-ups): Appalachia rides on area ("appalachia"),
 // because a separate nullable region field makes the compiled grammar too large (Oct 17). fromLlmSpec maps it back.
-export const llmSpecSchema = specSchema.omit({ region: true }).extend({ area: z.enum(["rural", "urban", "appalachia"]).nullable() });
+export const llmSpecSchema = specSchema.omit({ region: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable() });
 export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
   const { area, ...rest } = o;
   return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null };
 }
 
-export type Cause = z.infer<typeof causeSchema>;
+export type Cause = z.infer<typeof specCauseSchema>;
 export type Spec = z.infer<typeof specSchema>;
 export type Metric = Spec["metric"];
 export type Source = Spec["source"];
@@ -116,6 +123,8 @@ export function normalizeSpec(s: Spec): Spec {
       // label's own name reads as its name mid-sentence ("tech and AI skills"), and so does "women" (women and girls).
       name: (c.label && (/_/.test(c.name) || c.name.trim().toLowerCase() === labelName(c.label).toLowerCase() || readsAsLabel(c.name, c.label)) ? labelPhrase(c.label) : c.label ? c.name.trim().replace(/^[A-Z](?=[^A-Z]*$)/, (m) => m.toLowerCase()) : c.name.trim()).slice(0, 60) || "this cause",
       label: c.label,
+      // Labels with sub-types always carry one (part of the cache key): asked, else read from the cause's words.
+      ...(hasSubtypes(c.label) ? { subtype: c.subtype && (SUBTYPES as readonly string[]).includes(c.subtype) ? c.subtype : subtypeFromText([c.name, ...c.keywords].join(" "), c.label) } : {}),
       ntee: [...new Set(c.ntee.map((n) => n.toUpperCase().trim()).filter((n) => /^[A-Z][0-9A-Z]{0,4}$/.test(n)))].slice(0, 8),
       keywords: words(c.keywords),
     })),

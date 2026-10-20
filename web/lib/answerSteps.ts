@@ -24,7 +24,8 @@ export type Evidence = {
   baseline?: { label: string; a: number; z: number; g: number; real: number | null };
   spike?: { year: number; prev: number; paper?: boolean; prevUsd: number; usd: number; jump: number; since: number; sinceG: number | null; sinceReal: number | null };
 };
-export type CauseInfo = { name: string; kind: "label" | "ntee" | "keyword" | "program" | "all"; labelName?: string; tiers?: string; grade?: string };
+// subtype: for a label with sub-types (immigrants_refugees), which one was counted and the label's split in orgs.
+export type CauseInfo = { name: string; kind: "label" | "ntee" | "keyword" | "program" | "all"; labelName?: string; tiers?: string; grade?: string; subtype?: string };
 export type StepInput = {
   spec: Spec;
   a: {
@@ -119,7 +120,7 @@ export function buildSteps(i: StepInput): Step[] {
 
   // 2. The cause set.
   if (i.causes.length && !i.causes.every((c) => c.kind === "all")) {
-    const one = (c: CauseInfo) => c.kind === "label" ? `${c.labelName ?? c.name} label${c.tiers ? `, ${c.tiers}` : ""}${c.grade ? `, ${c.grade}` : ""}`
+    const one = (c: CauseInfo) => c.kind === "label" ? `${c.labelName ?? c.name} label${c.subtype ? `, ${c.subtype}` : ""}${c.tiers ? `, ${c.tiers}` : ""}${c.grade ? `, ${c.grade}` : ""}`
       : c.kind === "ntee" ? `${c.name} by IRS NTEE code, not a checked label (approximate)`
       : c.kind === "keyword" ? `${c.name} by keyword match, not a checked label (approximate)`
       : c.kind === "program" ? `${c.name} as a federal program` : c.name;

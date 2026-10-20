@@ -7,7 +7,7 @@ import { db } from "./db";
 import { keyed, apiError } from "./apiAuth";
 import { countRows, withRows } from "./apiLog";
 import { FUNDER_CLASS } from "./orgFunding";
-import { LABEL_SLUGS, isLabel } from "./labels";
+import { LABEL_SLUGS, LABEL_SUBTYPES, isLabel } from "./labels";
 import { embedQuery, MODEL_ID, toSql } from "./embedder";
 
 // ---------- input ----------
@@ -146,7 +146,7 @@ export async function apiGrants(p: In) {
   const [yearFrom, yearTo] = yearRange(p, "year_from", "year_to", ...GRANT_YEARS);
   const f = {
     source, funder_ein: ein(p, "funder_ein"), recipient_ein: ein(p, "recipient_ein"), year_from: yearFrom, year_to: yearTo,
-    state: state(p), county: fips(p), label: null as string | null, label_tier: null as string | null,
+    state: state(p), county: fips(p), label: null as string | null, label_tier: null as string | null, label_subtype: null as string | null,
     amount_min: int(p, "amount_min", 0, 1e13), funder_type: oneOf(p, "funder_type", FUNDER_TYPES), limit: pageSize(p, 50, 500),
   };
   const labelRaw = str(p, "label");
@@ -154,6 +154,9 @@ export async function apiGrants(p: In) {
     if (!isLabel(labelRaw)) throw new BadParam("label", `label must be one of: ${LABEL_SLUGS.join(", ")}.`);
     f.label = labelRaw;
     f.label_tier = oneOf(p, "label_tier", ["primary", "all"] as const) ?? "primary";
+    // A label with sub-types (immigrants_refugees): services (default), policy or all.
+    const st = LABEL_SUBTYPES[labelRaw];
+    if (st) f.label_subtype = oneOf(p, "label_subtype", ["services", "policy", "all"] as const) ?? st.default;
   }
   if (f.funder_type && source !== "charity") throw new BadParam("funder_type", "funder_type needs source=charity.");
   const after = cursor(p, ["n", "n"]);
@@ -170,7 +173,7 @@ export async function apiGrants(p: In) {
   if (st) q.and(`${t}.recipient_state = ${q.v(st)}`);
   if (f.county) q.and(`left(${t}.recipient_zip, 5)::char(5) IN (SELECT zip5 FROM zip_regions WHERE county_fips = ${q.v(f.county)})`);
   if (f.amount_min != null) q.and(`${t}.amount >= ${q.v(f.amount_min)}`);
-  if (f.label) q.and(`${t}.recipient_ein IN (SELECT ein FROM org_labels WHERE label = ${q.v(f.label)} AND tier = ANY(${q.v(f.label_tier === "all" ? ["primary", "partial"] : ["primary"])}))`);
+  if (f.label) q.and(`${t}.recipient_ein IN (SELECT ein FROM org_labels WHERE label = ${q.v(f.label)} AND tier = ANY(${q.v(f.label_tier === "all" ? ["primary", "partial"] : ["primary"])})${f.label_subtype && f.label_subtype !== "all" ? ` AND ${q.v(f.label_subtype)}::text = ANY(subtypes)` : ""})`);
   if (f.funder_type === "other") q.and(`NOT EXISTS (SELECT 1 FROM charity_funder_profile x WHERE x.ein = c.funder_ein AND x.funder_class <> 'other')`);
   else if (f.funder_type) q.and(`c.funder_ein IN (SELECT ein FROM charity_funder_profile WHERE funder_class = ${q.v(f.funder_type)})`);
   const sumFrom = source === "charity" ? "charity_grants c" : "grants g";
@@ -392,8 +395,10 @@ export async function apiHouseholdGiving(p: In) {
 type Grade = { p?: number; n?: number; lo?: number; hi?: number };
 export async function apiLabels() {
   const { rows } = await db.query(
-    `SELECT l.label, l.name, l.definition, l.includes, l.excludes, l.mixed_rule, l.version, l.grading,
-            count(*) FILTER (WHERE o.tier = 'primary')::int AS primary_n, count(*) FILTER (WHERE o.tier = 'partial')::int AS partial_n
+    `SELECT l.label, l.name, l.definition, l.includes, l.excludes, l.mixed_rule, l.version, l.grading, l.subtypes,
+            count(*) FILTER (WHERE o.tier = 'primary')::int AS primary_n, count(*) FILTER (WHERE o.tier = 'partial')::int AS partial_n,
+            (SELECT jsonb_object_agg(s, jsonb_build_object('primary', p, 'partial', q)) FROM (SELECT s, count(*) FILTER (WHERE x.tier = 'primary')::int AS p,
+               count(*) FILTER (WHERE x.tier = 'partial')::int AS q FROM org_labels x, unnest(x.subtypes) s WHERE x.label = l.label GROUP BY s) t) AS sub_n
        FROM cause_labels l LEFT JOIN org_labels o ON o.label = l.label GROUP BY l.label ORDER BY l.label`);
   const pct = (g: Grade | undefined) => (g?.p == null ? null : { estimate: g.p, low: g.lo ?? null, high: g.hi ?? null, sample: g.n ?? null });
   return {
@@ -403,6 +408,11 @@ export async function apiLabels() {
       return {
         label: r.label, name: r.name, definition: r.definition, includes: r.includes, excludes: r.excludes, mixed_rule: r.mixed_rule, version: r.version,
         orgs: { primary: r.primary_n, partial: r.partial_n },
+        // Sub-types inside the label (immigrants_refugees): definition, orgs per tier (an org in both counts in each), and
+        // whether questions and filters without a sub-type count it (default).
+        ...(r.subtypes ? { subtypes: Object.entries(r.subtypes as Record<string, { name: string; definition: string; default?: boolean }>).map(([k, v]) => ({
+          subtype: k, name: v.name, definition: v.definition, default: Boolean(v.default), orgs: r.sub_n?.[k] ?? { primary: 0, partial: 0 },
+        })), subtype_grade: g.subtypes ? { judge: g.subtypes.judge ?? null, right: g.subtypes.right_weighted ?? null, sample: g.subtypes.right?.n ?? null } : null } : {}),
         grades: r.grading
           ? {
               classifier: g.classifier ?? null, judge: g.judge ?? null,
@@ -420,17 +430,19 @@ export async function apiLabels() {
 
 export async function apiLabelOrgs(label: string, p: In) {
   if (!isLabel(label)) return null;
-  const f = { label, tier: oneOf(p, "tier", ["primary", "partial", "all"] as const) ?? "primary", state: state(p), ntee: text(p, "ntee", 5)?.toUpperCase() ?? null, limit: pageSize(p, 100, 1000) };
+  const f = { label, tier: oneOf(p, "tier", ["primary", "partial", "all"] as const) ?? "primary", subtype: LABEL_SUBTYPES[label] ? oneOf(p, "subtype", ["services", "policy", "all"] as const) ?? "all" : null,
+    state: state(p), ntee: text(p, "ntee", 5)?.toUpperCase() ?? null, limit: pageSize(p, 100, 1000) };
   if (f.ntee && !/^[A-Z][0-9A-Z]{0,4}$/.test(f.ntee)) throw new BadParam("ntee", "ntee must be an NTEE code prefix, e.g. C or C32.");
   const after = cursor(p, ["s"]);
   const q = new Sql();
   q.and(`l.label = ${q.v(label)}`);
   if (f.tier !== "all") q.and(`l.tier = ${q.v(f.tier)}`);
+  if (f.subtype && f.subtype !== "all") q.and(`${q.v(f.subtype)}::text = ANY(l.subtypes)`);
   if (f.state) q.and(`o.state = ${q.v(f.state)}`);
   if (f.ntee) q.and(`o.ntee_cd LIKE ${q.v(f.ntee + "%")}`);
   if (after) q.and(`l.ein > ${q.v(after[0])}`);
   const { rows } = await db.query(
-    `SELECT l.ein, l.tier, l.score, l.method, l.evidence, l.version, o.name, o.city, o.state, o.ntee_cd, o.revenue_amt
+    `SELECT l.ein, l.tier, l.subtypes, l.score, l.method, l.evidence, l.version, o.name, o.city, o.state, o.ntee_cd, o.revenue_amt
        FROM org_labels l LEFT JOIN orgs o ON o.ein = l.ein ${q.clause} ORDER BY l.ein LIMIT ${q.v(f.limit + 1)}`, q.params);
   const pg = page(rows, f.limit, (r) => [r.ein]);
   return {
@@ -438,7 +450,7 @@ export async function apiLabelOrgs(label: string, p: In) {
     ...pg,
     results: pg.results.map((r) => ({
       ein: r.ein, name: r.name, city: r.city, state: r.state, ntee: r.ntee_cd, revenue: num(r.revenue_amt),
-      tier: r.tier, score: num(r.score), method: r.method, why: r.evidence, version: r.version, api_path: `/api/v1/org/${r.ein}`,
+      tier: r.tier, ...(r.subtypes ? { subtypes: r.subtypes } : {}), score: num(r.score), method: r.method, why: r.evidence, version: r.version, api_path: `/api/v1/org/${r.ein}`,
     })),
   };
 }

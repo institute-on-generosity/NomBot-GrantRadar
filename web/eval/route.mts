@@ -11,7 +11,7 @@ type Spec = import("../lib/answerSpec").Spec;
 
 export type Expect = {
   q: string; research?: boolean; metric?: string[]; source?: string; by?: string[]; charityFunder?: string; funderType?: string; recipientKind?: string;
-  label?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
+  label?: string; subtype?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
   order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number; region?: string; topN?: number; streak?: number;
   premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
 };
@@ -28,6 +28,7 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
     if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   for (const k of ["perResident", "perPoverty"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   if (e.label && c0?.label !== e.label) bad.push(`label ${c0?.label}, want ${e.label}`);
+  if (e.subtype && c0?.subtype !== e.subtype) bad.push(`subtype ${c0?.subtype}, want ${e.subtype}`);
   if (e.ntee && !(c0?.ntee ?? []).some((n) => n.startsWith(e.ntee!) || e.ntee!.startsWith(n))) bad.push(`ntee ${c0?.ntee.join("+")}, want ${e.ntee}`);
   if (e.missing && !s.missing.includes(e.missing as Spec["missing"][number])) bad.push(`missing ${s.missing.join("+")}, want ${e.missing}`);
   if (e.states && !e.states.every((x) => s.states.includes(x))) bad.push(`states ${s.states.join(",")}, want ${e.states.join(",")}`);

@@ -17,7 +17,7 @@ import { LOADED_STATES } from "./filters";
 import { money } from "../components/money";
 import { orgName } from "../components/text";
 import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
-import { LABELS, LABEL_SCOPE, labelPhrase, narrowerThanLabel, type LabelSlug } from "./labels";
+import { LABELS, LABEL_SCOPE, LABEL_SUBTYPES, labelPhrase, narrowerThanLabel, type LabelSlug, type LabelSub } from "./labels";
 import { fedProgram, type FedProgram } from "./fedPrograms";
 import { buildSteps, type CauseInfo, type Evidence, type Movers, type Step, type StepInput } from "./answerSteps";
 
@@ -137,10 +137,14 @@ function tsq(keywords: string[]): string {
 // primaryOnly: a graded label counts only orgs where the cause is the main stated purpose. Used for whole-org
 // money (Form 990 lines, federal awards): a partial-tier org's entire budget isn't money for the cause (a
 // credit-union network with one green-lending program would count all its government grants as climate).
+// The sub-type a label cause counts (immigrants_refugees: services or policy), null for the whole label. The research
+// layer's labels arrays carry label:tier only, so a sub-type answers from grant_clean joined to org_labels.
+const labelSub = (c: C | null | undefined): LabelSub | null => (c && !c.all && c.label && c.subtype && c.subtype !== "all" ? c.subtype : null);
 function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primaryOnly = false): CauseSql {
   if (!c || c.all) return { join: "", where: [], tier: null, kind: "all" };
   p.cause(c);
-  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
+  const sub = labelSub(c);
+  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}${sub ? ` AND ${p.add(sub)}::text = ANY(l${sfx}.subtypes)` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
   if (c.ntee.length) return { join: "", where: [`${ntee} LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`], tier: null, kind: "ntee" };
   const kws = c.keywords.length ? c.keywords : [c.name.toLowerCase()];
   const q = tsq(kws);
@@ -234,7 +238,7 @@ const filtEin = (f: Filt, p: P, ein: string) => (f.rb ? [`${ein} IN (SELECT ein 
 // ------------------------------------------------------------------ research layer: grant_cube / grant_recipient_year
 // Sums come from grant_cube (alias x) when the cause is a label or NTEE prefixes of up to 3 characters
 // and there's no county; otherwise from grant_clean. Same grants, same numbers (eval/answer-cube.mts).
-const cubeCause = (c: C | null) => !c || c.all || !!c.label || (c.ntee.length > 0 && c.ntee.every((n) => n.length <= 3));
+const cubeCause = (c: C | null) => !c || c.all || (!!c.label && !labelSub(c)) || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length <= 3));
 const cubeOk = (ctx: Ctx, c: C | null, pl: Place) => ctx.cube && !pl.county && !pl.region && cubeCause(c) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company"; // no company column in the cube
 type CubeSql = { where: string[]; primary: (() => string) | null }; // primary: adds its parameter only when used
 function cubeWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, linkedOnly: boolean, x = "x"): CubeSql {
@@ -264,8 +268,8 @@ function ryWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, 
   let join = "";
   if (c && !c.all) {
     p.cause(c);
-    if (c.label) w.push(`${r}.labels <> '{}'`, `${r}.labels && ${p.add([`${c.label}:primary`, `${c.label}:partial`])}::text[]`);
-    else if (c.ntee.length) w.push(`${r}.recipient_ntee LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`);
+    if (c.label && !labelSub(c)) w.push(`${r}.labels <> '{}'`, `${r}.labels && ${p.add([`${c.label}:primary`, `${c.label}:partial`])}::text[]`);
+    else if (!c.label && c.ntee.length) w.push(`${r}.recipient_ntee LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`);
     else join = causeSql(c, p, `${r}.recipient_ein`, `${r}.recipient_ntee`).join;
   }
   w.push(...placeWhere(pl, p, `${r}.recipient_state`, `${r}.county_fips`));
@@ -379,14 +383,21 @@ async function resolvePlace(s: Spec): Promise<Place> {
 }
 
 // ------------------------------------------------------------------ label grades (for caveats)
-type Grade = { name: string; primary?: number; partial?: number; recall?: number; nPrimary?: number; nPartial?: number };
+type Grade = { name: string; primary?: number; partial?: number; recall?: number; nPrimary?: number; nPartial?: number; subRight?: number; nSub?: number; subPolicy?: number };
 const gradeMemo = memo<Record<string, Grade>>("answer-grades", 2, 3600_000);
 const grades = () => gradeMemo("all", async () => {
   const r = await db.query(`SELECT label, name, grading FROM cause_labels`);
   return Object.fromEntries(r.rows.map((x) => [x.label, {
     name: x.name, primary: x.grading?.primary?.exact?.p, partial: x.grading?.partial?.in_label?.p ?? x.grading?.partial?.in_label_weighted,
     recall: x.grading?.recall_est, nPrimary: x.grading?.primary?.exact?.n, nPartial: x.grading?.partial?.in_label?.n,
+    subRight: x.grading?.subtypes?.right_weighted, nSub: x.grading?.subtypes?.right?.n, subPolicy: x.grading?.subtypes?.policy_precision,
   }]));
+});
+// Orgs per sub-type of a label with sub-types (an org in both counts in each), for the steps and caveats.
+const subMemo = memo<Record<string, number>>("answer-subtype-counts", 8, 3600_000);
+const subCounts = (label: string) => subMemo(label, async () => {
+  const r = await db.query(`SELECT s AS sub, count(*)::int AS n FROM org_labels, unnest(subtypes) s WHERE label = $1 GROUP BY 1`, [label]);
+  return Object.fromEntries(r.rows.map((x) => [x.sub, x.n]));
 });
 
 const linkMemo = memo<{ grants: number; dollars: number }>("answer-link:v4", 4, 3600_000); // v4: placeholder lines out (generosity-data 050)
@@ -438,11 +449,15 @@ LEFT JOIN (SELECT year, sum(value)::float8 AS soi FROM benchmarks WHERE source I
 });
 
 // Label-specific limits beyond the grade line: a low recall makes every count a floor; a partial tier graded right at
-// the 90% bar is the least certain part; mental health is graded from 990 text, not NTEE F; immigration policy groups
-// count whatever their stance (the definition's "immigration policy, research, rights and advocacy").
-const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly: boolean) => string>> = {
+// the 90% bar is the least certain part; mental health is graded from 990 text, not NTEE F; immigrants and refugees
+// splits into services (the default) and immigration policy groups of every stance (sub-types, generosity-data 069).
+const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly: boolean, sub: LabelSub | null) => string>> = {
   racial_equity: (g) => `Racial equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.63)} of the orgs doing this work (many civil rights, community and health groups that work on race don't say so in their 990 text), so the true total is higher.`,
-  immigrants_refugees: () => "The immigrants and refugees label counts immigration policy and research groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies), so their funders count here too.",
+  immigrants_refugees: (g, _p, sub) => `${sub === "services"
+    ? "This counts orgs that serve immigrants and refugees: resettlement, immigration legal aid, ESL and integration, refugee relief abroad and immigrant rights groups. Immigration policy research and advocacy groups, on every side, are a separate sub-type and are left out unless they also serve immigrants. Ask about immigration policy to count them."
+    : sub === "policy"
+    ? `This counts immigration policy and advocacy groups of every viewpoint, from groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies) to groups that argue for more (FWD.us, the National Immigration Forum), so their funders count here whatever side they take. Groups that serve immigrants are left out unless they also run named policy work.${g?.subPolicy != null ? ` It is the less certain sub-type: ${pct(g.subPolicy)} of sampled policy orgs were judged policy groups, most misses immigrant community groups.` : ""}`
+    : "This counts the whole immigrants and refugees label: orgs that serve immigrants and refugees and immigration policy groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies)."}${g?.subRight != null ? ` The split into the two sub-types graded ${pct(g.subRight)} right on ${g.nSub ?? "a"} sampled orgs.` : ""}`,
   mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
 };
 
@@ -454,10 +469,12 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
     const g = (await grades())[c.label!];
     caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : "Primary is a floor, primary + partial an upper bound."}`);
     const extra = LABEL_CAVEAT[c.label as LabelSlug];
-    if (extra) caveats.push(extra(g, Boolean(cs.primaryOnly)));
+    const sub = labelSub(c);
+    if (extra) caveats.push(extra(g, Boolean(cs.primaryOnly), sub));
+    const subNote = sub ? `, ${LABEL_SUBTYPES[c.label as LabelSlug]!.names[sub].toLowerCase()} sub-type only` : "";
     return cs.primaryOnly
-      ? `${g?.name ?? c.label} label (org_labels), primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
-      : `${g?.name ?? c.label} label (org_labels): primary = the main stated purpose, partial = one program among others.${via}`;
+      ? `${g?.name ?? c.label} label (org_labels)${subNote}, primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
+      : `${g?.name ?? c.label} label (org_labels)${subNote}: primary = the main stated purpose, partial = one program among others.${via}`;
   }
   if (cs.kind === "ntee") {
     if (c.ntee.some((n) => n.startsWith("X"))) caveats.push("Churches and other houses of worship don't have to file Form 990 or apply for recognition, so most congregations are missing from these figures.");
@@ -763,7 +780,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // charity_grants totals say how much was left out.
 // v32: "Show the steps" evidence chain (lib/answerSteps), start-year spike check on trends ("Since 2021?").
 // v34: racial_equity, immigrants_refugees, mental_health labels (graded g2, g1, g1), with label caveats (LABEL_CAVEAT).
-const answerMemo = memo<Answer>("answer:v34", 500, 6 * 3600_000);
+// v36: immigrants_refugees sub-types (generosity-data 069): services by default, policy for immigration policy questions.
+const answerMemo = memo<Answer>("answer:v36", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -865,12 +883,23 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
   // The cause set: graded label (tiers and grade), NTEE codes or keywords.
   const gr: Record<string, Grade> = s.causes.some((c) => c.label) ? await grades().catch(() => ({})) : {};
   const primaryOnly = /primary tier only/.test(a.causeNote);
+  // Labels with sub-types: which one was counted and how the label splits (orgs per sub-type).
+  const subs = new Map<C, string>();
+  for (const c of s.causes as C[]) {
+    const t = c.label ? LABEL_SUBTYPES[c.label as LabelSlug] : undefined;
+    if (!t) continue;
+    const n: Record<string, number> = await subCounts(c.label!).catch(() => ({}));
+    const sub = labelSub(c), both = (Object.keys(t.names) as LabelSub[]);
+    const part = (k: LabelSub) => `${t.names[k].toLowerCase()} (${int(n[k] ?? 0)} orgs)`;
+    subs.set(c, sub ? `${part(sub)} only, ${both.filter((k) => k !== sub).map(part).join(", ")} left out` : `both sub-types: ${both.map(part).join(" and ")}`);
+    if (sub && gr[c.label!]?.subRight != null) subs.set(c, `${subs.get(c)}, sub-types graded ${pct(gr[c.label!].subRight!)} right`);
+  }
   const causes: CauseInfo[] = s.causes.map((c) => {
     if (s.source === "federal_awards" && fedProgram(c)) return { name: c.name, kind: "program" };
     if (c.label) {
       const g = gr[c.label];
       const grade = g?.primary != null ? `primary graded ${pct(g.primary)} right on ${g.nPrimary ?? "a"} sampled orgs${g.recall != null ? `, recall about ${pct(g.recall)}` : ""}` : undefined;
-      return { name: c.name, kind: "label", labelName: g?.name ?? LABELS[c.label as LabelSlug] ?? c.label, grade,
+      return { name: c.name, kind: "label", labelName: g?.name ?? LABELS[c.label as LabelSlug] ?? c.label, grade, subtype: subs.get(c),
         tiers: primaryOnly ? "primary tier only (main stated purpose)" : grantSrc ? "primary as the headline, primary + partial as the upper bound" : "primary and partial tiers" };
     }
     if (c.ntee.length) return { name: `${c.name} (NTEE ${c.ntee.join(", ")})`, kind: "ntee" };
@@ -1626,7 +1655,7 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
   if (isLabel) {
     const pp = new P();
     const w = [`f.tax_year = ${pp.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...placeWhere(pl, pp, "f.state", "f.county_fips"), ...filtEin(pl.f, pp, "f.ein")];
-    const [pt] = await ctx.q<{ usd: number; orgs: number; top: string | null; top_usd: number | null }>(`${fd.short}: orgs where ${c0.name} is one program among others (partial tier, left out)`, `WITH x AS (SELECT o.name, coalesce(${fd.col}, 0)::float8 AS v FROM flag_year f JOIN org_labels l ON l.ein = f.ein AND l.label = ${pp.add(c0.label)} AND l.tier = 'partial' JOIN orgs o ON o.ein = f.ein
+    const [pt] = await ctx.q<{ usd: number; orgs: number; top: string | null; top_usd: number | null }>(`${fd.short}: orgs where ${c0.name} is one program among others (partial tier, left out)`, `WITH x AS (SELECT o.name, coalesce(${fd.col}, 0)::float8 AS v FROM flag_year f JOIN org_labels l ON l.ein = f.ein AND l.label = ${pp.add(c0.label)} AND l.tier = 'partial'${labelSub(c0) ? ` AND ${pp.add(labelSub(c0))}::text = ANY(l.subtypes)` : ""} JOIN orgs o ON o.ein = f.ein
   WHERE ${and(w)})
 SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name FROM x ORDER BY v DESC LIMIT 1) AS top, (SELECT max(v) FROM x)::float8 AS top_usd FROM x`, pp);
     if (pt?.usd > 0) caveats.push(`Counted only for orgs whose main purpose is ${c0.name}. ${int(pt.orgs)} orgs where it's one program among others reported ${money(pt.usd)} more, led by ${pt.top ? orgName(pt.top) : "one org"} (${money(pt.top_usd ?? 0)}), but most of that money funds their other work.`);

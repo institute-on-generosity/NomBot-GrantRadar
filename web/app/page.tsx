@@ -17,7 +17,7 @@ import { SearchBox } from "@/components/SearchBox";
 import { parseQuestion } from "@/lib/parse";
 import { PROMPT_SETS } from "@/lib/examples";
 import { HeroFlip } from "@/components/HeroFlip";
-import { LABEL_SLUGS, labelName } from "@/lib/labels";
+import { LABEL_SLUGS, LABEL_SUBTYPES, labelName, type LabelSub } from "@/lib/labels";
 import { applyOverrides, BUDGETS, MIN_BUDGETS, CAUSES, causeLabel, hasOverrides, LOADED_STATES, money, reqSlug, type Overrides } from "@/lib/filters";
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
@@ -82,7 +82,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   }
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, label: p.label, tier: p.tier, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, label: p.label, tier: p.tier, sub: p.sub, drop: p.drop };
   // Content plan, per question (lib/answerSpec contentPlan):
   //   research  ("how much…", "what share…", "which states…"): redirected to /research/ask, the answer
   //             card only. No org search, landscape, AI overview or relevance scoring runs.
@@ -293,20 +293,29 @@ function filterChips(f: Filters, p: Params): Chip[] {
       removeHref: f.ntee ? go({ cause: "any" }) : undefined,
       options: [{ label: "Any cause", href: go({ cause: "any" }), on: !f.ntee },
         ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c })),
-        ...LABEL_SLUGS.map((l) => ({ label: labelName(l), href: go({ label: l, tier: "" }), on: f.label === l, note: "Graded label, any IRS code" }))],
+        ...LABEL_SLUGS.map((l) => ({ label: labelName(l), href: go({ label: l, tier: "", sub: "" }), on: f.label === l, note: "Graded label, any IRS code" }))],
     },
     // Graded cause labels (climate, women and girls, substance use, housing and homelessness, tech and AI skills, racial equity, immigrants and refugees, mental health): shown when the question names one or the user picks it.
     // Primary: the cause is the org's main work. Partial adds orgs where it's one named goal among others.
-    ...(f.label ? [{
-      key: "label", kind: "set", label: `${labelName(f.label)}${f.labelPartial ? " (main or partial focus)" : " (main focus)"}`,
-      removeHref: go({ label: "none", tier: "" }),
-      options: [
-        { label: "Main focus only", href: go({ label: f.label, tier: "primary" }), on: !f.labelPartial, note: "The cause is most of their work" },
-        { label: "Include partial focus", href: go({ label: f.label, tier: "all" }), on: Boolean(f.labelPartial), note: "Also orgs with one named program for it" },
-        ...LABEL_SLUGS.filter((l) => l !== f.label).map((l) => ({ label: `Switch to ${labelName(l)}`, href: go({ label: l, tier: "" }), on: false })),
-        { label: "No cause label", href: go({ label: "none", tier: "" }), on: false },
-      ],
-    } as Chip] : []),
+    // A label with sub-types (immigrants and refugees: serving immigrants, or immigration policy groups of any stance)
+    // shows which one is counted (the default unless the question or the chip picks another) and offers the others.
+    ...(f.label ? [((l) => {
+      const st = LABEL_SUBTYPES[l];
+      const sub = st ? (f.labelSub ?? st.default) : null;
+      const subText = st && sub ? `: ${sub === "all" ? "both sub-types" : st.names[sub as LabelSub].toLowerCase()}` : "";
+      return {
+        key: "label", kind: "set", label: `${labelName(l)}${subText}${f.labelPartial ? " (main or partial focus)" : " (main focus)"}`,
+        removeHref: go({ label: "none", tier: "", sub: "" }),
+        options: [
+          { label: "Main focus only", href: go({ label: l, tier: "primary" }), on: !f.labelPartial, note: "The cause is most of their work" },
+          { label: "Include partial focus", href: go({ label: l, tier: "all" }), on: Boolean(f.labelPartial), note: "Also orgs with one named program for it" },
+          ...(st ? [...(Object.keys(st.names) as LabelSub[]).map((k) => ({ label: st.names[k], href: go({ label: l, sub: k }), on: sub === k, note: st.notes[k] })),
+            { label: "Both sub-types", href: go({ label: l, sub: "all" }), on: sub === "all", note: "The whole label" }] : []),
+          ...LABEL_SLUGS.filter((x) => x !== l).map((x) => ({ label: `Switch to ${labelName(x)}`, href: go({ label: x, tier: "", sub: "" }), on: false })),
+          { label: "No cause label", href: go({ label: "none", tier: "", sub: "" }), on: false },
+        ],
+      } as Chip;
+    })(f.label)] : []),
     ...f.requirements.map((r): Chip => ({
       key: `must-${reqSlug(r.label)}`, kind: "must", label: `Must mention: ${r.label}`,
       removeHref: go({ drop: [...dropped, reqSlug(r.label)].join(",") }),

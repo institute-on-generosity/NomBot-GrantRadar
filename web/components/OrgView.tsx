@@ -11,6 +11,7 @@ import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase } from "@/components/text";
 import { getOrg, type Income } from "@/lib/org";
+import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
 import type { BoardLink } from "@/lib/people";
@@ -119,7 +120,7 @@ async function Org({ params, searchParams, modal }: Props) {
           {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
           {o.labels.length > 0 && <><dt>Cause labels</dt><dd className="org-labels">{o.labels.map((l) => (
             <span key={l.label} title="Graded by NomBot from the organization's name and Form 990 text">
-              <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "partial focus"}{l.why && <small>{l.why}</small>}
+              <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "partial focus"}{l.subtypes && LABEL_SUBTYPES[l.label] && ` · ${l.subtypes.map((x) => LABEL_SUBTYPES[l.label]!.names[x as LabelSub]?.toLowerCase() ?? x).join(" and ")}`}{l.why && <small>{l.why}</small>}
             </span>))}</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
           <dt>IRS status</dt><dd>{o.status.standing}</dd>

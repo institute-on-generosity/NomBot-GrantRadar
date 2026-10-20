@@ -83,6 +83,7 @@
   { "q": "How much foundation money goes to suicide prevention?", "metric": ["total"], "label": "mental_health", "headlineHas": "mental health orgs \\(the closest graded label to suicide prevention\\)" },
   { "q": "How much foundation money goes to racial justice?", "metric": ["total"], "label": "racial_equity", "headlineNot": "closest graded label", "caveatHas": "counts are a floor" },
   { "q": "Did foundation giving to racial justice spike after 2020 and then fall back?", "metric": ["trend"], "label": "racial_equity" },
-  { "q": "How much foundation money supports immigrants and refugees?", "metric": ["total"], "label": "immigrants_refugees", "headlineHas": "immigrants and refugees", "headlineNot": "closest graded label" },
-  { "q": "Which foundations give the most to refugee resettlement?", "metric": ["top_funders"], "label": "immigrants_refugees", "caveatHas": "argue for less immigration" }
+  { "q": "How much foundation money supports immigrants and refugees?", "metric": ["total"], "label": "immigrants_refugees", "subtype": "services", "headlineHas": "immigrants and refugees", "headlineNot": "closest graded label", "caveatHas": "Immigration policy research and advocacy groups, on every side, are a separate sub-type" },
+  { "q": "Which foundations give the most to refugee resettlement?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "services", "caveatHas": "serve immigrants and refugees" },
+  { "q": "Which foundations fund immigration policy groups?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "policy", "headlineNot": "closest graded label", "caveatHas": "argue for less immigration" }
 ]

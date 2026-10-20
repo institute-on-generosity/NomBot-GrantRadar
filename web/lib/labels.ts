@@ -11,6 +11,31 @@ export const labelName = (s: string) => (isLabel(s) ? LABELS[s] : s);
 // The name mid-sentence: "tech and AI skills", "climate" (acronyms keep their case).
 export const labelPhrase = (s: LabelSlug) => LABELS[s].replace(/^[A-Z](?![A-Z])/, (m) => m.toLowerCase());
 
+// Sub-types inside a label (generosity-data 069: org_labels.subtypes, cause_labels.subtypes). immigrants_refugees splits
+// into services (serving immigrants and refugees, the default) and policy (immigration policy research and advocacy of
+// any stance, FAIR and NumbersUSA as much as FWD.us). A question about immigrants or refugees counts services; one about
+// immigration policy, reform or advocacy counts policy; "all" (API, chips) counts the whole label.
+export type LabelSub = "services" | "policy";
+export type LabelSubPick = LabelSub | "all";
+export const LABEL_SUBTYPES: Partial<Record<LabelSlug, { default: LabelSub; names: Record<LabelSub, string>; notes: Record<LabelSub, string> }>> = {
+  immigrants_refugees: {
+    default: "services",
+    names: { services: "Serving immigrants and refugees", policy: "Immigration policy and advocacy" },
+    notes: { services: "Resettlement, legal aid, ESL, relief, immigrant rights", policy: "Every viewpoint, for and against more immigration" },
+  },
+};
+export const hasSubtypes = (l: string | null | undefined): l is LabelSlug => isLabel(l) && !!LABEL_SUBTYPES[l];
+export const isLabelSub = (s: unknown): s is LabelSubPick => s === "services" || s === "policy" || s === "all";
+// The question asks about immigration policy itself: policy, reform, enforcement, research or advocacy on immigration,
+// think tanks, or a side of the debate. "Advocacy for immigrants" or "immigrant rights" is still services.
+const POLICY_Q = /\b(immigration|migration|border|asylum|refugee)[- ](polic(y|ies)|reform|enforcement|restrictions?|restrictionists?|research|think[- ]tanks?|advocacy|advocates|debate|levels?|legislation|lobbying)\b|\b(polic(y|ies)|advocacy|lobbying|think[- ]tanks?|research(ers)?|reform)\b[^.?!]{0,40}\bimmigration\b|\b(restrictionists?|anti-?immigration|pro-?immigration|(less|lower|reduce[ds]?|more) immigration)\b/i;
+// The sub-type a question means: policy when it asks about immigration policy, else the label's default. undefined for labels without sub-types.
+export function subtypeFromText(text: string, label: LabelSlug | null | undefined): LabelSub | undefined {
+  const t = label ? LABEL_SUBTYPES[label] : undefined;
+  if (!t) return undefined;
+  return POLICY_Q.test(text) ? "policy" : t.default;
+}
+
 // The question must name the cause itself, so a stray guess never narrows a search to a label.
 // "Boys and girls clubs" serve everyone, so they don't count as women and girls; homeless pets aren't housing;
 // medical coding and building codes aren't tech skills, and bare "programming" (a charity's programs) or "AI" isn't either.
@@ -49,7 +74,8 @@ const WHOLE: Record<LabelSlug, string[]> = {
   housing_homelessness: ["housing and homelessness", "homelessness and housing", "housing", "homelessness", "homeless", "housing and homeless", "unhoused", "people experiencing homelessness", "homeless people"],
   ai_tech_learning_work: ["tech and ai skills", "ai and tech skills", "tech skills", "technology skills", "tech and ai learning and work", "ai tech learning work", "ai tech learning and work", "tech and ai skills and work"],
   racial_equity: ["racial equity", "racial justice", "racial equity and racial justice", "racial equity and justice", "racial justice and equity", "racial justice and racial equity", "race equity", "racial equality", "racism", "anti racism", "antiracism", "fighting racism", "ending racism", "racial equity and inclusion"],
-  immigrants_refugees: ["immigrants and refugees", "refugees and immigrants", "immigrant and refugee", "refugee and immigrant", "immigrants", "immigrant", "immigration", "refugees", "refugee", "migrants", "migrants and refugees", "refugees and migrants", "immigrants refugees and asylum seekers", "immigrant and refugee communities"],
+  immigrants_refugees: ["immigrants and refugees", "refugees and immigrants", "immigrant and refugee", "refugee and immigrant", "immigrants", "immigrant", "immigration", "refugees", "refugee", "migrants", "migrants and refugees", "refugees and migrants", "immigrants refugees and asylum seekers", "immigrant and refugee communities",
+    "immigration policy", "immigration policy and advocacy", "immigration advocacy", "immigration reform", "immigration policy research", "immigration policy groups", "immigration debate"],
   mental_health: ["mental health", "mental illness", "mental illnesses", "mental health and mental illness", "mental health and wellness", "mental wellness", "mental health care", "mental and behavioral health", "behavioral and mental health", "behavioral health", "mental health and suicide prevention"],
 };
 // What each label counts, for the caveat on a narrower question.
@@ -60,7 +86,7 @@ export const LABEL_SCOPE: Record<LabelSlug, string> = {
   housing_homelessness: "homeless services and shelters, affordable and supportive housing, eviction prevention, rental assistance and home ownership",
   ai_tech_learning_work: "computer science and coding education, digital and AI literacy, tech workforce training, and tech capacity for nonprofits",
   racial_equity: "racism and racial discrimination, civil rights of people of color, racial gaps in wealth, health, education and justice, and racial healing",
-  immigrants_refugees: "refugee resettlement, immigration legal services, citizenship and newcomer services, aid to refugees abroad, and immigrant rights and policy",
+  immigrants_refugees: "refugee resettlement, immigration legal services, citizenship and newcomer services, aid to refugees abroad, and immigrant rights (the services sub-type, without immigration policy groups)",
   mental_health: "mental health treatment and counseling, crisis lines and suicide prevention, peer support, and mental health advocacy and research",
 };
 const FILLER = /\b(the|orgs?|organi[sz]ations?|nonprofits?|non-profits?|charities|charity|groups?|causes?|funding|money|grants?|giving|sector|issues?|efforts?|programs?|services?|work|related|focused)\b/g;

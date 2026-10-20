@@ -282,7 +282,7 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 
 const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: llmSpecSchema });
 
-const cached = memo<Resolved>("follow-up:v9", 1000, 24 * 3600_000); // v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v11", 1000, 24 * 3600_000); // v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());

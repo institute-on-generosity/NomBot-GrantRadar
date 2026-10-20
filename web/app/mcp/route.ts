@@ -67,6 +67,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
       ntee: z.string().max(5).optional().describe("NTEE cause code prefix, e.g. 'K' (food) or 'K31' (food banks)"),
       label: z.enum(LABEL_SLUGS as [LabelSlug, ...LabelSlug[]]).optional().describe("Graded cause label no NTEE code captures: 'climate', 'women_girls', 'substance_use', 'housing_homelessness', 'ai_tech_learning_work', 'racial_equity', 'immigrants_refugees' or 'mental_health'. Only orgs with that label (each result's label shows its tier)"),
       label_tier: z.enum(["primary", "all"]).optional().describe("With label: 'primary' (default) = the cause is the org's main work; 'all' also adds 'partial' orgs where it is one named goal among others"),
+      label_subtype: z.enum(["services", "policy", "all"]).optional().describe("With label immigrants_refugees: 'services' (default) = orgs serving immigrants and refugees, 'policy' = immigration policy research and advocacy of any stance, 'all' = both"),
       limit: z.number().int().min(1).max(50).optional().describe("Results to return, 1-50 (default 10)"),
     },
     annotations: { title: "Search nonprofits", ...READ_ONLY },
@@ -152,6 +153,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
       state: st, county,
       label: z.enum(LABEL_SLUGS as [LabelSlug, ...LabelSlug[]]).optional().describe("Recipient's graded cause label"),
       label_tier: z.enum(["primary", "all"]).optional(),
+      label_subtype: z.enum(["services", "policy", "all"]).optional().describe("With label immigrants_refugees: 'services' (default) = orgs serving immigrants and refugees, 'policy' = immigration policy research and advocacy of any stance, 'all' = both"),
       amount_min: z.number().int().nonnegative().optional().describe("Dollars"),
       funder_type: z.enum(FUNDER_TYPES).optional().describe("source 'charity' only"),
       totals: z.boolean().optional().describe("Also return count and sum for the filters"),
@@ -207,6 +209,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
     inputSchema: {
       label: z.enum(LABEL_SLUGS as [LabelSlug, ...LabelSlug[]]).optional(),
       tier: z.enum(["primary", "partial", "all"]).optional().describe("With label. Default 'primary'"),
+      subtype: z.enum(["services", "policy", "all"]).optional().describe("With label immigrants_refugees: 'services', 'policy' or 'all' (default). Each org lists its subtypes"),
       state: st, ntee: z.string().max(5).optional().describe("NTEE code prefix"),
       limit: z.number().int().min(1).max(1000).optional(), cursor,
     },

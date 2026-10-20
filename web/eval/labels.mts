@@ -7,7 +7,7 @@
 import { join } from "node:path";
 try { process.loadEnvFile(join(import.meta.dirname, "..", ".env.local")); } catch { /* no .env.local */ }
 
-const { labelFromText } = await import("../lib/labels");
+const { labelFromText, subtypeFromText } = await import("../lib/labels");
 const { applyOverrides } = await import("../lib/filters");
 const { search } = await import("../lib/search");
 const { apiSearch, apiOrg } = await import("../lib/api");
@@ -62,6 +62,16 @@ const check = (ok: boolean, what: string) => { console.log(`${ok ? "PASS" : "FAI
 
 // 1. Rules parser (no Claude) and the guard Claude's answer must pass: the question names the cause.
 for (const [q, want] of CASES) check((labelFromText(q) ?? null) === want, `rules: "${q}" -> ${want ?? "no label"}`);
+
+// 1b. Sub-types (immigrants_refugees, generosity-data 069): immigration policy questions count policy, the rest services.
+const SUBS: [string, "services" | "policy"][] = [
+  ["funding for immigrants", "services"], ["refugee resettlement agencies in Texas", "services"], ["immigration legal services in California", "services"],
+  ["immigrant rights groups in Illinois", "services"], ["advocacy for immigrants in Ohio", "services"], ["organizations serving refugees", "services"],
+  ["immigration policy groups", "policy"], ["Which foundations fund immigration policy research?", "policy"], ["immigration reform advocacy organizations", "policy"],
+  ["think tanks on immigration", "policy"], ["groups that want less immigration", "policy"], ["immigration restrictionist groups", "policy"],
+];
+for (const [q, want] of SUBS) check(subtypeFromText(q, "immigrants_refugees") === want, `subtype: "${q}" -> ${want}`);
+check(subtypeFromText("climate policy groups", "climate") === undefined, "subtype: labels without sub-types -> none");
 
 // 2. Claude's parse (opt-in: costs tokens).
 if (process.argv.includes("--llm")) {
@@ -129,6 +139,27 @@ const ir = await apiOrg("135633307", "http://x"); // HIAS
 check(!("error" in ir) && ir.org.labels.some((l) => l.label === "immigrants_refugees" && l.name === "Immigrants and refugees" && l.tier === "primary" && Boolean(l.why)), "api org HIAS: immigrants_refugees, primary, with why");
 const mh = await apiOrg("581575080", "http://x"); // National Alliance on Mental Illness (NAMI)
 check(!("error" in mh) && mh.org.labels.some((l) => l.label === "mental_health" && l.name === "Mental health" && l.tier === "primary" && Boolean(l.why)), "api org NAMI: mental_health, primary, with why");
+// Sub-types: resettlement agencies are services, restriction and research groups policy (org pages, API, search filter).
+// Services orgs may also run named policy work (both); restriction groups are policy only.
+const sub = async (ein: string, name: string, want: "services" | "policy") => {
+  const o = await apiOrg(ein, "http://x");
+  const got = ("error" in o ? undefined : o.org.labels.find((x) => x.label === "immigrants_refugees"))?.subtypes ?? [];
+  check(want === "policy" ? got.join("+") === "policy" : got.includes("services"), `api org ${name}: immigrants_refugees ${want}${want === "policy" ? " only" : ""} (got ${got.join("+") || "none"})`);
+};
+await sub("135633307", "HIAS", "services");
+await sub("135660870", "International Rescue Committee", "services");
+await sub("521136126", "FAIR", "policy");
+await sub("521449368", "Center for Immigration Studies", "policy");
+const sv = await search({ q: "immigration", label: "immigrants_refugees", labelPartial: true, limit: 50 });
+const pv = await search({ q: "immigration", label: "immigrants_refugees", labelPartial: true, labelSub: "policy", limit: 50 });
+const av = await search({ q: "immigration", label: "immigrants_refugees", labelPartial: true, labelSub: "all", limit: 50 });
+check(sv.total > 0 && sv.results.every((x) => x.label?.subtypes?.includes("services")), `search immigrants_refugees: services by default (${sv.total})`);
+check(pv.total > 0 && pv.results.every((x) => x.label?.subtypes?.includes("policy")) && pv.total < sv.total, `search immigrants_refugees sub=policy: ${pv.total} orgs, all policy`);
+check(av.total >= sv.total && av.total >= pv.total, `search immigrants_refugees sub=all: ${av.total} orgs (both)`);
+check(applyOverrides({ ...base, label: "immigrants_refugees" }, { sub: "policy" }).labelSub === "policy", "override sub=policy sets it");
+check(applyOverrides({ ...base, label: "immigrants_refugees", labelSub: "policy" }, { label: "climate" }).labelSub === undefined, "override: a new label resets sub");
+const ai = await apiSearch({ q: "refugee", label: "immigrants_refugees", label_subtype: "policy", limit: 5 }, "http://x");
+check(ai.query.label_subtype === "policy" && ai.results.every((x) => x.label?.subtypes?.includes("policy")), "api search label_subtype=policy");
 const none = await apiOrg("341877332", "http://x"); // Mid-Ohio Youth Mentoring
 check(!("error" in none) && none.org.labels.length === 0, "api org without labels: empty list");
 

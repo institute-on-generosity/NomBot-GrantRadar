@@ -6,7 +6,7 @@ import { claude, fallback, PARSE_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Requirement } from "./search";
 import { LOADED_STATES } from "./filters";
-import { LABEL_SLUGS, labelFromText, namesLabel, type LabelSlug } from "./labels";
+import { LABEL_SLUGS, labelFromText, namesLabel, subtypeFromText, type LabelSlug, type LabelSubPick } from "./labels";
 import { z } from "zod";
 
 export type Filters = {
@@ -19,6 +19,7 @@ export type Filters = {
   appalachia?: boolean; // only orgs in the ARC region (by ZIP -> county), not whole states
   label?: LabelSlug;     // graded cause label (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): a hard filter on org_labels
   labelPartial?: boolean; // also orgs where the cause is one named goal among others (default: primary only)
+  labelSub?: LabelSubPick; // sub-type of a label that has them (immigrants_refugees: services, policy or all), read from the question
 };
 
 // State names, longest first so "west virginia" is read before "virginia".
@@ -60,7 +61,7 @@ const toReq = (label: string, terms: string[]): Requirement => ({ label, pattern
 
 // Same question -> same filters: sorting, "Show more", going back and CSV export reuse
 // Claude's reading instead of asking again (faster, and the CSV matches the screen).
-const cached = memo<Filters>("parse:v11", 1000, 24 * 3600_000); // bump the name when Filters changes shape (v11: racial_equity, immigrants_refugees, mental_health labels)
+const cached = memo<Filters>("parse:v13", 1000, 24 * 3600_000); // bump the name when Filters changes shape (v13: labelSub, immigrants_refugees sub-types; v11: racial_equity, immigrants_refugees, mental_health labels)
 export function parseQuestion(question: string): Promise<Filters> {
   return cached(question.toLowerCase().replace(/\s+/g, " ").trim(), () => parseFresh(question));
 }
@@ -83,7 +84,7 @@ async function parseFresh(question: string): Promise<Filters> {
         const requirements = o.requirements.filter((r) => r.label.trim()).map((r) => toReq(r.label, r.synonyms));
         const cities = o.cities.map((c) => c.trim().toUpperCase()).filter(Boolean);
         const label = o.label && namesLabel(question, o.label) ? o.label : undefined; // the question must name it
-        return { label, q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, minRevenue: o.minRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
+        return { label, labelSub: subtypeFromText(question, label), q: o.topic, semantic: o.topic, states, cities, maxRevenue: o.maxRevenue ?? undefined, minRevenue: o.minRevenue ?? undefined, nteeHint: o.ntee ?? undefined, requirements, parser: "llm", topic: o.topic, placeLabel: o.placeLabel || undefined, appalachia: o.appalachia || undefined };
       }
     } catch (err) {
       console.error("Claude parse failed; using rule-based parser", err);
@@ -118,5 +119,5 @@ async function parseFresh(question: string): Promise<Filters> {
   const words = (t: string) => t.replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((w) => w && !stop.has(w)).join(" ");
   const q = words(rest);
   const semantic = words(topic);
-  return { q, semantic, states: [...states], cities: [], maxRevenue, minRevenue, nteeHint: ntee, requirements, label, parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
+  return { q, semantic, states: [...states], cities: [], maxRevenue, minRevenue, nteeHint: ntee, requirements, label, labelSub: subtypeFromText(question, label), parser: "rules", topic: semantic, placeLabel: places.join(", ") || undefined, appalachia: appalachia || undefined };
 }

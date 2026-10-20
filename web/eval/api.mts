@@ -202,6 +202,19 @@ try {
   const lp2 = await ok(`/api/v1/labels/women_girls/orgs?limit=3&cursor=${lp1.next_cursor}`);
   check(lp2.results[0].ein > lp1.results[2].ein, "label orgs: page 2 continues by EIN");
   check((await get("/api/v1/labels/dogs/orgs")).status === 404, "label orgs: unknown label -> 404");
+  // Sub-types (immigrants_refugees: services, policy; generosity-data 069): counts, filter, and the grants filter's default.
+  const ir = (await ok("/api/v1/labels")).results.find((l: J) => l.label === "immigrants_refugees");
+  const [sc] = await sql("SELECT count(*) FILTER (WHERE 'services' = ANY(subtypes) AND tier = 'primary')::int AS s, count(*) FILTER (WHERE 'policy' = ANY(subtypes) AND tier = 'primary')::int AS p FROM org_labels WHERE label = 'immigrants_refugees'");
+  check(ir?.subtypes?.find((x: J) => x.subtype === "services")?.orgs.primary === sc.s && ir?.subtypes?.find((x: J) => x.subtype === "policy")?.orgs.primary === sc.p
+    && ir.subtypes.find((x: J) => x.subtype === "services").default === true, `labels: immigrants_refugees subtypes services ${sc.s}, policy ${sc.p} primary vs SQL`);
+  b = await ok("/api/v1/labels/immigrants_refugees/orgs?subtype=policy&tier=all&limit=1000", "label orgs subtype");
+  const [pol] = await sql("SELECT count(*)::int AS n FROM org_labels WHERE label = 'immigrants_refugees' AND 'policy' = ANY(subtypes)");
+  check(b.results.length === pol.n && b.results.every((r: J) => r.subtypes.includes("policy")) && b.results.some((r: J) => r.ein === "521136126"),
+    `label orgs: immigrants_refugees policy ${b.results.length} vs SQL ${pol.n}, FAIR in it`);
+  check((await get("/api/v1/labels/immigrants_refugees/orgs?subtype=nope")).status === 400, "label orgs: bad subtype -> 400");
+  const gs = await ok("/api/v1/grants?label=immigrants_refugees&year_from=2023&year_to=2023&totals=true&limit=1", "grants label default subtype");
+  const [gsq] = await sql(`SELECT count(*)::int AS n FROM grants g WHERE g.tax_year = 2023 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label = 'immigrants_refugees' AND tier = 'primary' AND 'services' = ANY(subtypes))`);
+  check(gs.filters.label_subtype === "services" && gs.totals?.count === gsq.n, `grants: label immigrants_refugees defaults to services (${gs.totals?.count} vs SQL ${gsq.n})`);
 
   // ---------- policy ----------
   b = await ok("/api/v1/congress/bills?q=charitable&limit=5", "bills q");
