@@ -383,6 +383,11 @@ async function BackupsSection() {
       ) : (
         <div className={s.banner}><Dot level="warn" />No off-machine copy yet. {b.offsiteLog ?? "Every dump lives on this Mac only."}</div>
       )}
+      {b.restoreTest ? (
+        <div className={s.banner}><Dot level={b.restoreTest.level} />Last restore test: {when(b.restoreTest.at ?? null)}, {b.restoreTest.ok ? "pass" : "FAIL"}, {Math.round((b.restoreTest.duration_s ?? 0) / 60)} min ({b.restoreTest.file}, {b.restoreTest.tables_matched ?? "?"}/{b.restoreTest.tables_total ?? "?"} table counts match){b.restoreTest.error ? `. ${b.restoreTest.error}` : ""}</div>
+      ) : (
+        <div className={s.banner}><Dot level="warn" />No restore test yet (weekly on the Linux helper, Sunday 5:00).</div>
+      )}
       {b.dumps.length > 0 && (
         <div className={s.tableWrap}>
           <table className={s.table}>

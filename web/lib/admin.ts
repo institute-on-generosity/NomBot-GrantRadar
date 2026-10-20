@@ -121,7 +121,10 @@ export type HeartbeatPayload = {
   jobs?: { pid: number; elapsed_s: number; kind: string; cmd: string }[];
   // embed_worker.py status (cron every 10 min): rows still without a vector, last run, rows written, result.
   embedding?: { pending?: number | null; last_run?: string; done?: number; result?: string; device?: string; tagging?: boolean } | null;
+  // ~/iog-backups/restore-test.sh summary (cron, weekly): newest dump restored into a scratch DB and checked.
+  restore_test?: RestoreTest | null;
 };
+export type RestoreTest = { at?: string; ok?: boolean; file?: string; duration_s?: number; restore_s?: number; tables_matched?: number; tables_total?: number; error?: string | null };
 export type Helper = {
   tailscale: { found: boolean; online: boolean; lastSeen: string | null; host: string | null; os: string | null; error: string | null };
   latest: { at: string; payload: HeartbeatPayload } | null;
@@ -450,6 +453,7 @@ export const keys = () => cached<KeyRow[]>(minute, "keys", async () => {
 export type Backups = {
   dumps: { file: string; at: string; bytes: number }[]; latest: { file: string; at: string; bytes: number } | null; lastLog: string | null; ok: boolean; level: Level;
   offsite: { file: string; at: string; bytes: number; kept: number | null; level: Level } | null; offsiteLog: string | null;
+  restoreTest: (RestoreTest & { level: Level }) | null;
 };
 export const backups = () => cached<Backups>(minute, "backups", async () => {
   let dumps: Backups["dumps"] = [];
@@ -471,7 +475,10 @@ export const backups = () => cached<Backups>(minute, "backups", async () => {
     offsite = { ...o, level: Date.now() - Date.parse(o.at) > 50 * 3600_000 ? "warn" : "ok" };
   } catch { /* never copied */ }
   try { offsiteLog = (await readFile(OFFSITE_LOG, "utf8")).trim().split("\n").filter((l) => l.trim()).at(-1)?.slice(0, 200) ?? null; } catch { /* no log */ }
-  return { dumps, latest: dumps[0] ?? null, lastLog, ok, offsite, offsiteLog, level: !ok || age > 50 * 3600_000 ? "bad" : age > 26 * 3600_000 ? "warn" : "ok" };
+  // Weekly restore test on the Linux helper, from its newest heartbeat. Warn when older than 9 days.
+  const rt = (await rows<{ r: RestoreTest | null }>("SELECT payload->'restore_test' AS r FROM helper_heartbeats WHERE host <> 'admin-eval' ORDER BY received_at DESC LIMIT 1").catch(() => []))[0]?.r ?? null;
+  const restoreTest = rt?.at ? { ...rt, level: (!rt.ok ? "bad" : Date.now() - Date.parse(rt.at) > 9 * 86400_000 ? "warn" : "ok") as Level } : null;
+  return { dumps, latest: dumps[0] ?? null, lastLog, ok, offsite, offsiteLog, restoreTest, level: !ok || age > 50 * 3600_000 ? "bad" : age > 26 * 3600_000 ? "warn" : "ok" };
 });
 
 // ---------- formatting ----------
