@@ -56,9 +56,10 @@ try {
   const ms = Math.round(performance.now() - t0);
   check(page.status === 200, `/admin with admin cookie -> 200 (got ${page.status})`);
   for (const id of ["health", "helper", "data", "labels", "api", "calls", "keys", "backups"]) check(html.includes(`data-section="${id}"`), `section ${id} renders`);
-  for (const text of ["Database", "Live site", "Public link", "Last backup", "Tailscale", "Heartbeat", "990-PF grants", "Pending approvals", "/api/v1/search", "MCP tools", "No off-machine copy"]) {
+  for (const text of ["Database", "Live site", "Public link", "Last backup", "Tailscale", "Heartbeat", "990-PF grants", "Pending approvals", "/api/v1/search", "MCP tools", "restore test"]) {
     check(html.includes(text), `page shows "${text}"`);
   }
+  check(/off-machine copy/i.test(html), "page shows the off-machine copy line");
   check(!/nb_live_[A-Za-z0-9_-]{7,}/.test(html), "no full API key in the page (prefixes only)");
   check(!/\b[0-9a-f]{64}\b/.test(html), "no key hash in the page");
   check(html.includes("noindex"), "page is noindex");
