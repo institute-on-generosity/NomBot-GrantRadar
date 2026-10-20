@@ -2,12 +2,14 @@
 import { useState } from "react";
 import type { Answer } from "@/lib/answer";
 import { AnswerMethod } from "./AnswerCard";
+import { AnswerSteps } from "./AnswerSteps";
 import { InsightChart } from "./InsightChart";
 import { SlideButton } from "./SlideButton";
 
 // One research answer in the chat (/research/ask), ChatGPT style: plain content on the page, no card.
 // A bold answer sentence, the key numbers as one inline row, the chart, short bullets, what the data
-// leaves out, then a quiet row of icon actions (copy, CSV, slide, how we got this, the organizations).
+// leaves out, "Show the steps" (the evidence chain, collapsed), then a quiet row of icon actions (copy, CSV,
+// slide, how we got this, the organizations).
 
 const parts = (s: string) => s.split(/\*\*(.+?)\*\*/g).map((t, k) => (k % 2 ? <b key={k}>{t}</b> : t));
 const plain = (s: string) => s.replace(/\*\*(.+?)\*\*/g, "$1");
@@ -56,6 +58,7 @@ export function ChatAnswer({ a }: { a: Answer }) {
       {a.missing.map((m) => (
         <p key={m.what} className="chat-missing"><b>{none ? "Why we can't answer this:" : `Not included, ${m.what.toLowerCase()}:`}</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>
       ))}
+      {!none && <AnswerSteps a={a} />}
       {!none && (
         <div className="chat-actions" role="toolbar" aria-label="Answer actions">
           <button type="button" className="chat-act" onClick={copy} title={copied ? "Copied" : "Copy answer"} aria-label="Copy answer">

@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Answer } from "@/lib/answer";
 import { InsightChart } from "./InsightChart";
 import { SlideButton } from "./SlideButton";
+import { AnswerSteps } from "./AnswerSteps";
 
 // A research answer at the top of the results (lib/answer.ts): the headline, key numbers, one chart,
 // 2-3 bullets, what our data can't answer and where to find it, then "How we got this" (cause set,
@@ -59,6 +60,7 @@ export function AnswerCard({ a }: { a: Answer }) {
       )}
       {!none && (
         <>
+          <AnswerSteps a={a} />
           <div className="answer-foot">
             <button type="button" className="ins-method-btn" aria-expanded={open} onClick={() => setOpen(!open)}>How we got this</button>
             <span className="answer-actions">

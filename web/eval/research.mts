@@ -38,6 +38,13 @@ const run = async (e: Expect) => {
     const corrected = /^[^.]* didn't (rise|fall|get more|get less)\b/.test(a.headline);
     if (corrected !== !e.premiseHolds) bad.push(`headline ${corrected ? "corrects" : "doesn't correct"} the premise: ${a.headline}`);
   }
+  // "Show the steps": every answer has the chain, and a change in the tiles appears in the Computed step.
+  if (a.status !== "unanswerable") {
+    const keys: string[] = (a.steps ?? []).map((x) => x.key);
+    if (!["question", "data", "check", "reproduce"].every((k) => keys.includes(k))) bad.push(`steps missing: ${keys.join(",")}`);
+    const comp = a.steps?.find((x) => x.key === "compute")?.line ?? "";
+    if (r.spec.metric === "trend" && /^[+−]/.test(a.numbers[0]?.value ?? "") && !comp.includes(a.numbers[0].value)) bad.push(`compute step "${comp}" lacks the headline change ${a.numbers[0].value}`);
+  }
   const history = [{ question: e.q, spec: r.spec }];
   const pool = candidateFollowUps(r.spec, history);
   const chips = a.status === "unanswerable" ? [] : await pickFollowUps(history);

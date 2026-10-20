@@ -229,6 +229,19 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [a.status === "partial" && a.missing.some((m) => /women and girls/i.test(m.what)) && /women and girls/i.test(a.headline) ? 1 : 0, 1] },
   { name: "guard: gov grants top recipients with two causes", s: spec({ metric: "top_recipients", source: "government_grants", causes: [climate, women] }),
     check: async (a) => [a.status === "partial" && a.missing.some((m) => /women and girls/i.test(m.what)) ? 1 : 0, 1] },
+  // "Show the steps" (lib/answerSteps): a per-year total in the Counted step against direct SQL, the Computed step
+  // against the headline tile, and the start-year spike (2020 food banks) against 2019 in SQL.
+  { name: "steps: food banks 2020 total in Counted = direct SQL", s: spec({ metric: "trend", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => { const { money } = await import("../components/money");
+      const want = money(await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year = 2020 AND o.ntee_cd LIKE 'K31%'`));
+      return [a.steps?.find((x) => x.key === "count")?.details.some((d) => d.startsWith(`2020: **${want}**`)) ? 1 : 0, 1]; } },
+  { name: "steps: food banks Computed = headline tile, spike flagged vs SQL", s: spec({ metric: "trend", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => { const [y19, y20] = [await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year = 2019 AND o.ntee_cd LIKE 'K31%'`), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year = 2020 AND o.ntee_cd LIKE 'K31%'`)];
+      const comp = a.steps?.find((x) => x.key === "compute")?.line ?? "", chk = a.steps?.find((x) => x.key === "check")?.line ?? "";
+      const spike = y20 / y19 - 1 > 0.3;
+      return [comp.includes(a.numbers[0].value) && spike === /spike/.test(chk) && spike === a.bullets.some((x) => /spike/.test(x)) ? 1 : 0, 1]; } },
+  { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
+    check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];
 
 let fail = 0;
@@ -245,6 +258,15 @@ for (const c of cases) {
   }
   console.log(`${String(ms).padStart(5)} ms  [${a.status}] ${c.name}\n         ${a.headline}${check}\n         ${a.bullets.join(" · ")}`);
   for (const bl of a.bullets) if (bl.split(/\s+/).length > 16 || /[;—]/.test(bl)) console.log(`         ! bullet rule: ${bl}`);
+  // Every answered case has the evidence chain, and a trend's Computed step carries the headline's change.
+  if (a.status !== "unanswerable") {
+    const keys: string[] = (a.steps ?? []).map((x) => x.key);
+    const bad = ["question", "data", "check", "reproduce"].filter((k) => !keys.includes(k));
+    const comp = a.steps?.find((x) => x.key === "compute")?.line ?? "";
+    if (c.s.metric === "trend" && a.numbers[0] && /^[+−]/.test(a.numbers[0].value) && !comp.includes(a.numbers[0].value)) bad.push(`compute "${comp}" lacks ${a.numbers[0].value}`);
+    if ((a.steps ?? []).some((x) => /[;—]/.test(x.line + x.details.join(" ")))) bad.push("semicolon or em dash");
+    if (bad.length) { fail++; console.log(`         ✗ steps: ${bad.join(", ")}`); }
+  }
 }
 
 if (process.argv.includes("--route")) {

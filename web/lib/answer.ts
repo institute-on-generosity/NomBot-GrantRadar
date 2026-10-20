@@ -19,6 +19,7 @@ import { orgName } from "../components/text";
 import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
 import { LABELS, LABEL_SCOPE, labelPhrase, narrowerThanLabel, type LabelSlug } from "./labels";
 import { fedProgram, type FedProgram } from "./fedPrograms";
+import { buildSteps, type CauseInfo, type Evidence, type Movers, type Step, type StepInput } from "./answerSteps";
 
 export type Num = { value: string; label: string; note?: string };
 export type Row = Record<string, string | number | boolean | null>;
@@ -42,6 +43,8 @@ export type Answer = {
   orgCount?: number;               // organizations behind the answer, for "See the N organizations" 
   premise?: { claim: string; holds: boolean } | null; // a direction the question assumed (spec.premise), checked against the data
   basis?: "codes" | "keywords" | null; // a cause counted without a checked label: shown under the answer as a trust note
+  steps?: Step[];                  // "Show the steps": the evidence chain (lib/answerSteps), deterministic
+  followUps?: string[];            // chips the numbers suggest ("Since 2021?" after a start-year spike)
   ms: number;
 };
 
@@ -405,9 +408,6 @@ async function notItemized(ctx: Ctx | null, cls: string | null, y: { from: numbe
   return (await db.query(sql, p.vals)).rows[0];
 }
 const niMemo = memo<NotItemized>("answer-not-itemized:v1", 8, 3600_000);
-
-// Years before e-filing was required: measured filers and dollars per tax year (org_given_year), and our
-// 990-PF totals against IRS SOI's estimate where the benchmarks table has it (generosity-data 053).
 // Schedule I lines that move assets between related organizations (restructurings, mergers, transfers of assets: the
 // UL to ULSE stock transfer, $7.6B in 2021) and a few clear reporting errors (generosity-data 067, grant_transfers).
 // Left out of charity_grant_clean; national totals say how much, counting only lines the total would otherwise hold.
@@ -418,6 +418,9 @@ async function transfersOut(ctx: Ctx, cls: string | null, y: { from: number; to:
   WHERE source = 'si' AND in_scope AND NOT to_grantmaker AND tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}${cls ? ` AND funder_class = ${p.add(cls)}` : ""}`;
   return (await ctx.q<Transfers>("Schedule I transfers between related organizations left out of the total", sql, p))[0];
 }
+
+// Years before e-filing was required: measured filers and dollars per tax year (org_given_year), and our
+// 990-PF totals against IRS SOI's estimate where the benchmarks table has it (generosity-data 053).
 const earlyMemo = memo<string>("answer-early-coverage:v1", 4, 3600_000);
 const earlyCoverage = (kind: "pf" | "charity", from: number) => earlyMemo(`${kind}:${from}`, async () => {
   const src = kind === "pf" ? "pf" : "si";
@@ -720,7 +723,7 @@ WHERE ${and(where)}`, p);
 type Change = { subject: string; g: number; from: string; to: string };
 type Versus = { first: string; second: string; a: number; z: number };
 // dual: a two-cause ranking (dualTop), which keeps one bullet per cause plus the overlap.
-type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "status"> & { status?: Answer["status"]; change?: Change; versus?: Versus; dual?: boolean };
+type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "status"> & { status?: Answer["status"]; change?: Change; versus?: Versus; dual?: boolean; ev?: Evidence };
 
 // v11: research layer (grant_cube, filters, breakdowns, cause taxonomy, DC note). v12: Schedule I charity grants,
 // federal awards (USAspending), Census ACS (per person in poverty, county groups). v13: IRS 05B batches loaded
@@ -747,7 +750,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v30: a cause narrower than its label ("AI literacy", "opioids") is counted and named as the label (closestLabel).
 // v31: Schedule I transfers between related organizations out of charity_grant_clean (generosity-data 067), national
 // charity_grants totals say how much was left out.
-const answerMemo = memo<Answer>("answer:v31", 500, 6 * 3600_000);
+// v32: "Show the steps" evidence chain (lib/answerSteps), start-year spike check on trends ("Since 2021?").
+const answerMemo = memo<Answer>("answer:v32", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -799,7 +803,8 @@ async function compute(question: string, asked: Spec, cube: boolean): Promise<An
     out = { status: "unanswerable", headline: `Nothing in ${SOURCE_WORDS[s.source]} matched ${names}. That means the cause couldn't be matched in this source, not that the money is $0.`, numbers: [], bullets: [], chart: null, rows: [], causeNote: out.causeNote, method: "", caveats: [], coverage: [], sources: [], searchQuery: null };
   }
   const premise = out.status === "unanswerable" ? null : checkPremise(s, out);
-  delete out.change; delete out.versus;
+  const { change, versus, ev } = out;
+  delete out.change; delete out.versus; delete out.ev;
   if (out.status !== "unanswerable") honorGuard(ctx, s, out, missing);
   slim(out, out.dual ? 3 : 2);
   delete out.dual;
@@ -811,8 +816,102 @@ async function compute(question: string, asked: Spec, cube: boolean): Promise<An
   // "How we got this". Keywords is the rougher of the two, so it wins when both appear.
   const basis = /Approximate keyword set/.test(out.causeNote) ? "keywords" : /NTEE codes /.test(out.causeNote) ? "codes" : null;
   if (narrowed.length && status !== "unanswerable") nameClosest(out, narrowed);
-  return { ...out, question, spec: asked, status, missing, premise, basis, queries: ctx.queries, ms: Date.now() - t0 };
+  const a: Answer = { ...out, question, spec: asked, status, missing, premise, basis, queries: ctx.queries, ms: 0 };
+  a.steps = await stepsFor(ctx, s, a, change, versus, ev).catch((e) => { console.error("answer steps failed", e); return []; });
+  return { ...a, ms: Date.now() - t0 };
 }
+
+// ---- "Show the steps" (lib/answerSteps): what the question was read as, the cause set, the data, then the
+// engine's own numbers. Only facts already computed or cheap lookups (grades, years), never a model call.
+const GRANT_EXCLUDED: Record<"pf" | "charity", string[]> = {
+  pf: ["grants to individuals", "foreign recipients", "placeholder lines (\"SEE ATTACHED\", \"VARIOUS\")", "grants to other private foundations (counted when they grant it on)"],
+  charity: ["foreign recipients", "placeholder lines (\"SEE ATTACHED\", \"VARIOUS\") and money not itemized by recipient", "transfers between related organizations (restructurings, mergers)", "grants to other DAF sponsors, community foundations and United Ways (counted when they grant it on)", "grants to private foundations"],
+};
+async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?: Versus, ev?: Evidence): Promise<Step[]> {
+  if (a.status === "unanswerable") return [];
+  const s = await resolveCauses(s0);
+  // Organization counts and finances read Form 990 returns whatever the source says (dispatch: countOrgs, orgFinanceBy).
+  const orgCounts = s.source !== "federal_awards" && s.source !== "household_giving" && s.source !== "foundation_finances" && (s.metric === "count_orgs" || (s.metric === "trend" && !!s.condition));
+  const grantSrc = isGrantSrc(s) && !orgCounts;
+  // Years used and why those years.
+  let years: StepInput["years"] = null;
+  if (grantSrc) {
+    const y = grantYears(s);
+    const none = s.yearFrom == null && s.yearTo == null;
+    const why = none && s.metric === "trend" ? `no years asked, so ${y.from} (the first tax year e-filing was required for 990-PF and 990 returns) to ${y.to} (the newest full year)`
+      : none ? `no years asked, so ${y.from} to ${y.to}, when e-filing covers almost every filer and ${G_FULL} is the newest full year`
+      : `the years asked${y.note ? `. ${y.note}` : ""}${y.from < EFILE_REQUIRED ? `. Before ${EFILE_REQUIRED} many smaller filers filed on paper, so early years run low` : ""}`;
+    years = { from: y.from, to: y.to, unit: "tax year", why: `${why}${y.partial ? `. ${G_LAST} returns are still arriving` : ""}` };
+  } else if (s.source === "federal_awards") {
+    const y = fedYears(s);
+    years = { from: y.from, to: y.to, unit: "fiscal year", why: s.yearFrom == null && s.yearTo == null ? `no years asked, so every federal fiscal year loaded (${FA_FIRST} to ${FA_LAST}, October to September)` : `the years asked${y.note ? `. ${y.note}` : ""}` };
+  } else {
+    const ys = a.rows.flatMap((r) => (typeof r.tax_year === "number" ? [r.tax_year] : []));
+    if (ys.length) years = { from: Math.min(...ys), to: Math.max(...ys), unit: "tax year", why: s.yearFrom == null && s.yearTo == null ? "no years asked, so the newest years this source covers" : "the years asked, within the years this source covers" };
+    else if (["government_grants", "contributions", "revenue"].includes(s.source)) { const fy = flagYear(s); years = { from: fy.year, to: fy.year, unit: "tax year", why: fy.note ?? `the newest full year of Form 990 returns (${F_FULL})` }; }
+  }
+  // The cause set: graded label (tiers and grade), NTEE codes or keywords.
+  const gr: Record<string, Grade> = s.causes.some((c) => c.label) ? await grades().catch(() => ({})) : {};
+  const primaryOnly = /primary tier only/.test(a.causeNote);
+  const causes: CauseInfo[] = s.causes.map((c) => {
+    if (s.source === "federal_awards" && fedProgram(c)) return { name: c.name, kind: "program" };
+    if (c.label) {
+      const g = gr[c.label];
+      const grade = g?.primary != null ? `primary graded ${pct(g.primary)} right on ${g.nPrimary ?? "a"} sampled orgs${g.recall != null ? `, recall about ${pct(g.recall)}` : ""}` : undefined;
+      return { name: c.name, kind: "label", labelName: g?.name ?? LABELS[c.label as LabelSlug] ?? c.label, grade,
+        tiers: primaryOnly ? "primary tier only (main stated purpose)" : grantSrc ? "primary as the headline, primary + partial as the upper bound" : "primary and partial tiers" };
+    }
+    if (c.ntee.length) return { name: `${c.name} (NTEE ${c.ntee.join(", ")})`, kind: "ntee" };
+    return { name: c.name, kind: "keyword" };
+  });
+  const pl = ctx.places[0];
+  const linked = s.causes.length > 0;
+  const source = orgCounts ? "Form 990 and 990-EZ returns, the newest per organization, against the IRS master file"
+    : grantSrc
+    ? `${pl?.g.form ?? "990-PF grants"} to ${linked ? "identified recipients" : "US organizations"}${pl && pl.g.kind === "charity" ? ` by ${pl.g.givers}` : ""}, placed by the recipient's address`
+    : s.source === "federal_awards" ? "federal grants and cooperative agreements to nonprofits (USAspending), placed where the work happens"
+    : s.source === "household_giving" ? "IRS SOI individual income tax returns, itemized charitable deductions by place"
+    : s.source === "foundation_finances" ? "990-PF returns: assets, distributable amount and qualifying distributions"
+    : `${SOURCE_WORDS[s.source]}, one return per organization per year`;
+  const excluded = orgCounts ? ["private foundations", "990-N filers (no financial lines)"] : grantSrc ? GRANT_EXCLUDED[pl?.g.kind ?? "pf"]
+    : s.source === "federal_awards" ? ["contracts, loans and direct payments", "federal money passed through states and cities"]
+    : s.source === "household_giving" ? ["gifts by people who don't itemize", "where the gifts went (returns don't say)"]
+    : s.source === "foundation_finances" ? [] : ["private foundations", "990-N filers (no revenue lines)"];
+  return buildSteps({ spec: s, a, years, causes, source, excluded, change, versus, ev, moneyTo: !orgCounts, ...(orgCounts ? { sourceWords: "Form 990 returns" } : {}) });
+}
+
+// Evidence for the steps: the biggest recipients and funders of a cause in the key years (a year each, or one span),
+// graded labels by primary-tier dollars so they add up to the headline's total.
+async function movers(ctx: Ctx, c: C, pl: Place, y: { from: number; to: number }, each: number[] | null, primaryOnly: boolean): Promise<Movers[]> {
+  const p = new P();
+  const gw = grantWhere(c, p, pl, y, true);
+  const where = [...gw.where, ...(each ? [`g.tax_year = ANY(${p.add(each)}::int[])`] : []), ...(primaryOnly && gw.cs.tier ? [`${gw.cs.tier} = 'primary'`] : [])];
+  const rows = await ctx.q<{ k: string; yr: number; ein: string; name: string | null; usd: number; total: number }>(`Biggest recipients and funders${each ? " in the key years" : ""} (evidence for the steps)`,
+    `WITH s AS MATERIALIZED (SELECT ${each ? "g.tax_year" : "0"} AS yr, g.recipient_ein, g.funder_ein, g.amount FROM ${pl.g.clean} g ${gw.cs.join} WHERE ${and(where)}),
+t AS (SELECT yr, sum(amount)::float8 AS total FROM s GROUP BY 1),
+r AS (SELECT yr, recipient_ein AS ein, sum(amount)::float8 AS usd, row_number() OVER (PARTITION BY yr ORDER BY sum(amount) DESC, recipient_ein) AS rk FROM s GROUP BY 1, 2),
+f AS (SELECT yr, funder_ein AS ein, sum(amount)::float8 AS usd, row_number() OVER (PARTITION BY yr ORDER BY sum(amount) DESC, funder_ein) AS rk FROM s GROUP BY 1, 2)
+SELECT 'r' AS k, r.yr, r.ein, o.name, r.usd, t.total FROM r JOIN t USING (yr) LEFT JOIN orgs o ON o.ein = r.ein WHERE r.rk <= 3
+UNION ALL SELECT 'f', f.yr, f.ein, fu.name, f.usd, t.total FROM f JOIN t USING (yr) LEFT JOIN ${pl.g.funders} fu ON fu.ein = f.ein WHERE f.rk <= 3
+ORDER BY 2, 1 DESC, 5 DESC`, p);
+  const keys = each ?? [0];
+  return keys.map((k) => {
+    const rs = rows.filter((r) => r.yr === k);
+    const ev = (role: "recipient" | "funder") => rs.filter((r) => r.k === (role === "recipient" ? "r" : "f")).map((r) => ({ role, name: orgName(r.name ?? r.ein), ein: r.ein, usd: r.usd }));
+    return { year: each ? String(k) : yrs(y.from, y.to), total: rs[0]?.total ?? 0, recipients: ev("recipient"), funders: ev("funder") };
+  }).filter((m) => m.total > 0);
+}
+// A cause's dollars in one tax year (the year before a trend starts, for the start-year spike check).
+async function yearSum(ctx: Ctx, c: C, pl: Place, year: number): Promise<{ usd: number; primary_usd: number }> {
+  const p = new P(), y = { from: year, to: year };
+  if (cubeOk(ctx, c, pl)) {
+    const cw = cubeWhere(c, p, pl, y, true);
+    return (await ctx.q<{ usd: number; primary_usd: number }>(`The year before the start, ${year} (start-year check, research cube)`, `SELECT coalesce(sum(x.usd), 0)::float8 AS usd, ${cubeSum(cw)} AS primary_usd FROM ${pl.g.cube} x WHERE ${and(cw.where)}`, p))[0];
+  }
+  const gw = grantWhere(c, p, pl, y, true);
+  return (await ctx.q<{ usd: number; primary_usd: number }>(`The year before the start, ${year} (start-year check)`, `SELECT coalesce(sum(g.amount), 0)::float8 AS usd, ${primarySum(gw.cs, "g.amount")} AS primary_usd FROM ${pl.g.clean} g ${gw.cs.join} WHERE ${and(gw.where)}`, p))[0];
+}
+const SPIKE = 0.3; // a start year more than 30% above the year before is flagged (2020 COVID-era giving)
 
 const SOURCE_WORDS: Record<Spec["source"], string> = { foundation_grants: "foundation grants", charity_grants: "charity grants (Schedule I)", federal_awards: "federal awards", government_grants: "government grants on Form 990", contributions: "contributions on Form 990", revenue: "revenue on Form 990", household_giving: "household giving", foundation_finances: "foundation finances" };
 
@@ -1079,20 +1178,26 @@ const allBase = (pl: Place, c: C | null) => !!(c?.all && !pl.f.rb && !(pl.f.kind
 async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const y = grantYears(s);
   const causes: (C | null)[] = s.causes.length ? s.causes.slice(0, s.metric === "compare" ? 2 : 1) : [hasFilt(pl.f) ? subjectOf(pl) : null];
+  // Evidence for the steps, run beside the main queries: the biggest recipients and funders (first and last full
+  // year on a trend, the whole span otherwise) and, on a trend, the year before the start (spike check).
+  const ce = causes[0] && !causes[0].all ? causes[0] : null;
+  const keyYears = s.metric === "trend" && y.full.length > 1 ? [y.full[0], y.full.at(-1)!] : null;
+  const evMovers = ce && s.metric !== "compare" ? movers(ctx, ce, pl, y, keyYears, !!ce.label).catch(() => []) : Promise.resolve([]);
+  const evPrev = ce && s.metric === "trend" && y.from - 1 >= G_FIRST && y.full.length >= 3 && y.full[0] === y.from ? yearSum(ctx, ce, pl, y.from - 1).catch(() => null) : Promise.resolve(null);
   const [den, gcav, ...ms] = await Promise.all([fDenom(ctx, pl, y), grantCaveats(pl), ...causes.map((c) => c ? fMoney(ctx, c, pl, y, `${cap(pl.g.grants)} to ${c.name}, by tax year`) : null)]);
   // Schedule I money with no named recipient: beside a national all-causes total, never inside any total.
   const ni = pl.g.kind === "charity" ? await notItemized(ctx, pl.g.cls, y) : null;
   const national = !pl.states.length && !pl.county && !pl.region && !pl.area;
+  // Transfers between related organizations: named beside a national all-causes total when any fall in the years.
+  const xf = pl.g.kind === "charity" && national && !causes[0] && !hasFilt(pl.f) ? await transfersOut(ctx, pl.g.cls, y) : null;
+  const xfShown = !!xf && xf.usd > 0;
+  const xfMethod = xfShown ? ` It excludes ${money(xf!.usd)} of non-cash transfers between related organizations (${int(xf!.n)} Schedule I line${xf!.n === 1 ? "" : "s"}: restructurings, mergers, transfers of assets to a subsidiary, parent or supporting organization, and clear reporting errors), which aren't grantmaking.` : "";
   const niShown = !!ni && ni.usd > 0 && national && !causes[0];
   const niMethod = !ni || ni.usd <= 0 ? ""
     : niShown ? ` Another ${money(ni.usd)} was reported on these returns (Part IX line 1) without naming recipients ("SEE ATTACHED", "VARIOUS" or left off the list). It's shown beside the total as reported but not itemized, not added to it.`
     : ` Another ${money(ni.usd)} (all states, all causes) was reported in these years without naming recipients, so it can't be counted by ${causes[0] ? "cause or place" : "place"} and is left out.`;
   const caveats: string[] = [];
   const notes = await Promise.all(causes.map((c, i) => causeNote(c, ms[i]?.cs ?? causeSql(null, new P(), "", ""), caveats)));
-  // Transfers between related organizations: named beside a national all-causes total when any fall in the years.
-  const xf = pl.g.kind === "charity" && national && !causes[0] && !hasFilt(pl.f) ? await transfersOut(ctx, pl.g.cls, y) : null;
-  const xfShown = !!xf && xf.usd > 0;
-  const xfMethod = xfShown ? ` It excludes ${money(xf!.usd)} of non-cash transfers between related organizations (${int(xf!.n)} Schedule I line${xf!.n === 1 ? "" : "s"}: restructurings, mergers, transfers of assets to a subsidiary, parent or supporting organization, and clear reporting errors), which aren't grantmaking.` : "";
   if (y.note) caveats.push(y.note);
   if (y.partial) caveats.push(`${G_LAST} returns are still arriving, so ${G_LAST} is incomplete.`);
   caveats.push(...gcav);
@@ -1107,6 +1212,8 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   // Inflation: growth after inflation next to nominal growth, and real dollars in the chart and CSV.
   const inf = await inflation(ctx, Array.from({ length: y.to - y.from + 1 }, (_, i) => y.from + i));
   const fl = (g: number | null) => realGrowth(inf, g, y.full[0], y.full.at(-1)!);
+  const chg = (a: number, z: number, g: number | null, primary: boolean): Evidence["change"] => (g == null ? undefined
+    : { from: y.full[0], to: y.full.at(-1)!, a, z, g, real: fl(g), cpiFrom: inf?.idx.get(y.full[0]), cpiTo: inf?.idx.get(y.full.at(-1)!), base: inf?.base, primary });
 
   if (!causes[0]) {
     // All foundation money in a place.
@@ -1134,15 +1241,16 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
           ...growthTile],
       bullets: [`${b(money(fullSum / fullYears))} a year in ${pl.g.kind === "pf" ? "private-foundation grants" : pl.g.grants} to ${where}`,
         ...(niShown ? [`Plus ${b(money(ni!.usd))} reported but not itemized by recipient`] : []),
+        ...(xfShown ? [`Excludes ${b(money(xf!.usd))} of non-cash transfers between related organizations`] : []),
         `${b(int(den.total.n))} grants counted, all recipients, by recipient address`,
         ...(growth != null && !trend ? [`Grant dollars changed ${b(signed(growth))} from ${y.full[0]} to ${y.full.at(-1)}${realG != null ? `, ${b(signed(realG))} after inflation` : ""}`] : [])],
       chart: { title: `${cap(pl.g.grants)} to ${where}, by tax year`, sub: u.title, spec: inf ? inflToggle(barSpec, "amount", inf) : barSpec },
       rows: den.years.map((r) => ({ tax_year: r.year, grants_usd: r.usd, ...(inf ? { [`grants_usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, r.usd, r.year!)) } : {}), grants: r.n, linked_usd: r.linked_usd })),
       causeNote: notes[0], coverage: [...coverage, ...(bench?.coverage ?? [])], caveats,
       method: `Sum of ${pl.g.form} paid in tax years ${yr} to US organizations in ${where} (by the recipient's address), excluding grants to individuals, unitemized lines, foreign recipients and transfers to other private foundations${pl.g.kind === "charity" ? " and to other DAF sponsors, community foundations and United Ways" : ""}.${xfMethod}${niMethod}${inf ? inflMethod(inf) : ""}${bench?.method ?? ""}`,
-        ...(xfShown ? [`Excludes ${b(money(xf!.usd))} of non-cash transfers between related organizations`] : []),
       sources: [pl.g.src, ...(inf ? [SRC_CPI] : []), ...(bench?.sources ?? [])], searchQuery: null,
       ...(growth != null ? { change: { subject: `${pl.g.money} to organizations in ${where}`, g: growth, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
+      ev: { perYear: [{ label: "", primary: false, years: den.years.map((r) => ({ year: r.year!, usd: r.usd, grants: r.n })) }], change: chg(first?.usd ?? 0, last?.usd ?? 0, growth, false), perYearAvg: { sum: fullSum, years: fullYears } },
     };
   }
 
@@ -1186,6 +1294,9 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const upper = label[0] ? ` (up to ${money(m0.total.usd)} with partial)` : "";
   const method = `Sum of ${pl.g.form} paid in tax years ${yr} to identified recipients in ${where} (by the recipient's address) whose organization is in the cause set. Share = over all identified-recipient grant dollars in the same place and years${pl.g.kind === "charity" ? ` from the same ${pl.g.givers}` : ""}. Grants to individuals, unitemized lines, foreign recipients and other private foundations are excluded${pl.g.kind === "charity" ? ", and so are grants to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}`;
   const chart = { title: `${cap(pl.g.grants)} to ${causes.map((c) => c!.name).join(" vs ")}${where !== "the US" ? ` in ${where}` : ""}, by tax year`, sub: u.title, spec: vbar(chartVals, "year", "amount", "Tax year", u.title, u.fmt, causes.length > 1 || label[0] ? "tier" : undefined) };
+  const perYear = (i: number): NonNullable<Evidence["perYear"]>[number] => ({ label: causes.length > 1 ? causes[i]!.name : label[i] ? "main-purpose (primary) orgs" : "", primary: label[i],
+    years: ms[i]!.years.map((r) => ({ year: r.year!, usd: label[i] ? r.primary_usd : r.usd, grants: r.grants, funders: r.funders, orgs: r.orgs })) });
+  const evMoved = await evMovers;
   const base = { chart, rows: rowsOut, causeNote: notes.join(" "), coverage, caveats, method, orgCount: m0.total.orgs, sources: [pl.g.src, ...(causes.some((c) => c?.label) ? [SRC.labels] : []), ...(causes.some((c) => c?.ntee.length) ? [SRC.ntee] : [])], searchQuery: searchFor(s, pl) };
 
   if (s.metric === "compare" && causes.length === 2) {
@@ -1205,6 +1316,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
         `${b(money(z))} to ${causes[1]!.name}, ${b(pct(z / baseUsd))}`,
         `${b(int(m0.total.funders))} and ${b(int(m1.total.funders))} ${pl.g.givers} funded each`],
       versus: { first: causes[0]!.name, second: causes[1]!.name, a, z },
+      ev: { perYear: [perYear(0), perYear(1)], ratio: { a, z, first: causes[0]!.name, second: causes[1]!.name }, share: { part: a, base: baseUsd, of: `${ofWhat.replace(/^identified \S+( sponsor| foundation| Way)?/, "identified")} dollars` } },
     };
   }
 
@@ -1223,15 +1335,27 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     }).map((r) => ({ ...r, change: r.change_nom })) : [];
     const realG = fl(g);
     const tSpec = trendSpec(idx, cap(c0.name), `All ${pl.g.grants}`);
+    // Start-year check: a first year far above the year before (2020 COVID-era giving) makes the change look worse
+    // (or better) than the years after it. Say so, give the change from the next year, offer it as a follow-up.
+    const v = (r: { usd: number; primary_usd: number }) => (label[0] ? r.primary_usd : r.usd);
+    const prev = await evPrev, yz = m0.years.find((r) => r.year === y.full.at(-1)), y1 = m0.years.find((r) => r.year === y.full[1]);
+    const jump = prev && y0 && v(prev) > 0 ? v(y0) / v(prev) - 1 : null;
+    const spike = jump != null && jump > SPIKE && y1 && yz && v(y1) > 0
+      ? { year: y.full[0], prev: y.full[0] - 1, paper: y.full[0] - 1 < EFILE_REQUIRED, prevUsd: v(prev!), usd: v(y0!), jump, since: y.full[1], sinceG: v(yz) / v(y1) - 1, sinceReal: realGrowth(inf, v(yz) / v(y1) - 1, y.full[1], y.full.at(-1)!) } : null;
+    const d0z = den.years.find((r) => r.year === y.full.at(-1));
+    const ev: Evidence = { perYear: [perYear(0)], movers: evMoved, change: chg(y0 ? v(y0) : 0, yz ? v(yz) : 0, g, label[0]), perYearAvg: { sum: fullYearSum(m0, label[0]), years: fullYears },
+      ...(denGrowth != null && d0 && d0z ? { baseline: { label: `All ${pl.g.grants} to identified recipients`, a: d0.linked_usd, z: d0z.linked_usd, g: denGrowth, real: fl(denGrowth) } } : {}), ...(spike ? { spike } : {}) };
     return {
       ...base,
+      ev, ...(spike ? { followUps: [`Since ${spike.since}?`] } : {}),
       chart: idx.length ? { title: `Change since ${y.full[0]}: ${c0.name} vs all ${pl.g.grants}`, sub: "Percent change", spec: inf ? inflToggle(tSpec, "change", inf) : tSpec } : base.chart,
       headline: g == null ? `${cap(pl.g.grants)} to ${c0.name}: ${money(floor0)} in ${yr}` : `${cap(pl.g.money)} for ${c0.name} ${grewText(g, realG)} from ${y.full[0]} to ${y.full.at(-1)}`,
       numbers: [...(g != null ? [{ value: signed(g), label: `${y.full[0]} to ${y.full.at(-1)}${label[0] ? ", primary" : ""}` }] : []),
         ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []),
         { value: money(perYear0), label: `a year${label[0] ? ", primary" : ""}` },
         { value: int(m0.total.orgs), label: "recipient orgs" }],
-      bullets: [denGrowth != null && g != null ? `All ${pl.g.grants} ${grewText(denGrowth, fl(denGrowth)).replace(/^(grew|fell) (\S+)/, (_, w, n) => `${w} ${b(n)}`)} over the same years` : "",
+      bullets: [spike ? `${spike.year} was a spike for ${c0.name} (${b(signed(spike.jump))} vs ${spike.prev}). Since ${spike.since}: ${b(signed(spike.sinceG))}` : "",
+        denGrowth != null && g != null ? `All ${pl.g.grants} ${grewText(denGrowth, fl(denGrowth)).replace(/^(grew|fell) (\S+)/, (_, w, n) => `${w} ${b(n)}`)} over the same years` : "",
         `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`,
         upper ? `${b(money(fullYearSum(m0, false) / fullYears))} a year counting partial` : ""].filter(Boolean),
       method: `${base.method}${inf && realG != null ? inflMethod(inf) : ""}`,
@@ -1253,6 +1377,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       // School districts and public colleges are matched by name, mostly without an EIN: count funders only.
       entities ? `${b(int(m0.total.funders))} ${pl.g.givers} gave to them` : `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`],
     ...((g0 => g0 != null ? { change: { subject: `${pl.g.money} for ${c0.name}`, g: g0, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {})(firstLast(m0, label[0]))),
+    ev: { perYear: [perYear(0)], movers: evMoved, share: { part: floor0, base: baseUsd, of: `${ofWhat} dollars` }, perYearAvg: { sum: fullYearSum(m0, label[0]), years: fullYears } },
   };
 }
 
@@ -2992,12 +3117,18 @@ GROUP BY 1 ORDER BY 1`, p);
 
 // ------------------------------------------------------------------ compact form for tools (Research Buddy, MCP, API)
 // Everything a model or partner needs to quote the answer honestly, without the chart spec or SQL text.
-export function answerBrief(a: Answer, rows = 15) {
+// opts.steps: the evidence chain as plain text (partners: /api/v1/answer, MCP), links reduced to names with EINs in evidence.
+export function answerBrief(a: Answer, rows = 15, opts: { steps?: boolean } = {}) {
   const plain = (x: string) => x.replace(/\*\*(.+?)\*\*/g, "$1");
+  const text = (x: string) => plain(x).replace(/\[([^\]]+)\]\(\/org\/(\d{9})\)/g, "$1 (EIN $2)");
   return {
     status: a.status, headline: a.headline, numbers: a.numbers, bullets: a.bullets.map(plain),
     what_counts: a.causeNote, method: a.method, caveats: a.caveats, coverage: a.coverage, missing: a.missing,
     data: a.rows.slice(0, rows), sources: a.sources, spec: a.spec,
     premise: a.premise ?? null, basis: a.basis ?? null,
+    ...(opts.steps ? {
+      steps: (a.steps ?? []).map((st) => ({ n: st.n, key: st.key, title: st.title, line: text(st.line), details: st.details.map(text), ...(st.evidence ? { evidence: st.evidence } : {}) })),
+      follow_ups: a.followUps ?? [],
+    } : {}),
   };
 }

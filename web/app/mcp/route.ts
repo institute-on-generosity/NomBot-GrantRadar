@@ -120,7 +120,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
   }, (a) => run("answer_research_question", async () => {
     const parsed = specSchema.safeParse({ ...DEFAULT_SPEC, ...a });
     if (!parsed.success) throw new BadInput(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ").slice(0, 500));
-    return answerBrief(await answer("MCP research question", normalizeSpec(parsed.data)), 50);
+    return answerBrief(await answer("MCP research question", normalizeSpec(parsed.data)), 50, { steps: true });
   })());
 
   // ---------- row-level data (lib/apiData.ts): same JSON as the REST list endpoints ----------

@@ -287,6 +287,12 @@ export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
   if (chip) return Promise.resolve({ kind: "answer", spec: chip.spec, standalone: describeSpec(chip.spec) });
+  // "Since 2021?": the chip an answer offers after a start-year spike (Answer.followUps). Same question, new start year.
+  const since = /^since (\d{4})\??$/i.exec(text.trim());
+  if (since) {
+    const spec = normalizeSpec({ ...last.spec, yearFrom: Number(since[1]), missing: [], missingNote: null, premise: null });
+    return Promise.resolve({ kind: "answer", spec, standalone: `${describeSpec(spec).replace(/\?$/, "")} since ${since[1]}?` });
+  }
   const key = JSON.stringify([history.map((h) => h.spec), text.trim().toLowerCase()]);
   return cached(key, () => resolveFresh(text, history));
 }

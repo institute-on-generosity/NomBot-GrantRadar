@@ -89,7 +89,7 @@ async function Ask({ searchParams }: { searchParams: SP }) {
               </div>
             )}
             {/* The answer shows first; the picked follow-ups stream in after it */}
-            {i === turns.length - 1 && <Suspense fallback={null}><FollowUpChips history={history} /></Suspense>}
+            {i === turns.length - 1 && <Suspense fallback={null}><FollowUpChips history={history} first={t.kind === "answer" ? t.answer.followUps ?? [] : []} /></Suspense>}
           </section>
         ))}
       </Chat>
@@ -97,6 +97,8 @@ async function Ask({ searchParams }: { searchParams: SP }) {
   );
 }
 
-async function FollowUpChips({ history }: { history: Turn[] }) {
-  return <Suggestions chips={await pickFollowUps(history)} />;
+// Chips the answer's own numbers suggest ("Since 2021?" after a start-year spike) come first, then the picked ones.
+async function FollowUpChips({ history, first }: { history: Turn[]; first: string[] }) {
+  const picks = await pickFollowUps(history);
+  return <Suggestions chips={[...first, ...picks.filter((p) => !first.includes(p))].slice(0, 3)} />;
 }

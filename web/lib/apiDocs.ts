@@ -146,7 +146,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "answer", method: "GET", path: "/api/v1/answer", title: "Answer a research question", mcpTool: "answer_research_question",
-    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
+    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. steps: the step-by-step evidence (how the question was read, the cause set, the data, per-year totals with the biggest recipients and funders, the computation, the baseline, checks such as a start-year spike, and the SQL), built from the same query results, no extra Claude call. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
     params: [
       { name: "q", in: "query", type: "string", example: "how much foundation money goes to climate", desc: "The question in plain words, up to 300 characters." },
       { name: "spec", in: "query", type: "string", example: '{"metric":"total","causes":[{"name":"climate","label":"climate","ntee":[],"keywords":[]}]}', desc: "Instead of q: the structured question as JSON (metric, causes, source, yearFrom, yearTo, states, county, area, condition, perResident, order). No Claude call." },
@@ -162,6 +162,12 @@ export const ENDPOINTS: Endpoint[] = [
       coverage: [{ label: "Grants counted", value: "4,575,000" }], missing: [],
       data: [{ cause: "climate", tax_year: 2022, usd: 1348800000, primary_usd: 732700000 }],
       sources: [{ label: "IRS Form 990-PF e-file (Part XV grants)", url: "https://www.irs.gov/charities-non-profits/form-990-series-downloads" }],
+      steps: [
+        { n: 1, key: "question", title: "Understood the question", line: "A total, climate, foundation grants (990-PF), the US, tax years 2022 to 2024", details: ["Years: no years asked, so 2022 to 2024, when e-filing covers almost every filer and 2024 is the newest full year"] },
+        { n: 4, key: "count", title: "Counted", line: "2022 $763.0M … 2024 $825.9M (main-purpose (primary) orgs)", details: ["2022–24 biggest recipients: ...", "2022–24 biggest funders: ..."], evidence: [{ role: "recipient", name: "...", ein: "...", usd: 0, year: "2022–24" }] },
+        { n: 5, key: "compute", title: "Computed", line: "share = $2.4B / $186.1B = 1.3% of identified foundation grant dollars", details: ["a year = ... / 3 full years = ..."] },
+      ],
+      follow_ups: [],
       chart: null, queries: [{ title: "Foundation grants to climate, by tax year", sql: "SELECT ..." }], ms: 250,
     },
   },
@@ -504,7 +510,7 @@ export const MCP_TOOLS = [
   { name: "get_tax_status", desc: "Same as GET /api/v1/orgs/{ein}/status. Argument: ein." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },
-  { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec. The calling AI fills the structured question, so no Claude call on our side." },
+  { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec, steps included. The calling AI fills the structured question, so no Claude call on our side." },
   { name: "search_grants", desc: "Same as GET /api/v1/grants. Arguments: source, funder_ein, recipient_ein, year_from, year_to, state, county, label, label_tier, amount_min, funder_type, totals, limit, cursor." },
   { name: "get_federal_awards", desc: "Same as GET /api/v1/federal-awards. Arguments: recipient_ein, agency, assistance_listing, fiscal_year_from, fiscal_year_to, state, county, recipient_kind, q, totals, limit, cursor." },
   { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },

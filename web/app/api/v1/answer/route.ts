@@ -31,5 +31,5 @@ export const GET = keyed("/api/v1/answer", async (request: NextRequest) => {
     spec = r.spec;
   }
   const a = await answer(q || "research answer", spec);
-  return Response.json({ research: true, question: q || null, ...answerBrief(a, 200), chart: a.chart, queries: a.queries, ms: a.ms, ...(router ? { router } : {}) });
+  return Response.json({ research: true, question: q || null, ...answerBrief(a, 200, { steps: true }), chart: a.chart, queries: a.queries, ms: a.ms, ...(router ? { router } : {}) });
 });

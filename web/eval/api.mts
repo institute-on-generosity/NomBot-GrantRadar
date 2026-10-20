@@ -283,6 +283,16 @@ try {
     check(!!spec.paths?.[p], `openapi.json documents ${p}`);
   check((await fetch(`${BASE}/api/docs`)).status === 200, "/api/docs loads");
 
+  // ---------- answer: steps (the evidence chain) with spec, no Claude call ----------
+  const FB_SPEC = { metric: "trend", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] };
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify(FB_SPEC))}`, "answer food bank trend (spec)");
+  const stepKeys = (b.steps ?? []).map((x: J) => x.key);
+  check(["question", "cause", "data", "count", "compute", "check", "reproduce"].every((k) => stepKeys.includes(k)), `answer: steps cover the chain (${stepKeys.join(",")})`);
+  const comp = b.steps?.find((x: J) => x.key === "compute");
+  check(!!comp && comp.line.includes(b.numbers?.[0]?.value), `answer: compute step matches the headline tile (${comp?.line} / ${b.numbers?.[0]?.value})`);
+  check(b.steps?.every((x: J) => !/\*\*|;|—/.test(x.line + x.details.join(" "))), "answer: steps are plain text, no semicolons or em dashes");
+  check(Array.isArray(b.follow_ups), "answer: follow_ups array");
+
   // ---------- MCP ----------
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), { requestInit: { headers: { Authorization: `Bearer ${KEY}` } } }));
@@ -316,6 +326,8 @@ try {
   check(!m.isError && m.json.results.length === nl.n, "MCP list_cause_labels");
   m = await call("list_cause_labels", { label: "climate", state: "CO", limit: 1000 });
   check(!m.isError && m.json.results.length === lo.n, "MCP list_cause_labels: orgs vs SQL");
+  m = await call("answer_research_question", FB_SPEC);
+  check(!m.isError && Array.isArray(m.json.steps) && m.json.steps.length >= 6, "MCP answer_research_question: steps");
   m = await call("search_policy", { q: "charitable", limit: 3 });
   check(!m.isError && m.json.bills.results.length === 3 && Array.isArray(m.json.federal_register.results) && Array.isArray(m.json.news.results), "MCP search_policy: all three sources");
   m = await call("search_policy", { q: "nonprofit", source: "news", limit: 50 });

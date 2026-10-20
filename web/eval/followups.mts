@@ -53,6 +53,27 @@ for (const [q, fs] of threads) {
   for (const p of picks) console.log(`        · ${p}`);
   for (const p of problems) console.log(`        ✗ ${p}`);
 }
+// Answer-suggested chips: a trend whose start year spiked (food banks, 2020) offers "Since 2021?", which resolves
+// without a model call to the same spec from 2021 and is answerable.
+{
+  const { resolveFollowUp } = await import("../lib/followUp");
+  const { DEFAULT_SPEC } = await import("../lib/answerSpec");
+  const fb = { ...DEFAULT_SPEC, metric: "trend" as const, causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] };
+  const a = await answer("Is food bank funding growing?", fb);
+  const chip = a.followUps?.[0];
+  const problems: string[] = [];
+  if (chip !== "Since 2021?") problems.push(`answer chip ${JSON.stringify(a.followUps)}, want "Since 2021?"`);
+  else {
+    const r = await resolveFollowUp(chip, [{ question: "Is food bank funding growing?", spec: fb }]);
+    if (r.kind !== "answer" || r.spec.yearFrom !== 2021) problems.push(`"${chip}" resolved to ${JSON.stringify(r)}`);
+    else {
+      const b = await answer(r.standalone, r.spec);
+      if (b.status === "unanswerable" || !b.headline.includes("2021")) problems.push(`"${chip}" answer: ${b.status} ${b.headline}`);
+      else console.log(`ok    answer chip ${chip} → ${b.headline}`);
+    }
+  }
+  if (problems.length) { fails++; console.log(`FAIL  answer chips (food banks)`); for (const p of problems) console.log(`        ✗ ${p}`); }
+}
 console.log(fails ? `\n${fails} thread(s) failed` : "\nAll threads passed");
 await db.end();
 process.exit(fails ? 1 : 0);
