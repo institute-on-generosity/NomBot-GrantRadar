@@ -15,7 +15,7 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
   // Set once a prompt or search starts: the loading veil moves the pointer off the chips (un-pausing), and a
   // flip would remount the clicked chip and drop its loading state while the search still runs.
   const [chosen, setChosen] = useState(false);
-  // Sets with `show` rotate through their pool: the first `show` on the server, a random start after mount.
+  // Sets with `show` rotate through their pool: the first `show` on the server, `show` in a row from a random start after mount.
   const [seed, setSeed] = useState(0);
   useEffect(() => setSeed(Math.floor(Math.random() * 1000)), []);
   useEffect(() => {
@@ -24,7 +24,7 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
     return () => clearInterval(t);
   }, [paused, chosen, sets.length]);
   const set = sets[i];
-  const prompts = set.show ? Array.from({ length: Math.min(set.show, set.prompts.length) }, (_, k) => set.prompts[(seed * set.show! + k) % set.prompts.length]) : set.prompts;
+  const prompts = set.show ? Array.from({ length: Math.min(set.show, set.prompts.length) }, (_, k) => set.prompts[(seed + k) % set.prompts.length]) : set.prompts;
   const hold = { onMouseEnter: () => setPaused(true), onMouseLeave: () => setPaused(false), onFocus: () => setPaused(true), onBlur: () => setPaused(false) };
   return (
     <>

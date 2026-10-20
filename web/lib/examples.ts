@@ -24,12 +24,12 @@ export const PROMPT_SETS = [
   { word: "philanthropic leaders", placeholder: "e.g. Darren Walker: every board a person sits on", prompts: ["Laura Arrillaga-Andreessen", "Darren Walker", "Laurene Powell Jobs", "Ai-jen Poo", "Ursula Burns", "La June Montgomery Tabron"] },
   { word: "foundations", placeholder: "e.g. health foundations in Kentucky", prompts: ["community foundations in Ohio", "health foundations in Kentucky", "foundations that fund the arts in New York", "family foundations in Texas that fund literacy"] },
   // Research questions get an answer card on /research/ask instead of a list (lib/answerSpec.ts)
-  // A pool: each visit shows `show` of them, one per graded label where it can (components/HeroFlip.tsx)
+  // A pool: each visit shows `show` in a row from a random start (components/HeroFlip.tsx), alternated so every visit mixes causes
   { word: "research", placeholder: "e.g. How much foundation money goes to climate?", show: 5, prompts: [
-    "Is food bank funding growing?", "How much foundation money goes to climate?", "Climate vs women and girls funding",
-    "Which states get the least foundation money per resident?", "How concentrated is climate funding?",
-    "Is mental health funding growing?", "Which states get the most foundation money for housing?",
-    "Who are the biggest funders of tech and AI skills?", "How has racial equity funding changed since 2020?",
-    "How much goes to immigrant services vs immigration policy?",
+    "Is mental health funding growing?", "How much foundation money goes to climate?",
+    "Which states get the most foundation money for housing?", "Climate vs women and girls funding",
+    "Who are the biggest funders of tech and AI skills?", "Is food bank funding growing?",
+    "How has racial equity funding changed since 2020?", "Which states get the least foundation money per resident?",
+    "How much goes to immigrant services vs immigration policy?", "How concentrated is climate funding?",
   ] },
 ];
