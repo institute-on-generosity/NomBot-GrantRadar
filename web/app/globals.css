@@ -953,6 +953,11 @@ main:has(.serp) { max-width: 1400px; }
 .rating-level { font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: var(--g-dark); background: var(--g-tint); }
 .rating.medium .rating-level { color: #8a5a00; background: rgba(245,165,36,.16); }
 .rating.weak .rating-level { color: #b4232a; background: rgba(229,72,77,.12); }
+/* Org page: IRS revoked the exemption (components/OrgView.tsx Revoked) */
+.notice.revoked { color: #b4232a; background: rgba(229,72,77,.1); border: 1px solid rgba(229,72,77,.35); }
+.notice.revoked b { font-weight: 600; }
+.notice.revoked a { color: inherit; }
+@media screen and (prefers-color-scheme: dark) { .notice.revoked { color: #ff8a8e; background: rgba(229,72,77,.18); } }
 .rating h2 small { font-size: 12px; font-weight: 400; color: var(--faint); }
 .rating details { margin-top: 10px; font-size: 12.5px; color: var(--mute); }
 .rating summary { cursor: pointer; width: fit-content; }

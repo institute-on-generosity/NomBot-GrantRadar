@@ -11,6 +11,7 @@ import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase } from "@/components/text";
 import { getOrg, type Income } from "@/lib/org";
+import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
 import type { BoardLink } from "@/lib/people";
 import { OrgFunding } from "@/components/OrgFunding";
@@ -60,6 +61,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
         {o.website && <> · <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title="Their website, as listed on their Form 990">{o.website.replace(/^www\./, "").replace(/\/.*$/, "")} ↗</a></>}
       </p>
+      {o.tax?.revocation && (o.tax.status === "revoked" || o.tax.status === "conflict") && <Revoked r={o.tax.revocation} conflict={o.tax.status === "conflict"} onPub78={o.tax.pub78.eligible} />}
       {(o.team || o.age != null) && <Team team={o.team} age={o.age} since={o.ruling} />}
 
       <section>
@@ -116,6 +118,11 @@ async function Org({ params, searchParams, modal }: Props) {
             </span>))}</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
           <dt>IRS status</dt><dd>{o.status.standing}</dd>
+          {o.tax && <><dt>Tax-deductible gifts</dt><dd>{o.tax.pub78.eligible
+            ? <>Eligible for tax-deductible gifts (Pub 78){o.tax.pub78.codes.length > 0 && ` · ${o.tax.pub78.codes.map((c) => c.label).join(", ")}`}</>
+            : <>Not listed on IRS Pub 78{o.tax.status === "revoked" ? " (exemption revoked)" : ". Churches and orgs under a group exemption can be eligible without a listing"}</>}
+            {o.tax.pub78.file_date && <small> IRS list of {o.tax.pub78.file_date}</small>}</dd></>}
+          {o.tax?.revocation && o.tax.status !== "revoked" && o.tax.status !== "conflict" && <><dt>Past revocation</dt><dd>Exemption revoked {o.tax.revocation.revocation_date}, reinstated {o.tax.revocation.reinstatement_date}</dd></>}
           {o.ruling && <><dt>Tax-exempt since</dt><dd>{o.ruling}{o.age != null && ` (${o.age} ${o.age === 1 ? "year" : "years"})`}</dd></>}
           <dt>Address</dt><dd>{[o.careOf, o.street && titleCase(o.street), [o.city && titleCase(o.city), o.state, o.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</dd>
         </dl>
@@ -129,6 +136,26 @@ async function Org({ params, searchParams, modal }: Props) {
       </section>
       <PrintStamp />
     </article>
+  );
+}
+
+// IRS automatic revocation (no 990 for 3 straight years) with no reinstatement date. conflict: the org is on
+// Pub 78 or has a newer BMF ruling date, which usually means a reinstatement the revocation file doesn't show,
+// so a softer note.
+function Revoked({ r, conflict, onPub78 }: { r: NonNullable<TaxStatus["revocation"]>; conflict: boolean; onPub78: boolean }) {
+  const g = r.grants_after_revocation;
+  const funded = g.count > 0 && <> Foundations reported {g.count.toLocaleString("en-US")} {g.count === 1 ? "grant" : "grants"} ({money(g.total)}) to this EIN after the revocation, latest in {g.latest_year}.</>;
+  const check = <>{" "}<a href="https://apps.irs.gov/app/eos/" target="_blank" rel="noreferrer">Check the IRS ↗</a></>;
+  if (conflict) return (
+    <p className="notice">
+      <b>IRS lists disagree.</b> The IRS revoked this EIN&apos;s tax-exempt status on {r.revocation_date} (posted {r.posting_date}) and its revocation list shows no reinstatement, but {onPub78 ? "the organization is on Pub 78" : "the IRS master file shows a newer ruling date"}, so it was probably reinstated.{funded}{check}
+    </p>
+  );
+  return (
+    <p className="notice revoked" role="alert">
+      <b>Tax-exempt status revoked by the IRS on {r.revocation_date}</b> (posted {r.posting_date}) for not filing a Form 990 for 3 years in a row, with no reinstatement on the IRS list of {r.file_date}. Gifts to this EIN are not tax-deductible.
+      {funded}{g.count > 0 && " Check for a fiscal sponsor or a new EIN."}{check}
+    </p>
   );
 }
 

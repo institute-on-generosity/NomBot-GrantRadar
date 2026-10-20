@@ -6,6 +6,7 @@ import { diligence } from "./flag";
 import { propublicaOrg, sources, type Source } from "./sources";
 import { boardLinks } from "./people";
 import { orgLabels } from "./orgLabels";
+import { taxStatus } from "./taxStatus";
 
 export async function getOrg(einParam: string) {
   const ein = einParam.replace(/\D/g, "");
@@ -20,6 +21,7 @@ export async function getOrg(einParam: string) {
   const { rows: [flagRow] } = await db.query("SELECT * FROM filing_flag WHERE ein = $1 ORDER BY tax_year DESC NULLS LAST LIMIT 1", [ein]);
   const links = await boardLinks(ein).catch(() => []); // needs generosity-data migration 018
   const labels = await orgLabels(ein).catch(() => []); // graded cause labels (generosity-data migration 032)
+  const tax = await taxStatus(ein).catch(() => null); // IRS Pub 78 and revocations (generosity-data migration 063)
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
@@ -61,6 +63,7 @@ export async function getOrg(einParam: string) {
     years,
     income: latestSoi ? income(latestSoi) : null,
     status: status(o.status, o.foundation, o.subsection),
+    tax, // Pub 78 eligibility and automatic revocation (lib/taxStatus)
     flag: flagRow ? diligence(flagRow, t?.object_id ? `https://projects.propublica.org/nonprofits/organizations/${ein}/${flagRow.object_id}/full` : null) : null,
     bmfUrl,
     sources: allSources,

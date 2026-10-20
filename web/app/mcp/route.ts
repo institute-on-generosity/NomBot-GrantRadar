@@ -1,4 +1,4 @@
-// Remote MCP server (Streamable HTTP, JSON-RPC over POST) for AI tools: search_nonprofits, get_organization,
+// Remote MCP server (Streamable HTTP, JSON-RPC over POST) for AI tools: search_nonprofits, get_organization, get_tax_status,
 // list_research, get_research, answer_research_question, plus row-level data (lib/apiData.ts): search_grants,
 // get_federal_awards, get_finances, get_household_giving, list_cause_labels, search_policy. Keys with the iog_internal scope also get search_iog_guides and get_iog_guide (lib/apiIog.ts, IoG internal). Same Bearer API key as /api/v1/*. Stateless: a fresh server and transport per
 // request, plain JSON responses (no SSE stream, no sessions). Tools call the same functions as the REST API,
@@ -14,6 +14,7 @@ import { DEFAULT_SPEC, normalizeSpec, specSchema } from "@/lib/answerSpec";
 import { ANSWER_TOOL_DESCRIPTION } from "@/lib/answerTool";
 import { LABEL_SLUGS, type LabelSlug } from "@/lib/labels";
 import { BadParam, apiGrants, apiFederalAwards, apiFoundationFinances, apiOrgFinances, apiHouseholdGiving, apiLabels, apiLabelOrgs, apiPolicy, FUNDER_TYPES, FR_TYPES, NEWS_TOPICS } from "@/lib/apiData";
+import { apiOrgStatus } from "@/lib/taxStatus";
 import { apiIogGuides, apiIogGuide, apiIogSearch, IogBadParam, IOG_SCOPE } from "@/lib/apiIog";
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
@@ -72,7 +73,7 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
 
   s.registerTool("get_organization", {
     title: "Get organization",
-    description: "Everything NomBot has on one organization by EIN: address, cause, graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work) with tier and why, status, years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), grants received from public charities and given on Form 990 Schedule I (by year, funder type such as donor-advised fund sponsor or community foundation, top funders and recipients), direct federal awards (by fiscal year, agency, program, place of performance), and sources. The grant sources overlap: do not add them.",
+    description: "Everything NomBot has on one organization by EIN: address, cause, graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work) with tier and why, status, IRS tax status (Pub 78 eligibility for tax-deductible gifts, automatic revocation with dates and foundation grants after it), years tax-exempt, website, mission, programs, staff and volunteers, financial history, Form 990 health signals, leaders and pay, foundation grants received (top funders) and given (top recipients), grants received from public charities and given on Form 990 Schedule I (by year, funder type such as donor-advised fund sponsor or community foundation, top funders and recipients), direct federal awards (by fiscal year, agency, program, place of performance), and sources. The grant sources overlap: do not add them.",
     inputSchema: { ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'") },
     annotations: { title: "Get organization", ...READ_ONLY },
   }, ({ ein }) => run("get_organization", async () => {
@@ -80,6 +81,13 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
     if ("error" in r && r.error === "bad_ein") throw new BadInput("EIN must be 9 digits.");
     return "error" in r ? null : r;
   })());
+
+  s.registerTool("get_tax_status", {
+    title: "Get IRS tax status",
+    description: "IRS tax-exempt status for one EIN, including EINs no longer in the master file: Pub 78 eligibility for tax-deductible gifts (with deductibility codes), automatic revocation (date, posting date, reinstatement, history) and foundation grants linked to the EIN after the revocation. file_date is the IRS list's date.",
+    inputSchema: { ein: z.string().describe("9-digit EIN, dashes allowed, e.g. '55-0123456'") },
+    annotations: { title: "Get IRS tax status", ...READ_ONLY },
+  }, ({ ein }) => run("get_tax_status", () => apiOrgStatus(ein))());
 
   s.registerTool("list_research", {
     title: "List research findings",

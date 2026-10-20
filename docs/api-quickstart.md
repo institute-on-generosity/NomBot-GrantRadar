@@ -108,7 +108,7 @@ get("/api/v1/federal-register", funding_only="true", agency="Education")
 get("/api/v1/news", topic="nonprofit cuts", date_from="2026-09-01")
 ```
 
-**Also:** `/api/v1/search?q=…` (find orgs in plain words), `/api/v1/org/{ein}` (full profile), `/api/v1/labels` and `/api/v1/labels/{label}/orgs` (cause labels with grades), `/api/v1/research` (verified findings), `/api/v1/answer?spec=…` (aggregate answers).
+**Also:** `/api/v1/search?q=…` (find orgs in plain words), `/api/v1/org/{ein}` (full profile, with `tax_status`), `/api/v1/orgs/{ein}/status` (IRS Pub 78 eligibility for tax-deductible gifts and automatic revocation, with foundation grants after a revocation), `/api/v1/labels` and `/api/v1/labels/{label}/orgs` (cause labels with grades), `/api/v1/research` (verified findings), `/api/v1/answer?spec=…` (aggregate answers).
 
 ## 3. Pagination
 
@@ -155,7 +155,7 @@ def get(path, **params):
 ## 5. MCP (AI tools)
 
 Remote MCP server at **`$NOMBOT/mcp`** (Streamable HTTP, stateless), same key and rate limit. 11 read-only tools:
-`search_nonprofits`, `get_organization`, `list_research`, `get_research`, `answer_research_question`, `search_grants`, `get_federal_awards`, `get_finances`, `get_household_giving`, `list_cause_labels`, `search_policy`.
+`search_nonprofits`, `get_organization`, `list_research`, `get_research`, `answer_research_question`, `search_grants`, `get_federal_awards`, `get_finances`, `get_tax_status`, `get_household_giving`, `list_cause_labels`, `search_policy`.
 
 **Claude Code**
 ```bash
@@ -207,6 +207,7 @@ print(resp.output_text)
 - **Headquarters vs place of service:** grants and finances are placed by the organization's mailing address, usually its headquarters. Federal awards also give the place of performance.
 - **Don't add sources together:** a DAF grant can start as a foundation grant to the sponsor, and federal money passed through a charity shows twice.
 - **Individuals:** grants to individuals keep amount and place but withhold the person's name and ZIP.
+- **Tax status:** IRS Pub 78 and the automatic revocation list, files of Oct 13 2026 (`file_date` on each answer). Not on Pub 78 is a prompt to check, not proof: churches and orgs under a group exemption can be eligible without a listing. The revocation file often lacks reinstatement dates, so `status` is `conflict` (not `revoked`) when the org is on Pub 78 or has a newer IRS ruling date.
 - **Cause labels** are model-graded. `/api/v1/labels` gives precision and recall estimates per label.
 - **Policy and news:** keyword search only, no EIN links. Bills: current Congress. Federal Register: from Oct 2025. News: GDELT headlines from late June 2026, tagged by topic. Recent days come from GDELT's search API (up to 250 per topic per day), older ones from its raw crawl files sampled hourly (headline must match, so fewer per day). Headlines and links only.
 - **Refresh schedule:** IRS data loads as the IRS releases it (a monthly refresh is planned). Bills, Federal Register and news are refreshed by hand for now (a daily schedule is planned). Check the newest date in each response.

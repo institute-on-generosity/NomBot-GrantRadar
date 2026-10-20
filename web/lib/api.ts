@@ -4,6 +4,7 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg } from "./org";
+import { TAX_STATUS_NOTE } from "./taxStatus";
 import { orgFunding, FUNDING_NOTES } from "./orgFunding";
 import { isLabel } from "./labels";
 import { getInsight } from "./insights";
@@ -93,6 +94,8 @@ export async function apiOrg(einRaw: string, base: string) {
       // Graded cause labels: primary (the cause is the main work) or partial (one named goal among others), with why
       labels: o.labels.map((l) => ({ label: l.label, name: l.name, tier: l.tier, why: l.why })),
       status: o.status,
+      // IRS Pub 78 eligibility and automatic revocation, same shape as /api/v1/orgs/{ein}/status
+      tax_status: o.tax ? { status: o.tax.status, pub78: o.tax.pub78, revocation: o.tax.revocation, note: TAX_STATUS_NOTE } : null,
       subsection: o.subsection,
       ruling_year: o.ruling ? Number(o.ruling) : null,
       years_tax_exempt: o.age,

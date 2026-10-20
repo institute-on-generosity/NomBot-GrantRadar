@@ -49,7 +49,7 @@ const isList = (b: J, path: string) => {
 try {
   // ---------- auth ----------
   const ENDPOINTS = ["/api/v1/search?q=food", "/api/v1/org/341877332", "/api/v1/research", "/api/v1/grants", "/api/v1/federal-awards",
-    "/api/v1/foundations/131684331/finances", "/api/v1/orgs/341877332/finances", "/api/v1/household-giving", "/api/v1/labels",
+    "/api/v1/foundations/131684331/finances", "/api/v1/orgs/341877332/finances", "/api/v1/orgs/341877332/status", "/api/v1/household-giving", "/api/v1/labels",
     "/api/v1/labels/climate/orgs", "/api/v1/congress/bills", "/api/v1/federal-register", "/api/v1/news"];
   for (const e of ENDPOINTS) {
     const r = await get(e, null);
@@ -133,6 +133,27 @@ try {
   check(b.results?.length === of.length && b.results[0].revenue === of[0].r, "org finances: years and revenue vs SQL");
   check((await get("/api/v1/foundations/000000001/finances")).status === 404, "foundation finances unknown EIN -> 404");
   check((await get("/api/v1/orgs/12/finances")).status === 400, "org finances bad EIN -> 400");
+
+  // ---------- IRS tax status (Pub 78, revocations) ----------
+  b = await ok("/api/v1/orgs/34-1877332/status", "tax status");
+  const [p78] = await sql("SELECT deductibility_codes AS c FROM irs_pub78 WHERE ein = '341877332'");
+  check(b.pub78?.eligible === Boolean(p78) && b.status === (p78 ? "eligible" : "not_listed") && b.pub78.codes.map((c: J) => c.code).join() === (p78?.c ?? []).join(), "tax status: Pub 78 eligibility and codes vs SQL");
+  const [rv] = await sql(`SELECT s.ein, s.revocation_date::text AS d, s.status, (SELECT count(*)::int FROM irs_revocations r WHERE r.ein = s.ein) AS n
+    FROM org_tax_status s WHERE s.status = 'revoked' AND s.revocations > 1 ORDER BY s.ein LIMIT 1`);
+  b = await ok(`/api/v1/orgs/${rv.ein}/status`, "tax status revoked");
+  check(b.status === "revoked" && b.revocation?.revoked_now === true && b.revocation.revocation_date === rv.d && b.revocation.history.length === rv.n && b.pub78.eligible === false, "tax status: revoked org's latest revocation and history vs SQL");
+  const [fa] = await sql(`SELECT g.recipient_ein AS ein, count(*)::int AS n, sum(g.amount)::float8 AS usd FROM grant_clean g
+    WHERE g.recipient_ein = (SELECT ein FROM org_tax_status WHERE status = 'revoked' AND ein IN (SELECT recipient_ein FROM grant_clean WHERE recipient_ein IS NOT NULL AND tax_year >= 2023) ORDER BY ein LIMIT 1)
+      AND EXISTS (SELECT 1 FROM irs_revocations r WHERE r.ein = g.recipient_ein AND g.tax_year > extract(year FROM r.revocation_date)
+        AND (r.reinstatement_date IS NULL OR extract(year FROM r.reinstatement_date) > g.tax_year)) GROUP BY 1`);
+  if (fa) {
+    b = await ok(`/api/v1/orgs/${fa.ein}/status`, "tax status funded after revocation");
+    check(b.revocation?.grants_after_revocation?.count === fa.n && b.revocation.grants_after_revocation.total === fa.usd, "tax status: grants after revocation vs SQL");
+  }
+  b = await ok("/api/v1/org/341877332", "org (tax status)");
+  check(b.org?.tax_status?.pub78?.eligible === Boolean(p78), "org: tax_status.pub78 vs SQL");
+  check((await get("/api/v1/orgs/12/status")).status === 400, "tax status bad EIN -> 400");
+  check((await get("/api/v1/orgs/000000001/status")).status === 404, "tax status unknown EIN -> 404");
 
   // ---------- household giving ----------
   b = await ok("/api/v1/household-giving?state=WV&year_from=2022&year_to=2022", "household state");
@@ -222,7 +243,7 @@ try {
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), { requestInit: { headers: { Authorization: `Bearer ${KEY}` } } }));
   const tools = (await client.listTools()).tools.map((t) => t.name);
-  for (const t of ["search_nonprofits", "get_organization", "list_research", "get_research", "answer_research_question", "search_grants", "get_federal_awards", "get_finances", "get_household_giving", "list_cause_labels", "search_policy"])
+  for (const t of ["search_nonprofits", "get_organization", "list_research", "get_research", "answer_research_question", "search_grants", "get_federal_awards", "get_finances", "get_tax_status", "get_household_giving", "list_cause_labels", "search_policy"])
     check(tools.includes(t), `MCP lists ${t}`);
   const call = async (name: string, args: Record<string, unknown>) => {
     const t = performance.now();
@@ -241,6 +262,10 @@ try {
   check(!m.isError && m.json.results.length === 2, "MCP get_federal_awards");
   m = await call("get_finances", { ein: "131684331" });
   check(!m.isError && m.json.foundation?.results?.[0]?.grants_paid === ff.g, "MCP get_finances: foundation vs SQL");
+  m = await call("get_tax_status", { ein: rv.ein });
+  check(!m.isError && m.json.status === "revoked" && m.json.revocation.revocation_date === rv.d, "MCP get_tax_status: revoked org vs SQL");
+  m = await call("get_organization", { ein: "341877332" });
+  check(!m.isError && m.json.org.tax_status?.pub78?.eligible === Boolean(p78), "MCP get_organization: tax_status");
   m = await call("get_household_giving", { state: "WV", year_from: 2022, year_to: 2022 });
   check(!m.isError && m.json.results[0].charity_usd === h1.usd, "MCP get_household_giving vs SQL");
   m = await call("list_cause_labels", {});

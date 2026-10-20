@@ -38,7 +38,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work), each with label, name, tier (primary or partial) and why.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -48,6 +48,11 @@ export const ENDPOINTS: Endpoint[] = [
         ntee: { code: "O31", label: "Youth Development" },
         labels: [], // e.g. Climate Central: [{ label: "climate", name: "Climate", tier: "primary", why: "Climate science and communication is the whole mission." }]
         status: { standing: "Recognized as tax-exempt", kind: "Public charity, supported by the public" },
+        tax_status: {
+          status: "eligible",
+          pub78: { eligible: true, codes: [{ code: "PC", label: "Public charity (50% deduction limit)" }], city: "Mansfield", state: "OH", file_date: "2026-10-13" },
+          revocation: null, note: "status: eligible (on Pub 78), revoked ...",
+        },
         subsection: "03", ruling_year: 1999, years_tax_exempt: 27, website: null,
         mission: "TO INSURE THAT ALL CHILDREN ...", programs: "...",
         team: { staff: 3, volunteers: 300, year: 2024 },
@@ -259,6 +264,24 @@ export const ENDPOINTS: Endpoint[] = [
     },
   },
   {
+    id: "org-status", method: "GET", path: "/api/v1/orgs/{ein}/status", title: "IRS tax status", mcpTool: "get_tax_status",
+    summary: "IRS tax-exempt status for one EIN, including EINs no longer in the master file. pub78: on IRS Publication 78 (eligible to receive tax-deductible gifts) with deductibility codes. revocation: the latest automatic revocation (no 990 for 3 straight years) with revocation, posting and reinstatement dates, the full history, and foundation (990-PF) grants linked to the EIN in tax years after the revocation year and before any reinstatement. status sums it up: eligible, revoked (no reinstatement, not on Pub 78, no newer IRS ruling date), conflict (no reinstatement date but on Pub 78 or recognized again per the master file ruling date, usually reinstated), reinstated or not_listed. file_date is the IRS list's date. 404 when the EIN is on neither list and not in the master file.",
+    params: [{ name: "ein", in: "path", type: "string", required: true, example: "20-8064678", desc: "9-digit EIN. Dashes are fine." }],
+    curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/orgs/208064678/status"`,
+    example: {
+      ein: "208064678", name: "FRIENDS OF WILDLIFE PRAIRIE PARK", status: "conflict",
+      pub78: { eligible: true, codes: [{ code: "PC", label: "Public charity (50% deduction limit)" }], city: "Hanna City", state: "IL", file_date: "2026-10-13" },
+      revocation: {
+        revoked_now: true, revocation_date: "2021-07-15", posting_date: "2021-10-11", reinstatement_date: null, exemption_type: "03",
+        history: [{ revocation_date: "2021-07-15", posting_date: "2021-10-11", reinstatement_date: null, exemption_type: "03" }],
+        grants_after_revocation: { count: 15, total: 3659900, latest_year: 2025 },
+        file_date: "2026-10-13",
+      },
+      sources: [{ label: "IRS Tax Exempt Organization Search (Pub 78 and revocations)", url: "https://apps.irs.gov/app/eos/" }],
+      notes: ["status: eligible (on Pub 78), revoked ..."],
+    },
+  },
+  {
     id: "household-giving", method: "GET", path: "/api/v1/household-giving", title: "Household giving", mcpTool: "get_household_giving",
     summary: "IRS Statistics of Income individual returns: returns, AGI, itemizers and the itemized charitable deduction, by state or county (tax years 2013 to 2023) or ZIP code (2013 to 2022), newest year first. Itemizers only, and itemizing fell by about 60% from 2018. by_agi=true splits rows by income class. Dollars, not thousands.",
     params: [
@@ -462,7 +485,7 @@ export const ERRORS = [
   { status: 401, code: "invalid_key", when: "The key is unknown or mistyped." },
   { status: 403, code: "revoked_key", when: "The key was revoked." },
   { status: 403, code: "insufficient_scope", when: "The key lacks the scope the endpoint needs." },
-  { status: 404, code: "not_found", when: "No organization, finding, finances or label with that id." },
+  { status: 404, code: "not_found", when: "No organization, finding, finances, tax status or label with that id." },
   { status: 429, code: "rate_limited", when: "Over the key's per-minute limit. Wait Retry-After seconds." },
   { status: 500, code: "server_error", when: "Our bug. Try again, then tell us." },
 ];
@@ -470,6 +493,7 @@ export const ERRORS = [
 export const MCP_TOOLS = [
   { name: "search_nonprofits", desc: "Same as GET /api/v1/search. Arguments: q, state[], city[], max_revenue, ntee, label, label_tier, limit." },
   { name: "get_organization", desc: "Same as GET /api/v1/org/{ein}. Argument: ein." },
+  { name: "get_tax_status", desc: "Same as GET /api/v1/orgs/{ein}/status. Argument: ein." },
   { name: "list_research", desc: "Same as GET /api/v1/research. Arguments: section, state, cause, limit." },
   { name: "get_research", desc: "Same as GET /api/v1/research/{slug}, with up to max_rows data rows (default 200)." },
   { name: "answer_research_question", desc: "Same as GET /api/v1/answer with spec. The calling AI fills the structured question, so no Claude call on our side." },
