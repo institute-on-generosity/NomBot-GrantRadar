@@ -1,4 +1,4 @@
-// Internal admin dashboard: database, live site, Linux helper, data freshness, cause labels, API, API calls, keys, backups.
+// Internal admin dashboard: database, live site, Linux helper, nightly checks, data freshness, cause labels, API, API calls, keys, backups.
 // Not linked from any page. proxy.ts asks for ADMIN_PASSWORD (signed cookie, lib/adminAuth.ts) after the site
 // password, and this page checks the cookie again. Data: lib/admin.ts (cached 30 s to 10 min).
 import { Suspense, type ReactNode } from "react";
@@ -7,7 +7,7 @@ import { connection } from "next/server";
 import { InsightChart } from "@/components/InsightChart";
 import { ADMIN_COOKIE, isAdminCookie } from "@/lib/adminAuth";
 import {
-  agoText, apiStats, backups, BARS, dataFreshness, fmtBytes, health, helper, keys, labels, STALE_HEARTBEAT_MS, FUNNEL, type Level,
+  agoText, apiStats, backups, IRS_LOAD_CMD, isoAt, linuxJobLevels, missedNight, BARS, dataFreshness, fmtBytes, health, helper, keys, labels, STALE_HEARTBEAT_MS, FUNNEL, type Level,
 } from "@/lib/admin";
 import { ApiCalls } from "./ApiCalls";
 import { AutoRefresh } from "./AutoRefresh";
@@ -16,7 +16,7 @@ import s from "./admin.module.css";
 export const metadata = { title: "Admin · NomBot", robots: { index: false, follow: false } };
 
 const SECTIONS = [
-  ["health", "Health"], ["helper", "Linux helper"], ["data", "Data"], ["labels", "Cause labels"],
+  ["health", "Health"], ["helper", "Linux helper"], ["nightly", "Nightly checks"], ["data", "Data"], ["labels", "Cause labels"],
   ["api", "API and MCP"], ["calls", "API calls"], ["keys", "Keys and apps"], ["backups", "Backups"],
 ] as const;
 
@@ -47,6 +47,7 @@ async function Gate() {
     <>
       <Suspense fallback={wait("health")}><HealthSection /></Suspense>
       <Suspense fallback={wait("helper")}><HelperSection /></Suspense>
+      <Suspense fallback={wait("nightly checks")}><NightlySection /></Suspense>
       <Suspense fallback={wait("data")}><DataSection /></Suspense>
       <Suspense fallback={wait("labels")}><LabelsSection /></Suspense>
       <Suspense fallback={wait("API")}><ApiSection /></Suspense>
@@ -195,6 +196,82 @@ async function HelperSection() {
   );
 }
 
+// ---------- 2b. Nightly checks (Linux helper cron, sent in its heartbeat) ----------
+// Data quality: ~/iog-qa/quality_check.py at 3:30 (generosity-data etl/quality_check.py), read-only.
+// Benchmark: ~/iog-qa/nightly_benchmark.py at 4:00 (eval/nightly_benchmark.py), the 150 questions on the live API.
+// Linux jobs: weekly Parquet snapshot (heartbeat `snapshot`) and the daily IRS batch watch (`irs_watch`).
+async function NightlySection() {
+  const p = (await helper()).latest?.payload;
+  const q = p?.quality, b = p?.benchmark;
+  const old = missedNight;
+  const qLevel: Level = !q?.at ? "off" : q.fail ? "bad" : q.warn || old(q.at) ? "warn" : "ok";
+  const bLevel: Level = !b?.at ? "off" : (b.misleading ?? 0) > 0 ? "bad" : old(b.at) || (b.prev_score != null && (b.score ?? 0) < b.prev_score) ? "warn" : "ok";
+  const tone = (st: string) => (st === "fail" ? "bad" : "warn") as "bad" | "warn";
+  const snap = p?.snapshot, irs = p?.irs_watch, jl = linuxJobLevels(snap, irs);
+  const item = (x: unknown) => (typeof x === "string" ? x : String((x as { batch?: string; name?: string })?.batch ?? (x as { name?: string })?.name ?? JSON.stringify(x)));
+  const waiting = [...(irs?.staged ?? []), ...(irs?.waiting_for_mac ?? [])].map(item);
+  const trendSpec = {
+    width: "container", height: 120,
+    data: { values: (b?.trend ?? []).map((t) => ({ day: t.date, score: t.score, misleading: t.misleading })) },
+    mark: { type: (b?.trend?.length ?? 0) > 1 ? "line" : "point", point: true, tooltip: true },
+    encoding: {
+      x: { field: "day", type: "temporal", title: null },
+      y: { field: "score", type: "quantitative", title: `passed of ${b?.total ?? 150}`, scale: { zero: false } },
+    },
+  };
+  return (
+    <Section id="nightly" title="Nightly checks" aside="Linux helper cron: data quality 3:30, benchmark 4:00, IRS watch 6:15, Parquet snapshot Sunday 3:30">
+      <div className={s.grid}>
+        <Card label="Data quality" level={qLevel} value={q?.at ? `${q.pass ?? 0} pass, ${q.warn ?? 0} warn, ${q.fail ?? 0} fail` : "no run yet"}
+          detail={q?.at ? `${agoText(q.at)}, ${q.duration_s ?? "?"} s, read-only` : "quality_check.py has not reported"} />
+        <Card label="Benchmark" level={bLevel} value={b?.at ? `${b.score ?? 0}/${b.total ?? 150}` : "no run yet"}
+          detail={b?.at ? `${agoText(b.at)}${b.prev_score != null ? `, previous night ${b.prev_score}` : ""}${b.errors ? `, ${b.errors} API errors` : ""}` : "nightly_benchmark.py has not reported"} />
+        <Card label="Misleading answers" level={!b?.at ? "off" : (b.misleading ?? 0) > 0 ? "bad" : "ok"} value={b?.at ? `${b.misleading ?? 0}` : "–"}
+          detail="must stay 0" />
+        <Card label="Benchmark cost" value={b?.at ? `$${(b.cost_usd ?? 0).toFixed(2)}` : "–"}
+          detail={b?.at ? `${b.router_calls ?? 0} router calls on the app key, ${Math.round((b.wall_s ?? 0) / 60)} min` : "measured per run"} />
+      </div>
+      <div className={s.grid2}>
+        <div className={s.card}>
+          <div className={s.chartTitle}>Failing and warning checks</div>
+          {q?.failing?.length ? (
+            <ul className={s.list}>{q.failing.map((c) => (
+              <li key={c.key}><Pill tone={tone(c.status)}>{c.status}</Pill> {c.name} <span className={s.muted}>{c.detail}</span></li>
+            ))}</ul>
+          ) : <p className={s.note}>{q?.at ? "Every check passed" : "No run yet"}</p>}
+        </div>
+        {(b?.trend?.length ?? 0) > 0 && <Chart title="Benchmark score by night" spec={trendSpec} label="Nightly benchmark questions passed by night" />}
+      </div>
+      <div className={s.grid}>
+        <Card label="Parquet snapshot" level={jl.snapshot} value={snap?.at ? `${day(isoAt(snap.at) ?? null)}, ${snap.ok ? "pass" : "FAIL"}` : "none yet"}
+          detail={snap?.at ? `${snap.files ?? "?"} files, ${fmtBytes(snap.total_bytes)}, row counts ${snap.rows_match ? "match" : "differ"}, weekly Sunday 3:30` : "weekly export, Sunday 3:30"} />
+        <Card label="IRS watch" level={jl.irs} value={irs?.at ? (waiting.length ? "new batch staged" : agoText(isoAt(irs.at)!)) : "no check yet"}
+          detail={!irs?.at ? "daily check for new IRS batches, 6:15" : waiting.length
+            ? <>{waiting.slice(0, 4).join(", ")}. Load on the Mac: <span className={s.mono}>{IRS_LOAD_CMD}</span></>
+            : `last check ${agoText(isoAt(irs.at)!)}, nothing new${irs.errors?.length ? `, ${irs.errors.length} errors` : ""}`} />
+      </div>
+      {b?.at && (
+        <div className={s.grid2}>
+          <div className={s.card}>
+            <div className={s.chartTitle}>Newly failing vs the previous night{b.newly_failing_count ? ` (${b.newly_failing_count})` : ""}</div>
+            {b.newly_failing?.length ? (
+              <ul className={s.list}>{b.newly_failing.map((x) => (
+                <li key={x.id}><span className={s.mono}>{x.id}</span> <Pill tone={x.now === "misleading" ? "bad" : "warn"}>{x.now}</Pill> <span className={s.muted}>{x.q}</span></li>
+              ))}</ul>
+            ) : <p className={s.note}>{b.prev_score == null ? "First run, nothing to compare yet" : "None"}{b.fixed?.length ? `. Newly passing: ${b.fixed.join(", ")}` : ""}</p>}
+          </div>
+          {(b.misleading_list?.length ?? 0) > 0 && (
+            <div className={s.card}>
+              <div className={s.cardLabel}><Dot level="bad" />Misleading answers</div>
+              <ul className={s.list}>{b.misleading_list!.map((x) => <li key={x.id}><span className={s.mono}>{x.id}</span> {x.q} <span className={s.muted}>{x.why}</span></li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+}
+
 // ---------- 3. Data ----------
 async function DataSection() {
   const f = await dataFreshness();
@@ -278,7 +355,7 @@ async function ApiSection() {
   };
   const rate = (bad: number, all: number) => (all ? `${Math.round((bad / all) * 100)}%` : "–");
   return (
-    <Section id="api" title="API and MCP" aside={`${n(a.totals.calls7)} calls in 7 days, ${n(a.totals.calls30)} in 30, ${pct(a.totals.errorRate)} errors`}>
+    <Section id="api" title="API and MCP" aside={`${n(a.totals.calls7)} calls in 7 days, ${n(a.totals.calls30)} in 30, ${pct(a.totals.errorRate)} errors, nightly benchmark left out`}>
       <div className={s.grid2}>
         <Chart title="Calls per day, 30 days" spec={dailySpec} label="API and MCP calls per day by status" />
         {top.length > 0 && <Chart title="Top endpoints and tools" spec={topSpec} label="Most called endpoints and MCP tools in 30 days" />}

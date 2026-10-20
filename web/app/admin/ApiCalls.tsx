@@ -7,8 +7,9 @@ import s from "./admin.module.css";
 // The /admin "API calls" tab: every keyed /api/v1 and /mcp call, newest first (lib/apiLog.ts writes them,
 // /api/admin/calls reads them). Filters, paging, live tail every 5 s, CSV of the filtered view.
 type Data = { rows: CallRow[]; total: number; page: number; size: number; summary: CallSummary; facets: CallFacets; fetchedAt: number; qs: string };
-type Filters = { key: string; app: string; route: string; tool: string; status: string; range: string; from: string; to: string };
-const EMPTY: Filters = { key: "", app: "", route: "", tool: "", status: "", range: "24h", from: "", to: "" };
+type Filters = { key: string; app: string; route: string; tool: string; status: string; bench: string; range: string; from: string; to: string };
+// bench "hide": the Linux helper's nightly benchmark (X-App nightly-benchmark) is left out unless shown.
+const EMPTY: Filters = { key: "", app: "", route: "", tool: "", status: "", bench: "hide", range: "24h", from: "", to: "" };
 const RANGES = [["15m", "15 min"], ["1h", "1 hour"], ["24h", "24 hours"], ["7d", "7 days"], ["30d", "30 days"], ["90d", "90 days"]] as const;
 const SIZE = 50, TAIL_MS = 5000;
 
@@ -78,6 +79,7 @@ export function ApiCalls() {
         <label className={s.field}>From (NY)<input className={s.select} type="datetime-local" step={1} value={f.from} onChange={(e) => set("from", e.target.value)} /></label>
         <label className={s.field}>To (NY)<input className={s.select} type="datetime-local" step={1} value={f.to} onChange={(e) => set("to", e.target.value)} /></label>
         <div className={s.filterActions}>
+          <label className={s.toggle}><input type="checkbox" checked={f.bench !== "hide"} onChange={(e) => set("bench", e.target.checked ? "" : "hide")} /> Nightly benchmark</label>
           <label className={s.toggle}><input type="checkbox" checked={live} onChange={(e) => { setLive(e.target.checked); if (e.target.checked) setPage(0); }} /> Live tail, 5 s</label>
           <button className={s.btn} onClick={() => { setF(EMPTY); setPage(0); }}>Reset</button>
           <a className={s.btn} href={csv} download>CSV</a>
@@ -111,7 +113,7 @@ export function ApiCalls() {
         <span>Page {page + 1} of {n(pages)}, {n(data?.total)} calls{loading ? ", loading…" : ""}</span>
         <button className={s.btn} disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)}>Older</button>
       </div>
-      <p className={s.note}>Calls that send an API key to /api/v1/* or /mcp, kept 90 days. Hover a time for UTC and a row for IP and user agent. Apps name themselves with the X-App header, else the MCP client name or user agent.</p>
+      <p className={s.note}>Calls that send an API key to /api/v1/* or /mcp, kept 90 days. Hover a time for UTC and a row for IP and user agent. Apps name themselves with the X-App header, else the MCP client name or user agent. The nightly benchmark is hidden unless ticked.</p>
     </>
   );
 }

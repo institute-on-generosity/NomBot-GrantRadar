@@ -99,18 +99,22 @@ const routerFormat = { ...zodFormat, schema: leanSchema(zodFormat.schema) as typ
 export type Routed = { research: false } | { research: true; spec: Spec };
 
 const cached = memo<Routed>("answer-route:v17", 1000, 24 * 3600_000); // v17: cause name in the asker's words (narrower than a label); v16: ai_tech_learning_work label; v15: named federal programs (Head Start) as keyword causes; v14: housing_homelessness label; v13: two causes asked separately = top_funders / top_recipients with both; v12: grants back to 2012; v11: substance_use label; v10: foundation_finances (payout, assets), org finances by year or size; v9: never mislead (region, topN, streak, years outside the data, missing-note rules, inflation), household_giving; v2: breakdowns and filters; v3: charity_grants; v4: federal_awards, ACS; v5: audit rules (largest 1%, public_entity); v6: trimmed prompt, lean schema, company funderType; v7: company example; v8: premise, "where does X money go"
-export function routeQuestion(question: string): Promise<Routed> {
+// onUsage: called with the call's token usage when the router actually calls Claude (not on a cache hit); the
+// nightly benchmark uses it to measure its cost (app/api/v1/answer, X-App: nightly-benchmark).
+export function routeQuestion(question: string, onUsage?: (u: RouteUsage) => void): Promise<Routed> {
   const q = question.replace(/\s+/g, " ").trim();
   if (!looksLikeResearch(q)) return Promise.resolve({ research: false });
   // A failed call isn't cached (memo drops rejections): the page falls back to a plain search this time.
-  return cached(q.toLowerCase(), () => routeFresh(q)).catch((err) => {
+  return cached(q.toLowerCase(), () => routeFresh(q, onUsage)).catch((err) => {
     console.error("answer router failed; treating as a search", err);
     return { research: false } as const;
   });
 }
 
-async function routeFresh(question: string): Promise<Routed> {
-  return (await routeMeasured(question)).routed;
+async function routeFresh(question: string, onUsage?: (u: RouteUsage) => void): Promise<Routed> {
+  const r = await routeMeasured(question);
+  if (r.usage) onUsage?.(r.usage);
+  return r.routed;
 }
 // One uncached router call with its token usage and time (eval/route.mts measures the prompt with it).
 export type RouteUsage = { input: number; output: number; cacheRead: number; cacheWrite: number }; // input = all prompt tokens, cached or not

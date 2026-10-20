@@ -2980,5 +2980,6 @@ export function answerBrief(a: Answer, rows = 15) {
     status: a.status, headline: a.headline, numbers: a.numbers, bullets: a.bullets.map(plain),
     what_counts: a.causeNote, method: a.method, caveats: a.caveats, coverage: a.coverage, missing: a.missing,
     data: a.rows.slice(0, rows), sources: a.sources, spec: a.spec,
+    premise: a.premise ?? null, basis: a.basis ?? null,
   };
 }

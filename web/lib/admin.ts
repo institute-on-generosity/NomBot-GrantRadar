@@ -123,6 +123,35 @@ export type HeartbeatPayload = {
   embedding?: { pending?: number | null; last_run?: string; done?: number; result?: string; device?: string; tagging?: boolean } | null;
   // ~/iog-backups/restore-test.sh summary (cron, weekly): newest dump restored into a scratch DB and checked.
   restore_test?: RestoreTest | null;
+  // Nightly jobs on the helper (generosity-data docs/linux-helper.md): ~/iog-qa/quality.json and benchmark.json summaries.
+  quality?: QualitySummary | null;
+  benchmark?: BenchSummary | null;
+  // Weekly Parquet export (~/iog-etl/export_snapshot.sh, Sunday 3:30) and the daily IRS batch check (irs_watch.py, 6:15).
+  snapshot?: Snapshot | null;
+  irs_watch?: IrsWatch | null;
+};
+export type Snapshot = { at?: string; ok?: boolean; folder?: string; files?: number; total_bytes?: number; rows_match?: boolean; duration_s?: number };
+export type IrsWatch = { at?: string; new_batches?: unknown[]; staged?: unknown[]; waiting_for_mac?: unknown[]; errors?: unknown[] };
+export const IRS_LOAD_CMD = "~/iog-host/irs-pull-and-load.sh --list";
+// "2026-10-19T23:01:21-0700" (no colon in the offset) to a form Date.parse always reads.
+export const isoAt = (at?: string) => at?.replace(/([+-]\d\d)(\d\d)$/, "$1:$2");
+const olderThan = (at: string | undefined, ms: number) => { const t = Date.parse(isoAt(at) ?? ""); return !Number.isFinite(t) || Date.now() - t > ms; };
+// Levels for the Linux jobs cards: snapshot weekly (warn after 8 days), IRS watch daily (warn after 30 h or when a batch waits).
+export function linuxJobLevels(snap?: Snapshot | null, irs?: IrsWatch | null): { snapshot: Level; irs: Level } {
+  return {
+    snapshot: !snap?.at ? "off" : !snap.ok || snap.rows_match === false ? "bad" : olderThan(snap.at, 8 * 86400_000) ? "warn" : "ok",
+    irs: !irs?.at ? "off" : irs.errors?.length ? "bad" : irs.staged?.length || irs.waiting_for_mac?.length || olderThan(irs.at, 30 * 3600_000) ? "warn" : "ok",
+  };
+}
+// A nightly job's last report is older than 30 hours: it missed a night.
+export const missedNight = (at?: string) => !at || Date.now() - Date.parse(at) > 30 * 3600_000;
+export type QualityCheck = { key: string; name: string; status: "pass" | "warn" | "fail"; detail: string };
+export type QualitySummary = { at?: string; pass?: number; warn?: number; fail?: number; failing?: QualityCheck[]; duration_s?: number };
+export type BenchSummary = {
+  at?: string; score?: number; total?: number; misleading?: number; statuses?: Record<string, number>; errors?: number; prev_score?: number | null;
+  newly_failing?: { id: string; q: string; was: string; now: string }[]; newly_failing_count?: number; fixed?: string[];
+  misleading_list?: { id: string; q: string; why: string }[]; cost_usd?: number; router_calls?: number; wall_s?: number;
+  trend?: { date: string; score: number; total: number; misleading: number }[];
 };
 export type RestoreTest = { at?: string; ok?: boolean; file?: string; duration_s?: number; restore_s?: number; tables_matched?: number; tables_total?: number; error?: string | null };
 export type Helper = {
@@ -279,14 +308,18 @@ export type ApiStats = {
   totals: { calls7: number; calls30: number; errorRate: number | null };
 };
 
+// The Linux helper's nightly benchmark (key "benchmark", X-App nightly-benchmark, ~150 calls a night) is kept out of
+// the usage charts and totals. The API calls tab hides it by default (bench=hide) with a toggle to show it.
+export const BENCH_KEY = "benchmark", BENCH_APP = "nightly-benchmark";
+const NOT_BENCH_KEY = `(key_id IS NULL OR key_id NOT IN (SELECT id FROM api_keys WHERE name = '${BENCH_KEY}'))`;
 type UsageRow = { route: string; status: number; n: string; ms_sum: string; ms_max: number; recent: boolean };
 export const apiStats = () => cached<ApiStats>(minute, "api", async () => {
   const [usage, daily, errors] = await Promise.all([
     rows<UsageRow>(`SELECT route, status, sum(n) AS n, sum(ms_sum) AS ms_sum, max(ms_max) AS ms_max, day > current_date - 7 AS recent
-                    FROM api_usage WHERE day > current_date - 30 GROUP BY route, status, recent`),
+                    FROM api_usage WHERE day > current_date - 30 AND ${NOT_BENCH_KEY} GROUP BY route, status, recent`),
     rows<{ day: string; kind: string; n: string }>(`SELECT to_char(day, 'YYYY-MM-DD') AS day,
         CASE WHEN status >= 500 THEN '5xx' WHEN status = 429 THEN '429' WHEN status >= 400 THEN '4xx' ELSE 'OK' END AS kind, sum(n) AS n
-      FROM api_usage WHERE day > current_date - 30 GROUP BY 1, 2 ORDER BY 1`),
+      FROM api_usage WHERE day > current_date - 30 AND ${NOT_BENCH_KEY} GROUP BY 1, 2 ORDER BY 1`),
     rows<{ at: string; route: string; status: number; key: string | null; ms: number | null }>(
       "SELECT e.at, e.route, e.status, k.name AS key, e.ms FROM api_errors e LEFT JOIN api_keys k ON k.id = e.key_id ORDER BY e.id DESC LIMIT 12"),
   ]);
@@ -357,7 +390,7 @@ async function routeExists(path: string) {
 // Live, not cached: the tab polls every 5 s while live tail is on. Every filter is a bound parameter.
 export const CALL_RANGES = { "15m": "15 minutes", "1h": "1 hour", "24h": "24 hours", "7d": "7 days", "30d": "30 days", "90d": "90 days" } as const;
 export type CallFilters = {
-  key?: string; app?: string; route?: string; tool?: string; status?: string;
+  key?: string; app?: string; route?: string; tool?: string; status?: string; bench?: string;
   range?: string; from?: string; to?: string; page?: number; size?: number;
 };
 export type CallRow = {
@@ -374,6 +407,7 @@ function callWhere(f: CallFilters) {
   if (f.key === "(none)") where.push("key_name IS NULL"); else if (f.key) add("key_name = ?", f.key);
   if (f.app === "(none)") where.push("app IS NULL"); else if (f.app) add("app = ?", f.app);
   if (f.route) add("route = ?", f.route);
+  if (f.bench === "hide") where.push(`app IS DISTINCT FROM '${BENCH_APP}'`);
   if (f.tool) add("mcp_tool = ?", f.tool);
   if (f.status && /^[1-5]xx$/.test(f.status)) add("status / 100 = ?", Number(f.status[0]));
   // from / to: wall-clock time in New York (datetime-local inputs), converted by Postgres.
@@ -411,13 +445,14 @@ export async function apiCallsCsv(f: CallFilters) {
   return [head.join(","), ...lines].join("\r\n") + "\r\n";
 }
 
-// Calls per minute over the last hour, and top apps today (New York day).
-export async function callSummary(): Promise<CallSummary> {
+// Calls per minute over the last hour, and top apps today (New York day). hideBench leaves out the nightly benchmark.
+export async function callSummary(hideBench = false): Promise<CallSummary> {
+  const nb = hideBench ? `AND app IS DISTINCT FROM '${BENCH_APP}'` : "";
   const [perMinute, topApps] = await Promise.all([
     rows<{ minute: Date; n: string; errors: string }>(`SELECT date_trunc('minute', at) AS minute, count(*) AS n, count(*) FILTER (WHERE status >= 400) AS errors
-      FROM api_calls WHERE at > now() - interval '60 minutes' GROUP BY 1 ORDER BY 1`),
+      FROM api_calls WHERE at > now() - interval '60 minutes' ${nb} GROUP BY 1 ORDER BY 1`),
     rows<{ app: string; key: string | null; n: string }>(`SELECT coalesce(app, '(none)') AS app, key_name AS key, count(*) AS n FROM api_calls
-      WHERE at >= date_trunc('day', now() AT TIME ZONE '${CALL_TZ}') AT TIME ZONE '${CALL_TZ}' GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 8`),
+      WHERE at >= date_trunc('day', now() AT TIME ZONE '${CALL_TZ}') AT TIME ZONE '${CALL_TZ}' ${nb} GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 8`),
   ]);
   const top = topApps.map((r) => ({ app: r.app, key: r.key, n: Number(r.n) }));
   return {

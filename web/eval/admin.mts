@@ -3,7 +3,8 @@
 // no API key secret or hash in the page, and the heartbeat endpoint rejects bad tokens and accepts the right one.
 // API calls tab: a temporary key ("admin-eval", revoked at the end, its logged calls deleted) makes REST and MCP
 // calls with an X-App header; each must appear in api_calls and /api/admin/calls with its second, key, app,
-// route, MCP tool and status, and never the key itself.
+// route, MCP tool and status, and never the key itself. A nightly-benchmark call is hidden by bench=hide.
+// Nightly checks section (data quality and benchmark cards from the helper's heartbeat) renders.
 // Secrets come from ~/.config/iog-host/site.env (or the environment) and are never printed.
 //   npm run test:admin                      against http://localhost:3000
 //   npm run test:admin -- --base=http://localhost:4000
@@ -55,8 +56,8 @@ try {
   const html = await page.text();
   const ms = Math.round(performance.now() - t0);
   check(page.status === 200, `/admin with admin cookie -> 200 (got ${page.status})`);
-  for (const id of ["health", "helper", "data", "labels", "api", "calls", "keys", "backups"]) check(html.includes(`data-section="${id}"`), `section ${id} renders`);
-  for (const text of ["Database", "Live site", "Public link", "Last backup", "Tailscale", "Heartbeat", "990-PF grants", "Pending approvals", "/api/v1/search", "MCP tools", "restore test"]) {
+  for (const id of ["health", "helper", "nightly", "data", "labels", "api", "calls", "keys", "backups"]) check(html.includes(`data-section="${id}"`), `section ${id} renders`);
+  for (const text of ["Database", "Live site", "Public link", "Last backup", "Tailscale", "Heartbeat", "990-PF grants", "Pending approvals", "/api/v1/search", "MCP tools", "restore test", "Data quality", "Benchmark", "Misleading answers", "Parquet snapshot", "IRS watch"]) {
     check(html.includes(text), `page shows "${text}"`);
   }
   check(/off-machine copy/i.test(html), "page shows the off-machine copy line");
@@ -146,6 +147,15 @@ try {
   const csvText = await csv.text();
   check(csv.status === 200 && (csv.headers.get("content-type") ?? "").includes("text/csv") && csvText.trim().split("\n").length === 5, "CSV export of the filtered view (header + 4 rows)");
   check((await go(`/api/admin/calls`)).status === 401, "/api/admin/calls without admin cookie -> 401");
+
+  // Nightly benchmark calls (X-App nightly-benchmark) are hidden with bench=hide (the tab's default), shown without it.
+  const nb = await fetch(`${BASE}/api/v1/grants?limit=1`, { headers: { Authorization: `Bearer ${KEY}`, "X-App": "nightly-benchmark" } });
+  await nb.text();
+  await new Promise((r) => setTimeout(r, 2500));
+  const all = await (await go(`/api/admin/calls?key=${HOST}&range=1h`, { headers: { Cookie: cookie ?? "" } })).json() as { total: number };
+  const hid = await (await go(`/api/admin/calls?key=${HOST}&range=1h&bench=hide`, { headers: { Cookie: cookie ?? "" } })).json() as { total: number; summary: { topApps: { app: string }[] } };
+  check(all.total === sent.length + 1 && hid.total === sent.length, `bench=hide leaves out the nightly benchmark call (${all.total} vs ${hid.total})`);
+  check(!hid.summary.topApps.some((a) => a.app === "nightly-benchmark"), "bench=hide: top apps leave out the nightly benchmark");
 } finally {
   if (testKeyId) {
     await db.query("UPDATE api_keys SET revoked_at = now() WHERE id = $1", [testKeyId]).catch(() => {});
