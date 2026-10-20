@@ -18,6 +18,9 @@ const opioid = { name: "opioid addiction", label: null, ntee: [], keywords: ["op
 const substance = { name: "substance use and addiction", label: "substance_use" as const, ntee: [], keywords: [] };
 const housing = { name: "housing and homelessness", label: "housing_homelessness" as const, ntee: [], keywords: [] };
 const tech = { name: "tech and AI skills", label: "ai_tech_learning_work" as const, ntee: [], keywords: [] };
+const racial = { name: "racial equity", label: "racial_equity" as const, ntee: [], keywords: [] };
+const immig = { name: "immigrants and refugees", label: "immigrants_refugees" as const, ntee: [], keywords: [] };
+const mental = { name: "mental health", label: "mental_health" as const, ntee: [], keywords: [] };
 const one = async (sql: string, params: unknown[] = []) => Number(Object.values((await db.query(sql, params)).rows[0])[0]);
 
 // Independent checks: base tables, the miner's CLEAN filter written out again.
@@ -68,6 +71,14 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='ai_tech_learning_work')`)] },
   { name: "top funders tech and AI skills", s: spec({ metric: "top_funders", causes: [tech] }),
     check: async (a) => [Number(a.rows[0].primary_usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='ai_tech_learning_work' AND tier='primary')`, [a.rows[0].funder_ein])] },
+  { name: "racial equity US (any tier)", s: spec({ causes: [racial] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='racial_equity')`)] },
+  { name: "immigrants & refugees NY (any tier)", s: spec({ causes: [immig], states: ["NY"] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_state='NY' AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='immigrants_refugees')`)] },
+  { name: "mental health US (any tier)", s: spec({ causes: [mental] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='mental_health')`)] },
+  { name: "top funders mental health", s: spec({ metric: "top_funders", causes: [mental] }),
+    check: async (a) => [Number(a.rows[0].primary_usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.recipient_ein IN (SELECT ein FROM org_labels WHERE label='mental_health' AND tier='primary')`, [a.rows[0].funder_ein])] },
   { name: "gov-reliant human services, KY", s: spec({ metric: "count_orgs", causes: [{ name: "human services", label: null, ntee: ["P"], keywords: [] }], states: ["KY"], condition: "gov_reliant" }) },
   { name: "low cash, Cook County", s: spec({ metric: "count_orgs", county: "Cook County", states: ["IL"], condition: "low_cash" }) },
   { name: "gov grants top funders (partial)", s: spec({ metric: "top_funders", source: "government_grants", causes: [climate] }) },

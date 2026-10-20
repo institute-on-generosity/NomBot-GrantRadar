@@ -73,7 +73,12 @@
   {"q": "largest hospitals in Texas", "research": false},
   {"q": "Gates Foundation", "research": false},
   {"q": "list foundations in Ohio by assets", "research": false},
-  {"q": "Are foundations giving more to mental health than they used to?", "metric": ["trend"], "ntee": "F"},
+  {"q": "Are foundations giving more to mental health than they used to?", "metric": ["trend"], "label": "mental_health"},
   {"q": "Biggest grantmakers for animal welfare", "metric": ["top_funders"], "ntee": "D"},
-  {"q": "Sum of foundation grants to museums in 2024", "metric": ["total"], "ntee": "A5", "yearFrom": 2024}
+  {"q": "Sum of foundation grants to museums in 2024", "metric": ["total"], "ntee": "A5", "yearFrom": 2024},
+  {"q": "How much foundation money goes to racial equity?", "metric": ["total"], "label": "racial_equity"},
+  {"q": "Which foundations fund immigrant legal services?", "metric": ["top_funders"], "label": "immigrants_refugees"},
+  {"q": "Where does foundation money for refugees go?", "metric": ["by_state", "top_recipients", "breakdown"], "label": "immigrants_refugees"},
+  {"q": "How much do foundations give to suicide prevention?", "metric": ["total"], "label": "mental_health"},
+  {"q": "Which states get the most foundation money for mental health per resident?", "metric": ["by_state"], "label": "mental_health", "perResident": true}
 ]

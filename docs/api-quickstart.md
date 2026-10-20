@@ -55,7 +55,7 @@ curl -H "Authorization: Bearer $NOMBOT_KEY" \
 get("/api/v1/grants", source="charity", funder_type="daf_sponsor", state="OH", year_from=2022, totals="true")
 ```
 
-**3. Grants to a cause label** (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work)
+**3. Grants to a cause label** (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health)
 ```bash
 curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/grants?label=climate&year_from=2022&year_to=2024"
 ```

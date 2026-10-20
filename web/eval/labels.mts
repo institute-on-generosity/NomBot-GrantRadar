@@ -1,4 +1,5 @@
-// Cause-label checks (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work; generosity-data migration 032): the question parse sets the label
+// Cause-label checks (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity,
+// immigrants_refugees, mental_health; generosity-data migration 032): the question parse sets the label
 // only when the question names the cause, the filter edits work, search keeps only labeled orgs, and the
 // API returns labels. No Claude calls unless --llm (then ~10 parses with PARSE_MODEL; tokens are printed).
 //   npm run test:labels          rules, filters, search, API
@@ -30,6 +31,21 @@ const CASES: [string, string | null][] = [
   ["digital literacy programs for seniors in Florida", "ai_tech_learning_work"],
   ["AI literacy nonprofits", "ai_tech_learning_work"],
   ["tech workforce training in Chicago", "ai_tech_learning_work"],
+  ["racial justice organizations in Georgia", "racial_equity"],
+  ["anti-racism groups in Minnesota", "racial_equity"],
+  ["racial equity nonprofits under $1M", "racial_equity"],
+  ["refugee resettlement agencies in Texas", "immigrants_refugees"],
+  ["immigration legal services in California", "immigrants_refugees"],
+  ["organizations serving immigrants in Ohio", "immigrants_refugees"],
+  ["mental health counseling for teens in Ohio", "mental_health"],
+  ["suicide prevention groups in Colorado", "mental_health"],
+  ["NAMI affiliates in Kentucky", "mental_health"],
+  ["civil rights groups in Alabama", null],
+  ["wildlife refuges in Oregon", null],
+  ["Refuge shelters for women in Texas", "women_girls"],
+  ["bird migration research in Texas", null],
+  ["Great Depression history museums", null],
+  ["environmental health groups in Ohio", null],
   ["medical coding schools in Texas", null],
   ["after-school programming in Ohio", null],
   ["STEM education in Oregon", null],
@@ -80,13 +96,13 @@ check(applyOverrides(base, { label: "bogus" }).label === "climate", "unknown lab
 
 // 4. Search: every result carries the label, primary only by default; partial adds orgs.
 const labeled = async (label: string, partial: boolean) => {
-  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery", housing_homelessness: "homeless shelter", ai_tech_learning_work: "coding" }[label] ?? label, label, labelPartial: partial, limit: 50 });
+  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery", housing_homelessness: "homeless shelter", ai_tech_learning_work: "coding", racial_equity: "racial justice", immigrants_refugees: "refugee", mental_health: "mental health" }[label] ?? label, label, labelPartial: partial, limit: 50 });
   const eins = r.results.map((x) => x.ein.replace("-", ""));
   const { rows } = await db.query("SELECT ein, tier FROM org_labels WHERE label = $1 AND ein = ANY($2)", [label, eins]);
   const tier = new Map(rows.map((x) => [x.ein.trim(), x.tier]));
   return { r, all: eins.every((e) => tier.has(e)), primaryOnly: eins.every((e) => tier.get(e) === "primary") };
 };
-for (const label of ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work"]) {
+for (const label of ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work", "racial_equity", "immigrants_refugees", "mental_health"]) {
   const p = await labeled(label, false), a = await labeled(label, true);
   check(p.r.total > 0 && p.all && p.primaryOnly && p.r.results.every((x) => x.label?.tier === "primary"), `search label=${label}: ${p.r.total} primary orgs, all labeled primary`);
   check(a.all && a.r.total > p.r.total, `search label=${label} + partial: ${a.r.total} orgs (> ${p.r.total}), all labeled`);
@@ -107,6 +123,12 @@ const hh = await apiOrg("042516093", "http://x"); // Pine Street Inn (Boston)
 check(!("error" in hh) && hh.org.labels.some((l) => l.label === "housing_homelessness" && l.tier === "primary" && Boolean(l.why)), "api org Pine Street Inn: housing_homelessness, primary, with why");
 const tech = await apiOrg("460858543", "http://x"); // Code.org
 check(!("error" in tech) && tech.org.labels.some((l) => l.label === "ai_tech_learning_work" && l.name === "Tech and AI skills" && l.tier === "primary" && Boolean(l.why)), "api org Code.org: ai_tech_learning_work, primary, with why");
+const re = await apiOrg("942759879", "http://x"); // Race Forward
+check(!("error" in re) && re.org.labels.some((l) => l.label === "racial_equity" && l.name === "Racial equity" && l.tier === "primary" && Boolean(l.why)), "api org Race Forward: racial_equity, primary, with why");
+const ir = await apiOrg("135633307", "http://x"); // HIAS
+check(!("error" in ir) && ir.org.labels.some((l) => l.label === "immigrants_refugees" && l.name === "Immigrants and refugees" && l.tier === "primary" && Boolean(l.why)), "api org HIAS: immigrants_refugees, primary, with why");
+const mh = await apiOrg("581575080", "http://x"); // National Alliance on Mental Illness (NAMI)
+check(!("error" in mh) && mh.org.labels.some((l) => l.label === "mental_health" && l.name === "Mental health" && l.tier === "primary" && Boolean(l.why)), "api org NAMI: mental_health, primary, with why");
 const none = await apiOrg("341877332", "http://x"); // Mid-Ohio Youth Mentoring
 check(!("error" in none) && none.org.labels.length === 0, "api org without labels: empty list");
 

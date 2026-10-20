@@ -14,7 +14,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "city", in: "query", type: "string", example: "Mansfield", desc: "City names, comma separated (up to 10)." },
       { name: "max_revenue", in: "query", type: "integer", example: "500000", desc: "Only organizations with revenue at or below this, in dollars." },
       { name: "ntee", in: "query", type: "string", example: "O", desc: "NTEE cause code prefix, e.g. K (food) or K31 (food banks)." },
-      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls, substance_use, housing_homelessness or ai_tech_learning_work. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Graded cause label, for causes no NTEE code captures: climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health. Only organizations with that label. Each result's label shows its tier. Unknown values are ignored." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) keeps organizations whose main work is the cause. all also adds partial ones, where it is one named goal or program among broader work." },
       { name: "limit", in: "query", type: "integer", example: "10", desc: "Results to return, 1 to 50. Default 10." },
     ],
@@ -38,7 +38,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "org", method: "GET", path: "/api/v1/org/{ein}", title: "Get an organization", mcpTool: "get_organization",
-    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
+    summary: "Everything NomBot has on one organization: profile, financial history, Form 990 health signals (fixed rules, no AI), leaders and pay, private-foundation grants received and given (990-PF), grants received from public charities and grants given on Schedule I (with funder type: donor-advised fund sponsor, community foundation, United Way, other), and direct federal awards (USAspending, by fiscal year, agency, program and place of performance). The sources overlap, so do not add them together. Foundations also get assets and how to apply. labels lists graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health), each with label, name, tier (primary or partial) and why. tax_status is the IRS Pub 78 and revocation block from /api/v1/orgs/{ein}/status.",
     params: [{ name: "ein", in: "path", type: "string", required: true, example: "34-1877332", desc: "9-digit EIN. Dashes are fine." }],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/org/341877332"`,
     example: {
@@ -183,7 +183,7 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "year_to", in: "query", type: "integer", example: "2024", desc: "Last tax year. Default 2025." },
       { name: "state", in: "query", type: "string", example: "WV", desc: "Recipient's state." },
       { name: "county", in: "query", type: "string", example: "54039", desc: "Recipient's county, 5-digit FIPS (by ZIP code)." },
-      { name: "label", in: "query", type: "string", example: "climate", desc: "Recipient's graded cause label: climate, women_girls, substance_use, housing_homelessness or ai_tech_learning_work." },
+      { name: "label", in: "query", type: "string", example: "climate", desc: "Recipient's graded cause label: climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health." },
       { name: "label_tier", in: "query", type: "string", example: "primary", desc: "With label: primary (default) or all (adds partial)." },
       { name: "amount_min", in: "query", type: "integer", example: "50000", desc: "Only grants of at least this many dollars." },
       { name: "funder_type", in: "query", type: "string", example: "daf_sponsor", desc: "With source=charity: daf_sponsor, community_foundation, united_way or other." },
@@ -316,7 +316,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "labels", method: "GET", path: "/api/v1/labels", title: "List cause labels", mcpTool: "list_cause_labels",
-    summary: "The graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work): definition, what's in and out, org counts per tier, and grades. primary_precision and partial_in_label_precision are the share a judge model agreed with on a random sample (with 95% intervals). recall_estimate is the share of relevant organizations the label found.",
+    summary: "The graded cause labels (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): definition, what's in and out, org counts per tier, and grades. primary_precision and partial_in_label_precision are the share a judge model agreed with on a random sample (with 95% intervals). recall_estimate is the share of relevant organizations the label found.",
     params: [],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/labels"`,
     example: {
@@ -337,7 +337,7 @@ export const ENDPOINTS: Endpoint[] = [
     id: "label-orgs", method: "GET", path: "/api/v1/labels/{label}/orgs", title: "Organizations with a label", mcpTool: "list_cause_labels",
     summary: "Organizations carrying one cause label, by EIN, with tier, score, method and the one-line why.",
     params: [
-      { name: "label", in: "path", type: "string", required: true, example: "climate", desc: "climate, women_girls, substance_use, housing_homelessness or ai_tech_learning_work." },
+      { name: "label", in: "path", type: "string", required: true, example: "climate", desc: "climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees or mental_health." },
       { name: "tier", in: "query", type: "string", example: "primary", desc: "primary (default), partial or all." },
       { name: "state", in: "query", type: "string", example: "CO", desc: "Organization's state." },
       { name: "ntee", in: "query", type: "string", example: "C", desc: "NTEE code prefix." },

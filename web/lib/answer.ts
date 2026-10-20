@@ -437,6 +437,15 @@ LEFT JOIN (SELECT year, sum(value)::float8 AS soi FROM benchmarks WHERE source I
   return `E-filing was optional for many filers before tax year ${EFILE_REQUIRED}, so earlier years miss many smaller ${who}, and growth from those years runs high. Measured here: ${int(a.filers)} ${who} and ${money(a.usd)} in ${from}, against ${int(z.filers)} and ${money(z.usd)} in ${G_DEFAULT}.${soi.length ? ` Our 990-PF grant totals as a share of the IRS SOI estimate for all foundations: ${soi.join(", ")}.` : ""}`;
 });
 
+// Label-specific limits beyond the grade line: a low recall makes every count a floor; a partial tier graded right at
+// the 90% bar is the least certain part; mental health is graded from 990 text, not NTEE F; immigration policy groups
+// count whatever their stance (the definition's "immigration policy, research, rights and advocacy").
+const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly: boolean) => string>> = {
+  racial_equity: (g) => `Racial equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.63)} of the orgs doing this work (many civil rights, community and health groups that work on race don't say so in their 990 text), so the true total is higher.`,
+  immigrants_refugees: () => "The immigrants and refugees label counts immigration policy and research groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies), so their funders count here too.",
+  mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
+};
+
 async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<string> {
   if (!c || cs.kind === "all") return c?.all ? `All causes, ${c.name}.` : "All causes.";
   if (cs.kind === "program") return `Federal program: ${cs.program!.name}, assistance listing${cs.program!.cfda.length > 1 ? "s" : ""} ${cs.program!.cfda.map((n) => n.replace("%", "*")).join(", ")} (matched to "${c.name}"). Every award under the program counts, whoever the recipient, not recipients' NTEE codes or labels.`;
@@ -444,6 +453,8 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
   if (cs.kind === "label") {
     const g = (await grades())[c.label!];
     caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : "Primary is a floor, primary + partial an upper bound."}`);
+    const extra = LABEL_CAVEAT[c.label as LabelSlug];
+    if (extra) caveats.push(extra(g, Boolean(cs.primaryOnly)));
     return cs.primaryOnly
       ? `${g?.name ?? c.label} label (org_labels), primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
       : `${g?.name ?? c.label} label (org_labels): primary = the main stated purpose, partial = one program among others.${via}`;
@@ -751,7 +762,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v31: Schedule I transfers between related organizations out of charity_grant_clean (generosity-data 067), national
 // charity_grants totals say how much was left out.
 // v32: "Show the steps" evidence chain (lib/answerSteps), start-year spike check on trends ("Since 2021?").
-const answerMemo = memo<Answer>("answer:v32", 500, 6 * 3600_000);
+// v34: racial_equity, immigrants_refugees, mental_health labels (graded g2, g1, g1), with label caveats (LABEL_CAVEAT).
+const answerMemo = memo<Answer>("answer:v34", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);

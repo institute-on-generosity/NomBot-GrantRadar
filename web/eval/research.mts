@@ -10,7 +10,7 @@ const { routeQuestion } = await import("../lib/answerRoute");
 const { answer } = await import("../lib/answer");
 const { candidateFollowUps, pickFollowUps } = await import("../lib/followUp");
 type Spec = import("../lib/answerSpec").Spec;
-type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; headlineHas?: string; premiseHolds?: boolean; [k: string]: unknown };
+type Expect = { q: string; research?: boolean; missing?: string; status?: string; headlineNot?: string; headlineHas?: string; caveatHas?: string; premiseHolds?: boolean; [k: string]: unknown };
 const routeEval = "./route.mts"; // shared route checks (eval/route.mts); a variable path keeps tsc from resolving .mts
 const { check } = (await import(routeEval)) as { check: (e: Expect, research: boolean, s: Spec | null) => string[] };
 
@@ -32,6 +32,8 @@ const run = async (e: Expect) => {
   // headlineHas: the answer covers every part asked (a two-cause question names both causes).
   if (e.headlineHas && !new RegExp(e.headlineHas, "i").test(a.headline)) bad.push(`headline doesn't mention "${e.headlineHas}": ${a.headline}`);
   if (e.headlineNot && new RegExp(e.headlineNot, "i").test(a.headline + " " + a.causeNote)) bad.push(`headline/cause note mentions "${e.headlineNot}"`);
+  // caveatHas: a label's own limit is passed on (racial equity counts are a floor).
+  if (e.caveatHas && !new RegExp(e.caveatHas, "i").test(a.caveats.join(" "))) bad.push(`caveats don't mention "${e.caveatHas}"`);
   // Premise check (spec.premise): holds or not as expected, and a false premise is corrected first thing.
   if (e.premiseHolds !== undefined) {
     if (a.premise?.holds !== e.premiseHolds) bad.push(`premise ${JSON.stringify(a.premise)}, want holds ${e.premiseHolds}`);

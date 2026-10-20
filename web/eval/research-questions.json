@@ -1,6 +1,6 @@
 [
   { "q": "Why does DC get so much foundation money per resident?", "metric": ["by_state"], "perResident": true },
-  { "q": "How has foundation funding for mental health changed since 2022?", "metric": ["trend"], "ntee": "F" },
+  { "q": "How has foundation funding for mental health changed since 2022?", "metric": ["trend"], "label": "mental_health" },
   { "q": "Are foundations shifting money away from the arts?", "metric": ["trend", "fastest_causes"] },
   { "q": "How much foundation money reaches rural counties in Kentucky and West Virginia?", "metric": ["total", "by_rurality", "breakdown"], "states": ["KY", "WV"] },
   { "q": "Do donor-advised funds favor different causes than private foundations?", "metric": ["breakdown"], "by": ["cause"], "source": "charity_grants" },
@@ -78,5 +78,11 @@
   { "q": "How much foundation money goes to girls' education?", "metric": ["total"], "label": "women_girls", "headlineHas": "women and girls orgs \\(the closest graded label to girls" },
   { "q": "Has foundation funding for clean energy grown?", "metric": ["trend"], "label": "climate", "headlineHas": "climate orgs \\(the closest graded label to clean energy\\)" },
   { "q": "How much foundation money goes to climate?", "metric": ["total"], "label": "climate", "headlineHas": "to climate,", "headlineNot": "closest graded label" },
-  { "q": "How much do foundations give to homelessness?", "metric": ["total"], "label": "housing_homelessness", "headlineNot": "closest graded label" }
+  { "q": "How much do foundations give to homelessness?", "metric": ["total"], "label": "housing_homelessness", "headlineNot": "closest graded label" },
+  { "q": "How much foundation money goes to mental health?", "metric": ["total"], "label": "mental_health", "headlineNot": "closest graded label", "caveatHas": "not its NTEE code" },
+  { "q": "How much foundation money goes to suicide prevention?", "metric": ["total"], "label": "mental_health", "headlineHas": "mental health orgs \\(the closest graded label to suicide prevention\\)" },
+  { "q": "How much foundation money goes to racial justice?", "metric": ["total"], "label": "racial_equity", "headlineNot": "closest graded label", "caveatHas": "counts are a floor" },
+  { "q": "Did foundation giving to racial justice spike after 2020 and then fall back?", "metric": ["trend"], "label": "racial_equity" },
+  { "q": "How much foundation money supports immigrants and refugees?", "metric": ["total"], "label": "immigrants_refugees", "headlineHas": "immigrants and refugees", "headlineNot": "closest graded label" },
+  { "q": "Which foundations give the most to refugee resettlement?", "metric": ["top_funders"], "label": "immigrants_refugees", "caveatHas": "argue for less immigration" }
 ]
