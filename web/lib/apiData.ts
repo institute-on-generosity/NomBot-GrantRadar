@@ -8,6 +8,7 @@ import { keyed, apiError } from "./apiAuth";
 import { countRows, withRows } from "./apiLog";
 import { FUNDER_CLASS } from "./orgFunding";
 import { LABEL_SLUGS, isLabel } from "./labels";
+import { embedQuery, MODEL_ID, toSql } from "./embedder";
 
 // ---------- input ----------
 // A bad parameter: REST answers 400 bad_param, MCP a tool error with the message.
@@ -439,18 +440,31 @@ export async function apiLabelOrgs(label: string, p: In) {
 
 // ---------- policy: bills, Federal Register, news ----------
 const tsq = (q: Sql, col: string, text: string) => q.and(`${col} @@ websearch_to_tsquery('english', ${q.v(text)})`);
-export const POLICY_NOTE = "No organization or EIN links: these are public documents matched by keyword (English stemming, quotes for phrases, -word to exclude).";
+export const POLICY_NOTE = "No organization or EIN links: these are public documents matched by keyword (English stemming, quotes for phrases, -word to exclude), or by meaning with semantic=true.";
+export const SEMANTIC_NOTE = "semantic=true: ranked by meaning (cosine similarity of nomic-embed-text-v1.5 vectors, the model NomBot search uses), closest first, instead of keyword match and date. Every row with a vector is ranked, so later pages drift off topic: read similarity. Rows loaded in the last few minutes may not have a vector yet.";
+
+// semantic=true: the q vector's distance to each row (pgvector cosine), rows without a current vector left out.
+// Returns null for keyword search. The distance is the first cursor key, so pages stay in order.
+async function semantic(p: In, q: Sql, alias: string, text: string | null) {
+  if (bool(p, "semantic") !== true) return null;
+  if (!text) throw new BadParam("q", "semantic=true needs q.");
+  const vec = await embedQuery(text);
+  q.and(`${alias}.embedding_model = ${q.v(MODEL_ID)}`);
+  return `(${alias}.embedding <=> ${q.v(toSql(vec))}::vector)`;
+}
+const sim = (dist: unknown) => Math.round((1 - Number(dist)) * 1000) / 1000;
 export const BILL_TYPES = ["hr", "s", "hres", "sres", "hjres", "sjres", "hconres", "sconres"] as const;
 
 export async function apiBills(p: In) {
   const f = {
     q: text(p, "q"), congress: int(p, "congress", 93, 200), bill_type: oneOf(p, "bill_type", BILL_TYPES), chamber: oneOf(p, "chamber", ["House", "Senate"] as const),
     introduced_from: day(p, "introduced_from"), introduced_to: day(p, "introduced_to"), action_from: day(p, "action_from"), action_to: day(p, "action_to"),
-    limit: pageSize(p, 50, 500),
+    semantic: bool(p, "semantic") === true, limit: pageSize(p, 50, 500),
   };
-  const after = cursor(p, ["s", "n", "s", "n"]);
   const q = new Sql();
-  if (f.q) tsq(q, "b.search", f.q);
+  const dist = await semantic(p, q, "b", f.q);
+  const after = cursor(p, dist ? ["n", "n", "s", "n"] : ["s", "n", "s", "n"]);
+  if (f.q && !dist) tsq(q, "b.search", f.q);
   if (f.congress) q.and(`b.congress = ${q.v(f.congress)}`);
   if (f.bill_type) q.and(`b.bill_type = ${q.v(f.bill_type)}`);
   if (f.chamber) q.and(`b.origin_chamber = ${q.v(f.chamber)}`);
@@ -459,20 +473,23 @@ export async function apiBills(p: In) {
   if (f.action_from) q.and(`b.latest_action_date >= ${q.v(f.action_from)}::date`);
   if (f.action_to) q.and(`b.latest_action_date <= ${q.v(f.action_to)}::date`);
   const d = "coalesce(b.latest_action_date, b.introduced, date '1900-01-01')::text";
-  if (after) q.and(`(${d}, b.congress, b.bill_type, b.number) < (${q.v(after[0])}, ${q.v(after[1])}, ${q.v(after[2])}, ${q.v(after[3])})`);
+  if (after && dist) q.and(`(${dist}, b.congress, b.bill_type, b.number) > (${q.v(after[0])}::float8, ${q.v(after[1])}, ${q.v(after[2])}, ${q.v(after[3])})`);
+  else if (after) q.and(`(${d}, b.congress, b.bill_type, b.number) < (${q.v(after[0])}, ${q.v(after[1])}, ${q.v(after[2])}, ${q.v(after[3])})`);
   const { rows } = await db.query(
     `SELECT b.congress, b.bill_type, b.number, b.title, b.origin_chamber, b.introduced::text AS introduced, b.latest_action_date::text AS action_date,
-            b.latest_action, b.updated_at, b.url, ${d} AS sort_day
-       FROM congress_bills b ${q.clause} ORDER BY ${d} DESC, b.congress DESC, b.bill_type DESC, b.number DESC LIMIT ${q.v(f.limit + 1)}`, q.params);
-  const pg = page(rows, f.limit, (r) => [r.sort_day, r.congress, r.bill_type, r.number]);
+            b.latest_action, b.updated_at, b.url, ${d} AS sort_day${dist ? `, ${dist} AS dist` : ""}
+       FROM congress_bills b ${q.clause}
+      ORDER BY ${dist ? `${dist}, b.congress, b.bill_type, b.number` : `${d} DESC, b.congress DESC, b.bill_type DESC, b.number DESC`} LIMIT ${q.v(f.limit + 1)}`, q.params);
+  const pg = page(rows, f.limit, (r) => [dist ? r.dist : r.sort_day, r.congress, r.bill_type, r.number]);
   return {
     filters: f, ...pg,
     results: pg.results.map((r) => ({
       id: `${r.congress}-${r.bill_type}-${r.number}`, congress: r.congress, bill_type: r.bill_type, number: r.number, title: r.title,
       chamber: r.origin_chamber, introduced: r.introduced, latest_action: { date: r.action_date, text: r.latest_action },
       updated_at: r.updated_at instanceof Date ? r.updated_at.toISOString() : r.updated_at, url: r.url,
+      ...(dist ? { similarity: sim(r.dist) } : {}),
     })),
-    notes: ["Bills and resolutions of the current (119th) Congress from Congress.gov. Refreshed by hand for now (a daily schedule is planned), so check the newest latest_action date. Search covers the title and latest action. Committees, sponsors and bill text are not loaded yet.", POLICY_NOTE],
+    notes: ["Bills and resolutions of the current (119th) Congress from Congress.gov, refreshed daily. Search covers the title and latest action. Committees, sponsors and bill text are not loaded yet.", POLICY_NOTE, ...(dist ? [SEMANTIC_NOTE] : [])],
   };
 }
 
@@ -480,56 +497,62 @@ export const FR_TYPES = ["Rule", "Proposed Rule", "Notice", "Presidential Docume
 export async function apiFederalRegister(p: In) {
   const f = {
     q: text(p, "q"), type: oneOf(p, "type", FR_TYPES), agency: text(p, "agency", 100), date_from: day(p, "date_from"), date_to: day(p, "date_to"),
-    funding_only: bool(p, "funding_only") === true, significant: bool(p, "significant"), limit: pageSize(p, 50, 500),
+    funding_only: bool(p, "funding_only") === true, significant: bool(p, "significant"), semantic: bool(p, "semantic") === true, limit: pageSize(p, 50, 500),
   };
-  const after = cursor(p, ["s", "s"]);
   const q = new Sql();
-  if (f.q) tsq(q, "d.search", f.q);
+  const dist = await semantic(p, q, "d", f.q);
+  const after = cursor(p, dist ? ["n", "s"] : ["s", "s"]);
+  if (f.q && !dist) tsq(q, "d.search", f.q);
   if (f.type) q.and(`d.type = ${q.v(f.type)}`);
   if (f.agency) q.and(`EXISTS (SELECT 1 FROM unnest(d.agencies) a WHERE a ILIKE ${q.v(`%${f.agency}%`)})`);
   if (f.date_from) q.and(`d.publication_date >= ${q.v(f.date_from)}::date`);
   if (f.date_to) q.and(`d.publication_date <= ${q.v(f.date_to)}::date`);
   if (f.funding_only) q.and("d.funding_notice");
   if (f.significant != null) q.and(`coalesce(d.significant, false) = ${q.v(f.significant)}`);
-  if (after) q.and(`(d.publication_date::text, d.document_number) < (${q.v(after[0])}, ${q.v(after[1])})`);
+  if (after && dist) q.and(`(${dist}, d.document_number) > (${q.v(after[0])}::float8, ${q.v(after[1])})`);
+  else if (after) q.and(`(d.publication_date::text, d.document_number) < (${q.v(after[0])}, ${q.v(after[1])})`);
   const { rows } = await db.query(
-    `SELECT d.document_number, d.title, d.type, d.abstract, d.agencies, d.action, d.publication_date::text AS published, d.significant, d.funding_notice, d.html_url
-       FROM federal_register_docs d ${q.clause} ORDER BY d.publication_date DESC, d.document_number DESC LIMIT ${q.v(f.limit + 1)}`, q.params);
-  const pg = page(rows, f.limit, (r) => [r.published, r.document_number]);
+    `SELECT d.document_number, d.title, d.type, d.abstract, d.agencies, d.action, d.publication_date::text AS published, d.significant, d.funding_notice, d.html_url${dist ? `, ${dist} AS dist` : ""}
+       FROM federal_register_docs d ${q.clause}
+      ORDER BY ${dist ? `${dist}, d.document_number` : "d.publication_date DESC, d.document_number DESC"} LIMIT ${q.v(f.limit + 1)}`, q.params);
+  const pg = page(rows, f.limit, (r) => [dist ? r.dist : r.published, r.document_number]);
   return {
     filters: f, ...pg,
     results: pg.results.map((r) => ({
       document_number: r.document_number, title: r.title, type: r.type, action: r.action, abstract: r.abstract, agencies: r.agencies ?? [],
       published: r.published, significant: r.significant, funding_notice: r.funding_notice, url: r.html_url,
+      ...(dist ? { similarity: sim(r.dist) } : {}),
     })),
-    notes: ["Federal Register documents (rules, proposed rules, notices, presidential documents) from federalregister.gov, from October 2025 on. Refreshed by hand for now (a daily schedule is planned), so check the newest published date. funding_notice marks notices of funding opportunity, found by wording. Search covers title and abstract.", POLICY_NOTE],
+    notes: ["Federal Register documents (rules, proposed rules, notices, presidential documents) from federalregister.gov, from October 2025 on, refreshed daily. funding_notice marks notices of funding opportunity, found by wording. Search covers title and abstract.", POLICY_NOTE, ...(dist ? [SEMANTIC_NOTE] : [])],
   };
 }
 
 export const NEWS_TOPICS = ["nonprofit", "philanthropy", "foundation grants", "donations", "nonprofit cuts", "giving"] as const;
 export async function apiNews(p: In) {
-  const f = { q: text(p, "q"), topic: oneOf(p, "topic", NEWS_TOPICS), outlet: text(p, "outlet", 100) ?? text(p, "domain", 100), country: text(p, "country", 50), date_from: day(p, "date_from"), date_to: day(p, "date_to"), limit: pageSize(p, 50, 500) };
-  const after = cursor(p, ["s", "s"]);
+  const f = { q: text(p, "q"), topic: oneOf(p, "topic", NEWS_TOPICS), outlet: text(p, "outlet", 100) ?? text(p, "domain", 100), country: text(p, "country", 50), date_from: day(p, "date_from"), date_to: day(p, "date_to"), semantic: bool(p, "semantic") === true, limit: pageSize(p, 50, 500) };
   const q = new Sql();
-  if (f.q) tsq(q, "n.search", f.q);
+  const dist = await semantic(p, q, "n", f.q);
+  const after = cursor(p, dist ? ["n", "s"] : ["s", "s"]);
+  if (f.q && !dist) tsq(q, "n.search", f.q);
   if (f.topic) q.and(`n.queries @> ARRAY[${q.v(f.topic)}]::text[]`);
   if (f.outlet) q.and(`n.domain ILIKE ${q.v(`%${f.outlet}%`)}`);
   if (f.country) q.and(`n.source_country ILIKE ${q.v(f.country)}`);
   if (f.date_from) q.and(`n.seen_at >= ${q.v(f.date_from)}::date`);
   if (f.date_to) q.and(`n.seen_at < ${q.v(f.date_to)}::date + 1`);
-  if (after) q.and(`(n.seen_at, n.url) < (${q.v(after[0])}::timestamptz, ${q.v(after[1])})`);
+  if (after && dist) q.and(`(${dist}, n.url) > (${q.v(after[0])}::float8, ${q.v(after[1])})`);
+  else if (after) q.and(`(n.seen_at, n.url) < (${q.v(after[0])}::timestamptz, ${q.v(after[1])})`);
   const { rows } = await db.query(
-    `SELECT n.url, n.title, n.seen_at, n.domain, n.source_country, n.language, n.queries
-       FROM news_articles n ${q.clause} ORDER BY n.seen_at DESC, n.url DESC LIMIT ${q.v(f.limit + 1)}`, q.params);
+    `SELECT n.url, n.title, n.seen_at, n.domain, n.source_country, n.language, n.queries${dist ? `, ${dist} AS dist` : ""}
+       FROM news_articles n ${q.clause} ORDER BY ${dist ? `${dist}, n.url` : "n.seen_at DESC, n.url DESC"} LIMIT ${q.v(f.limit + 1)}`, q.params);
   const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : String(d));
-  const pg = page(rows, f.limit, (r) => [iso(r.seen_at), r.url]);
+  const pg = page(rows, f.limit, (r) => [dist ? r.dist : iso(r.seen_at), r.url]);
   return {
     filters: f, ...pg,
-    results: pg.results.map((r) => ({ title: r.title, url: r.url, seen_at: iso(r.seen_at), domain: r.domain, country: r.source_country, language: r.language, topics: r.queries })),
+    results: pg.results.map((r) => ({ title: r.title, url: r.url, seen_at: iso(r.seen_at), domain: r.domain, country: r.source_country, language: r.language, topics: r.queries, ...(dist ? { similarity: sim(r.dist) } : {}) })),
     notes: [
       "News about philanthropy and the nonprofit sector from GDELT (headlines and links only, no article text). topic is one of: nonprofit, philanthropy, foundation grants, donations, nonprofit cuts, giving. Search covers the headline.",
-      "Two GDELT feeds: its search API (up to 250 headlines per topic per day, matched on full text) and, for days the API rate-limited, its raw crawl files sampled hourly (headline must match the topic, so fewer per day). From June 2026 on. Refreshed by hand for now (a daily schedule is planned), so check the newest seen_at.",
-      POLICY_NOTE,
+      "Two GDELT feeds: its search API (up to 250 headlines per topic per day, matched on full text) and its raw crawl files (headline must match the topic, so fewer per day). From June 2026 on, refreshed daily.",
+      POLICY_NOTE, ...(dist ? [SEMANTIC_NOTE] : []),
     ],
   };
 }
@@ -538,7 +561,7 @@ export async function apiNews(p: In) {
 export async function apiPolicy(p: In) {
   const which = oneOf(p, "source", ["all", "bills", "federal_register", "news"] as const) ?? "all";
   const lim = String(int(p, "limit", 1, 50) ?? 10);
-  const common = { q: p.q, limit: lim };
+  const common = { q: p.q, semantic: p.semantic, limit: lim };
   const [bills, fr, news] = await Promise.all([
     which === "all" || which === "bills" ? apiBills({ ...common, action_from: p.date_from, action_to: p.date_to }) : null,
     which === "all" || which === "federal_register" ? apiFederalRegister({ ...common, agency: p.agency, type: p.type, date_from: p.date_from, date_to: p.date_to, funding_only: p.funding_only }) : null,

@@ -101,11 +101,13 @@ get("/api/v1/household-giving", level="county", state="WV", year_from=2018, year
 curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/congress/bills?q=%22charitable+deduction%22"
 curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/federal-register?funding_only=true&agency=Education"
 curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/news?topic=nonprofit+cuts&date_from=2026-09-01"
+curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/federal-register?q=rural+food+access&semantic=true"
 ```
 ```python
 get("/api/v1/congress/bills", q='"charitable deduction"')
 get("/api/v1/federal-register", funding_only="true", agency="Education")
 get("/api/v1/news", topic="nonprofit cuts", date_from="2026-09-01")
+get("/api/v1/federal-register", q="rural food access", semantic="true")  # by meaning, closest first
 ```
 
 **Also:** `/api/v1/search?q=…` (find orgs in plain words), `/api/v1/org/{ein}` (full profile, with `tax_status`), `/api/v1/orgs/{ein}/status` (IRS Pub 78 eligibility for tax-deductible gifts and automatic revocation, with foundation grants after a revocation), `/api/v1/labels` and `/api/v1/labels/{label}/orgs` (cause labels with grades), `/api/v1/research` (verified findings), `/api/v1/answer?spec=…` (aggregate answers).
@@ -209,8 +211,8 @@ print(resp.output_text)
 - **Individuals:** grants to individuals keep amount and place but withhold the person's name and ZIP.
 - **Tax status:** IRS Pub 78 and the automatic revocation list, files of Oct 13 2026 (`file_date` on each answer). Not on Pub 78 is a prompt to check, not proof: churches and orgs under a group exemption can be eligible without a listing. The revocation file often lacks reinstatement dates, so `status` is `conflict` (not `revoked`) when the org is on Pub 78 or has a newer IRS ruling date.
 - **Cause labels** are model-graded. `/api/v1/labels` gives precision and recall estimates per label.
-- **Policy and news:** keyword search only, no EIN links. Bills: current Congress. Federal Register: from Oct 2025. News: GDELT headlines from late June 2026, tagged by topic. Recent days come from GDELT's search API (up to 250 per topic per day), older ones from its raw crawl files sampled hourly (headline must match, so fewer per day). Headlines and links only.
-- **Refresh schedule:** IRS data loads as the IRS releases it (a monthly refresh is planned). Bills, Federal Register and news are refreshed by hand for now (a daily schedule is planned). Check the newest date in each response.
+- **Policy and news:** keyword search by default, or by meaning with `semantic=true` (closest first, each row with `similarity`; later pages drift off topic). No EIN links. Bills: current Congress. Federal Register: from Oct 2025. News: GDELT headlines from late June 2026, tagged by topic. Recent days come from GDELT's search API (up to 250 per topic per day), older ones from its raw crawl files sampled hourly (headline must match, so fewer per day). Headlines and links only.
+- **Refresh schedule:** IRS data loads as the IRS releases it (a monthly refresh is planned). Bills, Federal Register and news are refreshed daily at 6 am Pacific. Check the newest date in each response.
 
 ## 7. Requests and help
 

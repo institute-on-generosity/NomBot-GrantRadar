@@ -228,6 +228,28 @@ try {
     check(b.results.length > 0, "news: q finds headlines");
   }
 
+  // semantic=true (generosity-data 064): ranked by meaning, closest first, filters still hold, distance cursor pages on
+  check((await get("/api/v1/news?semantic=true")).status === 400, "semantic: no q -> 400");
+  const [sv] = await sql("SELECT (SELECT count(*) FROM news_articles WHERE embedding_model IS NOT NULL)::int AS n, (SELECT count(*) FROM congress_bills WHERE embedding_model IS NOT NULL)::int AS b, (SELECT count(*) FROM federal_register_docs WHERE embedding_model IS NOT NULL)::int AS f");
+  const desc = (r: J[]) => r.every((x: J, i: number) => typeof x.similarity === "number" && (i === 0 || x.similarity <= r[i - 1].similarity));
+  if (sv.n > 0) {
+    const sn1 = await ok("/api/v1/news?q=rural+food+access&semantic=true&limit=5", "news semantic");
+    isList(sn1, "news semantic");
+    check(sn1.results.length === Math.min(5, sv.n) && desc(sn1.results), "news semantic: closest first, with similarity");
+    if (sn1.next_cursor) {
+      const sn2 = await ok(`/api/v1/news?q=rural+food+access&semantic=true&limit=5&cursor=${sn1.next_cursor}`);
+      check(sn2.results.length > 0 && sn2.results[0].similarity <= sn1.results[4].similarity && !sn2.results.some((a: J) => sn1.results.some((x: J) => x.url === a.url)), "news semantic: page 2 continues, no overlap");
+    }
+  }
+  if (sv.b > 0) {
+    const sb = await ok("/api/v1/congress/bills?q=charitable+deduction+changes&semantic=true&bill_type=hr&limit=5", "bills semantic");
+    check(sb.results.length > 0 && desc(sb.results) && sb.results.every((x: J) => x.bill_type === "hr"), "bills semantic: filters hold, closest first");
+  }
+  if (sv.f > 0) {
+    const sf = await ok("/api/v1/federal-register?q=disaster+relief+nonprofits&semantic=true&type=Notice&limit=5", "federal-register semantic");
+    check(sf.results.length > 0 && desc(sf.results) && sf.results.every((x: J) => x.type === "Notice"), "federal-register semantic: filters hold, closest first");
+  }
+
   // ---------- rate headers ----------
   const rh = await get("/api/v1/labels");
   check(rh.headers.get("x-ratelimit-limit") === "1000" && rh.headers.has("x-ratelimit-remaining"), "rate-limit headers");
@@ -274,6 +296,8 @@ try {
   check(!m.isError && m.json.results.length === lo.n, "MCP list_cause_labels: orgs vs SQL");
   m = await call("search_policy", { q: "charitable", limit: 3 });
   check(!m.isError && m.json.bills.results.length === 3 && Array.isArray(m.json.federal_register.results) && Array.isArray(m.json.news.results), "MCP search_policy: all three sources");
+  m = await call("search_policy", { q: "AI in schools", semantic: true, source: "bills", limit: 3 });
+  check(!m.isError && m.json.bills.results.every((x: J) => typeof x.similarity === "number"), "MCP search_policy: semantic ranks with similarity");
   m = await call("search_grants", { funder_ein: "12" });
   check(m.isError, "MCP search_grants: bad EIN is a tool error");
   m = await call("get_finances", { ein: "000000001" });

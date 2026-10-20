@@ -203,9 +203,10 @@ function server(auth: Auth, base: string, outcome: CallOutcome) {
 
   s.registerTool("search_policy", {
     title: "Search policy and news",
-    description: "Keyword search over current-Congress bills (Congress.gov), Federal Register documents (last 12 months) and sector news headlines (GDELT), newest first. No EIN links.",
+    description: "Search current-Congress bills (Congress.gov), Federal Register documents (from October 2025) and sector news headlines (GDELT), refreshed daily. Keyword search, newest first, by default; semantic=true ranks by meaning instead (closest first, with similarity), better for plain-language topics like 'rural food access'. No EIN links.",
     inputSchema: {
-      q: z.string().max(200).optional().describe("Keywords; quotes for phrases, -word to exclude"),
+      q: z.string().max(200).optional().describe("Keywords (quotes for phrases, -word to exclude), or a topic in plain words with semantic=true"),
+      semantic: z.boolean().optional().describe("Rank by meaning instead of keyword match and date. Needs q. Default false"),
       source: z.enum(["all", "bills", "federal_register", "news"]).optional().describe("Default 'all'"),
       agency: z.string().max(100).optional().describe("Federal Register agency name contains this"),
       type: z.enum(FR_TYPES).optional().describe("Federal Register document type"),

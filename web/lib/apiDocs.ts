@@ -348,7 +348,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "bills", method: "GET", path: "/api/v1/congress/bills", title: "Search bills in Congress", mcpTool: "search_policy",
-    summary: "Bills and resolutions of the current (119th) Congress from Congress.gov, latest action first. Refreshed by hand for now (a daily schedule is planned). Keyword search over the title and latest action. Committees, sponsors and bill text are not loaded yet, and bills carry no EIN links.",
+    summary: "Bills and resolutions of the current (119th) Congress from Congress.gov, latest action first, refreshed daily. Keyword search over the title and latest action, or search by meaning with semantic=true. Committees, sponsors and bill text are not loaded yet, and bills carry no EIN links.",
     params: [
       { name: "q", in: "query", type: "string", example: "\"charitable deduction\"", desc: "Keywords. Quotes for a phrase, -word to exclude." },
       { name: "congress", in: "query", type: "integer", example: "119", desc: "Congress number." },
@@ -358,12 +358,13 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "introduced_to", in: "query", type: "string", example: "2026-12-31", desc: "Introduced on or before." },
       { name: "action_from", in: "query", type: "string", example: "2026-09-01", desc: "Latest action on or after." },
       { name: "action_to", in: "query", type: "string", example: "2026-10-15", desc: "Latest action on or before." },
+      { name: "semantic", in: "query", type: "boolean", example: "true", desc: "Rank by meaning instead of keyword and date: closest first, each row with similarity. Needs q. Use plain words, e.g. rural food access." },
       { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
       { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/congress/bills?q=%22charitable+deduction%22&limit=1"`,
     example: {
-      filters: { q: "\"charitable deduction\"", congress: null, bill_type: null, chamber: null, introduced_from: null, introduced_to: null, action_from: null, action_to: null, limit: 1 },
+      filters: { q: "\"charitable deduction\"", congress: null, bill_type: null, chamber: null, introduced_from: null, introduced_to: null, action_from: null, action_to: null, semantic: false, limit: 1 },
       results: [{
         id: "119-hr-9173", congress: 119, bill_type: "hr", number: 9173, title: "Charitable Deductions for Digital Asset Donations Act", chamber: "House",
         introduced: "2026-06-08", latest_action: { date: "2026-06-08", text: "Referred to the House Committee on Ways and Means." },
@@ -374,7 +375,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "federal-register", method: "GET", path: "/api/v1/federal-register", title: "Search the Federal Register", mcpTool: "search_policy",
-    summary: "Federal Register documents from October 2025 on (rules, proposed rules, notices, presidential documents), newest first. Refreshed by hand for now (a daily schedule is planned). Keyword search over title and abstract. funding_only keeps notices of funding opportunity.",
+    summary: "Federal Register documents from October 2025 on (rules, proposed rules, notices, presidential documents), newest first, refreshed daily. Keyword search over title and abstract, or search by meaning with semantic=true. funding_only keeps notices of funding opportunity.",
     params: [
       { name: "q", in: "query", type: "string", example: "nonprofit", desc: "Keywords. Quotes for a phrase, -word to exclude." },
       { name: "type", in: "query", type: "string", example: "Notice", desc: "Rule, Proposed Rule, Notice or Presidential Document." },
@@ -383,12 +384,13 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "date_to", in: "query", type: "string", example: "2026-10-14", desc: "Published on or before." },
       { name: "funding_only", in: "query", type: "boolean", example: "true", desc: "Only notices of funding opportunity." },
       { name: "significant", in: "query", type: "boolean", example: "true", desc: "Only (or, with false, no) significant rules under EO 12866." },
+      { name: "semantic", in: "query", type: "boolean", example: "true", desc: "Rank by meaning instead of keyword and date: closest first, each row with similarity. Needs q. Use plain words, e.g. rural food access." },
       { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
       { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/federal-register?funding_only=true&agency=Education&limit=1"`,
     example: {
-      filters: { q: null, type: null, agency: "Education", date_from: null, date_to: null, funding_only: true, significant: null, limit: 1 },
+      filters: { q: null, type: null, agency: "Education", date_from: null, date_to: null, funding_only: true, significant: null, semantic: false, limit: 1 },
       results: [{
         document_number: "2026-19240", title: "Notice Announcing Impact Aid Discretionary Construction Grant Program Competition", type: "Notice", action: "Notice.",
         abstract: "The Employment and Training Administration at the U.S. Department of Labor (DOL) is soliciting applications ...", agencies: ["Education Department"],
@@ -400,7 +402,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "news", method: "GET", path: "/api/v1/news", title: "Search sector news", mcpTool: "search_policy",
-    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed by hand for now (a daily schedule is planned): check the newest seen_at.",
+    summary: "Headlines and links about philanthropy and the nonprofit sector from GDELT, newest first, tagged with the topic searches that found them. No article text. From June 2026 on, from GDELT's search API (up to 250 per topic per day) plus its raw crawl files for days the API rate-limited (fewer per day). Refreshed daily. Keyword search over the headline, or search by meaning with semantic=true.",
     params: [
       { name: "q", in: "query", type: "string", example: "layoffs", desc: "Keywords in the headline." },
       { name: "topic", in: "query", type: "string", example: "nonprofit cuts", desc: "nonprofit, philanthropy, foundation grants, donations, nonprofit cuts or giving." },
@@ -408,12 +410,13 @@ export const ENDPOINTS: Endpoint[] = [
       { name: "country", in: "query", type: "string", example: "United States", desc: "Source country." },
       { name: "date_from", in: "query", type: "string", example: "2026-10-01", desc: "Seen on or after, YYYY-MM-DD." },
       { name: "date_to", in: "query", type: "string", example: "2026-10-19", desc: "Seen on or before." },
+      { name: "semantic", in: "query", type: "boolean", example: "true", desc: "Rank by meaning instead of keyword and date: closest first, each row with similarity. Needs q. Use plain words, e.g. rural food access." },
       { name: "limit", in: "query", type: "integer", example: "50", desc: "Rows per page, 1 to 500. Default 50." },
       { name: "cursor", in: "query", type: "string", desc: "next_cursor from the previous page." },
     ],
     curl: `curl -H "Authorization: Bearer $NOMBOT_KEY" "$NOMBOT/api/v1/news?topic=nonprofit+cuts&limit=20"`,
     example: {
-      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, limit: 20 },
+      filters: { q: null, topic: "nonprofit cuts", outlet: null, country: null, date_from: null, date_to: null, semantic: false, limit: 20 },
       results: [], count: 0, has_more: false, next_cursor: null,
       notes: ["News about philanthropy and the nonprofit sector from GDELT ...", "Two GDELT feeds: its search API ... and its raw crawl files ..."],
     },
@@ -502,7 +505,7 @@ export const MCP_TOOLS = [
   { name: "get_finances", desc: "Both finance endpoints in one: { org, foundation } for an ein. kind: org, foundation or both (default)." },
   { name: "get_household_giving", desc: "Same as GET /api/v1/household-giving. Arguments: level, state, county, zip, year_from, year_to, by_agi, limit, cursor." },
   { name: "list_cause_labels", desc: "GET /api/v1/labels with no label, GET /api/v1/labels/{label}/orgs with one. Arguments: label, tier, state, ntee, limit, cursor." },
-  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, source, agency, type, funding_only, topic, outlet, date_from, date_to, limit." },
+  { name: "search_policy", desc: "Bills, Federal Register and news in one call, up to limit of each (default 10). Arguments: q, semantic (rank by meaning), source, agency, type, funding_only, topic, outlet, date_from, date_to, limit." },
   { name: "search_iog_guides", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. Same as GET /api/v1/iog/search. Arguments: q, guide, limit." },
   { name: "get_iog_guide", desc: "IoG internal (scope iog_internal): listed only for keys with that scope. No slug: GET /api/v1/iog/guides. With slug: GET /api/v1/iog/guides/{slug}." },
 ];
