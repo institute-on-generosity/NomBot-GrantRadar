@@ -612,7 +612,24 @@ function flagYear(s: Spec): { year: number; note: string | null } {
   const year = Math.min(Math.max(want, F_FIRST), F_LAST);
   return { year, note: want !== year ? `Form 990 revenue lines here cover tax years ${F_FIRST}–${F_LAST}; showing ${year}.` : year === F_LAST ? `${F_LAST} returns are still arriving, so ${F_LAST} is incomplete.` : null };
 }
-const yearLabel = (y: number) => (y > G_FULL ? `${y} (partial)` : String(y));
+// "(partial)" chart labels follow the same filings rule as the recency note (partialYears), loaded at the start of
+// every answer (loadFullYears). The constants are only the fallback when that query fails.
+const FULL: Record<"pf" | "charity" | "f990", number> = { pf: G_FULL, charity: G_FULL, f990: F_FULL };
+const PARTIAL_SHARE_OF: Record<"pf" | "charity" | "f990", Map<number, number>> = { pf: new Map(), charity: new Map(), f990: new Map() };
+async function loadFullYears() {
+  await Promise.all((["pf", "charity", "f990"] as const).map(async (k) => {
+    const r = await partialYears(k);
+    FULL[k] = r.latestFull;
+    PARTIAL_SHARE_OF[k] = new Map(r.partial.map((x) => [x.year, x.share]));
+  }));
+}
+const yearLabel = (y: number, kind: "pf" | "charity" | "f990" = "pf") => (y > FULL[kind] ? `${y} (partial)` : String(y));
+// A trend whose last year is partial headlines the change to the newest full year and names the partial year
+// on its own line (Oct 21: "fell 42% from 2023 to 2025" compared against a year a third filed).
+function partialEnd(kind: "pf" | "charity" | "f990", to: number): { year: number; share: number } | null {
+  return to > FULL[kind] ? { year: to, share: PARTIAL_SHARE_OF[kind].get(to) ?? 0 } : null;
+}
+const partialLine = (pe: { year: number; share: number }, full: number) => `${pe.year} is partial${pe.share ? ` (${pct(pe.share)} of returns in)` : ""}, so the comparison ends at ${full}`;
 
 // ------------------------------------------------------------------ data recency (Joshua Elder, Oct 19)
 // Every answer on 990 or grant data says which filing years it covers, and that the newest are incomplete:
@@ -902,7 +919,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v40: corrected NTEE footnote splits orgs added with no IRS code (uncoded_vote_llm) from orgs moved.
 // v41: animal_welfare label (graded g2), headlined on primary + partial (ALL_TIERS), with its caveat (LABEL_CAVEAT).
 // v42: data recency note (recencyOf): the filing years covered, partial years read from filings per tax year.
-const answerMemo = memo<Answer>("answer:v42", 500, 6 * 3600_000);
+// v43: trend headlines end at the newest full year (partialEnd), "(partial)" labels from filings per tax year (loadFullYears).
+const answerMemo = memo<Answer>("answer:v43", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -938,6 +956,7 @@ async function compute(question: string, asked: Spec, cube: boolean): Promise<An
   const t0 = Date.now();
   const { spec: s, narrowed } = closestLabel(asked);
   const ctx = new Ctx(cube);
+  await loadFullYears().catch((e) => console.error("answer full years failed", e));
   const missing = [...new Set(s.missing)].map((m) => m === "other" ? { what: s.missingNote || "Part of the question", why: "It isn't in IRS nonprofit filings.", source: "Not in our data", url: "" } : MISSING_TEXT[m]).filter(Boolean);
   let out: Out;
   try {
@@ -1444,7 +1463,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
 
   if (!causes[0]) {
     // All foundation money in a place.
-    const vals = den.years.map((r) => ({ year: yearLabel(r.year!), usd: r.usd, real: inf ? realOf(inf, r.usd, r.year!) : null }));
+    const vals = den.years.map((r) => ({ year: yearLabel(r.year!, pl.g.kind), usd: r.usd, real: inf ? realOf(inf, r.usd, r.year!) : null }));
     const u = unit(Math.max(...vals.map((v) => Math.max(v.usd, v.real ?? 0)), 1));
     const fullSum = den.years.filter((r) => r.year! <= G_FULL).reduce((a, r) => a + r.usd, 0);
     const first = den.years.find((r) => r.year === y.full[0]), last = den.years.find((r) => r.year === y.full.at(-1));
@@ -1491,9 +1510,9 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       const d = den.years.find((x) => x.year === r.year);
       rowsOut.push({ cause: c!.name, tax_year: r.year, usd: r.usd, primary_usd: label[i] ? r.primary_usd : null, ...(inf && s.metric === "trend" ? { [`${label[i] ? "primary_usd" : "usd"}_in_${inf.base}_dollars`]: Math.round(realOf(inf, label[i] ? r.primary_usd : r.usd, r.year!)) } : {}), recipients: r.orgs, funders: r.funders, share_of_linked: d ? r.usd / d.linked_usd : null });
       if (causes.length === 1 && label[i]) {
-        series.push({ year: yearLabel(r.year!), tier: "Main purpose (primary)", usd: r.primary_usd });
-        series.push({ year: yearLabel(r.year!), tier: "One program among others (partial)", usd: r.usd - r.primary_usd });
-      } else series.push({ year: yearLabel(r.year!), tier: c!.name, usd: label[i] ? r.primary_usd : r.usd });
+        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "Main purpose (primary)", usd: r.primary_usd });
+        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "One program among others (partial)", usd: r.usd - r.primary_usd });
+      } else series.push({ year: yearLabel(r.year!, pl.g.kind), tier: c!.name, usd: label[i] ? r.primary_usd : r.usd });
     }
   });
   const u = unit(Math.max(...series.map((v) => Number(v.usd)), 1));
@@ -1681,7 +1700,7 @@ WHERE ${and([...gw.where, ...(by === "county" ? ["g.county_fips IS NOT NULL"] : 
       case "funder_size": return F_NAMES[Number(k) - 1] ?? k;
       case "funder_type": return cap(FTYPE_NAME[k] ?? k);
       case "recipient_kind": return cap(KIND_NAME[k] ?? k);
-      case "year": return yearLabel(Number(k));
+      case "year": return yearLabel(Number(k), pl.g.kind);
       case "charity_funder": return CLASS_NAME[k]?.[0] ?? k;
       default: return k;
     }
@@ -1785,28 +1804,37 @@ async function flagTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const p = new P();
     const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const where = [`f.tax_year BETWEEN ${p.add(from)} AND ${p.add(to)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
+    // The panel is orgs filing every full year, so a partial last year (returns still arriving) doesn't shrink it to early filers.
+    const panelTo = to > FULL.f990 && FULL.f990 > from ? FULL.f990 : to;
     const rows = await ctx.q<{ year: number; usd: number; orgs: number }>(`Same organizations each year: ${fd.short}`, `WITH s AS (
   SELECT f.ein, f.tax_year, coalesce(${fd.col}, 0) AS v FROM flag_year f ${cs.join} WHERE ${and(where)}),
-panel AS (SELECT ein FROM s GROUP BY ein HAVING count(*) = ${p.add(to - from + 1)})
+panel AS (SELECT ein FROM s GROUP BY ein HAVING count(*) FILTER (WHERE s.tax_year <= ${p.add(panelTo)}) = ${p.add(panelTo - from + 1)})
 SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s JOIN panel USING (ein) GROUP BY 1 ORDER BY 1`, p);
     const note = await causeNote(c, cs, caveats);
-    caveats.push("Trend uses only organizations with a filing in every year shown, so new and late filers don't distort it.");
-    const a = rows[0], z = rows.at(-1);
+    caveats.push(panelTo < to ? `Trend uses only organizations with a filing in every full year (${from} to ${panelTo}), so new and late filers don't distort it. ${to} counts those of them that have filed so far.` : "Trend uses only organizations with a filing in every year shown, so new and late filers don't distort it.");
+    const a = rows[0], zLast = rows.at(-1);
+    // Headline end: the newest full year (a partial last year is named separately).
+    const pe = zLast ? partialEnd("f990", zLast.year) : null;
+    const zFull = pe ? [...rows].reverse().find((r) => r.year <= FULL.f990 && r.year > (a?.year ?? 0)) : undefined;
+    const z = pe && zFull ? zFull : zLast;
+    const end = z?.year ?? to;
     const g = a && z && a !== z && a.usd ? z.usd / a.usd - 1 : null;
     const inf = rows.length ? await inflation(ctx, rows.map((r) => r.year)) : null;
     const realG = a && z ? realGrowth(inf, g, a.year, z.year) : null;
+    const peLines = pe && zLast && z !== zLast ? [partialLine(pe, end), `${b(int(zLast.orgs))} of them have filed for ${pe.year} so far: ${b(money(zLast.usd))}`]
+      : pe ? [`${pe.year} is partial${pe.share ? ` (${pct(pe.share)} of returns in)` : ""}, so this may move as late returns arrive`] : [];
     const u = unit(Math.max(...rows.map((r) => Math.max(r.usd, inf ? realOf(inf, r.usd, r.year) : 0)), 1));
-    const bars = vbar(rows.map((r) => ({ year: String(r.year), amount: +(r.usd / u.div).toFixed(3), amount_nom: +(r.usd / u.div).toFixed(3), amount_real: inf ? +(realOf(inf, r.usd, r.year) / u.div).toFixed(3) : null })), "year", "amount", "Tax year", u.title, u.fmt);
+    const bars = vbar(rows.map((r) => ({ year: yearLabel(r.year, "f990"), amount: +(r.usd / u.div).toFixed(3), amount_nom: +(r.usd / u.div).toFixed(3), amount_real: inf ? +(realOf(inf, r.usd, r.year) / u.div).toFixed(3) : null })), "year", "amount", "Tax year", u.title, u.fmt);
     return {
-      headline: g == null ? `Not enough organizations filed in every year to show a trend` : `${fd.short[0].toUpperCase() + fd.short.slice(1)} to ${causeName(c, pl)} ${grewText(g, realG, "rose")} from ${from} to ${to} (same ${int(a.orgs)} orgs)`,
-      numbers: [...(g != null ? [{ value: signed(g), label: `${from} to ${to}` }] : []), ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []), ...(z ? [{ value: money(z.usd), label: `${fd.short}, ${z.year}` }] : []), { value: int(a?.orgs ?? 0), label: "orgs filing every year" }],
-      bullets: [g != null ? `${b(signed(g))} in ${fd.short} from ${from} to ${to}` : "Too few filings to compare years", `${b(int(a?.orgs ?? 0))} organizations filed a return for every year`],
+      headline: g == null ? `Not enough organizations filed in every year to show a trend` : `${fd.short[0].toUpperCase() + fd.short.slice(1)} to ${causeName(c, pl)} ${grewText(g, realG, "rose")} from ${from} to ${end}${end === zLast?.year && pe ? ` (partial)` : ""} (same ${int(a.orgs)} orgs)`,
+      numbers: [...(g != null ? [{ value: signed(g), label: `${from} to ${end}` }] : []), ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []), ...(z ? [{ value: money(z.usd), label: `${fd.short}, ${z.year}` }] : []), { value: int(a?.orgs ?? 0), label: "orgs filing every year" }],
+      bullets: [g != null ? `${b(signed(g))} in ${fd.short} from ${from} to ${end}` : "Too few filings to compare years", ...peLines, `${b(int(a?.orgs ?? 0))} organizations filed a return for every year`],
       chart: { title: `${fd.short} to ${causeName(c, pl)}, same organizations each year`, sub: u.title, spec: inf ? inflToggle(bars, "amount", inf) : bars },
       rows: rows.map((r) => ({ tax_year: r.year, usd: r.usd, ...(inf ? { [`usd_in_${inf.base}_dollars`]: Math.round(realOf(inf, r.usd, r.year)) } : {}), orgs: r.orgs })), causeNote: note, caveats,
       coverage: [{ label: "Orgs in every year", value: int(a?.orgs ?? 0) }],
       method: `Each organization's ${fd.name} for tax years ${from}–${to}, newest return per year, summed over organizations that filed for every year.${inf ? inflMethod(inf) : ""}`,
       sources: [SRC.f990, ...(inf ? [SRC_CPI] : [])], searchQuery: searchFor(s, pl),
-      ...(g != null ? { change: { subject: `${fd.short} to ${c ? causeName(c, pl) : "nonprofits"}`, g, from: String(from), to: String(to) } } : {}),
+      ...(g != null ? { change: { subject: `${fd.short} to ${c ? causeName(c, pl) : "nonprofits"}`, g, from: String(from), to: String(end) } } : {}),
     };
   }
 
@@ -3175,14 +3203,14 @@ ${key ? `GROUP BY GROUPING SETS ((f.tax_year), (f.tax_year, ${key}))` : "GROUP B
     "Medians, not averages: a foundation with little in investments can show a payout rate of 50% or more. The dollar-weighted rate (all qualifying distributions over all net investment assets) leans toward the largest foundations.",
     ...(pl.f.fb ? ["Foundation size = that year's market value of all assets (990-PF item I)."] : []),
     ...(pl.f.ftype && pl.f.ftype !== "operating" ? [pl.f.notes.find((n) => /family|company|trust/i.test(n)) ?? ""] : []).filter(Boolean),
-    ...(y1 > FF_FULL ? [`${y1} returns are still arriving, so ${y1} is incomplete.`] : []),
+    ...(y1 > FULL.pf ? [`${y1} returns are still arriving, so ${y1} is incomplete.`] : []),
     ...(pl.county || pl.region || pl.area ? ["Foundation finances are placed by state only."] : []),
   ];
   const coverage = [{ label: "Foundations", value: `${int(cur.n)} in ${y1}` }, { label: "Tax years", value: `${FF_FIRST}–${FF_LAST} (${FF_LAST} partial)` },
     ...(soi ? [{ label: "Vs IRS SOI 2022", value: `investment assets ${pct(soi.nia)}, qualifying distributions ${pct(soi.qd)}, grants paid ${pct(soi.gp)} of the SOI totals` }] : [])];
   const method = `Every e-filed 990-PF, one return per foundation per tax year (the newest filed, so amendments win), from IRS e-file XML. ${PAYOUT_DEF} Share at 5% or more = foundations whose payout rate is at least 5%. Met the distributable amount = qualifying distributions at least the Part X line 7 amount for the same year.`;
   const sources = [SRC_PF_FIN, SRC_SOI_PF];
-  const yr = (y: number) => (y > FF_FULL ? `${y} (partial)` : String(y));
+  const yr = (y: number) => yearLabel(y, "pf");
   const medOf = (r: PayRow) => r.med ?? 0;
   const rowOut = (r: PayRow) => ({ tax_year: r.y, ...(r.k != null ? { group: r.k } : {}), foundations: r.n, median_payout_rate: r.med != null ? +r.med.toFixed(4) : null, p25_payout_rate: r.p25 != null ? +r.p25.toFixed(4) : null, p75_payout_rate: r.p75 != null ? +r.p75.toFixed(4) : null,
     share_at_5pct_or_more: +(r.ge5 / Math.max(1, r.n)).toFixed(4), share_met_distributable_amount: +(r.meets / Math.max(1, r.da_n)).toFixed(4), dollar_weighted_payout_rate: +(r.qd / Math.max(1, r.nia)).toFixed(4),
@@ -3192,8 +3220,11 @@ ${key ? `GROUP BY GROUPING SETS ((f.tax_year), (f.tax_year, ${key}))` : "GROUP B
 
   if (by === "year") {
     const ys = [...tot.values()].sort((a, z) => a.y - z.y);
-    const a = ys[0], z = ys.at(-1)!;
-    if (a === z) throw new Unanswerable(`A payout trend needs two tax years between ${FF_FIRST} and ${FF_LAST}.`);
+    const a = ys[0], zLast = ys.at(-1)!;
+    if (a === zLast) throw new Unanswerable(`A payout trend needs two tax years between ${FF_FIRST} and ${FF_LAST}.`);
+    // Headline end: the newest full year. A partial last year is named on its own line.
+    const pe = partialEnd("pf", zLast.y);
+    const z = (pe && [...ys].reverse().find((r) => r.y <= FULL.pf && r.y > a.y)) || zLast;
     // Assets of every 990-PF filer (no investment-asset or operating screen), for "how much did assets grow".
     const pa = new P();
     const wa = [`f.tax_year BETWEEN ${pa.add(y0)} AND ${pa.add(y1)}`, ...base(pa).slice(op ? 0 : 1)];
@@ -3205,11 +3236,12 @@ FROM foundation_finance_year f WHERE ${and(wa)} GROUP BY 1 ORDER BY 1`, pa);
     const sameN = Math.abs(z.n / Math.max(1, a.n) - 1) < 0.1;
     return {
       ...common,
-      caveats: [...caveats, `Each year counts the foundations that filed for it (${int(a.n)} in ${a.y}, ${int(z.n)} in ${z.y}), not a fixed set.${z.y > FF_FULL ? ` ${z.y} is partial and leans to early filers.` : ""}`, ...(ag != null ? ["Asset totals are year-end market values, so they move with the stock market as much as with new gifts."] : [])],
+      caveats: [...caveats, `Each year counts the foundations that filed for it (${int(a.n)} in ${a.y}, ${int(zLast.n)} in ${zLast.y}), not a fixed set.${zLast.y > FULL.pf ? ` ${zLast.y} is partial and leans to early filers.` : ""}`, ...(ag != null ? ["Asset totals are year-end market values, so they move with the stock market as much as with new gifts."] : [])],
       headline: `The median ${whoOne}${inW} paid out ${pct(medOf(a))} of its investment assets in ${yr(a.y)} and ${pct(medOf(z))} in ${yr(z.y)}. ${pct(a.ge5 / Math.max(1, a.n))} paid out 5% or more in ${a.y}, ${pct(z.ge5 / Math.max(1, z.n))} in ${z.y}`,
       numbers: [{ value: pct(medOf(z)), label: `median payout rate, ${yr(z.y)}` }, { value: pct(z.ge5 / Math.max(1, z.n)), label: `paid out 5% or more, ${yr(z.y)}` },
         ...(ag != null && sameN ? [{ value: signed(ag), label: `assets ${a.y} to ${z.y} (${money(fz!.fmv)})` }] : [{ value: pct(z.qd / Math.max(1, z.nia)), label: `dollar-weighted payout, ${yr(z.y)}` }])],
       bullets: [`Dollar-weighted payout: ${b(pct(a.qd / Math.max(1, a.nia)))} in ${a.y}, ${b(pct(z.qd / Math.max(1, z.nia)))} in ${z.y}`,
+        ...(pe && z !== zLast ? [partialLine(pe, z.y), `Median payout in ${zLast.y} so far: ${b(pct(medOf(zLast)))}`] : []),
         ...(ag != null ? [`Assets of all filers: ${b(money(fa!.fmv))} in ${a.y}, ${b(money(fz!.fmv))} in ${z.y}`] : [])],
       chart: { title: `Foundation payout rate${inW}, by tax year`, sub: "Qualifying distributions as a share of net investment assets", spec: vbar(vals, "year", "rate", "Tax year", "Payout rate", ".1%", "series") },
       rows: ys.map((r) => ({ ...rowOut(r), all_filers_fmv_assets_usd: assets.find((x) => x.y === r.y)?.fmv ?? null })),
@@ -3316,15 +3348,19 @@ GROUP BY 1 ORDER BY 1`, p);
   const sources = [SRC.f990, SRC.bmf];
   const method0 = `Nonprofit finance panel (one row per organization per tax year, private foundations excluded): each org's own e-filed return for the year, newest filing first. Deficit = expenses above revenue. Months of cash = cash and savings divided by a month of expenses. Thin cash = under 3 months.`;
   if (by === "year") {
-    const a = rows[0], z = rows.at(-1)!;
+    const a = rows[0], zLast = rows.at(-1)!;
+    // Headline end: the newest full year. A partial last year is named on its own line.
+    const pe = partialEnd("f990", zLast.k);
+    const z = (pe && [...rows].reverse().find((r) => r.k <= FULL.f990 && r.k > a.k)) || zLast;
     caveats.unshift(`Year-to-year shares use Form 990 filers only. A year with no return of its own is filled from the next year's Form 990 prior-year column (revenue and expenses, not cash), so the mix of orgs changes by year. The same-organizations line keeps only the ${int(z.p_of)} orgs with a Form 990 every year shown.`,
-      ...(y1 > F_FULL ? [`${y1} returns are still arriving and lean to early filers.`] : []),
+      ...(y1 > FULL.f990 ? [`${y1} returns are still arriving and lean to early filers.`] : []),
       ...(y0 <= 2022 ? ["2022 counts fewer orgs: it comes mostly from 2023 returns' prior-year column, and 2023 returns are only partly loaded."] : []));
-    const vals = rows.flatMap((r) => [{ year: r.k > F_FULL ? `${r.k} (partial)` : String(r.k), series: "All Form 990 filers", share: +sh(r).toFixed(4) }, ...(r.p_of ? [{ year: r.k > F_FULL ? `${r.k} (partial)` : String(r.k), series: "Same orgs every year", share: +psh(r).toFixed(4) }] : [])]);
+    const vals = rows.flatMap((r) => [{ year: yearLabel(r.k, "f990"), series: "All Form 990 filers", share: +sh(r).toFixed(4) }, ...(r.p_of ? [{ year: yearLabel(r.k, "f990"), series: "Same orgs every year", share: +psh(r).toFixed(4) }] : [])]);
     return {
       headline: `${pct(sh(a))} of ${subj}${inW} filing Form 990 ${what} in ${a.k}, ${pct(sh(z))} in ${z.k}${z.p_of ? `. Among the same ${int(z.p_of)} orgs every year: ${pct(psh(a))} to ${pct(psh(z))}` : ""}`,
       numbers: [{ value: pct(sh(z)), label: `${what}, ${z.k}` }, { value: pct(sh(a)), label: `${a.k}` }, ...(cond === "low_cash" && z.med_cash != null ? [{ value: cashTxt(z.med_cash), label: `median cash, ${z.k}` }] : [{ value: int(z.of_n), label: `Form 990 filers, ${z.k}` }])],
-      bullets: rows.slice(1, -1).map((r) => `${r.k}: ${b(pct(sh(r)))} of ${b(int(r.of_n))} filers`).concat(z.med_cash != null && cond !== "low_cash" ? [`Median cash in ${z.k}: ${b(cashTxt(z.med_cash))} of expenses`] : []),
+      bullets: rows.slice(1).filter((r) => r !== z).map((r) => `${r.k}${r.k > FULL.f990 ? " (partial)" : ""}: ${b(pct(sh(r)))} of ${b(int(r.of_n))} filers`)
+        .concat(pe && z !== zLast ? [`${partialLine(pe, z.k)}`] : []).concat(z.med_cash != null && cond !== "low_cash" ? [`Median cash in ${z.k}: ${b(cashTxt(z.med_cash))} of expenses`] : []),
       chart: { title: `Share of ${subj}${inW} that ${what}, by tax year`, sub: "Form 990 filers", spec: vbar(vals, "year", "share", "Tax year", "Share of filers", ".0%", "series") },
       rows: rows.map((r) => ({ tax_year: r.k, filers: r.of_n, met_condition: r.hits, share: +sh(r).toFixed(4), same_orgs_filers: r.p_of, same_orgs_met: r.p_hits, same_orgs_share: r.p_of ? +psh(r).toFixed(4) : null, median_months_cash: r.med_cash != null ? +r.med_cash.toFixed(2) : null })),
       causeNote: note, caveats, coverage: [{ label: "Tax years", value: `${y0}–${y1}` }, { label: "Form 990 filers", value: `${int(z.of_n)} in ${z.k}` }],

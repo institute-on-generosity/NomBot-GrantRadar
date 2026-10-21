@@ -276,6 +276,13 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [a.recency?.newest_per_org && /newest Form 990, from tax years \d{4} to \d{4}/.test(a.recency.note) ? 1 : 0, 1] },
   { name: "recency: no filing note on household giving (IRS SOI)", s: spec({ source: "household_giving" }),
     check: async (a) => [a.recency == null ? 1 : 0, 1] },
+  // Oct 21: a trend through a partial year headlines the change to the newest full year and names the partial one.
+  { name: "partial end: government grants trend through 2025 headlines 2023 to 2024", s: spec({ source: "government_grants", metric: "trend", yearFrom: 2023, yearTo: 2025, causes: [climate] }),
+    check: async (a) => [/from 2023 to 2024 /.test(a.headline) && !/to 2025/.test(a.headline) && a.bullets.some((x) => /2025 is partial .*ends at 2024/.test(x)) && JSON.stringify(a.chart?.spec ?? {}).includes("2025 (partial)") ? 1 : 0, 1] },
+  { name: "partial end: payout trend through 2025 headlines 2024", s: spec({ source: "foundation_finances", metric: "trend", yearFrom: 2022, yearTo: 2025 }),
+    check: async (a) => [/in 2024 \. |in 2024\./.test(a.headline) && !/2025/.test(a.headline) && a.bullets.some((x) => /2025 is partial/.test(x)) ? 1 : 0, 1] },
+  { name: "partial end: deficits by year through 2025 headlines 2024", s: spec({ metric: "count_orgs", condition: "deficit", by: "year", yearFrom: 2023, yearTo: 2025, causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [/in 2024/.test(a.headline) && !/in 2025/.test(a.headline) && a.bullets.some((x) => /2025 is partial/.test(x)) ? 1 : 0, 1] },
   { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
     check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];
