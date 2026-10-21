@@ -38,7 +38,7 @@ async function scoreFresh(question: string, results: Result[]): Promise<Map<stri
 
 async function scoreBatch(question: string, results: Result[]): Promise<Map<string, Relevance>> {
   const out = new Map<string, Relevance>();
-  const client = claude();
+  const client = claude("rerank");
   if (!client || !results.length) return out;
   // Short ids ("r1"…) come back reliably; EINs sometimes come back altered.
   const items = results.map((r, i) => ({

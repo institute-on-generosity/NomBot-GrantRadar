@@ -251,7 +251,7 @@ const picked = memo<string[]>("follow-up-picks:v1", 1000, 7 * 24 * 3600_000);
 export async function pickFollowUps(history: Turn[]): Promise<string[]> {
   const pool = candidateFollowUps(history.at(-1)!.spec, history);
   const fallback = pool.slice(0, 3).map((c) => c.label);
-  const client = claude();
+  const client = claude("followUp-pick");
   if (pool.length <= 3 || !client) return fallback;
   const key = JSON.stringify([history.map((h) => [h.question, describeSpec(h.spec)]), pool.map((c) => c.label)]);
   const choose = picked(key, async () => {
@@ -298,7 +298,7 @@ export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved
 }
 
 async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
-  const client = claude();
+  const client = claude("followUp-route");
   if (!client) return { kind: "text", standalone: text };
   const thread = history.map((h, i) => `${i + 1}. ${h.question}\nspec: ${JSON.stringify(h.spec)}`).join("\n\n");
   const res = await client.beta.messages.parse({

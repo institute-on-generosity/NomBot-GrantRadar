@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid request" }, { status: 400 });
   const { question, ask, overrides = {}, all = false, history = [] } = parsed.data;
-  const client = claude();
+  const client = claude("buddy");
   if (!client) return Response.json({ error: "Research Buddy needs ANTHROPIC_API_KEY." }, { status: 503 });
 
   // The search's own research answer (cached from the page), so follow-ups like "and for women and girls?"

@@ -17,7 +17,7 @@ Make 3-5 themes. Each theme: a label of 2-5 plain words naming the activity or a
 const schema = z.object({ themes: z.array(z.object({ label: z.string(), ids: z.array(z.string()) })) });
 
 async function fresh(question: string, l: Landscape): Promise<Theme[]> {
-  const client = claude();
+  const client = claude("themes");
   const orgs = l.orgs.slice(0, TOP);
   if (!client || orgs.length < 6) return [];
   const items = orgs.map((o, i) => ({ id: `o${i + 1}`, name: o.name, work: readable(o.text) || null }));

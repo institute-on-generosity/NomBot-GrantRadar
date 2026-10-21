@@ -67,7 +67,7 @@ export function parseQuestion(question: string): Promise<Filters> {
 }
 
 async function parseFresh(question: string): Promise<Filters> {
-  const client = claude();
+  const client = claude("parse");
   if (client) {
     try {
       const res = await client.beta.messages.parse({

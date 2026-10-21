@@ -120,7 +120,7 @@ async function routeFresh(question: string, onUsage?: (u: RouteUsage) => void): 
 export type RouteUsage = { input: number; output: number; cacheRead: number; cacheWrite: number }; // input = all prompt tokens, cached or not
 export async function routeMeasured(question: string): Promise<{ routed: Routed; usage: RouteUsage | null; ms: number }> {
   const t0 = Date.now();
-  const client = claude();
+  const client = claude("answerRoute");
   if (!client) return { routed: { research: false }, usage: null, ms: 0 }; // no key: plain search, as before
   {
     const res = await client.beta.messages.parse({

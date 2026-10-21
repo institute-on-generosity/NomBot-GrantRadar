@@ -24,6 +24,7 @@ export const EXAMPLES = [
 const RESEARCH_GROUPS = [
   { label: "Climate", prompts: ["How much foundation money goes to climate?", "Is climate funding growing?", "How concentrated is climate funding?", "Which federal agencies fund the most climate work at nonprofits?"] },
   { label: "Women and girls", prompts: ["How much foundation money goes to women and girls?", "How does foundation support for women and girls compare to climate?", "Which foundations fund climate, and which foundations fund women and girls?"] },
+  { label: "Education", prompts: ["How much foundation money goes to education?", "Is education funding growing?", "How does foundation support for education compare to climate?"] },
   { label: "Food banks", prompts: ["Is food bank funding growing?", "Who are the biggest foundation funders of food banks?", "How many food banks are running deficits?"] },
   { label: "Mental health", prompts: ["Is mental health funding growing?", "Which states get the most foundation money for mental health?", "Who are the biggest foundation funders of mental health?"] },
   { label: "Housing", prompts: ["Which states get the most foundation money for housing?", "Is foundation money for housing growing faster than foundation giving overall?", "Who are the biggest foundation funders of homelessness work in Washington State?"] },

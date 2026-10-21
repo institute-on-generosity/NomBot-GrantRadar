@@ -30,7 +30,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid request" }, { status: 400 });
   const { ask, history = [] } = parsed.data;
-  const client = claude();
+  const client = claude("finding-ask");
   if (!client) return Response.json({ error: "Asking about findings needs an Anthropic API key on the server (ANTHROPIC_API_KEY)." }, { status: 503 });
   const i = await getInsight((await ctx.params).slug);
   if (!i) return Response.json({ error: "This finding isn't available." }, { status: 404 });

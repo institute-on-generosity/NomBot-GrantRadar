@@ -532,3 +532,26 @@ export function agoText(iso: string) {
   if (s < 86400 * 2) return `${Math.round(s / 3600)} h ago`;
   return `${Math.round(s / 86400)} days ago`;
 }
+
+// Claude token usage on NomBot's key (llm_usage, generosity-data migration 074, logged by lib/llm.ts): exact token
+// counts from each API response. Dollars come from the Anthropic console (Spending), not from here.
+export type TokenRow = { calls: number; input: number; output: number; cache_read: number; cache_write: number };
+export type TokenUsage = { since: string | null; today: TokenRow; d7: TokenRow; d30: TokenRow; all: TokenRow;
+  days: (TokenRow & { day: string })[]; byModel: (TokenRow & { model: string })[]; byFeature: (TokenRow & { feature: string; source: string })[] };
+export async function tokenUsage(): Promise<TokenUsage> {
+  const sums = `count(*)::int AS calls, coalesce(sum(input_tokens), 0)::bigint AS input, coalesce(sum(output_tokens), 0)::bigint AS output,
+    coalesce(sum(cache_read), 0)::bigint AS cache_read, coalesce(sum(cache_write), 0)::bigint AS cache_write`;
+  const num = <T extends Record<string, unknown>>(r: T) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === "string" && /^\d+$/.test(v) ? Number(v) : v])) as T;
+  const [tot, days, models, features] = await Promise.all([
+    db.query(`SELECT min(at) AS since,
+      ${["today", "d7", "d30", "all"].map((k, i) => `json_build_object('calls', count(*) FILTER (WHERE ${["at >= date_trunc('day', now() AT TIME ZONE 'America/New_York') AT TIME ZONE 'America/New_York'", "at > now() - interval '7 days'", "at > now() - interval '30 days'", "true"][i]}),
+        ${["input_tokens", "output_tokens", "cache_read", "cache_write"].map((c, j) => `'${["input", "output", "cache_read", "cache_write"][j]}', coalesce(sum(${c}) FILTER (WHERE ${["at >= date_trunc('day', now() AT TIME ZONE 'America/New_York') AT TIME ZONE 'America/New_York'", "at > now() - interval '7 days'", "at > now() - interval '30 days'", "true"][i]}), 0)`).join(", ")}) AS ${k}`).join(",\n      ")}
+      FROM llm_usage`),
+    db.query(`SELECT (at AT TIME ZONE 'America/New_York')::date::text AS day, ${sums} FROM llm_usage WHERE at > now() - interval '30 days' GROUP BY 1 ORDER BY 1 DESC`),
+    db.query(`SELECT model, ${sums} FROM llm_usage WHERE at > now() - interval '30 days' GROUP BY 1 ORDER BY sum(input_tokens + output_tokens + cache_read + cache_write) DESC`),
+    db.query(`SELECT coalesce(feature, 'other') AS feature, source, ${sums} FROM llm_usage WHERE at > now() - interval '30 days' GROUP BY 1, 2 ORDER BY sum(input_tokens + output_tokens + cache_read + cache_write) DESC`),
+  ]);
+  const t = tot.rows[0];
+  return { since: t.since ? new Date(t.since).toISOString() : null, today: t.today, d7: t.d7, d30: t.d30, all: t.all,
+    days: days.rows.map(num), byModel: models.rows.map(num), byFeature: features.rows.map(num) };
+}

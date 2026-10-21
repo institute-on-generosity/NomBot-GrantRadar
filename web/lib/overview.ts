@@ -53,7 +53,7 @@ const top = (xs: (string | null)[], k: number) => {
 };
 
 async function fresh(question: string, strong: Result[], basis: Basis, need?: string, story?: string): Promise<Overview | null> {
-  const client = claude();
+  const client = claude("overview");
   if (!client || strong.length < 3) return null;
   const { rows } = await db.query(
     `SELECT DISTINCT ON (ein) ein, employees, volunteers FROM filing_text WHERE ein = ANY($1) ORDER BY ein, tax_year DESC`, [strong.map((r) => r.ein)]);

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success || parsed.data.i >= parsed.data.f.length) return Response.json({ error: "invalid request" }, { status: 400 });
   const { q, f, i } = parsed.data;
-  const client = claude();
+  const client = claude("research-followup");
   if (!client) return Response.json({ error: "Follow-up answers need ANTHROPIC_API_KEY." }, { status: 503 });
   const turns = await resolveThread(q, f.slice(0, i));
   if (!turns) return Response.json({ error: "Not a research thread." }, { status: 400 });

@@ -1,4 +1,4 @@
-// Internal admin dashboard: database, live site, Linux helper, nightly checks, data freshness, cause labels, API, API calls, keys, backups.
+// Internal admin dashboard: database, live site, Linux helper, nightly checks, data freshness, cause labels, Claude tokens, API, API calls, keys, backups.
 // Not linked from any page. proxy.ts asks for ADMIN_PASSWORD (signed cookie, lib/adminAuth.ts) after the site
 // password, and this page checks the cookie again. Data: lib/admin.ts (cached 30 s to 10 min).
 import { Suspense, type ReactNode } from "react";
@@ -7,7 +7,7 @@ import { connection } from "next/server";
 import { InsightChart } from "@/components/InsightChart";
 import { ADMIN_COOKIE, isAdminCookie } from "@/lib/adminAuth";
 import {
-  agoText, apiStats, backups, IRS_LOAD_CMD, isoAt, linuxJobLevels, missedNight, BARS, dataFreshness, fmtBytes, health, helper, keys, labels, STALE_HEARTBEAT_MS, FUNNEL, type Level,
+  agoText, apiStats, backups, IRS_LOAD_CMD, isoAt, linuxJobLevels, missedNight, BARS, dataFreshness, fmtBytes, health, helper, keys, labels, STALE_HEARTBEAT_MS, tokenUsage, type TokenRow, FUNNEL, type Level,
 } from "@/lib/admin";
 import { ApiCalls } from "./ApiCalls";
 import { AutoRefresh } from "./AutoRefresh";
@@ -17,7 +17,7 @@ export const metadata = { title: "Admin · NomBot", robots: { index: false, foll
 
 const SECTIONS = [
   ["health", "Health"], ["helper", "Linux helper"], ["nightly", "Nightly checks"], ["data", "Data"], ["labels", "Cause labels"],
-  ["api", "API and MCP"], ["calls", "API calls"], ["keys", "Keys and apps"], ["backups", "Backups"],
+  ["tokens", "Claude tokens"], ["api", "API and MCP"], ["calls", "API calls"], ["keys", "Keys and apps"], ["backups", "Backups"],
 ] as const;
 
 export default function AdminPage() {
@@ -50,6 +50,7 @@ async function Gate() {
       <Suspense fallback={wait("nightly checks")}><NightlySection /></Suspense>
       <Suspense fallback={wait("data")}><DataSection /></Suspense>
       <Suspense fallback={wait("labels")}><LabelsSection /></Suspense>
+      <Suspense fallback={wait("tokens")}><TokensSection /></Suspense>
       <Suspense fallback={wait("API")}><ApiSection /></Suspense>
       <Section id="calls" title="API calls" aside="every keyed call, newest first, kept 90 days"><ApiCalls /></Section>
       <Suspense fallback={wait("keys")}><KeysSection /></Suspense>
@@ -393,6 +394,40 @@ async function ApiSection() {
               <li key={i}><Pill tone={e.status >= 500 ? "bad" : "warn"}>{e.status}</Pill> <span className={s.mono}>{e.route}</span> <span className={s.muted}>{e.key ?? "no key"}, {agoText(e.at)}</span></li>
             ))}</ul>
           ) : <p className={s.note}>None logged yet. Logging started with this dashboard</p>}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+// ---------- Claude tokens: every Messages API call on NomBot's key (lib/llm.ts → llm_usage) ----------
+async function TokensSection() {
+  const t = await tokenUsage();
+  const total = (r: TokenRow) => r.input + r.output + r.cache_read + r.cache_write;
+  const cells = (r: TokenRow) => (<>
+    <td className={s.num}>{n(r.calls)}</td><td className={s.num}>{n(r.input)}</td><td className={s.num}>{n(r.output)}</td>
+    <td className={s.num}>{n(r.cache_read)}</td><td className={s.num}>{n(r.cache_write)}</td><td className={s.num}><b>{n(total(r))}</b></td>
+  </>);
+  const head = (first: ReactNode) => <thead><tr>{first}<th className={s.num}>Calls</th><th className={s.num}>Input</th><th className={s.num}>Output</th><th className={s.num}>Cache read</th><th className={s.num}>Cache write</th><th className={s.num}>Total</th></tr></thead>;
+  const card = (label: string, r: TokenRow) => <Card label={label} value={n(total(r))} detail={`${n(r.calls)} calls, ${n(r.input)} in, ${n(r.output)} out, ${n(r.cache_read)} cache read`} />;
+  return (
+    <Section id="tokens" title="Claude tokens" aside={`exact counts from each API response${t.since ? `, logged since ${day(t.since)}` : ""}. Dollars: Anthropic console, Spending`}>
+      <div className={s.grid}>{card("Today (New York)", t.today)}{card("7 days", t.d7)}{card("30 days", t.d30)}{card("All logged", t.all)}</div>
+      <div className={s.tableWrap}>
+        <table className={s.table}>{head(<th>Day</th>)}
+          <tbody>{t.days.map((r) => <tr key={r.day}><td>{r.day}</td>{cells(r)}</tr>)}</tbody>
+        </table>
+      </div>
+      <div className={s.grid2}>
+        <div className={s.tableWrap}>
+          <table className={s.table}>{head(<th>Model, 30 days</th>)}
+            <tbody>{t.byModel.map((r) => <tr key={r.model}><td className={s.mono}>{r.model}</td>{cells(r)}</tr>)}</tbody>
+          </table>
+        </div>
+        <div className={s.tableWrap}>
+          <table className={s.table}>{head(<th>Feature and source, 30 days</th>)}
+            <tbody>{t.byFeature.map((r) => <tr key={`${r.feature}|${r.source}`}><td><span className={s.mono}>{r.feature}</span> <span className={s.muted}>{r.source}</span></td>{cells(r)}</tr>)}</tbody>
+          </table>
         </div>
       </div>
     </Section>

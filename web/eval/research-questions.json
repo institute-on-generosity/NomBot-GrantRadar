@@ -75,7 +75,7 @@
   { "q": "How much foundation money goes to AI literacy?", "metric": ["total"], "label": "ai_tech_learning_work", "headlineHas": "tech and AI skills orgs \\(the closest graded label to AI literacy\\)" },
   { "q": "How much do foundations give to fight opioids?", "metric": ["total"], "label": "substance_use", "headlineHas": "substance use and addiction orgs \\(the closest graded label to opioid" },
   { "q": "How much foundation money goes to homeless shelters?", "metric": ["total"], "label": "housing_homelessness", "headlineHas": "housing and homelessness orgs \\(the closest graded label to homeless shelters\\)" },
-  { "q": "How much foundation money goes to girls' education?", "metric": ["total"], "label": "women_girls", "headlineHas": "women and girls orgs \\(the closest graded label to girls" },
+  { "q": "How much foundation money goes to girls' education?", "metric": ["total"], "headlineHas": "to girls'? education", "caveatHas": "Approximate set: \"girls'? education\" has no IRS code or graded label" },
   { "q": "Has foundation funding for clean energy grown?", "metric": ["trend"], "label": "climate", "headlineHas": "climate orgs \\(the closest graded label to clean energy\\)" },
   { "q": "How much foundation money goes to climate?", "metric": ["total"], "label": "climate", "headlineHas": "to climate,", "headlineNot": "closest graded label" },
   { "q": "How much do foundations give to homelessness?", "metric": ["total"], "label": "housing_homelessness", "headlineNot": "closest graded label" },
