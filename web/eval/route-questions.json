@@ -86,6 +86,10 @@
   {"q": "How much foundation money goes to education?", "metric": ["total"], "label": "education"},
   {"q": "Is foundation funding for education growing?", "metric": ["trend"], "label": "education"},
   {"q": "Which foundations fund adult literacy programs?", "metric": ["top_funders"], "label": "education"},
+  {"q": "How much foundation money goes to health equity?", "metric": ["total"], "label": "health_equity"},
+  {"q": "Which foundations fund efforts to reduce health disparities?", "metric": ["top_funders"], "label": "health_equity"},
+  {"q": "Is foundation funding for health equity growing?", "metric": ["trend"], "label": "health_equity"},
+  {"q": "How much foundation money goes to health?", "metric": ["total"], "ntee": "E"},
   {"q": "how much foundation money goes to arts and culture with corrected NTEE categories?", "metric": ["total"], "ntee": "A", "nteeBasis": "corrected"},
   {"q": "which states get the most foundation money for food banks", "metric": ["by_state"], "ntee": "K31", "nteeBasis": "irs"}
 ]

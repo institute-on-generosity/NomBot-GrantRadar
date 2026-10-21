@@ -502,6 +502,7 @@ const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly
     ? `This counts immigration policy and advocacy groups of every viewpoint, from groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies) to groups that argue for more (FWD.us, the National Immigration Forum), so their funders count here whatever side they take. Groups that serve immigrants are left out unless they also run named policy work.${g?.subPolicy != null ? ` Lower confidence: ${pct(g.subPolicy)} of sampled policy orgs were judged policy groups, below the 90% bar. Most misses are immigrant community groups.` : ""}`
     : "This counts the whole immigrants and refugees label: orgs that serve immigrants and refugees and immigration policy groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies)."}${g?.subRight != null ? ` The split into the two sub-types graded ${pct(g.subRight)} right on ${g.nSub ?? "a"} sampled orgs.` : ""}`,
   education: () => "Education is graded within one org of the bar (95% main focus, 90% partial), and counts are a floor: the label finds about 73% of education orgs. It counts all learning, from schools and universities to tutoring, literacy, scholarships and libraries.",
+  health_equity: (g) => `Health equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of orgs doing this work.`,
   mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
 };
 
@@ -827,7 +828,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v36: immigrants_refugees sub-types (generosity-data 069): services by default, policy for immigration policy questions.
 // v37: education label (graded g3), with its caveat (LABEL_CAVEAT).
 // v38: spec.ntee "corrected" (generosity-data 072 suggested NTEE groups), the "With corrected categories?" chip.
-const answerMemo = memo<Answer>("answer:v38", 500, 6 * 3600_000);
+// v39: health_equity label (graded g2), with its caveat (LABEL_CAVEAT).
+const answerMemo = memo<Answer>("answer:v39", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);

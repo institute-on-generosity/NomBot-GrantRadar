@@ -27,6 +27,7 @@ const RESEARCH_GROUPS = [
   { label: "Education", prompts: ["How much foundation money goes to education?", "Is education funding growing?", "How does foundation support for education compare to climate?"] },
   { label: "Food banks", prompts: ["Is food bank funding growing?", "Who are the biggest foundation funders of food banks?", "How many food banks are running deficits?"] },
   { label: "Mental health", prompts: ["Is mental health funding growing?", "Which states get the most foundation money for mental health?", "Who are the biggest foundation funders of mental health?"] },
+  { label: "Health equity", prompts: ["How much foundation money goes to health equity?", "Who are the biggest foundation funders of health equity?", "Which states get the most foundation money for health equity?"] },
   { label: "Housing", prompts: ["Which states get the most foundation money for housing?", "Is foundation money for housing growing faster than foundation giving overall?", "Who are the biggest foundation funders of homelessness work in Washington State?"] },
   { label: "Tech and AI", prompts: ["Who are the biggest funders of tech and AI skills?", "How much foundation money goes to tech and AI skills?", "Is tech and AI skills funding growing?"] },
   { label: "Racial equity", prompts: ["How has racial equity funding changed since 2020?", "Who are the biggest foundation funders of racial equity?", "Which foundations give the most to Native American communities?"] },
