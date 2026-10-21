@@ -20,6 +20,7 @@ import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
 import { LABELS, LABEL_SCOPE, LABEL_SUBTYPES, labelPhrase, narrowerThanLabel, type LabelSlug, type LabelSub } from "./labels";
 import { fedProgram, type FedProgram } from "./fedPrograms";
 import { buildSteps, type CauseInfo, type Evidence, type Movers, type Step, type StepInput } from "./answerSteps";
+import { whoSplit, whoTagged, WHO_CELLS_SQL, type Who } from "./recipientTypes";
 
 export type Num = { value: string; label: string; note?: string };
 export type Row = Record<string, string | number | boolean | null>;
@@ -47,6 +48,7 @@ export type Answer = {
   followUps?: string[];            // chips the numbers suggest ("Since 2021?" after a start-year spike)
   recency?: Recency | null;        // the filing years the answer covers, and which are still arriving (recencyOf)
   orgs?: OrgPick[];                // metric underfunded: the orgs listed, linked to their pages
+  who?: Who | null;                // "Who received it": foundation grant $ by recipient type (lib/recipientTypes)
   ms: number;
 };
 // form: the filings read. partial: tax years with returns still arriving (share = filings in / the fullest year's).
@@ -922,7 +924,9 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v42: data recency note (recencyOf): the filing years covered, partial years read from filings per tax year.
 // v43: trend headlines end at the newest full year (partialEnd), "(partial)" labels from filings per tax year (loadFullYears).
 // v44: underfunded metric (orgs in a cause getting little foundation money for their size), Answer.orgs.
-const answerMemo = memo<Answer>("answer:v44", 500, 6 * 3600_000);
+// v45: "Who received it" (Answer.who) on foundation grant totals and recipient-kind splits: governments, public
+// universities, international bodies, companies (generosity-data 079), with a one-line share caveat.
+const answerMemo = memo<Answer>("answer:v45", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1361,7 +1365,7 @@ async function dispatch(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   switch (s.metric) {
     case "breakdown":
       if (!isGrantSrc(s)) throw new Unanswerable("Breakdowns by cause, size, funder or county cover foundation and charity grants only. Form 990 lines have no funder or grant detail.");
-      return breakdown(ctx, s, pl);
+      return s.by === "recipient_kind" && !s.causes.length && (s.measure ?? "dollars") === "dollars" ? withWho(ctx, s, pl, () => breakdown(ctx, s, pl)) : breakdown(ctx, s, pl);
     case "total": case "share": case "compare": case "trend":
       return isGrantSrc(s) ? foundationTotal(ctx, s, pl) : flagTotal(ctx, s, pl);
     case "fastest_causes": return fastestCauses(ctx, s, pl);
@@ -1423,8 +1427,41 @@ async function funderGroupBase(ctx: Ctx, pl: Place, y: Years): Promise<number> {
 // recipients (school districts and colleges are mostly matched without an EIN).
 const allBase = (pl: Place, c: C | null) => !!(c?.all && !pl.f.rb && !(pl.f.kinds && pl.f.kinds.every((k) => k === "nonprofit")));
 
+// ---- who received it (lib/recipientTypes, generosity-data 079)
+// Foundation grant dollars split by who got them: linked nonprofits, governments, public universities, international
+// bodies, companies, unidentified. Only where it fits: 990-PF money with no cause (a cause counts linked nonprofits
+// only), on the cube (no county, region or company-foundation filter) and no recipient-side filter.
+async function whoReceived(ctx: Ctx, pl: Place, y: { from: number; to: number }): Promise<Who | null> {
+  if (!ctx.cube || pl.g.kind !== "pf" || pl.corr || !cubeOk(ctx, null, pl) || pl.f.rb || pl.f.kinds) return null;
+  const p = new P();
+  const cw = cubeWhere(null, p, pl, y, false);
+  const [kinds, tagged] = await Promise.all([
+    ctx.q<{ k: string; usd: number; linked_usd: number }>("Foundation grant dollars by recipient kind (who received it; research cube)", `SELECT x.recipient_kind AS k, coalesce(sum(x.usd), 0)::float8 AS usd, coalesce(sum(x.usd) FILTER (WHERE x.linked), 0)::float8 AS linked_usd
+FROM grant_cube x WHERE ${and(cw.where)} GROUP BY 1`, p),
+    whoTagged({ from: y.from, to: y.to, states: pl.states, area: pl.area, fb: pl.f.fb, ftype: pl.f.ftype }),
+  ]);
+  ctx.queries.push({ title: "Unlinked grant dollars by recipient type, plus EIN links to IPEDS public colleges (generosity-data 079; summed once, cached, then filtered to these years, place and foundations)", sql: WHO_CELLS_SQL });
+  return whoSplit(kinds, tagged);
+}
+// "About 9% of these grant dollars went to governments and public universities." Only when it's at least 1%.
+const whoLine = (w: Who) => (w.public_share + w.other_share < 0.01 ? null
+  : `About ${pct(w.public_share)} of these grant dollars went to governments and public universities${w.other_share >= 0.005 ? `, and ${pct(w.other_share)} to international bodies and companies` : ""}. They stay in the total.`);
+async function withWho(ctx: Ctx, s: Spec, pl: Place, make: () => Promise<Out>): Promise<Out> {
+  const whoP = whoReceived(ctx, pl, grantYears(s)).catch((e) => { console.error("who received failed", e); return null; });
+  const [out, who] = await Promise.all([make(), whoP]);
+  if (who) {
+    out.who = who;
+    const line = whoLine(who);
+    if (line) out.caveats.unshift(line);
+  }
+  return out;
+}
+
 // ---- total / share / compare / trend, foundation grants
 async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  return !s.causes.length && s.metric !== "compare" ? withWho(ctx, s, pl, () => foundationTotal0(ctx, s, pl)) : foundationTotal0(ctx, s, pl);
+}
+async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const y = grantYears(s);
   const causes: (C | null)[] = s.causes.length ? s.causes.slice(0, s.metric === "compare" ? 2 : 1) : [hasFilt(pl.f) ? subjectOf(pl) : null];
   // Evidence for the steps, run beside the main queries: the biggest recipients and funders (first and last full
@@ -3523,6 +3560,8 @@ export function answerBrief(a: Answer, rows = 15, opts: { steps?: boolean } = {}
     data_years: a.recency ?? null,
     // metric underfunded: the orgs listed (foundation grants a year vs the peer median for their size), else null
     underfunded_orgs: a.orgs ?? null,
+    // Foundation grant totals with no cause: the dollars split by who received them (generosity-data 079), else null
+    who_received: a.who ? { total_usd: a.who.total, parts: a.who.parts.map((x) => ({ type: x.key, label: x.label, usd: x.usd, share: x.share })), government_and_public_university_share: a.who.public_share, international_and_company_share: a.who.other_share, linked_share_all_usd: a.who.all_link_rate, linked_share_nonprofit_usd: a.who.nonprofit_link_rate, note: a.who.note } : null,
     ...(opts.steps ? {
       steps: (a.steps ?? []).map((st) => ({ n: st.n, key: st.key, title: st.title, line: text(st.line), details: st.details.map(text), ...(st.evidence ? { evidence: st.evidence } : {}) })),
       follow_ups: a.followUps ?? [],

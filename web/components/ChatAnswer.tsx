@@ -4,6 +4,7 @@ import type { Answer } from "@/lib/answer";
 import { AnswerMethod } from "./AnswerCard";
 import { AnswerSteps } from "./AnswerSteps";
 import { AnswerOrgs } from "./AnswerOrgs";
+import { AnswerWho } from "./AnswerWho";
 import { InsightChart } from "./InsightChart";
 import { SlideButton } from "./SlideButton";
 
@@ -58,6 +59,7 @@ export function ChatAnswer({ a }: { a: Answer }) {
       {a.recency && !none && <p className="chat-basis chat-recency">{a.recency.note}</p>}
       {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.orgs && !none && <AnswerOrgs orgs={a.orgs} />}
+      {a.who && !none && <AnswerWho who={a.who} />}
       {a.missing.map((m) => (
         <p key={m.what} className="chat-missing"><b>{none ? "Why we can't answer this:" : `Not included, ${m.what.toLowerCase()}:`}</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>
       ))}

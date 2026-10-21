@@ -294,7 +294,7 @@ async function DataSection() {
         </table>
       </div>
       <div className={s.grid}>
-        {f.links.map((l) => <Card key={l.name} label={l.name} value={pct(l.rate)} detail={`${l.basis}, sampled`} level={l.rate == null ? "off" : l.rate >= 0.7 ? "ok" : "warn"} />)}
+        {f.links.map((l) => <Card key={l.name} label={l.name} value={pct(l.rate)} detail={l.exact ? l.basis : `${l.basis}, sampled`} level={l.rate == null ? "off" : l.rate >= 0.7 ? "ok" : "warn"} />)}
       </div>
       <p className={s.note}>Basis: load log is source_updates, a column name is that column&apos;s newest value, table stats is the last analyze. Link goal 70%.</p>
     </Section>

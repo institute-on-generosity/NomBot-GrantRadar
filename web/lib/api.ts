@@ -140,6 +140,11 @@ export async function apiOrg(einRaw: string, base: string) {
       grants_given: {
         count: given.n, total: Number(given.total), first_year: given.first, latest_year: given.latest,
         top_recipients: topRecipients.map((r) => ({ ein: r.ein as string | null, name: r.name as string, city: r.city as string | null, state: r.state as string | null, grants: r.grants as number, total: Number(r.total), latest_year: r.latest as number })),
+        // Who received these 990-PF grants (generosity-data 079): nonprofits, governments, public universities, international
+        // bodies, companies, foreign addresses, unidentified. Null when none went to the four non-nonprofit types.
+        by_recipient_type: fund.given.foundation?.byType.length
+          ? { types: fund.given.foundation.byType.map((t) => ({ type: t.type, label: t.label, grants: t.n, total: t.total, share: t.share, top_recipients: t.top })), note: FUNDING_NOTES.types }
+          : null,
       },
       // Grants public charities (DAF sponsors, community foundations, United Ways, others) list on Form 990 Schedule I
       charity_grants_received: fund.charities

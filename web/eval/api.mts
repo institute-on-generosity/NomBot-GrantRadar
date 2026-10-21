@@ -347,6 +347,22 @@ try {
   b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify(FB_SPEC))}`, "answer food bank trend again");
   check(b.underfunded_orgs === null, "answer: underfunded_orgs null on other metrics");
 
+  check(b.who_received === null, "answer: who_received null on a cause answer");
+
+  // ---------- who received it (generosity-data 079): answers with no cause, funder pages ----------
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify({ metric: "total", states: ["TX"] }))}`, "answer Texas total (spec)");
+  const wr = b.who_received;
+  check(!!wr && wr.parts.length === 6 && Math.abs(wr.parts.reduce((t: number, x: J) => t + x.usd, 0) - wr.total_usd) <= 1 && wr.linked_share_nonprofit_usd >= wr.linked_share_all_usd && !/;|—/.test(wr.note), "answer: who_received parts add up, both link rates");
+  const directTx = Number((await db.query(`SELECT coalesce(sum(amount), 0) AS s FROM grants WHERE amount > 0 AND recipient_kind IS NULL AND recipient_ein IS NULL AND recipient_entity IS NULL AND tax_year BETWEEN 2022 AND 2024 AND recipient_state = 'TX' AND recipient_type IN ('international', 'company')`)).rows[0].s);
+  check(!!wr && Math.abs(wr.international_and_company_share * wr.total_usd - directTx) <= Math.max(1, directTx * 0.001), `answer: who_received international + companies vs SQL (${directTx})`);
+  check(b.caveats?.some((c: string) => /^About \d+(\.\d+)?% of these grant dollars went to governments and public universities/.test(c)), "answer: share caveat line");
+  b = await ok("/api/v1/org/562618866", "org Gates (recipient types)");
+  const bt: J[] = b.org?.grants_given?.by_recipient_type?.types ?? [];
+  const intl = bt.find((t) => t.type === "international");
+  const directIntl = Number((await db.query(`SELECT coalesce(sum(amount), 0) AS s FROM grants WHERE funder_ein = '562618866' AND tax_year IS NOT NULL AND recipient_kind IS NULL AND recipient_ein IS NULL AND recipient_entity IS NULL AND recipient_type = 'international'`)).rows[0].s);
+  check(!!intl && intl.total === directIntl && intl.top_recipients.some((x: J) => /RECONSTRUCTION/.test(x.name)), `org: Gates by_recipient_type international vs SQL (${intl?.total} / ${directIntl})`);
+  check(Math.abs(bt.reduce((t, x) => t + x.total, 0) - b.org.grants_given.total) <= 1, "org: by_recipient_type adds up to grants_given.total");
+
   // ---------- MCP ----------
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), { requestInit: { headers: { Authorization: `Bearer ${KEY}` } } }));

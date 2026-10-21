@@ -296,6 +296,33 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [(a.orgs?.length ?? 0) >= 5 && /established food banks/.test(a.headline) ? 1 : 0, 1] },
   { name: "underfunded: no cause is unanswerable with a plain reason", s: spec({ metric: "underfunded" }),
     check: async (a) => [a.status === "unanswerable" && /Name a cause/.test(a.headline) ? 1 : 0, 1] },
+  // Who received it (generosity-data 079): a no-cause total splits its dollars by recipient type. Governments and public
+  // universities (named types, NCES school districts, IPEDS public colleges by match or EIN) vs direct SQL on grants,
+  // the parts add up to the headline total, and the caveat line carries the same share. Cause answers get no split.
+  { name: "who received: US 2022-24, governments + public universities vs direct SQL", s: spec({}),
+    check: async (a) => {
+      const w = a.who;
+      const direct = await one(`SELECT sum(g.amount) FROM grants g LEFT JOIN orgs o ON o.ein = g.recipient_ein LEFT JOIN public_entities pe ON pe.id = g.recipient_entity
+        WHERE g.amount > 0 AND g.recipient_kind IS NULL AND coalesce(o.foundation, '') NOT IN ('02','03','04') AND g.tax_year BETWEEN 2022 AND 2024
+          AND (pe.kind IN ('school_district', 'college_public')
+            OR (g.recipient_ein IS NULL AND g.recipient_entity IS NULL AND g.recipient_type IN ('government', 'public_university'))
+            OR (g.recipient_entity IS NULL AND g.recipient_ein IN (SELECT ein FROM public_entities WHERE kind = 'college_public')))`);
+      if (!w) return [0, direct];
+      const sumOk = Math.abs(w.parts.reduce((t, x) => t + x.usd, 0) - w.total) <= 1 && Math.abs(w.total - Number(a.rows.reduce((t, r) => t + Number(r.grants_usd), 0))) <= Math.max(1, w.total * 0.001);
+      const line = a.caveats.find((c) => /went to governments and public universities/.test(c)) ?? "";
+      const shown = Number(line.match(/^About ([\d.]+)%/)?.[1] ?? NaN);
+      const pctOk = Math.abs(shown - w.public_share * 100) <= (w.public_share >= 0.095 ? 0.5 : 0.05) && !/[;—]/.test(line + w.note);
+      return [sumOk && pctOk ? w.public_share * w.total : -1, direct];
+    } },
+  { name: "who received: international bodies + companies, Texas, vs direct SQL", s: spec({ states: ["TX"] }),
+    check: async (a) => [a.who ? a.who.other_share * a.who.total : -1, await one(`SELECT coalesce(sum(g.amount), 0) FROM grants g WHERE g.amount > 0 AND g.recipient_kind IS NULL AND g.recipient_ein IS NULL AND g.recipient_entity IS NULL
+        AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_state = 'TX' AND g.recipient_type IN ('international', 'company')`)] },
+  { name: "who received: family-named foundations get a split", s: spec({ funderType: "family" }),
+    check: async (a) => [a.who && a.who.parts.length === 6 && a.who.total > 0 ? 1 : 0, 1] },
+  { name: "who received: breakdown by recipient kind gets a split", s: spec({ metric: "breakdown", by: "recipient_kind" }),
+    check: async (a) => [a.who && a.who.parts.some((x) => x.key === "international" && x.usd > 0) ? 1 : 0, 1] },
+  { name: "who received: a cause answer has no split", s: spec({ causes: [climate] }),
+    check: async (a) => [a.who == null && !a.caveats.some((c) => /went to governments/.test(c)) ? 1 : 0, 1] },
   { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
     check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];

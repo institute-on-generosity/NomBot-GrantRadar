@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { db } from "./db";
 import { memo } from "./memo";
+import { whoSplit, whoTagged } from "./recipientTypes";
 import { ENDPOINTS, MCP_TOOLS } from "./apiDocs";
 import { CALL_TZ, fmtCallTime } from "./callTime";
 
@@ -215,7 +216,7 @@ const SOURCES: SourceDef[] = [
   { key: "iog", name: "IoG guides", table: "iog_documents", loadedAt: "loaded_at", staleDays: 90 },
 ];
 export type Source = { key: string; name: string; table: string; lastLoad: string | null; basis: string; rows: number | null; years: string | null; stale: boolean };
-export type Freshness = { sources: Source[]; links: { name: string; rate: number | null; basis: string }[] };
+export type Freshness = { sources: Source[]; links: { name: string; rate: number | null; basis: string; exact?: boolean }[] };
 
 export const dataFreshness = () => cached<Freshness>(slow, "freshness", async () => {
   const tables = SOURCES.map((s) => s.table);
@@ -249,15 +250,24 @@ export const dataFreshness = () => cached<Freshness>(slow, "freshness", async ()
   });
   // Link rates on a small random sample of pages (about 70,000 grants), not a full count.
   const sample = (sql: string) => rows<{ r: string | null }>(sql).then((r) => (r[0]?.r == null ? null : Number(r[0].r)));
-  const [pf, ch, fed] = await Promise.all([
+  // Foundation dollars linked both ways, exact (grant_cube + recipient types, generosity-data 079): over all grant $ to US
+  // orgs, and over $ to nonprofits (leaving out governments, public universities, international bodies and companies).
+  const whoAll = Promise.all([
+    rows<{ k: string; usd: string; linked_usd: string }>("SELECT recipient_kind AS k, sum(usd) AS usd, coalesce(sum(usd) FILTER (WHERE linked), 0) AS linked_usd FROM grant_cube GROUP BY 1"),
+    whoTagged({ from: 2012, to: 2025, states: [], area: null, fb: null, ftype: null }),
+  ]).then(([k, t]) => whoSplit(k.map((r) => ({ k: r.k, usd: Number(r.usd), linked_usd: Number(r.linked_usd) })), t)).catch(() => null);
+  const [pf, ch, fed, who] = await Promise.all([
     sample("SELECT avg((recipient_ein IS NOT NULL OR recipient_entity IS NOT NULL)::int) AS r FROM grants TABLESAMPLE SYSTEM (0.5)"),
     sample("SELECT avg((recipient_ein IS NOT NULL)::int) AS r FROM charity_grants TABLESAMPLE SYSTEM (0.3)"),
     sample("SELECT avg((recipient_ein IS NOT NULL)::int) AS r FROM federal_awards TABLESAMPLE SYSTEM (5)"),
+    whoAll,
   ]);
   return {
     sources,
     links: [
       { name: "Foundation grants (990-PF)", rate: pf, basis: "linked to an org, school district or college" },
+      { name: "Foundation $, all", rate: who?.all_link_rate ?? null, basis: "dollars to US orgs linked to an EIN, 2012-25", exact: true },
+      { name: "Foundation $ to nonprofits", rate: who?.nonprofit_link_rate ?? null, basis: "leaving out governments, public universities, international bodies and companies", exact: true },
       { name: "Charity grants (Schedule I)", rate: ch, basis: "linked to an EIN" },
       { name: "Federal awards", rate: fed, basis: "linked to an EIN" },
     ],

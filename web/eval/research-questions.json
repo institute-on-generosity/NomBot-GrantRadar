@@ -94,5 +94,7 @@
   { "q": "What share of foundation money goes to community improvement groups, with corrected categories?", "metric": ["share", "total"], "ntee": "S", "nteeBasis": "corrected", "caveatHas": "moved out" },
   { "q": "Which mental health nonprofits in California get little foundation money for their size?", "metric": ["underfunded"], "label": "mental_health", "states": ["CA"], "headlineHas": "established mental health", "caveatHas": "can't link" },
   { "q": "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "metric": ["underfunded"], "label": "housing_homelessness", "states": ["TX"], "caveatHas": "not that it lacks money" },
-  { "q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31", "headlineHas": "food banks" }
+  { "q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31", "headlineHas": "food banks" },
+  { "q": "How much did foundations give to organizations in Texas from 2022 to 2024?", "metric": ["total"], "states": ["TX"], "who": true, "caveatHas": "went to governments and public universities" },
+  { "q": "How much did family foundations give in total from 2022 to 2024?", "metric": ["total"], "funderType": "family", "who": true }
 ]

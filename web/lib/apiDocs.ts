@@ -81,7 +81,10 @@ export const ENDPOINTS: Endpoint[] = [
           top_funders: [{ ein: "341623986", name: "RICHARD & ARLINE LANDERS FOUNDATION", grants: 3, total: 15000, latest_year: 2024 }],
           note: "Only grants from private foundations' 990-PF filings that we linked to this EIN (about 66% of grants and 58% of grant dollars are linked).",
         },
-        grants_given: { count: 0, total: 0, first_year: null, latest_year: null, top_recipients: [] },
+        // by_recipient_type: who received the 990-PF grants (null when none went to governments, public universities, international bodies or
+        //   companies). e.g. Gates Foundation (56-2618866): { types: [{ type: "international", label: "International bodies", grants: 638, total: 1723000000, share: 0.028,
+        //   top_recipients: [{ name: "INTERNATIONAL BANK FOR RECONSTRUCTION AND DEVELOPMENT", total: 763000000 }] }, ...], note: "..." }
+        grants_given: { count: 0, total: 0, first_year: null, latest_year: null, top_recipients: [], by_recipient_type: null },
         charity_grants_received: {
           count: 13, total: 346274,
           by_year: [{ tax_year: 2024, count: 3, total: 104330 }, { tax_year: 2023, count: 5, total: 140844 }],
@@ -154,7 +157,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "answer", method: "GET", path: "/api/v1/answer", title: "Answer a research question", mcpTool: "answer_research_question",
-    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits, which orgs in a cause get little foundation money for their size) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. underfunded_orgs (metric underfunded): up to 10 orgs with their revenue, foundation grants a year, the peer median for their size and government share, null otherwise. data_years: the filing years it covers and which are still arriving (a later tax year with under 90% of the fullest year's filings is partial). steps: the step-by-step evidence (how the question was read, the cause set, the data, per-year totals with the biggest recipients and funders, the computation, the baseline, checks such as a start-year spike, and the SQL), built from the same query results, no extra Claude call. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
+    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits, which orgs in a cause get little foundation money for their size) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. who_received (foundation grant totals with no cause, and splits by recipient kind): the dollars split into linked nonprofits, governments, public universities, international bodies, companies and unidentified, with the linked share of all dollars and of dollars to nonprofits, null otherwise. underfunded_orgs (metric underfunded): up to 10 orgs with their revenue, foundation grants a year, the peer median for their size and government share, null otherwise. data_years: the filing years it covers and which are still arriving (a later tax year with under 90% of the fullest year's filings is partial). steps: the step-by-step evidence (how the question was read, the cause set, the data, per-year totals with the biggest recipients and funders, the computation, the baseline, checks such as a start-year spike, and the SQL), built from the same query results, no extra Claude call. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
     params: [
       { name: "q", in: "query", type: "string", example: "how much foundation money goes to climate", desc: "The question in plain words, up to 300 characters." },
       { name: "spec", in: "query", type: "string", example: '{"metric":"total","causes":[{"name":"climate","label":"climate","ntee":[],"keywords":[]}]}', desc: "Instead of q: the structured question as JSON (metric, causes, source, yearFrom, yearTo, states, county, area, condition, perResident, order, ntee). ntee \"corrected\" counts NTEE-coded causes by corrected groups (orgs whose IRS code doesn't fit their 990 text count under a suggested major group, with a footnote on what moved). Default \"irs\". No Claude call." },
@@ -176,6 +179,7 @@ export const ENDPOINTS: Endpoint[] = [
         { n: 5, key: "compute", title: "Computed", line: "share = $2.4B / $186.1B = 1.3% of identified foundation grant dollars", details: ["a year = ... / 3 full years = ..."] },
       ],
       follow_ups: [],
+      who_received: null,
       data_years: { form: "990-PF", from: 2022, to: 2024, newest_per_org: false, latest_full: 2024, partial: [{ year: 2025, share: 0.54 }], partial_in_range: [], trend_end_partial: false, note: "Covers 990-PF grants for tax years 2022 to 2024. Returns arrive 1 to 2 years late, so 2025 is still incomplete." },
       chart: null, queries: [{ title: "Foundation grants to climate, by tax year", sql: "SELECT ..." }], ms: 250,
     },

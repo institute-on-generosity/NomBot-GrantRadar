@@ -1,7 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { titleCase } from "@/components/text";
-import { orgFunding, FUNDING_NOTES, FUNDER_CLASS, type Funder, type Recipient, type Transfer, type YearTotal } from "@/lib/orgFunding";
+import { orgFunding, FUNDING_NOTES, FUNDER_CLASS, type Funder, type GivenType, type Recipient, type Transfer, type YearTotal } from "@/lib/orgFunding";
 
 // Grants received (990-PF foundations, Schedule I charities, federal awards) and grants given, for one org page.
 // Async server component: the org page streams it in its own Suspense so the profile shows first.
@@ -164,6 +164,32 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
   );
 }
 
+// 990-PF grants given by who received them (lib/orgFunding pfGivenTypes): shown when any went to a government,
+// public university, international body or company. Top names for those four types.
+const pctOf = (x: number) => (x >= 0.095 ? `${Math.round(x * 100)}%` : x >= 0.0005 ? `${(x * 100).toFixed(1)}%` : "<0.1%");
+const nameOf = (x: string) => (x === x.toUpperCase() ? titleCase(x) : x);
+function GivenTypes({ types }: { types: GivenType[] }) {
+  const non = types.filter((t) => ["government", "public_university", "international", "company"].includes(t.type));
+  const share = non.reduce((a, t) => a + t.share, 0);
+  return (
+    <>
+      <h3 className="fund-sub">Who received it <small>{pctOf(share)} to governments, public universities, international bodies and companies</small></h3>
+      <table className="fund-years">
+        <thead><tr><th>Recipient</th><th className="n">Grants</th><th className="n">Total</th><th className="n">Share</th></tr></thead>
+        <tbody>
+          {types.map((t) => (
+            <tr key={t.type}>
+              <td>{t.label}{t.top.length > 0 && <small className="fund-type-top"> {t.top.map((x) => nameOf(x.name)).join(", ")}</small>}</td>
+              <td className="n">{t.n.toLocaleString("en-US")}</td><td className="n">{money(t.total)}</td><td className="n">{pctOf(t.share)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="note-small">{FUNDING_NOTES.types}</p>
+    </>
+  );
+}
+
 function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
   const { scheduleI: si, foundation: pf } = f.given;
   return (
@@ -195,6 +221,7 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
           )}
           <h3 className="fund-sub">Top recipients</h3>
           <More items={pf.top} noun="recipients" extra={pf.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
+          {pf.byType.length > 0 && <GivenTypes types={pf.byType} />}
         </div>
       )}
       {!!f.transfers?.given.length && <Transfers items={f.transfers.given} side="to" />}

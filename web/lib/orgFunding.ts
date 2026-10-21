@@ -12,6 +12,7 @@
 // Every query runs on an index on the EIN column (recipient_ein partial indexes, funder_ein indexes). Grants given
 // read per-funder rollups (generosity-data 051: org_given_year, org_given_top), refreshed by refresh_research_layer().
 import { db } from "./db";
+import { WHO_NAME } from "./recipientTypes";
 
 export type YearTotal = { year: number; n: number; total: number };
 export type Funder = { ein: string; name: string; n: number; total: number; latest: number; kind?: string | null };
@@ -37,6 +38,7 @@ const count = (ys: YearTotal[]) => ys.reduce((a, y) => a + y.n, 0);
 
 export async function orgFunding(ein: string) {
   const q = <T,>(sql: string) => db.query(sql, [ein]).then((r) => r.rows as T[]);
+  const pfTypeP = pfGivenTypes(ein);
   const [pfYears, pfTop, ciYears, ciClass, ciTop, fedYears, fedAgency, fedProgram, fedPlace, fedAwards, siYears, siTop, pfGivenYears, pfGivenTop, xfer] = await Promise.all([
     q<{ year: number; n: number; total: string }>(
       `SELECT tax_year AS year, count(*)::int AS n, sum(amount)::bigint AS total FROM grants
@@ -106,6 +108,7 @@ export async function orgFunding(ein: string) {
     id: Number(r.id), year: Number(r.year), ein: side === "funder" ? r.funder_ein : r.recipient_ein, name: (side === "funder" ? r.funder : r.recipient) ?? r.funder_ein,
     amount: num(r.amount), cash: num(r.cash), noncash: num(r.noncash), kind: r.kind, reason: r.reason,
   });
+  const pfTypes = await pfTypeP;
   const xIn = xfer.filter((r) => r.recipient_ein === ein && r.funder_ein !== ein).map((r) => transfer(r, "funder"));
   const xOut = xfer.filter((r) => r.funder_ein === ein).map((r) => transfer(r, "recipient"));
   return {
@@ -130,7 +133,7 @@ export async function orgFunding(ein: string) {
       scheduleI: siY.length
         ? { total: sum(siY), n: count(siY), notItemized: siY.reduce((a, y) => a + y.notItemized, 0), transfers: siY.reduce((a, y) => a + y.transfers, 0), years: siY, top: recipients(siTop), more: siTop.length > TOP }
         : null,
-      foundation: pfgY.length ? { total: sum(pfgY), n: count(pfgY), years: pfgY, top: recipients(pfGivenTop), more: pfGivenTop.length > TOP } : null,
+      foundation: pfgY.length ? { total: sum(pfgY), n: count(pfgY), years: pfgY, top: recipients(pfGivenTop), more: pfGivenTop.length > TOP, byType: pfTypes } : null,
     },
     // Schedule I transfers between related organizations, left out of every total above
     transfers: xIn.length || xOut.length ? { received: xIn, given: xOut } : null,
@@ -158,11 +161,52 @@ async function givenTop(ein: string, source: "si" | "pf"): Promise<RecipientRow[
   return live.rows as RecipientRow[];
 }
 
+// 990-PF grants given split by who received them (generosity-data 079, lib/recipientTypes): linked nonprofits,
+// governments (school districts and named government bodies), public universities (IPEDS public colleges by match or
+// EIN, state systems), international bodies, companies, foreign addresses, other lines (individuals, unnamed) and
+// unidentified. Sums to the foundation's 990-PF total. One pass over its grants on grants_funder_idx (~50 ms warm).
+export type GivenType = { type: string; label: string; n: number; total: number; share: number; top: { name: string; total: number }[] };
+const GIVEN_TYPE_LABEL: Record<string, string> = { ...WHO_NAME, foreign: "Foreign addresses", other: "Individuals and unnamed lines" };
+const GIVEN_TYPE_ORDER = ["nonprofit", "government", "public_university", "international", "company", "foreign", "other", "unidentified"];
+async function pfGivenTypes(ein: string): Promise<GivenType[]> {
+  const r = await db.query<{ k: string; name: string; n: number; total: string }>(
+    `WITH l AS (
+       SELECT CASE WHEN g.recipient_kind = 'foreign' THEN 'foreign'
+                   WHEN g.recipient_kind IS NOT NULL THEN 'other'
+                   WHEN pe.kind = 'school_district' THEN 'government'
+                   WHEN pe.kind = 'college_public' OR pc.ein IS NOT NULL THEN 'public_university'
+                   WHEN g.recipient_type IS NOT NULL THEN g.recipient_type
+                   WHEN g.recipient_ein IS NOT NULL OR pe.kind IS NOT NULL THEN 'nonprofit'
+                   ELSE 'unidentified' END AS k,
+              coalesce(g.recipient_entity, g.recipient_ein, upper(btrim(g.recipient_name))) AS who,
+              coalesce(pe.name, g.recipient_name) AS name, g.amount
+         FROM grants g
+         LEFT JOIN public_entities pe ON pe.id = g.recipient_entity
+         LEFT JOIN (SELECT DISTINCT ein FROM public_entities WHERE kind = 'college_public' AND ein IS NOT NULL) pc ON pc.ein = g.recipient_ein AND g.recipient_entity IS NULL
+        WHERE g.funder_ein = $1 AND g.tax_year IS NOT NULL),
+     w AS (SELECT k, who, min(name) AS name, count(*)::int AS n, coalesce(sum(amount), 0)::bigint AS total,
+                  row_number() OVER (PARTITION BY k ORDER BY sum(amount) DESC NULLS LAST) AS rk
+             FROM l GROUP BY k, who)
+     SELECT k, NULL AS name, sum(n)::int AS n, sum(total)::bigint AS total FROM w GROUP BY k
+     UNION ALL
+     SELECT k, name, n, total FROM w WHERE rk <= 3 AND k IN ('government', 'public_university', 'international', 'company')`, [ein]);
+  const sums = r.rows.filter((x) => x.name == null);
+  const all = sums.reduce((a, x) => a + Number(x.total), 0);
+  if (!sums.some((x) => ["government", "public_university", "international", "company"].includes(x.k))) return [];
+  return GIVEN_TYPE_ORDER.flatMap((k) => {
+    const s0 = sums.find((x) => x.k === k);
+    if (!s0 || Number(s0.total) === 0) return [];
+    const top = r.rows.filter((x) => x.k === k && x.name != null).map((x) => ({ name: x.name, total: Number(x.total) })).sort((a, z) => z.total - a.total);
+    return [{ type: k, label: GIVEN_TYPE_LABEL[k] ?? k, n: Number(s0.n), total: Number(s0.total), share: all > 0 ? Number(s0.total) / all : 0, top }];
+  });
+}
+
 // Caveats shown with the numbers (UI and API), one per source.
 export const FUNDING_NOTES = {
   foundations: "Grants private foundations list on Form 990-PF, linked to this EIN by reported EIN, name and address. Tax years. Some grants are not linked, so totals can be low.",
   charities: "Grants public charities list on Form 990 Schedule I (over $5,000 per recipient), linked to this EIN. Tax years. A multi-year grant can appear as installments in several years.",
   federal: "Direct federal grants and cooperative agreements from USAspending, by federal fiscal year (October to September), not tax year. Net obligations, so a year can be negative. Linked by name and place.",
+  types: "Who received this foundation's 990-PF grants. Types for unlinked recipients come from their names (generosity-data 079, graded 146 of 150 right). School districts and public colleges are matched to NCES and IPEDS lists, by name or EIN. Foreign addresses are recipients outside the US, often foreign NGOs. Shares are of every grant line listed, all years.",
   given: "What this organization reported paying. Schedule I lists grants over $5,000 per recipient. Not itemized is the return's Part IX line 1 total minus the grants listed by name, including lines such as \"SEE ATTACHED\" or \"VARIOUS\" that name no recipient. That money has no recipient, so NomBot's totals by cause and place leave it out.",
   transfers: "Schedule I lines that move assets between related organizations (a restructuring, merger, dissolution or a transfer to a subsidiary, parent or supporting organization), mostly non-cash, plus a few amounts that are clearly reporting errors. They are real lines on the return but not grantmaking, so NomBot leaves them out of grants received, grants given and every total by cause and place, and lists them here.",
   overlap: "The sources overlap. A donor-advised fund grant can start as a foundation grant to the sponsor, and federal money passed through a charity shows in both. Do not add the columns together.",
