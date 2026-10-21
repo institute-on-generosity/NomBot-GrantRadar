@@ -128,7 +128,8 @@ class Ctx {
 
 // A cause as SQL: a join and/or WHERE terms on the alias's EIN and NTEE columns. tier: the label's tier column.
 // all: a subject with no cause restriction (e.g. "organizations under $1M", where only the filters apply).
-type C = Cause & { all?: boolean; via?: string }; // via: the cause_terms / NTEE name a plain-English cause matched
+// corr: an NTEE cause counted by corrected groups (spec.ntee "corrected", see nteeMatch).
+type C = Cause & { all?: boolean; via?: string; corr?: boolean }; // via: the cause_terms / NTEE name a plain-English cause matched
 // kind program: a named federal program (federal_awards only, lib/fedPrograms), matched on the assistance listing.
 type CauseSql = { join: string; where: string[]; tier: string | null; kind: "label" | "ntee" | "keyword" | "all" | "program"; primaryOnly?: boolean; program?: FedProgram };
 function tsq(keywords: string[]): string {
@@ -145,7 +146,7 @@ function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primar
   p.cause(c);
   const sub = labelSub(c);
   if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}${sub ? ` AND ${p.add(sub)}::text = ANY(l${sfx}.subtypes)` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
-  if (c.ntee.length) return { join: "", where: [`${ntee} LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`], tier: null, kind: "ntee" };
+  if (c.ntee.length) return { join: "", where: [nteeMatch(c, p, ein, ntee)], tier: null, kind: "ntee" };
   const kws = c.keywords.length ? c.keywords : [c.name.toLowerCase()];
   const q = tsq(kws);
   const t = p.add(q || "nothing");
@@ -161,6 +162,46 @@ function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primar
     where: [], tier: null, kind: "keyword",
   };
 }
+// Corrected NTEE groups (spec.ntee "corrected", generosity-data 072): an org in org_ntee_suggested counts under its
+// suggested major group only (no detailed code was graded reliable), every other org under its IRS code. Org-level
+// tables test the EIN. The cube has no EIN, so its corrected source (CUBE_CORR) adds each listed org's grants back
+// under the suggested group and takes them out of the IRS one. Graded labels are never affected.
+function nteeMatch(c: C, p: P, ein: string, ntee: string): string {
+  const pats = p.add(c.ntee.map((n) => `${n}%`));
+  if (!c.corr || !ein) return `${ntee} LIKE ANY(${pats}::text[])`;
+  return `((${ntee} LIKE ANY(${pats}::text[]) AND ${ein} NOT IN (SELECT ein FROM org_ntee_suggested)) OR ${ein} IN (SELECT ein FROM org_ntee_suggested WHERE suggested_major::text LIKE ANY(${pats}::text[])))`;
+}
+// The corrected NTEE code of a grant row (breakdowns by cause on grant_clean): the suggested major group, else the IRS code.
+const corrNtee = (ein: string, ntee: string) => `coalesce((SELECT ns.suggested_major::text FROM org_ntee_suggested ns WHERE ns.ein = ${ein}), ${ntee})`;
+// grant_cube / charity_grant_cube with corrected groups: the cube plus, for each listed org's grants, one row at minus
+// the amount under its IRS ntee3 and one at plus the amount under the suggested major group. Same columns, so every
+// cube query reads it unchanged. recipients and funders are 0 on the added rows (not additive anyway). ~0.1-0.3 s.
+const CUBE_CORR: Record<"pf" | "charity", string> = {
+  pf: `(SELECT tax_year, recipient_state, rural, ntee3, recipient_kind, linked, recipient_band, funder_band, funder_type, labels, usd, n, gos_usd, gos_n, recipients, funders FROM grant_cube
+UNION ALL
+SELECT g.tax_year::smallint, g.recipient_state, CASE WHEN cn.population < 50000 THEN true WHEN cn.population IS NOT NULL THEN false END, m.ntee3,
+  coalesce(pe.kind, 'nonprofit'), true, rp.band, fp.asset_band, coalesce(fp.funder_type, 'other'),
+  coalesce((SELECT array_agg(l.label || ':' || l.tier ORDER BY l.label) FROM org_labels l WHERE l.ein = g.recipient_ein), '{}'),
+  (m.sg * g.amount)::bigint, m.sg, (m.sg * CASE WHEN g.gos THEN g.amount ELSE 0 END)::bigint, CASE WHEN g.gos THEN m.sg ELSE 0 END, 0, 0
+FROM org_ntee_suggested ns
+CROSS JOIN LATERAL (SELECT * FROM grant_clean g0 WHERE g0.recipient_ein = ns.ein OFFSET 0) g
+CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (ns.suggested_major::text, 1)) m(ntee3, sg)
+JOIN grants gr ON gr.id = g.id LEFT JOIN public_entities pe ON pe.id = gr.recipient_entity
+LEFT JOIN county_need cn ON cn.county_fips = g.county_fips
+LEFT JOIN recipient_profile rp ON rp.ein = g.recipient_ein LEFT JOIN funder_profile fp ON fp.ein = g.funder_ein)`,
+  charity: `(SELECT tax_year, recipient_state, rural, ntee3, linked, funder_class, to_grantmaker, labels, usd, n, gos_usd, gos_n FROM charity_grant_cube
+UNION ALL
+SELECT g.tax_year, g.recipient_state, CASE WHEN cn.population < 50000 THEN true WHEN cn.population IS NOT NULL THEN false END, m.ntee3,
+  true, g.funder_class, g.to_grantmaker,
+  coalesce((SELECT array_agg(l.label || ':' || l.tier ORDER BY l.label) FROM org_labels l WHERE l.ein = g.recipient_ein), '{}'),
+  (m.sg * g.amount)::bigint, m.sg, (m.sg * CASE WHEN g.gos THEN g.amount ELSE 0 END)::bigint, CASE WHEN g.gos THEN m.sg ELSE 0 END
+FROM org_ntee_suggested ns
+CROSS JOIN LATERAL (SELECT * FROM charity_grant_clean g0 WHERE g0.recipient_ein = ns.ein OFFSET 0) g
+CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (ns.suggested_major::text, 1)) m(ntee3, sg)
+LEFT JOIN county_need cn ON cn.county_fips = g.county_fips)`,
+};
+// Does spec.ntee "corrected" change this answer: an NTEE-coded cause, a split by NTEE group, or fastest-growing causes.
+const corrApplies = (s: Spec) => s.ntee === "corrected" && (s.causes.some((c) => !c.label && c.ntee.length > 0) || s.by === "cause" || s.by === "cause_detail" || s.metric === "fastest_causes");
 const primarySum = (cs: CauseSql, amt: string) => (cs.tier ? `coalesce(sum(${amt}) FILTER (WHERE ${cs.tier} = 'primary'), 0)::float8` : `coalesce(sum(${amt}), 0)::float8`);
 
 // Filters from the research layer (generosity-data 038-040): recipient revenue band, funder asset band,
@@ -269,7 +310,7 @@ function ryWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, 
   if (c && !c.all) {
     p.cause(c);
     if (c.label && !labelSub(c)) w.push(`${r}.labels <> '{}'`, `${r}.labels && ${p.add([`${c.label}:primary`, `${c.label}:partial`])}::text[]`);
-    else if (!c.label && c.ntee.length) w.push(`${r}.recipient_ntee LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`);
+    else if (!c.label && c.ntee.length) w.push(nteeMatch(c, p, `${r}.recipient_ein`, `${r}.recipient_ntee`));
     else join = causeSql(c, p, `${r}.recipient_ein`, `${r}.recipient_ntee`).join;
   }
   w.push(...placeWhere(pl, p, `${r}.recipient_state`, `${r}.county_fips`));
@@ -311,7 +352,8 @@ async function resolveCauses(s: Spec): Promise<Spec> {
 // region: a county set (Appalachia). used: which place parts a query applied (placeWhere, cubeWhere, fedWhere),
 // shared by every copy of the Place, so compute() can say when an answer couldn't honor one (honorGuard).
 type Region = { key: string; name: string; fips: string[] };
-type Place = { states: string[]; county: { fips: string; name: string; state: string } | null; region: Region | null; area: "rural" | "urban" | null; label: string; f: Filt; g: GSrc; used: Set<string> };
+// corr: NTEE groups counted corrected (corrApplies): g.cube is the corrected cube, clean breakdowns use corrNtee.
+type Place = { states: string[]; county: { fips: string; name: string; state: string } | null; region: Region | null; area: "rural" | "urban" | null; label: string; f: Filt; g: GSrc; used: Set<string>; corr?: boolean };
 
 // ------------------------------------------------------------------ grant sources: 990-PF or Schedule I
 // Foundation grants (grant_clean, grant_cube) and Schedule I grants by public charities (charity_grant_clean,
@@ -376,10 +418,11 @@ async function resolvePlace(s: Spec): Promise<Place> {
   const stateWords = s.states.length ? (s.states.length <= 3 ? s.states.map(stateName).join(", ") : `${s.states.length} states`) : "";
   const where = county ? `${county.name}, ${county.state}` : region ? (stateWords ? `the Appalachian counties of ${stateWords}` : region.name) : stateWords || "the US";
   const area = s.area ? `${s.area} counties of ` : "";
-  const g = gsrcOf(s);
+  const g0 = gsrcOf(s), corr = corrApplies(s);
+  const g = corr ? { ...g0, cube: CUBE_CORR[g0.kind] } : g0;
   const f = filtersOf(s);
   // Foundation size, foundation type and recipient kind exist only for 990-PF grants.
-  return { states: s.states, county, region, area: s.area, label: `${area}${where}`, f: g.kind === "charity" ? { ...f, fb: null, ftype: null, kinds: null, from: "" } : f, g, used: new Set<string>() };
+  return { states: s.states, county, region, area: s.area, label: `${area}${where}`, f: g.kind === "charity" ? { ...f, fb: null, ftype: null, kinds: null, from: "" } : f, g, used: new Set<string>(), corr };
 }
 
 // ------------------------------------------------------------------ label grades (for caveats)
@@ -783,7 +826,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v34: racial_equity, immigrants_refugees, mental_health labels (graded g2, g1, g1), with label caveats (LABEL_CAVEAT).
 // v36: immigrants_refugees sub-types (generosity-data 069): services by default, policy for immigration policy questions.
 // v37: education label (graded g3), with its caveat (LABEL_CAVEAT).
-const answerMemo = memo<Answer>("answer:v37", 500, 6 * 3600_000);
+// v38: spec.ntee "corrected" (generosity-data 072 suggested NTEE groups), the "With corrected categories?" chip.
+const answerMemo = memo<Answer>("answer:v38", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1100,11 +1144,15 @@ async function grantCaveats(pl: Place): Promise<string[]> {
 
 async function run(ctx: Ctx, s0: Spec): Promise<Out> {
   if (s0.metric === "none") throw new Unanswerable("Our IRS data can't answer this question.");
-  const s = await resolveCauses(s0);
+  const s1 = await resolveCauses(s0);
+  // Corrected NTEE groups: NTEE-coded causes count listed orgs under their suggested major group (nteeMatch).
+  const s = s1.ntee === "corrected" ? { ...s1, causes: s1.causes.map((c) => (!c.label && c.ntee.length ? { ...c, corr: true } : c)) } : s1;
   const pl = await resolvePlace(s);
   ctx.places.push(pl);
   if (s.county && !pl.county) throw new Unanswerable(`We couldn't find a county named "${s.county}"${s.states.length ? ` in ${s.states.join(", ")}` : ""}.`);
   const out = await dispatch(ctx, s, pl);
+  if (pl.corr) await corrNote(ctx, s, pl, out).catch((e) => console.error("corrected NTEE note failed", e));
+  else if (s.ntee !== "corrected" && s.source !== "household_giving" && s.source !== "foundation_finances" && await corrMoves(s)) out.followUps = [...(out.followUps ?? []), CORR_CHIP];
   // Years before e-filing was required: say so, and on a trend lead with it (much of the rise is filers moving to e-file).
   if (isGrantSrc(s) && grantYears(s).from < EFILE_REQUIRED) {
     const { from, to } = grantYears(s), note = await earlyCoverage(pl.g.kind, from).catch(() => "");
@@ -1116,6 +1164,61 @@ async function run(ctx: Ctx, s0: Spec): Promise<Out> {
   else if (s.source !== "foundation_grants" && (s.funderSize || s.funderType || s.recipientKind)) out.caveats = ["Foundation size, foundation type and recipient kind apply only to foundation grants, so they're not applied here.", ...out.caveats];
   else if (hasFilt(pl.f)) out.caveats = [...pl.f.notes, ...out.caveats];
   return out;
+}
+
+// ---- corrected NTEE groups (spec.ntee "corrected", generosity-data 072)
+export const CORR_CHIP = "With corrected categories?";
+const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). The IRS codes are unchanged and stay the default.";
+// Offer the chip only when an NTEE-coded cause has orgs that move in or out of it.
+const corrMoves = async (s: Spec): Promise<boolean> => {
+  const pats = [...new Set(s.causes.filter((c) => !c.label && c.ntee.length).flatMap((c) => c.ntee.map((n) => `${n}%`)))];
+  if (!pats.length) return false;
+  const r = await db.query(`SELECT EXISTS (SELECT 1 FROM org_ntee_suggested WHERE suggested_major::text LIKE ANY($1::text[]) OR irs_ntee LIKE ANY($1::text[])) AS x`, [pats]).catch(() => null);
+  return !!r?.rows[0]?.x;
+};
+// The footnote: how many orgs and dollars (grant sources) moved into and out of each corrected cause, in the
+// answer's years and place. A split by NTEE group (or fastest causes) says how many orgs moved in all.
+async function corrNote(ctx: Ctx, s: Spec, pl: Place, out: Out) {
+  const grant = isGrantSrc(s) && s.metric !== "count_orgs";
+  const y = grant ? grantYears(s) : null;
+  const causes = (s.causes as C[]).filter((c) => c.corr);
+  const notes: string[] = [];
+  const run1 = async (c: C | null) => {
+    const p = new P();
+    const pats = c ? p.add(c.ntee.map((n) => `${n}%`)) : null;
+    const sm = pats ? `ns.suggested_major::text LIKE ANY(${pats}::text[])` : "true", im = pats ? `coalesce(x.ntee, '') LIKE ANY(${pats}::text[])` : "false";
+    let sql: string;
+    if (grant && y) {
+      const w = [...placeWhere(pl, p, "g.recipient_state", "g.county_fips"), ...gExtra(pl, p, "g")];
+      sql = `SELECT count(DISTINCT x.ein) FILTER (WHERE x.sm AND NOT x.im)::int AS n_in, coalesce(sum(x.amount) FILTER (WHERE x.sm AND NOT x.im), 0)::float8 AS usd_in,
+       count(DISTINCT x.ein) FILTER (WHERE x.im AND NOT x.sm)::int AS n_out, coalesce(sum(x.amount) FILTER (WHERE x.im AND NOT x.sm), 0)::float8 AS usd_out
+FROM (SELECT ns.ein, g.amount, ${sm} AS sm, ${im.replace("x.ntee", "g.recipient_ntee")} AS im
+      FROM org_ntee_suggested ns
+      CROSS JOIN LATERAL (SELECT * FROM ${pl.g.clean} g0 WHERE g0.recipient_ein = ns.ein AND g0.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)} OFFSET 0) g
+      ${w.length ? `WHERE ${and(w)}` : ""}) x`;
+    } else {
+      const w = pl.states.length ? [`o.state = ANY(${p.add(pl.states)}::text[])`] : [];
+      sql = `SELECT count(*) FILTER (WHERE x.sm AND NOT x.im)::int AS n_in, 0::float8 AS usd_in, count(*) FILTER (WHERE x.im AND NOT x.sm)::int AS n_out, 0::float8 AS usd_out
+FROM (SELECT ns.ein, ${sm} AS sm, ${im.replace("x.ntee", "o.ntee_cd")} AS im FROM org_ntee_suggested ns JOIN orgs o ON o.ein = ns.ein ${w.length ? `WHERE ${and(w)}` : ""}) x`;
+    }
+    const [r] = await ctx.q<{ n_in: number; usd_in: number; n_out: number; usd_out: number }>(`Orgs${grant ? " and dollars" : ""} moved by corrected NTEE groups${c ? `: ${c.name}` : ""}`, sql, p);
+    return r;
+  };
+  const when = y ? `, ${yrs(y.from, y.to)}` : "";
+  const orgs = (n: number) => `${int(n)} ${n === 1 ? "org" : "orgs"}`;
+  const amt = (n: number, usd: number) => (grant ? `${orgs(n)} (${money(usd)})` : orgs(n));
+  if (causes.length) {
+    for (const c of causes) {
+      const r = await run1(c);
+      notes.push(`${cap(c.name)}: ${amt(r.n_in, r.usd_in)} moved in and ${amt(r.n_out, r.usd_out)} moved out${when}.`);
+    }
+  } else {
+    const r = await run1(null);
+    notes.push(`${amt(r.n_in, r.usd_in)} counted under a different NTEE major group than their IRS code${when}.`);
+  }
+  out.caveats.unshift(`Corrected categories. ${notes.join(" ")} ${CORR_GRADE}`);
+  out.causeNote = `${out.causeNote ? `${out.causeNote.replace(/\s+$/, "")} ` : ""}By corrected category: orgs in org_ntee_suggested count under their suggested NTEE major group.`;
+  out.coverage = [...out.coverage, { label: "NTEE basis", value: "Corrected categories" }];
 }
 
 async function dispatch(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
@@ -1442,7 +1545,7 @@ async function breakdown(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const linked = !!c || ["cause", "cause_detail", "recipient_size"].includes(by);
   const p = new P();
   let sql: string, cs: CauseSql;
-  if (by === "county" && ctx.cube && pl.g.kind === "pf" && !hasFilt(pl.f) && (!c || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length === 1)))) {
+  if (by === "county" && ctx.cube && !pl.corr && pl.g.kind === "pf" && !hasFilt(pl.f) && (!c || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length === 1)))) {
     cs = causeSql(c, new P(), "", "");
     const w = [`cy.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`, "cy.county_fips IS NOT NULL", ...(linked ? ["cy.linked"] : []), ...(c ? (p.cause(c), [`cy.ntee_major = ANY(${p.add(c.ntee)}::text[])`]) : []), ...placeWhere({ ...pl, county: null }, p, "cy.recipient_state", "cy.county_fips")];
     sql = `SELECT cy.county_fips AS k, sum(cy.usd)::float8 AS usd, sum(cy.usd)::float8 AS primary_usd, sum(cy.n)::int AS n, sum(cy.n)::int AS primary_n
@@ -1456,7 +1559,8 @@ FROM ${pl.g.cube} x WHERE ${and(cw.where)} GROUP BY 1`;
   } else {
     const gw = grantWhere(c, p, pl, y, linked);
     cs = gw.cs;
-    const dim: Record<string, string> = { state: "g.recipient_state", county: "g.county_fips", cause: "coalesce(left(g.recipient_ntee, 1), '?')", cause_detail: "coalesce(left(g.recipient_ntee, 3), '?')", recipient_size: "rp.band::text", funder_size: "fp.asset_band::text", funder_type: "fp.funder_type", recipient_kind: "CASE WHEN pe.kind IS NOT NULL THEN pe.kind WHEN g.recipient_ein IS NOT NULL THEN 'nonprofit' ELSE 'unidentified' END", year: "g.tax_year::text", charity_funder: "g.funder_class" };
+    const gNtee = pl.corr ? corrNtee("g.recipient_ein", "g.recipient_ntee") : "g.recipient_ntee";
+    const dim: Record<string, string> = { state: "g.recipient_state", county: "g.county_fips", cause: `coalesce(left(${gNtee}, 1), '?')`, cause_detail: `coalesce(left(${gNtee}, 3), '?')`, recipient_size: "rp.band::text", funder_size: "fp.asset_band::text", funder_type: "fp.funder_type", recipient_kind: "CASE WHEN pe.kind IS NOT NULL THEN pe.kind WHEN g.recipient_ein IS NOT NULL THEN 'nonprofit' ELSE 'unidentified' END", year: "g.tax_year::text", charity_funder: "g.funder_class" };
     const joins = by === "recipient_size" ? "LEFT JOIN recipient_profile rp ON rp.ein = g.recipient_ein" : by === "funder_size" || by === "funder_type" ? "LEFT JOIN funder_profile fp ON fp.ein = g.funder_ein" : by === "recipient_kind" ? "JOIN grants gr ON gr.id = g.id LEFT JOIN public_entities pe ON pe.id = gr.recipient_entity" : "";
     const tierN = cs.tier ? `(count(*) FILTER (WHERE ${cs.tier} = 'primary'))::int` : "count(*)::int";
     sql = `SELECT ${dim[by]} AS k, sum(g.amount)::float8 AS usd, ${primarySum(cs, "g.amount")} AS primary_usd, count(*)::int AS n, ${tierN} AS primary_n
@@ -1719,9 +1823,10 @@ GROUP BY 1`, p);
   } else {
   const pw = [...placeWhere(pl, p, "g.recipient_state", "g.county_fips"), ...filtGc(pl.f, p), ...gExtra(pl, p, "g")];
   const pa = p.add(a), pz = p.add(z);
-  rows = await ctx.q<{ grp: string; y0: number; y1: number }>("Grant dollars by NTEE major group and graded label, first and last full year", `SELECT left(g.recipient_ntee, 1) AS grp, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pa}), 0)::float8 AS y0,
+  const gNtee = pl.corr ? corrNtee("g.recipient_ein", "g.recipient_ntee") : "g.recipient_ntee";
+  rows = await ctx.q<{ grp: string; y0: number; y1: number }>("Grant dollars by NTEE major group and graded label, first and last full year", `SELECT left(${gNtee}, 1) AS grp, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pa}), 0)::float8 AS y0,
        coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pz}), 0)::float8 AS y1
-FROM ${pl.g.clean} g WHERE g.recipient_ntee ~ '^[A-Z]' AND g.tax_year IN (${pa}, ${pz}) ${pw.length ? `AND ${and(pw)}` : ""}
+FROM ${pl.g.clean} g WHERE ${gNtee} ~ '^[A-Z]' AND g.tax_year IN (${pa}, ${pz}) ${pw.length ? `AND ${and(pw)}` : ""}
 GROUP BY 1
 UNION ALL
 SELECT 'label:' || l.label, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pa}), 0)::float8, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pz}), 0)::float8
@@ -1893,7 +1998,7 @@ async function byCountyGroup(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const fw = fedWhere(c, p, { ...pl, area: null }, y);
     cs = fw.cs;
     money = `SELECT fa.pop_county_fips AS k, ${fedSum(cs)} AS usd FROM ${fw.from} WHERE ${and([...fw.where, "fa.pop_county_fips IS NOT NULL"])} GROUP BY 1`;
-  } else if (grant && pl.g.kind === "pf" && ctx.cube && !hasFilt(pl.f) && (!c || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length === 1)))) {
+  } else if (grant && pl.g.kind === "pf" && ctx.cube && !pl.corr && !hasFilt(pl.f) && (!c || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length === 1)))) {
     cs = causeSql(c, new P(), "", "");
     const w = [`cy.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`, "cy.county_fips IS NOT NULL", ...(c ? (p.cause(c), ["cy.linked", `cy.ntee_major = ANY(${p.add(c.ntee)}::text[])`]) : []), ...placeWhere({ ...pl, area: null }, p, "cy.recipient_state", "cy.county_fips")];
     money = `SELECT cy.county_fips AS k, sum(cy.usd)::float8 AS usd FROM grant_county_year cy WHERE ${and(w)} GROUP BY 1`;
@@ -2277,7 +2382,7 @@ async function grantSize(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const y = grantYears(s);
   // Research layer: percentiles from grant_size_hist / charity_grant_size_hist, count and average from the cube.
   // Keyword causes, long NTEE codes and counties use the exact grant_clean query.
-  const hist = cubeOk(ctx, c, pl);
+  const hist = cubeOk(ctx, c, pl) && !pl.corr; // histograms have no EIN: corrected groups read grant_clean
   const stat = async (cc: Cause | null, title: string) => {
     const p = new P();
     const gw = grantWhere(cc, p, pl, y, false);
@@ -2633,10 +2738,11 @@ FROM x JOIN flag_year f ON f.ein = x.recipient_ein AND f.tax_year = 2024 AND f.f
       if (by === "county" && pl.county) throw new Unanswerable("Pick a state or the whole US to rank counties.");
       const p = new P();
       const fw = fedWhere(c, p, pl, y);
+      const oNtee = pl.corr ? corrNtee("fa.recipient_ein", "o.ntee_cd") : "o.ntee_cd";
       const dim: Record<string, [string, string]> = {
         state: ["fa.pop_state", "fa.pop_state IS NOT NULL"], county: ["fa.pop_county_fips", "fa.pop_county_fips IS NOT NULL"], year: ["fa.fiscal_year::text", "true"],
         agency: ["fa.agency_name", "true"], program: ["fa.cfda_number || ' ' || coalesce(fa.cfda_title, '')", "fa.cfda_number IS NOT NULL"],
-        cause: ["coalesce(left(o.ntee_cd, 1), '?')", "fa.recipient_ein IS NOT NULL"], cause_detail: ["coalesce(left(o.ntee_cd, 3), '?')", "fa.recipient_ein IS NOT NULL"],
+        cause: [`coalesce(left(${oNtee}, 1), '?')`, "fa.recipient_ein IS NOT NULL"], cause_detail: [`coalesce(left(${oNtee}, 3), '?')`, "fa.recipient_ein IS NOT NULL"],
         recipient: ["coalesce(fa.recipient_ein, fa.recipient_uei, fa.recipient_name)", "true"],
       };
       const raw = await ctx.q<{ k: string; name: string | null; usd: number; n: number; orgs: number }>(`Federal awards by ${by}`, `SELECT ${dim[by][0]} AS k, min(fa.recipient_name) AS name, ${fedSum(fw.cs)} AS usd, count(*)::int AS n,
@@ -2685,7 +2791,7 @@ FROM ${fw.from} WHERE ${and([...fw.where, dim[by][1]])} GROUP BY 1`, p);
       const p = new P();
       const fw = fedWhere(c, p, pl, y);
       // fed_award_size_hist (generosity-data 046) unless the cause is keywords or a long NTEE code, or a county.
-      const hist = ctx.cube && !pl.county && !pl.region && !prog && cubeCause(c);
+      const hist = ctx.cube && !pl.county && !pl.region && !prog && cubeCause(c) && !(c as C | null)?.corr;
       let r: { n: number; avg: number; median: number; p90: number }, med$: string, p90$: string, approx = false;
       if (hist) {
         const ph = new P();

@@ -14,6 +14,7 @@ export type Expect = {
   label?: string; subtype?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
   order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number; region?: string; topN?: number; streak?: number;
   premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
+  nteeBasis?: string;       // spec.ntee: "irs" | "corrected"
 };
 export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   const bad: string[] = [];
@@ -35,6 +36,7 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   if (e.funderSizeMin && s.funderSize?.min !== e.funderSizeMin) bad.push(`funderSize.min ${s.funderSize?.min}, want ${e.funderSizeMin}`);
   if (e.recipientSizeMax && s.recipientSize?.max !== e.recipientSizeMax) bad.push(`recipientSize.max ${s.recipientSize?.max}, want ${e.recipientSizeMax}`);
   for (const k of ["yearFrom", "yearTo"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
+  if (e.nteeBasis !== undefined && s.ntee !== e.nteeBasis) bad.push(`ntee ${s.ntee}, want ${e.nteeBasis}`);
   for (const k of ["region", "topN", "streak"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   return bad;
 }

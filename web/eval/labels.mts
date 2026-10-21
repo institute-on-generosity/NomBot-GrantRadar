@@ -169,6 +169,10 @@ const ai = await apiSearch({ q: "refugee", label: "immigrants_refugees", label_s
 check(ai.query.label_subtype === "policy" && ai.results.every((x) => x.label?.subtypes?.includes("policy")), "api search label_subtype=policy");
 const none = await apiOrg("341877332", "http://x"); // Mid-Ohio Youth Mentoring
 check(!("error" in none) && none.org.labels.length === 0, "api org without labels: empty list");
+// Corrected NTEE group (generosity-data 072): Brown University is S412 at the IRS, suggested B (Education)
+const brown = await apiOrg("050258809", "http://x");
+check(!("error" in brown) && brown.org.ntee_suggested?.major === "B" && brown.org.ntee_suggested.name === "Education" && !!brown.org.ntee_suggested.quote && brown.org.ntee?.code?.startsWith("S") === true, "api org ntee_suggested: Brown S412, likely B");
+check(!("error" in none) && none.org.ntee_suggested === null, "api org without a suggestion: ntee_suggested null");
 
 await db.end();
 console.log(fails ? `\n${fails} failed` : "\nall passed");

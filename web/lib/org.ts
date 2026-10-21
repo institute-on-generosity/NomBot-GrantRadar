@@ -22,6 +22,7 @@ export async function getOrg(einParam: string) {
   const links = await boardLinks(ein).catch(() => []); // needs generosity-data migration 018
   const labels = await orgLabels(ein).catch(() => []); // graded cause labels (generosity-data migration 032)
   const tax = await taxStatus(ein).catch(() => null); // IRS Pub 78 and revocations (generosity-data migration 063)
+  const nteeSuggested = await suggestedNtee(ein).catch(() => null); // corrected NTEE group (generosity-data migration 072)
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
@@ -52,6 +53,8 @@ export async function getOrg(einParam: string) {
     ruling: orgAge(o.ruling) != null ? String(o.ruling).slice(0, 4) : null,
     age: orgAge(o.ruling), // track record: whole years since the IRS ruling
     ntee: o.ntee_cd ? { code: o.ntee_cd as string, label: nteeLabel(o.ntee_cd) } : null,
+    // A better NTEE major group when the IRS code doesn't fit the org's own 990 text. The IRS code stays as is.
+    nteeSuggested,
     labels, // climate, women and girls: tier (primary or partial) and a short why
     // The organization's own site as it lists it on its 990 header, so donors can look for themselves.
     website: w?.website as string | null ?? null,
@@ -70,6 +73,18 @@ export async function getOrg(einParam: string) {
     // Board members who also sit on other boards in this state (board_members, by first + last name)
     links,
   };
+}
+
+// Corrected NTEE group (generosity-data org_ntee_suggested, migration 072): orgs whose IRS major group doesn't fit
+// their own newest 990 text. Only the major group is stored (detailed codes failed a spot check). 4,049 orgs,
+// graded 94% right on a fresh sample of 150 by hand and by a blind judge.
+export const NTEE_SUGGESTED_NOTE = "Suggested from the org's own 990 text by a model check, graded 94% right on a sample of 150. The IRS code is unchanged.";
+export type NteeSuggested = { major: string; name: string; quote: string; irs_code: string; note: string };
+export async function suggestedNtee(ein: string): Promise<NteeSuggested | null> {
+  const { rows: [r] } = await db.query("SELECT suggested_major, quote, irs_ntee FROM org_ntee_suggested WHERE ein = $1", [ein]);
+  if (!r) return null;
+  const major = String(r.suggested_major).trim();
+  return { major, name: nteeLabel(major) ?? major, quote: r.quote as string, irs_code: r.irs_ntee as string, note: NTEE_SUGGESTED_NOTE };
 }
 
 // Where the money comes from, Form 990 Part VIII (or 990-EZ Part I) as loaded in the SOI extract.

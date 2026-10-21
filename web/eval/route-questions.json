@@ -85,5 +85,7 @@
   {"q": "Which states get the most foundation money for mental health per resident?", "metric": ["by_state"], "label": "mental_health", "perResident": true},
   {"q": "How much foundation money goes to education?", "metric": ["total"], "label": "education"},
   {"q": "Is foundation funding for education growing?", "metric": ["trend"], "label": "education"},
-  {"q": "Which foundations fund adult literacy programs?", "metric": ["top_funders"], "label": "education"}
+  {"q": "Which foundations fund adult literacy programs?", "metric": ["top_funders"], "label": "education"},
+  {"q": "how much foundation money goes to arts and culture with corrected NTEE categories?", "metric": ["total"], "ntee": "A", "nteeBasis": "corrected"},
+  {"q": "which states get the most foundation money for food banks", "metric": ["by_state"], "ntee": "K31", "nteeBasis": "irs"}
 ]

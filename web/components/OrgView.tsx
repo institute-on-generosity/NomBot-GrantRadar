@@ -117,7 +117,11 @@ async function Org({ params, searchParams, modal }: Props) {
       <section>
         <h2>Details</h2>
         <dl>
-          {o.ntee && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
+          {o.ntee && !o.nteeSuggested && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
+          {o.nteeSuggested && <><dt>Cause</dt><dd className="org-labels">
+            <span>IRS code: {o.ntee ? <>{o.ntee.code} ({o.ntee.label})</> : o.nteeSuggested.irs_code}. Likely: <b>{o.nteeSuggested.name} ({o.nteeSuggested.major})</b>
+              <small>&ldquo;{readable(o.nteeSuggested.quote)}&rdquo;</small>
+              <small>{o.nteeSuggested.note}</small></span></dd></>}
           {o.labels.length > 0 && <><dt>Cause labels</dt><dd className="org-labels">{o.labels.map((l) => (
             <span key={l.label} title="Graded by NomBot from the organization's name and Form 990 text">
               <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "partial focus"}{l.subtypes && LABEL_SUBTYPES[l.label] && ` · ${l.subtypes.map((x) => LABEL_SUBTYPES[l.label]!.names[x as LabelSub]?.toLowerCase() ?? x).join(" and ")}`}{l.why && <small>{l.why}</small>}

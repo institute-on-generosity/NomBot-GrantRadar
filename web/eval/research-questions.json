@@ -86,5 +86,7 @@
   { "q": "Did foundation giving to racial justice spike after 2020 and then fall back?", "metric": ["trend"], "label": "racial_equity" },
   { "q": "How much foundation money supports immigrants and refugees?", "metric": ["total"], "label": "immigrants_refugees", "subtype": "services", "headlineHas": "immigrants and refugees", "headlineNot": "closest graded label", "caveatHas": "Immigration policy research and advocacy groups, on every side, are a separate sub-type" },
   { "q": "Which foundations give the most to refugee resettlement?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "services", "caveatHas": "serve immigrants and refugees" },
-  { "q": "Which foundations fund immigration policy groups?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "policy", "headlineNot": "closest graded label", "caveatHas": "argue for less immigration" }
+  { "q": "Which foundations fund immigration policy groups?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "policy", "headlineNot": "closest graded label", "caveatHas": "argue for less immigration" },
+  { "q": "If we fix miscoded organizations, how much foundation money goes to the arts?", "metric": ["total", "share"], "ntee": "A", "nteeBasis": "corrected", "caveatHas": "Corrected categories\\. .*[0-9,]+ orgs \\(\\$" },
+  { "q": "What share of foundation money goes to community improvement groups, with corrected categories?", "metric": ["share", "total"], "ntee": "S", "nteeBasis": "corrected", "caveatHas": "moved out" }
 ]

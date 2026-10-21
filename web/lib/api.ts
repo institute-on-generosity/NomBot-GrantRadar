@@ -99,6 +99,8 @@ export async function apiOrg(einRaw: string, base: string) {
       name: o.name,
       address: { street: o.street, city: o.city, state: o.state, zip: o.zip },
       ntee: o.ntee,
+      // Corrected NTEE major group when the IRS code doesn't fit the org's own 990 text (generosity-data 072), else null
+      ntee_suggested: o.nteeSuggested,
       // Graded cause labels: primary (the cause is the main work) or partial (one named goal among others), with why
       labels: o.labels.map((l) => ({ label: l.label, name: l.name, tier: l.tier, why: l.why, ...(l.subtypes ? { subtypes: l.subtypes } : {}) })),
       status: o.status,
