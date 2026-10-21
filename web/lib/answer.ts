@@ -829,7 +829,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v37: education label (graded g3), with its caveat (LABEL_CAVEAT).
 // v38: spec.ntee "corrected" (generosity-data 072 suggested NTEE groups), the "With corrected categories?" chip.
 // v39: health_equity label (graded g2), with its caveat (LABEL_CAVEAT).
-const answerMemo = memo<Answer>("answer:v39", 500, 6 * 3600_000);
+// v40: corrected NTEE footnote splits orgs added with no IRS code (uncoded_vote_llm) from orgs moved.
+const answerMemo = memo<Answer>("answer:v40", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1170,7 +1171,7 @@ async function run(ctx: Ctx, s0: Spec): Promise<Out> {
 
 // ---- corrected NTEE groups (spec.ntee "corrected", generosity-data 072)
 export const CORR_CHIP = "With corrected categories?";
-const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). The IRS codes are unchanged and stay the default.";
+const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). Each added org had no IRS code and counts under a group suggested from similar orgs and its own filings (graded 98% right on a sample of 150). The IRS codes are unchanged and stay the default.";
 // Offer the chip only when an NTEE-coded cause has orgs that move in or out of it.
 const corrMoves = async (s: Spec): Promise<boolean> => {
   const pats = [...new Set(s.causes.filter((c) => !c.label && c.ntee.length).flatMap((c) => c.ntee.map((n) => `${n}%`)))];
@@ -1179,7 +1180,8 @@ const corrMoves = async (s: Spec): Promise<boolean> => {
   return !!r?.rows[0]?.x;
 };
 // The footnote: how many orgs and dollars (grant sources) moved into and out of each corrected cause, in the
-// answer's years and place. A split by NTEE group (or fastest causes) says how many orgs moved in all.
+// answer's years and place. Orgs with no IRS code (irs_ntee '', method uncoded_vote_llm) are "added", not moved.
+// A split by NTEE group (or fastest causes) says how many orgs moved and were added in all.
 async function corrNote(ctx: Ctx, s: Spec, pl: Place, out: Out) {
   const grant = isGrantSrc(s) && s.metric !== "count_orgs";
   const y = grant ? grantYears(s) : null;
@@ -1189,21 +1191,24 @@ async function corrNote(ctx: Ctx, s: Spec, pl: Place, out: Out) {
     const p = new P();
     const pats = c ? p.add(c.ntee.map((n) => `${n}%`)) : null;
     const sm = pats ? `ns.suggested_major::text LIKE ANY(${pats}::text[])` : "true", im = pats ? `coalesce(x.ntee, '') LIKE ANY(${pats}::text[])` : "false";
+    const un = "coalesce(ns.irs_ntee, '') = ''";
     let sql: string;
     if (grant && y) {
       const w = [...placeWhere(pl, p, "g.recipient_state", "g.county_fips"), ...gExtra(pl, p, "g")];
-      sql = `SELECT count(DISTINCT x.ein) FILTER (WHERE x.sm AND NOT x.im)::int AS n_in, coalesce(sum(x.amount) FILTER (WHERE x.sm AND NOT x.im), 0)::float8 AS usd_in,
+      sql = `SELECT count(DISTINCT x.ein) FILTER (WHERE x.sm AND NOT x.im AND NOT x.un)::int AS n_in, coalesce(sum(x.amount) FILTER (WHERE x.sm AND NOT x.im AND NOT x.un), 0)::float8 AS usd_in,
+       count(DISTINCT x.ein) FILTER (WHERE x.sm AND NOT x.im AND x.un)::int AS n_add, coalesce(sum(x.amount) FILTER (WHERE x.sm AND NOT x.im AND x.un), 0)::float8 AS usd_add,
        count(DISTINCT x.ein) FILTER (WHERE x.im AND NOT x.sm)::int AS n_out, coalesce(sum(x.amount) FILTER (WHERE x.im AND NOT x.sm), 0)::float8 AS usd_out
-FROM (SELECT ns.ein, g.amount, ${sm} AS sm, ${im.replace("x.ntee", "g.recipient_ntee")} AS im
+FROM (SELECT ns.ein, g.amount, ${sm} AS sm, ${un} AS un, ${im.replace("x.ntee", "g.recipient_ntee")} AS im
       FROM org_ntee_suggested ns
       CROSS JOIN LATERAL (SELECT * FROM ${pl.g.clean} g0 WHERE g0.recipient_ein = ns.ein AND g0.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)} OFFSET 0) g
       ${w.length ? `WHERE ${and(w)}` : ""}) x`;
     } else {
       const w = pl.states.length ? [`o.state = ANY(${p.add(pl.states)}::text[])`] : [];
-      sql = `SELECT count(*) FILTER (WHERE x.sm AND NOT x.im)::int AS n_in, 0::float8 AS usd_in, count(*) FILTER (WHERE x.im AND NOT x.sm)::int AS n_out, 0::float8 AS usd_out
-FROM (SELECT ns.ein, ${sm} AS sm, ${im.replace("x.ntee", "o.ntee_cd")} AS im FROM org_ntee_suggested ns JOIN orgs o ON o.ein = ns.ein ${w.length ? `WHERE ${and(w)}` : ""}) x`;
+      sql = `SELECT count(*) FILTER (WHERE x.sm AND NOT x.im AND NOT x.un)::int AS n_in, 0::float8 AS usd_in, count(*) FILTER (WHERE x.sm AND NOT x.im AND x.un)::int AS n_add, 0::float8 AS usd_add,
+       count(*) FILTER (WHERE x.im AND NOT x.sm)::int AS n_out, 0::float8 AS usd_out
+FROM (SELECT ns.ein, ${sm} AS sm, ${un} AS un, ${im.replace("x.ntee", "o.ntee_cd")} AS im FROM org_ntee_suggested ns JOIN orgs o ON o.ein = ns.ein ${w.length ? `WHERE ${and(w)}` : ""}) x`;
     }
-    const [r] = await ctx.q<{ n_in: number; usd_in: number; n_out: number; usd_out: number }>(`Orgs${grant ? " and dollars" : ""} moved by corrected NTEE groups${c ? `: ${c.name}` : ""}`, sql, p);
+    const [r] = await ctx.q<{ n_in: number; usd_in: number; n_add: number; usd_add: number; n_out: number; usd_out: number }>(`Orgs${grant ? " and dollars" : ""} moved or added by corrected NTEE groups${c ? `: ${c.name}` : ""}`, sql, p);
     return r;
   };
   const when = y ? `, ${yrs(y.from, y.to)}` : "";
@@ -1212,11 +1217,12 @@ FROM (SELECT ns.ein, ${sm} AS sm, ${im.replace("x.ntee", "o.ntee_cd")} AS im FRO
   if (causes.length) {
     for (const c of causes) {
       const r = await run1(c);
-      notes.push(`${cap(c.name)}: ${amt(r.n_in, r.usd_in)} moved in and ${amt(r.n_out, r.usd_out)} moved out${when}.`);
+      const add = r.n_add ? `, ${amt(r.n_add, r.usd_add)} added that had no IRS code,` : "";
+      notes.push(`${cap(c.name)}: ${amt(r.n_in, r.usd_in)} moved in${add} and ${amt(r.n_out, r.usd_out)} moved out${when}.`);
     }
   } else {
     const r = await run1(null);
-    notes.push(`${amt(r.n_in, r.usd_in)} counted under a different NTEE major group than their IRS code${when}.`);
+    notes.push(`${amt(r.n_in, r.usd_in)} counted under a different NTEE major group than their IRS code${r.n_add ? `, and ${amt(r.n_add, r.usd_add)} with no IRS code added under a suggested group` : ""}${when}.`);
   }
   out.caveats.unshift(`Corrected categories. ${notes.join(" ")} ${CORR_GRADE}`);
   out.causeNote = `${out.causeNote ? `${out.causeNote.replace(/\s+$/, "")} ` : ""}By corrected category: orgs in org_ntee_suggested count under their suggested NTEE major group.`;

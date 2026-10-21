@@ -119,8 +119,8 @@ async function Org({ params, searchParams, modal }: Props) {
         <dl>
           {o.ntee && !o.nteeSuggested && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
           {o.nteeSuggested && <><dt>Cause</dt><dd className="org-labels">
-            <span>IRS code: {o.ntee ? <>{o.ntee.code} ({o.ntee.label})</> : o.nteeSuggested.irs_code}. Likely: <b>{o.nteeSuggested.name} ({o.nteeSuggested.major})</b>
-              <small>&ldquo;{readable(o.nteeSuggested.quote)}&rdquo;</small>
+            <span>IRS code: {o.ntee ? <>{o.ntee.code} ({o.ntee.label})</> : (o.nteeSuggested.irs_code ?? "none")}. Likely: <b>{o.nteeSuggested.name} ({o.nteeSuggested.major})</b>
+              {o.nteeSuggested.quote && <small>&ldquo;{readable(o.nteeSuggested.quote)}&rdquo;</small>}
               <small>{o.nteeSuggested.note}</small></span></dd></>}
           {o.labels.length > 0 && <><dt>Cause labels</dt><dd className="org-labels">{o.labels.map((l) => (
             <span key={l.label} title="Graded by NomBot from the organization's name and Form 990 text">

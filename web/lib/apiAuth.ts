@@ -83,8 +83,8 @@ export function record(keyId: number, route: string, status: number, ms = 0) {
   const r = route.slice(0, 100), t = Math.max(0, Math.round(ms));
   db.query(
     `WITH u AS (UPDATE api_keys SET last_used_at = now() WHERE id = $1)
-     INSERT INTO api_usage (key_id, day, route, status, ms_sum, ms_max) VALUES ($1, current_date, $2, $3, $4, $4)
-     ON CONFLICT (key_id, day, route, status) DO UPDATE SET n = api_usage.n + 1, ms_sum = api_usage.ms_sum + $4, ms_max = greatest(api_usage.ms_max, $4)`,
+     INSERT INTO api_usage (key_id, day, route, status, ms_sum, ms_max) VALUES ($1, current_date, $2, $3, $4::int, $4::int)
+     ON CONFLICT (key_id, day, route, status) DO UPDATE SET n = api_usage.n + 1, ms_sum = api_usage.ms_sum + $4::int, ms_max = greatest(api_usage.ms_max, $4::int)`,
     [keyId, r, status, t],
   ).catch((e) => console.error("api usage write failed", e.message));
   if (status >= 400) {
