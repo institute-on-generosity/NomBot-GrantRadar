@@ -10,7 +10,7 @@ import type { Profile, Seat } from "@/lib/people";
 // grants between their boards, and who they keep serving with.
 // topicHref: on the results page, a way back to an organization search for the same words.
 export function PersonView({ name, profile, topicHref }: { name: string; profile: Profile; topicHref?: string }) {
-  const { seats, giving, peers, between } = profile;
+  const { seats, others, giving, peers, between } = profile;
   if (!seats.length) {
     return (
       <div className="person">
@@ -47,6 +47,17 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
           <p className="person-meta">
             {byState.size > 1 && <>Matched by first and last name: seats in different states may be different people.</>}
             {topicHref && <> <NavLink href={topicHref} label="Searching organizations…">Search organizations for “{name}” instead</NavLink></>}
+          </p>
+        )}
+        {others.length > 0 && (
+          // generosity-data 078: one name, several people told apart by middle initial or Jr / Sr
+          <p className="person-meta">
+            Other people with this name:{" "}
+            {others.slice(0, 6).map((o, i) => (
+              <span key={o.ein + o.name}>{i > 0 && ", "}<NavLink href={`/person?${new URLSearchParams({ name: o.name, ein: o.ein })}`} label="Opening the person…">{titleCase(o.name)}</NavLink>
+                {" "}({o.noMiddle ? "name only, " : ""}{o.boards} {o.boards === 1 ? "board" : "boards"}{o.states.length ? `, ${o.states.slice(0, 3).join(", ")}` : ""})</span>
+            ))}
+            {others.length > 6 && <> and {others.length - 6} more</>}
           </p>
         )}
       </header>
@@ -132,7 +143,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
           <ul className="peers">
             {peers.map((p) => (
               <li key={p.name}>
-                <NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…"><b>{titleCase(p.name)}</b></NavLink>
+                <NavLink href={`/person?${new URLSearchParams({ name: p.name, ein: p.ein })}`} label="Opening the person…"><b>{titleCase(p.name)}</b></NavLink>
                 <span className="count">{p.shared.length} boards together</span>
                 <small>{p.shared.map((x) => titleCase(x.org)).join(", ")}</small>
               </li>

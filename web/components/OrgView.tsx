@@ -112,9 +112,9 @@ async function Org({ params, searchParams, modal }: Props) {
       {/* Grants received (foundations, charities, federal) and given; streams in after the profile */}
       <Suspense fallback={<p className="hint">Loading grants…</p>}><OrgFunding ein={o.ein} /></Suspense>
 
-      {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} />}
+      {o.flag && (o.flag.people.length > 0 || o.flag.checks.length > 0) && <Leadership d={o.flag} ein={o.ein} />}
 
-      {o.links.length > 0 && <BoardConnections links={o.links} />}
+      {o.links.length > 0 && <BoardConnections links={o.links} ein={o.ein} />}
 
       {/* Nearest orgs by 990 text, with a less-funded toggle (generosity-data org_similar); streams in */}
       <Suspense fallback={null}><OrgSimilar ein={o.ein} /></Suspense>
@@ -268,7 +268,7 @@ function YearOverYear({ d }: { d: Diligence }) {
 
 // Who leads it (Part VII): paid staff first with their pay, then the board in one line; then the
 // governance answers (Part VI, IV) as a short checklist, problems first.
-function Leadership({ d }: { d: Diligence }) {
+function Leadership({ d, ein }: { d: Diligence; ein: string }) {
   const paid = d.people.filter((p) => p.pay + p.other > 0).slice(0, 6);
   const unpaid = d.people.filter((p) => p.pay + p.other === 0);
   const checks = [...d.checks].sort((a, b) => Number(a.ok) - Number(b.ok));
@@ -277,7 +277,7 @@ function Leadership({ d }: { d: Diligence }) {
       <h2>Leadership and governance</h2>
       {paid.length > 0 && (
         <ul className="people">
-          {paid.map((p) => <li key={p.name + p.title}><NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…" className="person-link"><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></NavLink><span>{money(p.pay + p.other)}</span></li>)}
+          {paid.map((p) => <li key={p.name + p.title}><NavLink href={personHref(p.name, ein)} label="Opening the person…" className="person-link"><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></NavLink><span>{money(p.pay + p.other)}</span></li>)}
         </ul>
       )}
       <p className="board-line">
@@ -286,7 +286,7 @@ function Leadership({ d }: { d: Diligence }) {
       </p>
       {unpaid.length > 0 && (
         <p className="board-names">
-          {unpaid.slice(0, 30).map((p, i) => <span key={p.name + i}>{i > 0 && ", "}<NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…">{titleCase(p.name)}</NavLink></span>)}
+          {unpaid.slice(0, 30).map((p, i) => <span key={p.name + i}>{i > 0 && ", "}<NavLink href={personHref(p.name, ein)} label="Opening the person…">{titleCase(p.name)}</NavLink></span>)}
           {unpaid.length > 30 && <> and {unpaid.length - 30} more</>}
         </p>
       )}
@@ -301,14 +301,14 @@ function Leadership({ d }: { d: Diligence }) {
 }
 
 // Board members who also sit on other boards in this state: who this organization is connected to.
-function BoardConnections({ links }: { links: BoardLink[] }) {
+function BoardConnections({ links, ein }: { links: BoardLink[]; ein: string }) {
   return (
     <section>
       <h2>Board connections</h2>
       <ul className="links">
         {links.map((p) => (
           <li key={p.name}>
-            <NavLink href={`/person?name=${encodeURIComponent(p.name)}`} label="Opening the person…" className="link-person"><b>{titleCase(p.name)}</b>{p.title && <small>{prettyTitle(p.title)}</small>}</NavLink>
+            <NavLink href={personHref(p.name, ein)} label="Opening the person…" className="link-person"><b>{titleCase(p.name)}</b>{p.title && <small>{prettyTitle(p.title)}</small>}</NavLink>
             <span>Also on {p.others.map((x, i) => <span key={x.ein}>{i > 0 && ", "}<NavLink href={`/org/${x.ein}`} label="Opening the organization…">{titleCase(x.org)}</NavLink>{x.foundation && <i className="person-tag">Foundation</i>}</span>)}</span>
           </li>
         ))}
@@ -340,3 +340,6 @@ function HealthRating({ d }: { d: Diligence }) {
     </section>
   );
 }
+
+// The person holding this seat: ein tells apart people who share a name (generosity-data 078).
+const personHref = (name: string, ein: string) => `/person?${new URLSearchParams({ name, ein: ein.replace(/\D/g, "") })}`;

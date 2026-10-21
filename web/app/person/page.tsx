@@ -4,7 +4,8 @@ import { PersonView } from "@/components/PersonView";
 import { personProfile } from "@/lib/people";
 
 // /person?name=Darren+Walker: one person's board seats (linked from "Board connections" on org pages).
-export default function PersonPage({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
+// &ein=…: the person holding that seat, when several people share the name (generosity-data 078).
+export default function PersonPage({ searchParams }: { searchParams: Promise<{ name?: string; ein?: string }> }) {
   return (
     <main>
       <Suspense fallback={<p className="hint">Loading…</p>}>
@@ -14,9 +15,10 @@ export default function PersonPage({ searchParams }: { searchParams: Promise<{ n
   );
 }
 
-async function Person({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
-  const name = ((await searchParams).name ?? "").trim().slice(0, 80);
+async function Person({ searchParams }: { searchParams: Promise<{ name?: string; ein?: string }> }) {
+  const p = await searchParams;
+  const name = (p.name ?? "").trim().slice(0, 80), ein = /^\d{9}$/.test(p.ein ?? "") ? p.ein : undefined;
   await connection();
-  const profile = name ? await personProfile(name) : { key: null, seats: [], giving: [], peers: [], between: [] };
+  const profile = name ? await personProfile(name, ein) : { key: null, seats: [], others: [], giving: [], peers: [], between: [] };
   return <PersonView name={name || "Unknown"} profile={profile} />;
 }
