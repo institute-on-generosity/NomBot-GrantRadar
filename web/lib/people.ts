@@ -1,6 +1,6 @@
 // People on nonprofit and foundation boards (generosity-data migration 018: board_members, person_key()).
-// A person is matched by first + last name (person_key), so two people with one name can merge:
-// pages group seats by state and say so.
+// A person is matched by first + last name (person_key) plus graded same-person merges (075: board_person_merges),
+// so two people with one name can still merge: pages group seats by state and say so.
 import { db } from "./db";
 import { nteeLabel } from "./ntee";
 
@@ -18,19 +18,28 @@ export function looksLikeName(q: string) {
 }
 
 // Every board seat for a name, one per organization (its newest return), foundations first, with the
-// organization's size and cause and a link to the return the seat comes from.
-export async function personSeats(name: string): Promise<{ key: string | null; seats: Seat[] }> {
-  const { rows } = await db.query(
-    `WITH k AS (SELECT person_key($1) AS key)
+// organization's size and cause and a link to the return the seat comes from. Seats join by person_key, plus one step
+// through board_person_merges (generosity-data 075: the same person under another name, "BOB JONES" / "ROBERT L JONES",
+// graded 59/60). Seats whose middle initial or Jr / Sr conflicts with the name asked for are left out ("John A Smith"
+// never shows JOHN R SMITH's seats).
+export const SEATS_SQL = `
+    WITH k AS (SELECT person_key($1) AS key, person_middle($1) AS mid, person_suffix($1) AS sfx),
+         s0 AS (SELECT b.ein, b.name FROM k JOIN board_members b ON b.person_key = k.key),
+         s1 AS (SELECT ein, name FROM s0
+                UNION SELECT m.ein_b, m.name_b FROM board_person_merges m JOIN s0 ON s0.ein = m.ein_a AND s0.name = m.name_a
+                UNION SELECT m.ein_a, m.name_a FROM board_person_merges m JOIN s0 ON s0.ein = m.ein_b AND s0.name = m.name_b)
      SELECT DISTINCT ON (b.ein) k.key, b.ein, coalesce(o.name, f.name) AS org, coalesce(o.city, f.city) AS city,
             coalesce(o.state, f.state, b.state) AS state, (f.ein IS NOT NULL) AS foundation,
             b.name, b.title, b.tax_year AS year, coalesce(b.pay, 0)::float8 AS pay, b.hours, b.object_id,
             o.ntee_cd, o.revenue_amt::float8 AS revenue, coalesce(f.assets, o.asset_amt)::float8 AS assets, f.grants_paid::float8 AS grants_paid
-     FROM k JOIN board_members b ON b.person_key = k.key
+     FROM k CROSS JOIN s1 JOIN board_members b ON b.ein = s1.ein AND b.name = s1.name
      LEFT JOIN orgs o ON o.ein = b.ein LEFT JOIN funders f ON f.ein = b.ein
+     WHERE (k.mid IS NULL OR person_middle(b.name) IS NULL OR person_middle(b.name) = k.mid)
+       AND (k.sfx IS NULL OR person_suffix(b.name) IS NULL OR person_suffix(b.name) = k.sfx)
      ORDER BY b.ein, b.tax_year DESC NULLS LAST, b.pay DESC NULLS LAST
-     LIMIT 300`,
-    [name]);
+     LIMIT 300`;
+export async function personSeats(name: string): Promise<{ key: string | null; seats: Seat[] }> {
+  const { rows } = await db.query(SEATS_SQL, [name]);
   const seats: Seat[] = rows.map((r) => ({
     ein: r.ein, org: r.org ?? r.ein, city: r.city, state: r.state, foundation: r.foundation,
     name: r.name, title: r.title, year: r.year, pay: Number(r.pay), hours: r.hours == null ? null : Number(r.hours),
@@ -86,20 +95,31 @@ export async function personProfile(name: string): Promise<Profile> {
 
 export type BoardLink = { name: string; title: string | null; others: { ein: string; org: string; foundation: boolean; title: string | null }[] };
 
-// People on this organization's board who also sit on other boards in its state. Names on more than
-// 8 boards there are skipped: those are usually different people sharing a common name.
+// People on this organization's board who also sit on other boards in its state: the same person_key (middle
+// initials and Jr / Sr not conflicting) or the same person under another name (board_person_merges, one step).
+// Names on more than 8 boards there are skipped: those are usually different people sharing a common name.
 export async function boardLinks(ein: string): Promise<BoardLink[]> {
   const { rows } = await db.query(
     `WITH me AS (SELECT DISTINCT ON (person_key) person_key, name, title FROM board_members WHERE ein = $1 AND person_key IS NOT NULL),
           st AS (SELECT coalesce((SELECT state FROM orgs WHERE ein = $1), (SELECT state FROM funders WHERE ein = $1)) AS s),
-          seat AS (  -- one row per (person, other organization), even when they hold two titles there
-            SELECT DISTINCT ON (me.person_key, b.ein) me.person_key, me.name, me.title, b.ein,
-                   coalesce(f.name, o.name, b.ein) AS org, f.ein IS NOT NULL AS foundation, b.title AS other_title
+          other AS (  -- (person, other seat): same key, or merged with any of this person's seats here
+            SELECT me.person_key, me.name, me.title, b.ein, b.name AS other_name, b.title AS other_title, b.tax_year
             FROM me JOIN board_members b ON b.person_key = me.person_key AND b.ein <> $1
-            LEFT JOIN orgs o ON o.ein = b.ein LEFT JOIN funders f ON f.ein = b.ein
+            WHERE (person_middle(me.name) IS NULL OR person_middle(b.name) IS NULL OR person_middle(me.name) = person_middle(b.name))
+              AND (person_suffix(me.name) IS NULL OR person_suffix(b.name) IS NULL OR person_suffix(me.name) = person_suffix(b.name))
+            UNION ALL
+            SELECT me.person_key, me.name, me.title, b.ein, b.name, b.title, b.tax_year
+            FROM me JOIN board_members h ON h.ein = $1 AND h.person_key = me.person_key
+            JOIN board_person_merges m ON (m.ein_a = $1 AND m.name_a = h.name) OR (m.ein_b = $1 AND m.name_b = h.name)
+            JOIN board_members b ON (b.ein, b.name) = (CASE WHEN m.ein_a = $1 THEN m.ein_b ELSE m.ein_a END, CASE WHEN m.ein_a = $1 THEN m.name_b ELSE m.name_a END)),
+          seat AS (  -- one row per (person, other organization), even when they hold two titles there
+            SELECT DISTINCT ON (x.person_key, x.ein) x.person_key, x.name, x.title, x.ein,
+                   coalesce(f.name, o.name, x.ein) AS org, f.ein IS NOT NULL AS foundation, x.other_title
+            FROM other x
+            LEFT JOIN orgs o ON o.ein = x.ein LEFT JOIN funders f ON f.ein = x.ein
             CROSS JOIN st
             WHERE coalesce(o.state, f.state) = st.s
-            ORDER BY me.person_key, b.ein, b.tax_year DESC NULLS LAST)
+            ORDER BY x.person_key, x.ein, x.tax_year DESC NULLS LAST)
      SELECT name, title, json_agg(json_build_object('ein', ein, 'org', org, 'foundation', foundation, 'title', other_title) ORDER BY foundation DESC, org) AS others
      FROM seat GROUP BY person_key, name, title
      HAVING count(*) <= 8

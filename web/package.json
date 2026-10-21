@@ -19,7 +19,8 @@
     "test:labels": "tsx eval/labels.mts",
     "test:api": "tsx eval/api.mts",
     "test:admin": "tsx eval/admin.mts",
-    "test:iog": "tsx eval/iog.mts"
+    "test:iog": "tsx eval/iog.mts",
+    "test:people": "tsx eval/people.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
