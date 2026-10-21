@@ -72,7 +72,9 @@ main.wide { max-width: 1100px; }
 @media (prefers-reduced-motion: reduce) { .flip-word, .flip-chips > * { animation: none; } }
 .prompt-groups { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; width: 100%; max-width: 640px; }
 .prompt-group { display: grid; grid-template-columns: 104px 1fr; align-items: baseline; gap: 12px; }
-.prompt-group .chips { margin-top: 0; gap: 6px; justify-content: flex-start; }
+.prompt-group .chips { margin-top: 0; gap: 6px; justify-content: flex-start; align-items: center; }
+.prompt-group .chip.show-more { border: 0; font: inherit; font-size: 13px; color: var(--mute); background: none; cursor: pointer; padding: 6px 8px; }
+.prompt-group .chip.show-more:hover { color: var(--ink); }
 .prompt-group-label { font-size: 12px; font-weight: 600; color: var(--mute); text-align: right; padding-top: 6px; }
 @media (max-width: 560px) { .prompt-group { grid-template-columns: 1fr; gap: 4px; } .prompt-group-label { text-align: left; padding-top: 0; } }
 .composer { width: 100%; background: var(--bg); border-radius: 22px; padding: 18px 12px 12px 20px; box-shadow: 0 0 0 1px var(--line), var(--shadow); transition: box-shadow .25s var(--spring); animation: settle .7s var(--spring) .06s both; }

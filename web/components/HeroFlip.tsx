@@ -9,6 +9,8 @@ export type PromptSet = { word: string; placeholder: string; prompts: string[]; 
 // foundations, research answers) and the example prompts below the search box flip with it. Pauses while
 // the pointer or keyboard is on it; with reduced motion it still changes, without the flip.
 // ?tab=research opens on the research prompts (research questions go on to /research/ask).
+const SHOWN = 2; // prompts per research group before "+ N more"
+
 export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: number }) {
   const [i, setI] = useState(start);
   const [paused, setPaused] = useState(start !== 0);
@@ -21,6 +23,7 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
     return () => clearInterval(t);
   }, [paused, chosen, sets.length]);
   const set = sets[i];
+  const [open, setOpen] = useState<string[]>([]); // groups expanded with "+ N more"
   const chip = (e: string) => (
     <NavLink key={e} href={`/?${new URLSearchParams({ question: e })}`} className="chip link" label="Reading your question…" search>
       {e}
@@ -53,7 +56,12 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
           {set.groups.map((g) => (
             <div key={g.label} className="prompt-group">
               <span className="prompt-group-label">{g.label}</span>
-              <div className="chips suggest">{g.prompts.map(chip)}</div>
+              <div className="chips suggest">
+                {(open.includes(g.label) ? g.prompts : g.prompts.slice(0, SHOWN)).map(chip)}
+                {!open.includes(g.label) && g.prompts.length > SHOWN && (
+                  <button type="button" className="chip show-more" onClick={() => setOpen([...open, g.label])}>+ {g.prompts.length - SHOWN} more</button>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -19,16 +19,20 @@ export const EXAMPLES = [
   "community foundations in Ohio",
 ];
 
-// Research prompts by cause, all shown on the home Research tab under a cause label.
+// Research prompts by cause (each one checked to answer ok), on the home Research tab under a cause label: the first
+// SHOWN of each group, the rest behind "+ N more".
 const RESEARCH_GROUPS = [
-  { label: "Climate", prompts: ["How much foundation money goes to climate?", "How concentrated is climate funding?", "Climate vs women and girls funding"] },
-  { label: "Food banks", prompts: ["Is food bank funding growing?"] },
-  { label: "Mental health", prompts: ["Is mental health funding growing?"] },
-  { label: "Housing", prompts: ["Which states get the most foundation money for housing?"] },
-  { label: "Tech and AI", prompts: ["Who are the biggest funders of tech and AI skills?"] },
-  { label: "Racial equity", prompts: ["How has racial equity funding changed since 2020?"] },
-  { label: "Immigrants", prompts: ["How much goes to immigrant services vs immigration policy?"] },
-  { label: "All causes", prompts: ["Which states get the least foundation money per resident?"] },
+  { label: "Climate", prompts: ["How much foundation money goes to climate?", "Is climate funding growing?", "How concentrated is climate funding?", "Which federal agencies fund the most climate work at nonprofits?"] },
+  { label: "Women and girls", prompts: ["How much foundation money goes to women and girls?", "How does foundation support for women and girls compare to climate?", "Which foundations fund climate, and which foundations fund women and girls?"] },
+  { label: "Food banks", prompts: ["Is food bank funding growing?", "Who are the biggest foundation funders of food banks?", "How many food banks are running deficits?"] },
+  { label: "Mental health", prompts: ["Is mental health funding growing?", "Which states get the most foundation money for mental health?", "Who are the biggest foundation funders of mental health?"] },
+  { label: "Housing", prompts: ["Which states get the most foundation money for housing?", "Is foundation money for housing growing faster than foundation giving overall?", "Who are the biggest foundation funders of homelessness work in Washington State?"] },
+  { label: "Tech and AI", prompts: ["Who are the biggest funders of tech and AI skills?", "How much foundation money goes to tech and AI skills?", "Is tech and AI skills funding growing?"] },
+  { label: "Racial equity", prompts: ["How has racial equity funding changed since 2020?", "Who are the biggest foundation funders of racial equity?", "Which foundations give the most to Native American communities?"] },
+  { label: "Immigrants", prompts: ["How much goes to immigrant services vs immigration policy?", "Which states get the most foundation money for immigrants and refugees?", "Who are the top recipients of foundation money for immigrants?"] },
+  { label: "Foundations", prompts: ["Which states get the least foundation money per resident?", "What share of foundation giving comes from the 100 largest foundations?", "What is the median payout rate by foundation size?", "Which causes are growing fastest in foundation funding?"] },
+  { label: "Nonprofit finances", prompts: ["How many nonprofits ran deficits two years in a row?", "What share of nonprofit revenue do the largest 1% of nonprofits take in?", "How many nonprofits in Mississippi have less than three months of cash?"] },
+  { label: "Household giving", prompts: ["Do high-income households give a larger share of income than low-income households?", "How has itemized charitable giving changed since 2015?"] },
 ];
 
 // Home page prompts by kind, shown under the flipping "Look up …" heading. People are board members
