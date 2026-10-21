@@ -9,8 +9,6 @@ export type PromptSet = { word: string; placeholder: string; prompts: string[]; 
 // foundations, research answers) and the example prompts below the search box flip with it. Pauses while
 // the pointer or keyboard is on it; with reduced motion it still changes, without the flip.
 // ?tab=research opens on the research prompts (research questions go on to /research/ask).
-const SHOWN = 2; // prompts per research group before "+ N more"
-
 export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: number }) {
   const [i, setI] = useState(start);
   const [paused, setPaused] = useState(start !== 0);
@@ -23,7 +21,7 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
     return () => clearInterval(t);
   }, [paused, chosen, sets.length]);
   const set = sets[i];
-  const [open, setOpen] = useState<string[]>([]); // groups expanded with "+ N more"
+  const [open, setOpen] = useState<string | null>(null); // the research block whose questions show
   const chip = (e: string) => (
     <NavLink key={e} href={`/?${new URLSearchParams({ question: e })}`} className="chip link" label="Reading your question…" search>
       {e}
@@ -51,19 +49,21 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
         ))}
       </div>
       {set.groups ? (
-        // Grouped sets (research): every prompt, one row per cause
-        <div key={set.word} className="prompt-groups flip-chips" {...hold} onClickCapture={() => setChosen(true)}>
-          {set.groups.map((g) => (
-            <div key={g.label} className="prompt-group">
-              <span className="prompt-group-label">{g.label}</span>
-              <div className="chips suggest">
-                {(open.includes(g.label) ? g.prompts : g.prompts.slice(0, SHOWN)).map(chip)}
-                {!open.includes(g.label) && g.prompts.length > SHOWN && (
-                  <button type="button" className="chip show-more" onClick={() => setOpen([...open, g.label])}>+ {g.prompts.length - SHOWN} more</button>
-                )}
-              </div>
+        // Grouped sets (research): progressive disclosure, cause blocks first, one block's questions on tap
+        <div key={set.word} className="prompt-groups flip-chips" {...hold}>
+          <div className="prompt-blocks" role="tablist" aria-label="Research topics">
+            {set.groups.map((g) => (
+              <button key={g.label} type="button" role="tab" aria-selected={open === g.label} className={open === g.label ? "on" : undefined}
+                onClick={() => setOpen(open === g.label ? null : g.label)}>
+                {g.label}<span>{g.prompts.length}</span>
+              </button>
+            ))}
+          </div>
+          {open && (
+            <div key={open} className="chips suggest prompt-list" onClickCapture={() => setChosen(true)}>
+              {set.groups.find((g) => g.label === open)?.prompts.map(chip)}
             </div>
-          ))}
+          )}
         </div>
       ) : (
         <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>
