@@ -250,25 +250,30 @@ export const dataFreshness = () => cached<Freshness>(slow, "freshness", async ()
   });
   // Link rates on a small random sample of pages (about 70,000 grants), not a full count.
   const sample = (sql: string) => rows<{ r: string | null }>(sql).then((r) => (r[0]?.r == null ? null : Number(r[0].r)));
-  // Foundation dollars linked both ways, exact (grant_cube + recipient types, generosity-data 079): over all grant $ to US
-  // orgs, and over $ to nonprofits (leaving out governments, public universities, international bodies and companies).
-  const whoAll = Promise.all([
-    rows<{ k: string; usd: string; linked_usd: string }>("SELECT recipient_kind AS k, sum(usd) AS usd, coalesce(sum(usd) FILTER (WHERE linked), 0) AS linked_usd FROM grant_cube GROUP BY 1"),
-    whoTagged({ from: 2012, to: 2025, states: [], area: null, fb: null, ftype: null }),
+  // Headline link rate (README "Linked share" definitions): 990-PF grant dollars to US organizations (grant_clean scope:
+  // 2012-25, amount > 0, no individuals, placeholders, foreign addresses or transfers to other private foundations)
+  // linked to an EIN, exact from grant_cube; and over dollars to nonprofits (leaving out governments, public
+  // universities, international bodies and companies, generosity-data 079). All years and 2022-24.
+  const whoYears = (from: number, to: number) => Promise.all([
+    rows<{ k: string; usd: string; linked_usd: string }>(`SELECT recipient_kind AS k, sum(usd) AS usd, coalesce(sum(usd) FILTER (WHERE linked), 0) AS linked_usd FROM grant_cube WHERE tax_year BETWEEN ${from} AND ${to} GROUP BY 1`),
+    whoTagged({ from, to, states: [], area: null, fb: null, ftype: null }),
   ]).then(([k, t]) => whoSplit(k.map((r) => ({ k: r.k, usd: Number(r.usd), linked_usd: Number(r.linked_usd) })), t)).catch(() => null);
-  const [pf, ch, fed, who] = await Promise.all([
+  const [pf, ch, fed, who, who3] = await Promise.all([
     sample("SELECT avg((recipient_ein IS NOT NULL OR recipient_entity IS NOT NULL)::int) AS r FROM grants TABLESAMPLE SYSTEM (0.5)"),
     sample("SELECT avg((recipient_ein IS NOT NULL)::int) AS r FROM charity_grants TABLESAMPLE SYSTEM (0.3)"),
     sample("SELECT avg((recipient_ein IS NOT NULL)::int) AS r FROM federal_awards TABLESAMPLE SYSTEM (5)"),
-    whoAll,
+    whoYears(2012, 2025),
+    whoYears(2022, 2024),
   ]);
   return {
     sources,
     links: [
-      { name: "Foundation grants (990-PF)", rate: pf, basis: "linked to an org, school district or college" },
-      { name: "Foundation $, all", rate: who?.all_link_rate ?? null, basis: "dollars to US orgs linked to an EIN, 2012-25", exact: true },
-      { name: "Foundation $ to nonprofits", rate: who?.nonprofit_link_rate ?? null, basis: "leaving out governments, public universities, international bodies and companies", exact: true },
-      { name: "Charity grants (Schedule I)", rate: ch, basis: "linked to an EIN" },
+      { name: "Foundation $ linked, 2012-25 (headline)", rate: who?.all_link_rate ?? null, basis: "990-PF grant $ to US organizations linked to an EIN", exact: true },
+      { name: "Foundation $ linked, 2022-24 (headline)", rate: who3?.all_link_rate ?? null, basis: "990-PF grant $ to US organizations linked to an EIN", exact: true },
+      { name: "Foundation $ to nonprofits linked, 2012-25", rate: who?.nonprofit_link_rate ?? null, basis: "same, leaving out governments, public universities, international bodies and companies", exact: true },
+      { name: "Foundation $ to nonprofits linked, 2022-24", rate: who3?.nonprofit_link_rate ?? null, basis: "same, leaving out governments, public universities, international bodies and companies", exact: true },
+      { name: "Foundation grant lines linked, by count", rate: pf, basis: "every 990-PF line incl. individuals, placeholders, foreign; org, school district or college" },
+      { name: "Schedule I lines linked, by count", rate: ch, basis: "every charity grant line, linked to an EIN" },
       { name: "Federal awards", rate: fed, basis: "linked to an EIN" },
     ],
   };

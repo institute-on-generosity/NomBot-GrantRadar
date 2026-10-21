@@ -20,7 +20,7 @@ import { normalizeSpec, type Cause, type Spec } from "./answerSpec";
 import { LABELS, LABEL_SCOPE, LABEL_SUBTYPES, labelPhrase, narrowerThanLabel, type LabelSlug, type LabelSub } from "./labels";
 import { fedProgram, type FedProgram } from "./fedPrograms";
 import { buildSteps, type CauseInfo, type Evidence, type Movers, type Step, type StepInput } from "./answerSteps";
-import { whoSplit, whoTagged, WHO_CELLS_SQL, type Who } from "./recipientTypes";
+import { whoSplit, whoTaggedSql, type Who } from "./recipientTypes";
 
 export type Num = { value: string; label: string; note?: string };
 export type Row = Record<string, string | number | boolean | null>;
@@ -1435,13 +1435,14 @@ async function whoReceived(ctx: Ctx, pl: Place, y: { from: number; to: number })
   if (!ctx.cube || pl.g.kind !== "pf" || pl.corr || !cubeOk(ctx, null, pl) || pl.f.rb || pl.f.kinds) return null;
   const p = new P();
   const cw = cubeWhere(null, p, pl, y, false);
+  const tp = new P();
   const [kinds, tagged] = await Promise.all([
     ctx.q<{ k: string; usd: number; linked_usd: number }>("Foundation grant dollars by recipient kind (who received it; research cube)", `SELECT x.recipient_kind AS k, coalesce(sum(x.usd), 0)::float8 AS usd, coalesce(sum(x.usd) FILTER (WHERE x.linked), 0)::float8 AS linked_usd
 FROM grant_cube x WHERE ${and(cw.where)} GROUP BY 1`, p),
-    whoTagged({ from: y.from, to: y.to, states: pl.states, area: pl.area, fb: pl.f.fb, ftype: pl.f.ftype }),
+    ctx.q<{ k: string; usd: number }>("Unlinked grant dollars by recipient type, plus EIN links to IPEDS public colleges (generosity-data 079, index 080)",
+      whoTaggedSql({ from: y.from, to: y.to, states: pl.states, area: pl.area, fb: pl.f.fb, ftype: pl.f.ftype }, (v) => tp.add(v)), tp),
   ]);
-  ctx.queries.push({ title: "Unlinked grant dollars by recipient type, plus EIN links to IPEDS public colleges (generosity-data 079; summed once, cached, then filtered to these years, place and foundations)", sql: WHO_CELLS_SQL });
-  return whoSplit(kinds, tagged);
+  return whoSplit(kinds, Object.fromEntries(tagged.map((r) => [r.k, Number(r.usd)])));
 }
 // "About 9% of these grant dollars went to governments and public universities." Only when it's at least 1%.
 const whoLine = (w: Who) => (w.public_share + w.other_share < 0.01 ? null

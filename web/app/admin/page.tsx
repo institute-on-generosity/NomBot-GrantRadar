@@ -296,7 +296,7 @@ async function DataSection() {
       <div className={s.grid}>
         {f.links.map((l) => <Card key={l.name} label={l.name} value={pct(l.rate)} detail={l.exact ? l.basis : `${l.basis}, sampled`} level={l.rate == null ? "off" : l.rate >= 0.7 ? "ok" : "warn"} />)}
       </div>
-      <p className={s.note}>Basis: load log is source_updates, a column name is that column&apos;s newest value, table stats is the last analyze. Link goal 70%.</p>
+      <p className={s.note}>Basis: load log is source_updates, a column name is that column&apos;s newest value, table stats is the last analyze. Headline link rate: 990-PF grant $ to US organizations linked to an EIN (README Data, Linked share). Link goal 70%.</p>
     </Section>
   );
 }

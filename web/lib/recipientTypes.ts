@@ -7,11 +7,10 @@
 //   every other linked recipient (private colleges included)             -> nonprofit
 // Research totals are unchanged: this only splits them (grant_clean scope: 2012-2025, amount > 0, US organizations).
 //
-// grant_cube has no recipient_type column, and a filtered scan of grants for the tag takes ~3 s (no index on it), so the
-// tagged and EIN-public-college rows are summed once into a small cached table (~10K cells: year, state, rural, funder
-// asset band and type, kind) and filtered here in memory. The index to make it direct is in the README.
+// grant_cube has no recipient_type column, so the tagged and EIN-public-college rows are summed straight from grants
+// for each filter: generosity-data 080 (grants_recipient_type_idx, partial, tax_year INCLUDE the filter columns) makes
+// the tagged part an index-only scan, and the public-college part uses grants_recipient_idx (~70 ms warm together).
 import { db } from "./db";
-import { memo } from "./memo";
 
 export type WhoKey = "nonprofit" | "government" | "public_university" | "international" | "company" | "unidentified";
 export const WHO_KEYS: WhoKey[] = ["nonprofit", "government", "public_university", "international", "company", "unidentified"];
@@ -26,49 +25,34 @@ export const WHO_NAME: Record<WhoKey, string> = {
 // The one-line rule shown with every split (UI and API). Plain words, no semicolons or dashes.
 export const WHO_NOTE = "Linked nonprofits have an EIN match and include private colleges. Governments are recipients named as a government body plus school districts matched to NCES. Public universities are public colleges matched to IPEDS by name or EIN plus state college systems. International bodies are the World Bank group, development banks and UN agencies. Types for unlinked recipients come from their names (graded 146 of 150 right on a fresh sample, top 50 by dollars 50 of 50). Unidentified grants have no match and no type.";
 
-// One cached cell: tax year, recipient state, rural (county under 50K people), funder asset band and type, kind.
-// k: a recipient_type, or "ein_public_college" (EIN-linked to an IPEDS public college, counted inside the cube's nonprofit).
-export type WhoCell = { y: number; st: string | null; rural: boolean | null; fb: number | null; ft: string; k: string; usd: number; n: number };
-export const WHO_CELLS_SQL = `SELECT x.tax_year::int AS y, x.recipient_state AS st,
-       CASE WHEN cn.population < 50000 THEN true WHEN cn.population IS NOT NULL THEN false END AS rural,
-       fp.asset_band AS fb, coalesce(fp.funder_type, 'other') AS ft, x.k, sum(x.amount)::float8 AS usd, count(*)::int AS n
-FROM (SELECT g.tax_year, g.recipient_state, g.recipient_zip, g.funder_ein, g.amount, g.recipient_type AS k
+export type WhoFilter = { from: number; to: number; states: string[]; area: "rural" | "urban" | null; fb: [number, number] | null; ftype: string | null };
+// Dollars per kind for the filter. k: a recipient_type, or "ein_public_college" (EIN-linked to an IPEDS public college,
+// counted inside the cube's nonprofit). add() binds a parameter and returns its placeholder. recipient_type is only set
+// while a grant is unlinked (079 apply_recipient_types clears it on link), so the tagged part needs no link columns.
+export function whoTaggedSql(f: WhoFilter, add: (v: unknown) => string): string {
+  const yr = `g.tax_year BETWEEN ${add(f.from)} AND ${add(f.to)} AND g.amount > 0`;
+  const outer: string[] = [];
+  if (f.states.length) outer.push(`x.recipient_state = ANY(${add(f.states)}::text[])`);
+  if (f.area) outer.push(`x.recipient_zip IS NOT NULL AND left(x.recipient_zip, 5)::char(5) IN (SELECT z.zip5 FROM zip_regions z JOIN county_need cn ON cn.county_fips = z.county_fips WHERE cn.population ${f.area === "rural" ? "<" : ">="} 50000)`);
+  // Funders missing from funder_profile count as type 'other', as in grant_cube.
+  if (f.fb) outer.push(`fp.asset_band BETWEEN ${add(f.fb[0])} AND ${add(f.fb[1])}`);
+  if (f.ftype) outer.push(`coalesce(fp.funder_type, 'other') = ${add(f.ftype)}`);
+  return `SELECT x.k, sum(x.amount)::float8 AS usd
+FROM (SELECT g.recipient_state, g.recipient_zip, g.funder_ein, g.amount, g.recipient_type AS k
         FROM grants g
-       WHERE g.recipient_type IS NOT NULL AND g.recipient_ein IS NULL AND g.recipient_entity IS NULL AND g.recipient_kind IS NULL
-         AND g.tax_year BETWEEN 2012 AND 2025 AND g.amount > 0
+       WHERE g.recipient_type IS NOT NULL AND ${yr}
       UNION ALL
-      SELECT g.tax_year, g.recipient_state, g.recipient_zip, g.funder_ein, g.amount, 'ein_public_college'
+      SELECT g.recipient_state, g.recipient_zip, g.funder_ein, g.amount, 'ein_public_college'
         FROM grants g
        WHERE g.recipient_ein IN (SELECT ein FROM public_entities WHERE kind = 'college_public' AND ein IS NOT NULL)
-         AND g.recipient_entity IS NULL AND g.recipient_kind IS NULL AND g.tax_year BETWEEN 2012 AND 2025 AND g.amount > 0) x
-LEFT JOIN zip_regions z ON z.zip5 = left(x.recipient_zip, 5)::char(5)
-LEFT JOIN county_need cn ON cn.county_fips = z.county_fips
-LEFT JOIN funder_profile fp ON fp.ein = x.funder_ein
-GROUP BY 1, 2, 3, 4, 5, 6`;
-const cellsMemo = memo<WhoCell[]>("who-received-cells:v1", 1, 6 * 3600_000);
-export const whoCells = () => cellsMemo("all", async () => (await db.query(WHO_CELLS_SQL)).rows.map((r) => ({ ...r, usd: Number(r.usd), n: Number(r.n) }) as WhoCell));
-
-// Server start: build the cells in the background (~5 s of reads), so the first answer doesn't wait. Scripts skip it.
-const g = globalThis as unknown as { whoWarm?: boolean };
-if (!g.whoWarm && process.env.NEXT_RUNTIME === "nodejs" && process.env.NEXT_PHASE !== "phase-production-build") {
-  g.whoWarm = true;
-  setTimeout(() => void whoCells().catch((e) => console.warn("who-received cells skipped:", (e as Error).message)), 20_000).unref();
+         AND g.recipient_entity IS NULL AND g.recipient_kind IS NULL AND ${yr}) x${f.fb || f.ftype ? "\nLEFT JOIN funder_profile fp ON fp.ein = x.funder_ein" : ""}
+WHERE ${outer.length ? outer.join("\n  AND ") : "true"}
+GROUP BY 1`;
 }
-
-export type WhoFilter = { from: number; to: number; states: string[]; area: "rural" | "urban" | null; fb: [number, number] | null; ftype: string | null };
-// Sums per kind for the filter, from the cached cells.
 export async function whoTagged(f: WhoFilter): Promise<Record<string, number>> {
-  const cells = await whoCells();
-  const out: Record<string, number> = {};
-  for (const c of cells) {
-    if (c.y < f.from || c.y > f.to) continue;
-    if (f.states.length && (!c.st || !f.states.includes(c.st))) continue;
-    if (f.area && c.rural !== (f.area === "rural")) continue;
-    if (f.fb && (c.fb == null || c.fb < f.fb[0] || c.fb > f.fb[1])) continue;
-    if (f.ftype && c.ft !== f.ftype) continue;
-    out[c.k] = (out[c.k] ?? 0) + c.usd;
-  }
-  return out;
+  const vals: unknown[] = [];
+  const r = await db.query<{ k: string; usd: number }>(whoTaggedSql(f, (v) => { vals.push(v); return `$${vals.length}`; }), vals);
+  return Object.fromEntries(r.rows.map((x) => [x.k, Number(x.usd)]));
 }
 
 export type WhoPart = { key: WhoKey; label: string; usd: number; share: number };
