@@ -45,8 +45,11 @@ export type Answer = {
   basis?: "codes" | "keywords" | null; // a cause counted without a checked label: shown under the answer as a trust note
   steps?: Step[];                  // "Show the steps": the evidence chain (lib/answerSteps), deterministic
   followUps?: string[];            // chips the numbers suggest ("Since 2021?" after a start-year spike)
+  recency?: Recency | null;        // the filing years the answer covers, and which are still arriving (recencyOf)
   ms: number;
 };
+// form: the filings read. partial: tax years with returns still arriving (share = filings in / the fullest year's).
+export type Recency = { form: string; from: number; to: number; newest_per_org: boolean; latest_full: number; partial: { year: number; share: number }[]; partial_in_range: number[]; trend_end_partial: boolean; note: string };
 
 // ------------------------------------------------------------------ constants
 const G_FIRST = 2012, G_LAST = 2025, G_FULL = 2024; // grants: 2012-2021 from the GivingTuesday e-file mirror (generosity-data 057); 2025 returns are still arriving
@@ -117,6 +120,7 @@ class Ctx {
   places: Place[] = [];          // every Place resolved for this answer (honorGuard reads what they applied)
   honored = new Set<string>();   // spec fields a block applied beyond place: topN, streak, condition
   causes = new Set<string>();    // causes some query actually ran with (P.cause)
+  span: Span | null = null;      // the filing years a block read, when it isn't grantYears / flagYear (recencyOf)
   constructor(public cube = true) {} // false: the original grant_clean queries only (eval/answer-cube.mts compares both)
   async q<T = Row>(title: string, sql: string, p: P): Promise<T[]> {
     this.queries.push({ title, sql: inline(sql, p.vals) });
@@ -610,6 +614,58 @@ function flagYear(s: Spec): { year: number; note: string | null } {
 }
 const yearLabel = (y: number) => (y > G_FULL ? `${y} (partial)` : String(y));
 
+// ------------------------------------------------------------------ data recency (Joshua Elder, Oct 19)
+// Every answer on 990 or grant data says which filing years it covers, and that the newest are incomplete:
+// returns reach the IRS 6 to 18 months after a tax year ends and its public e-file batches later still, so
+// the newest 990 for most organizations is a year or two old. Years come from the blocks (ctx.span) or
+// grantYears / flagYear, never constants. Partial is read from the filings loaded per tax year:
+//   pf       990-PF returns (foundation_finance_year, one per foundation and year)
+//   charity  Form 990 filers with grant lines (charity_filers, Schedule I)
+//   f990     Form 990 / 990-EZ returns (flag_year, one per org and year)
+// Rule: the tax year with the most filings is the newest full year. A later tax year with under 90% of
+// that year's filings is partial (returns still arriving). Earlier thin years are an e-filing coverage
+// question, not lag (earlyCoverage).
+export type Span = { kind: "pf" | "charity" | "f990"; from: number; to: number; newest?: boolean; byYear?: boolean };
+const PARTIAL_SHARE = 0.9;
+const FILINGS_SQL: Record<Span["kind"], string> = {
+  pf: "SELECT tax_year::int AS year, count(*)::int AS n FROM foundation_finance_year GROUP BY 1",
+  charity: "SELECT tax_year::int AS year, count(*)::int AS n FROM charity_filers GROUP BY 1",
+  f990: "SELECT tax_year::int AS year, count(*)::int AS n FROM flag_year GROUP BY 1",
+};
+const filingsMemo = memo<{ year: number; n: number }[]>("answer-filings-per-year:v1", 4, 6 * 3600_000);
+export const filingsPerYear = (kind: Span["kind"]) => filingsMemo(kind, async () => (await db.query(FILINGS_SQL[kind])).rows.map((r) => ({ year: Number(r.year), n: Number(r.n) })).sort((a, z) => a.year - z.year));
+export async function partialYears(kind: Span["kind"]): Promise<{ latestFull: number; partial: { year: number; share: number }[] }> {
+  const ys = await filingsPerYear(kind);
+  const peak = ys.reduce((m, y) => (y.n > m.n ? y : m), ys[0]);
+  const partial = ys.filter((y) => y.year > peak.year && y.n < PARTIAL_SHARE * peak.n).map((y) => ({ year: y.year, share: y.n / peak.n }));
+  const latestFull = Math.max(peak.year, ...ys.filter((y) => y.year > peak.year && y.n >= PARTIAL_SHARE * peak.n).map((y) => y.year));
+  return { latestFull, partial };
+}
+const FORM_WORDS: Record<Span["kind"], string> = { pf: "990-PF", charity: "Form 990 Schedule I", f990: "Form 990" };
+const listYears = (ys: number[]) => (ys.length < 3 ? ys.join(" and ") : `${ys.slice(0, -1).join(", ")} and ${ys.at(-1)}`);
+async function recencyOf(ctx: Ctx, s: Spec): Promise<Recency | null> {
+  const kind0 = ctx.places[0]?.g.kind ?? (s.source === "charity_grants" ? "charity" : "pf");
+  const sp: Span | null = ctx.span
+    ?? (isGrantSrc(s) ? { kind: kind0, from: grantYears(s).from, to: grantYears(s).to }
+      : ["government_grants", "contributions", "revenue"].includes(s.source) ? { kind: "f990", from: flagYear(s).year, to: flagYear(s).year } : null);
+  if (!sp) return null;
+  const { latestFull, partial } = await partialYears(sp.kind);
+  const inRange = partial.filter((p) => p.year >= sp.from && p.year <= sp.to);
+  const byYear = sp.byYear ?? (s.metric === "trend" || s.by === "year");
+  const trendEnd = byYear && sp.to > sp.from && inRange.some((p) => p.year === sp.to);
+  const form = FORM_WORDS[sp.kind];
+  const years = sp.from === sp.to ? `tax year ${sp.to}` : `tax years ${sp.from} to ${sp.to}`;
+  const what = sp.kind === "f990" ? `${form} returns` : sp.kind === "pf" && s.source === "foundation_finances" ? "990-PF returns" : `${form} grants`;
+  const lead = sp.newest ? `Uses each organization's newest ${form}, from ${years}.` : `Covers ${what} for ${years}.`;
+  const lag = "Returns arrive 1 to 2 years late";
+  const after = partial.filter((p) => p.year > sp.to);
+  const tail = inRange.length
+    ? `${lag}, so ${listYears(inRange.map((p) => p.year))} ${inRange.length > 1 ? "are" : "is"} partial, with ${inRange.map((p) => pct(p.share)).join(" and ")} of a full year's returns in.${trendEnd ? ` A dip in ${sp.to} is likely late filings, not a real drop.` : ""}`
+    : after.length ? `${lag}, so ${listYears(after.map((p) => p.year))} ${after.length > 1 ? "are" : "is"} still incomplete.`
+      : `${lag}, so ${latestFull} is the newest full year.`;
+  return { form, from: sp.from, to: sp.to, newest_per_org: !!sp.newest, latest_full: latestFull, partial, partial_in_range: inRange.map((p) => p.year), trend_end_partial: trendEnd, note: `${lead} ${tail}` };
+}
+
 // ------------------------------------------------------------------ inflation (generosity-data 052: cpi_u_year)
 // BLS CPI-U, all items, US city average. Tax years (990, 990-PF) use the calendar-year annual average of the
 // year the tax year starts in. Federal fiscal years use the October-September average. Real dollars are in
@@ -845,7 +901,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v39: health_equity label (graded g2), with its caveat (LABEL_CAVEAT).
 // v40: corrected NTEE footnote splits orgs added with no IRS code (uncoded_vote_llm) from orgs moved.
 // v41: animal_welfare label (graded g2), headlined on primary + partial (ALL_TIERS), with its caveat (LABEL_CAVEAT).
-const answerMemo = memo<Answer>("answer:v41", 500, 6 * 3600_000);
+// v42: data recency note (recencyOf): the filing years covered, partial years read from filings per tax year.
+const answerMemo = memo<Answer>("answer:v42", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -910,7 +967,8 @@ async function compute(question: string, asked: Spec, cube: boolean): Promise<An
   // "How we got this". Keywords is the rougher of the two, so it wins when both appear.
   const basis = /Approximate keyword set/.test(out.causeNote) ? "keywords" : /NTEE codes /.test(out.causeNote) ? "codes" : null;
   if (narrowed.length && status !== "unanswerable") nameClosest(out, narrowed);
-  const a: Answer = { ...out, question, spec: asked, status, missing, premise, basis, queries: ctx.queries, ms: 0 };
+  const recency = status === "unanswerable" ? null : await recencyOf(ctx, s).catch((e) => { console.error("answer recency failed", e); return null; });
+  const a: Answer = { ...out, question, spec: asked, status, missing, premise, basis, recency, queries: ctx.queries, ms: 0 };
   a.steps = await stepsFor(ctx, s, a, change, versus, ev).catch((e) => { console.error("answer steps failed", e); return []; });
   return { ...a, ms: Date.now() - t0 };
 }
@@ -1723,6 +1781,7 @@ async function flagTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   if (s.metric === "trend") {
     const c = causes[0];
     const from = Math.max(s.yearFrom ?? F_FIRST, F_FIRST), to = Math.min(Math.max(s.yearTo ?? F_FULL, from + 1), F_LAST);
+    ctx.span = { kind: "f990", from, to, byYear: true };
     const p = new P();
     const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
     const where = [`f.tax_year BETWEEN ${p.add(from)} AND ${p.add(to)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")];
@@ -2877,6 +2936,7 @@ FROM n`, p);
   const caveats: string[] = [];
   const note = await causeNote(c, cs, caveats);
   if (!r.orgs) throw new Unanswerable(`No organizations match ${causeName(c, pl)} in ${pl.label}.`);
+  if (r.year_min && r.year_max) ctx.span = { kind: "f990", from: r.year_min, to: r.year_max, newest: true };
   caveats.push(`Finances come from each org's newest e-filed 990 or 990-EZ (tax years ${r.year_min}–${r.year_max}). ${int(r.orgs - r.filed)} of ${int(r.orgs)} orgs (mostly small 990-N filers) have none, so the shares are of filers.`,
     "One deficit year isn't a red flag by itself: an org may be spending down savings on purpose.");
   if (s.condition === "gov_reliant") caveats.push(GOV_CAVEAT);
@@ -3071,6 +3131,7 @@ async function foundationPayout(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const year = Math.min(Math.max(want, FF_FIRST), FF_LAST);
   const y0 = by === "year" ? Math.min(Math.max(s.yearFrom ?? FF_FIRST, FF_FIRST), FF_LAST) : year;
   const y1 = by === "year" ? Math.max(Math.min(s.yearTo ?? FF_FULL, FF_LAST), y0) : year;
+  ctx.span = { kind: "pf", from: y0, to: y1, byYear: by === "year" };
   const p = new P();
   const base = (pp: P) => {
     const w = [op ? "f.private_operating" : "NOT coalesce(f.private_operating, false)"];
@@ -3244,6 +3305,7 @@ WHERE ${and([`f.tax_year = ${p.add(y1)}`, "f.source = 'filing'", "f.revenue_band
 GROUP BY 1 ORDER BY 1`, p);
   }
   rows = rows.filter((r) => r.of_n > 0);
+  ctx.span = { kind: "f990", from: by === "year" && rows.length ? rows[0].k : y0, to: by === "year" && rows.length ? rows.at(-1)!.k : y1, byYear: by === "year" };
   if (!rows.length) throw new Unanswerable(`No ${subj}${inW} have e-filed finances for ${y0 === y1 ? y0 : `${y0}–${y1}`} in our data.`);
   const sh = (r: FinRow) => r.hits / Math.max(1, r.of_n), psh = (r: FinRow) => r.p_hits / Math.max(1, r.p_of);
   const cashTxt = (x: number | null) => (x == null ? "n/a" : `${x.toFixed(1)} months`);
@@ -3298,6 +3360,8 @@ export function answerBrief(a: Answer, rows = 15, opts: { steps?: boolean } = {}
     what_counts: a.causeNote, method: a.method, caveats: a.caveats, coverage: a.coverage, missing: a.missing,
     data: a.rows.slice(0, rows), sources: a.sources, spec: a.spec,
     premise: a.premise ?? null, basis: a.basis ?? null,
+    // The filing years behind the answer and which are still arriving (null when it uses no 990 or grant data)
+    data_years: a.recency ?? null,
     ...(opts.steps ? {
       steps: (a.steps ?? []).map((st) => ({ n: st.n, key: st.key, title: st.title, line: text(st.line), details: st.details.map(text), ...(st.evidence ? { evidence: st.evidence } : {}) })),
       follow_ups: a.followUps ?? [],

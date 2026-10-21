@@ -22,7 +22,7 @@ export function ChatAnswer({ a }: { a: Answer }) {
   const [copied, setCopied] = useState(false);
   const none = a.status === "unanswerable";
   const copy = async () => {
-    const text = [a.headline, a.numbers.map((n) => `${n.value} ${n.label}`).join(" · "), ...a.bullets.map((b) => `- ${plain(b)}`), "", `Source: NomBot (public IRS filings), ${location.href}`].join("\n");
+    const text = [a.headline, a.numbers.map((n) => `${n.value} ${n.label}`).join(" · "), ...a.bullets.map((b) => `- ${plain(b)}`), ...(a.recency ? [a.recency.note] : []), "", `Source: NomBot (public IRS filings), ${location.href}`].join("\n");
     try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard blocked */ }
   };
   const csv = async () => {
@@ -54,6 +54,7 @@ export function ChatAnswer({ a }: { a: Answer }) {
           {a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.
         </p>
       )}
+      {a.recency && !none && <p className="chat-basis chat-recency">{a.recency.note}</p>}
       {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.missing.map((m) => (
         <p key={m.what} className="chat-missing"><b>{none ? "Why we can't answer this:" : `Not included, ${m.what.toLowerCase()}:`}</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>

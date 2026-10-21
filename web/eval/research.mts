@@ -40,6 +40,8 @@ const run = async (e: Expect) => {
     const corrected = /^[^.]* didn't (rise|fall|get more|get less)\b/.test(a.headline);
     if (corrected !== !e.premiseHolds) bad.push(`headline ${corrected ? "corrects" : "doesn't correct"} the premise: ${a.headline}`);
   }
+  // Data recency: an answer on 990 or grant data says which filing years it covers (Joshua Elder, Oct 19).
+  if (a.status !== "unanswerable" && ["foundation_grants", "charity_grants", "government_grants", "contributions", "revenue", "foundation_finances"].includes(r.spec.source) && !/tax years? \d{4}.*1 to 2 years late/.test(a.recency?.note ?? "")) bad.push(`no data-years note: ${a.recency?.note ?? "none"}`);
   // "Show the steps": every answer has the chain, and a change in the tiles appears in the Computed step.
   if (a.status !== "unanswerable") {
     const keys: string[] = (a.steps ?? []).map((x) => x.key);

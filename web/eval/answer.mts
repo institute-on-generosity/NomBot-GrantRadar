@@ -260,6 +260,22 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
       const comp = a.steps?.find((x) => x.key === "compute")?.line ?? "", chk = a.steps?.find((x) => x.key === "check")?.line ?? "";
       const spike = y20 / y19 - 1 > 0.3;
       return [comp.includes(a.numbers[0].value) && spike === /spike/.test(chk) && spike === a.bullets.some((x) => /spike/.test(x)) ? 1 : 0, 1]; } },
+  // Data recency (Joshua Elder, Oct 19): the years covered, and the partial share read from filings per tax year,
+  // checked on the base tables (one 990-PF / Form 990 return per org and year, the fullest year as 100%).
+  { name: "recency: grants 2022-24 by default, 2025 share of 990-PF returns (permille)", s: spec({ causes: [climate] }),
+    check: async (a) => { const r = a.recency; const p = r?.partial.find((x) => x.year === 2025);
+      const want = await one(`WITH y AS (SELECT tax_year, count(DISTINCT ein) AS n FROM foundation_finances GROUP BY 1) SELECT round(1000.0 * (SELECT n FROM y WHERE tax_year = 2025) / max(n)) FROM y`);
+      return [r && r.from === 2022 && r.to === 2024 && /2025 is still incomplete/.test(r.note) && p ? Math.round(p.share * 1000) : -1, want]; } },
+  { name: "recency: trend through 2025 flags the partial last year", s: spec({ metric: "trend", yearFrom: 2020, yearTo: 2025, causes: [climate] }),
+    check: async (a) => [a.recency?.trend_end_partial && a.recency.partial_in_range.includes(2025) && /A dip in 2025 is likely late filings/.test(a.recency.note) ? 1 : 0, 1] },
+  { name: "recency: Form 990 government grants, 2025 share of returns (permille)", s: spec({ source: "government_grants", metric: "trend", yearTo: 2025, causes: [climate] }),
+    check: async (a) => { const p = a.recency?.partial.find((x) => x.year === 2025);
+      const want = await one(`WITH y AS (SELECT tax_year, count(DISTINCT ein) AS n FROM filing_flag GROUP BY 1) SELECT round(1000.0 * (SELECT n FROM y WHERE tax_year = 2025) / max(n)) FROM y`);
+      return [a.recency?.form === "Form 990" && a.recency.trend_end_partial && p ? Math.round(p.share * 1000) : -1, want]; } },
+  { name: "recency: newest return per org names its year range", s: spec({ metric: "count_orgs", condition: "deficit", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [a.recency?.newest_per_org && /newest Form 990, from tax years \d{4} to \d{4}/.test(a.recency.note) ? 1 : 0, 1] },
+  { name: "recency: no filing note on household giving (IRS SOI)", s: spec({ source: "household_giving" }),
+    check: async (a) => [a.recency == null ? 1 : 0, 1] },
   { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
     check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];
@@ -285,7 +301,11 @@ for (const c of cases) {
     const comp = a.steps?.find((x) => x.key === "compute")?.line ?? "";
     if (c.s.metric === "trend" && a.numbers[0] && /^[+−]/.test(a.numbers[0].value) && !comp.includes(a.numbers[0].value)) bad.push(`compute "${comp}" lacks ${a.numbers[0].value}`);
     if ((a.steps ?? []).some((x) => /[;—]/.test(x.line + x.details.join(" ")))) bad.push("semicolon or em dash");
-    if (bad.length) { fail++; console.log(`         ✗ steps: ${bad.join(", ")}`); }
+    // Answers on 990 or grant data say which filing years they cover and that the newest are still arriving.
+    const filed = ["foundation_grants", "charity_grants", "government_grants", "contributions", "revenue", "foundation_finances"].includes(c.s.source);
+    if (filed && !(a.recency && /tax years? \d{4}/.test(a.recency.note) && /1 to 2 years late/.test(a.recency.note))) bad.push(`recency note missing: ${a.recency?.note ?? "none"}`);
+    if (a.recency && /[;—]/.test(a.recency.note)) bad.push("recency note has a semicolon or em dash");
+    if (bad.length) { fail++; console.log(`         ✗ ${bad.join(", ")}`); }
   }
 }
 

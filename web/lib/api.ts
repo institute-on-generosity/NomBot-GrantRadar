@@ -3,7 +3,7 @@
 // No Claude API calls anywhere here: search uses the local embedding model and Postgres only.
 import { db } from "./db";
 import { search } from "./search";
-import { getOrg } from "./org";
+import { getOrg, LATEST_RETURN_NOTE } from "./org";
 import { orgNews, ORG_NEWS_NOTE } from "./orgNews";
 import { TAX_STATUS_NOTE } from "./taxStatus";
 import { orgFunding, FUNDING_NOTES } from "./orgFunding";
@@ -114,6 +114,8 @@ export async function apiOrg(einRaw: string, base: string) {
       programs: o.programs,
       team: o.team,
       latest_filing: o.filing ? { year: o.filing.year, form: o.filing.form, url: o.filing.url ?? null } : null,
+      // Newest return of any form (990, 990-EZ, 990-PF). irs_processed_year = the year in its IRS e-file object ID (no filed date in the data)
+      latest_990: o.latest990 ? { tax_year: o.latest990.year, form: o.latest990.form, irs_processed_year: o.latest990.processed, note: LATEST_RETURN_NOTE } : null,
       financials: {
         latest: latest ? { year: latest.year, revenue: latest.revenue, expenses: latest.expenses, assets: latest.assets, source: latest.source } : null,
         history: o.years.map((y) => ({ year: y.year, revenue: y.revenue, expenses: y.expenses, assets: y.assets, source: y.source })),

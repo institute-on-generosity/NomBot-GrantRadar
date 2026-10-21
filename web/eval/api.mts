@@ -152,6 +152,8 @@ try {
   }
   b = await ok("/api/v1/org/341877332", "org (tax status)");
   check(b.org?.tax_status?.pub78?.eligible === Boolean(p78), "org: tax_status.pub78 vs SQL");
+  const [lr] = await sql(`SELECT max(tax_year)::int AS y FROM (SELECT tax_year FROM filing_text WHERE ein = '341877332' UNION ALL SELECT tax_year FROM filing_flag WHERE ein = '341877332' UNION ALL SELECT tax_year FROM foundation_finances WHERE ein = '341877332') x`);
+  check(b.org?.latest_990?.tax_year === lr.y && typeof b.org.latest_990.note === "string", `org: latest_990 tax year vs SQL (${b.org?.latest_990?.tax_year} / ${lr.y})`);
   check((await get("/api/v1/orgs/12/status")).status === 400, "tax status bad EIN -> 400");
   check((await get("/api/v1/orgs/000000001/status")).status === 404, "tax status unknown EIN -> 404");
 
@@ -334,6 +336,7 @@ try {
   check(!!comp && comp.line.includes(b.numbers?.[0]?.value), `answer: compute step matches the headline tile (${comp?.line} / ${b.numbers?.[0]?.value})`);
   check(b.steps?.every((x: J) => !/\*\*|;|—/.test(x.line + x.details.join(" "))), "answer: steps are plain text, no semicolons or em dashes");
   check(Array.isArray(b.follow_ups), "answer: follow_ups array");
+  check(b.data_years?.from === 2020 && b.data_years.to === 2024 && /1 to 2 years late/.test(b.data_years.note) && !/;|—/.test(b.data_years.note), `answer: data_years note (${b.data_years?.note})`);
 
   // ---------- MCP ----------
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });

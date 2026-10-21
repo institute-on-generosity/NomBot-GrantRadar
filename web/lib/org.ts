@@ -23,6 +23,7 @@ export async function getOrg(einParam: string) {
   const labels = await orgLabels(ein).catch(() => []); // graded cause labels (generosity-data migration 032)
   const tax = await taxStatus(ein).catch(() => null); // IRS Pub 78 and revocations (generosity-data migration 063)
   const nteeSuggested = await suggestedNtee(ein).catch(() => null); // corrected NTEE group (generosity-data migration 072)
+  const latest990 = await latestReturn(ein).catch(() => null);
   const bmfYear = o.tax_period ? Number(String(o.tax_period).slice(0, 4)) : null;
   const latestSoi = fin[0];
   const revSrc = o.revenue_amt != null && (!latestSoi || (bmfYear ?? 0) > latestSoi.tax_year) ? "bmf" : latestSoi ? "soi" : null;
@@ -61,6 +62,8 @@ export async function getOrg(einParam: string) {
     mission: t?.mission as string | null ?? null,
     programs: t?.programs as string | null ?? null,
     filing: t ? { year: t.tax_year as number, form: t.form as string, url: src[0]?.url } : null,
+    // The newest return we have from any form (Joshua Elder, Oct 19: say how recent the data is)
+    latest990,
     // Team size from Form 990 Part I lines 5-6 (not reported on 990-EZ).
     team: t && (t.employees != null || t.volunteers != null) ? { staff: t.employees as number | null, volunteers: t.volunteers as number | null, year: t.tax_year as number } : null,
     years,
@@ -74,6 +77,23 @@ export async function getOrg(einParam: string) {
     links,
   };
 }
+
+// The newest 990, 990-EZ or 990-PF loaded for an org. There's no filed date in the e-file data, so `processed` is
+// the year in the IRS e-file object ID (the year the IRS processed the return). Returns lag their tax year by 1 to
+// 2 years, so for most orgs the newest is 2023 or 2024.
+export type LatestReturn = { year: number; form: string; processed: number | null };
+export const LATEST_RETURN_NOTE = "Returns reach the IRS 1 to 2 years after the tax year, so newer years may not be filed yet.";
+export async function latestReturn(ein: string): Promise<LatestReturn | null> {
+  const { rows: [r] } = await db.query(`SELECT tax_year, form, object_id FROM (
+      SELECT tax_year, form, object_id::text FROM filing_text WHERE ein = $1
+      UNION ALL SELECT tax_year, form, object_id::text FROM filing_flag WHERE ein = $1
+      UNION ALL SELECT tax_year, '990PF', object_id::text FROM foundation_finances WHERE ein = $1) x
+    WHERE tax_year IS NOT NULL ORDER BY tax_year DESC, object_id DESC NULLS LAST LIMIT 1`, [ein]);
+  if (!r) return null;
+  const p = /^(20\d\d)\d{8,}$/.exec(String(r.object_id ?? ""));
+  return { year: Number(r.tax_year), form: String(r.form), processed: p ? Number(p[1]) : null };
+}
+export const formName = (f: string) => (f === "990EZ" ? "990-EZ" : f === "990PF" ? "990-PF" : f);
 
 // Corrected NTEE group (generosity-data org_ntee_suggested, migration 072): orgs whose IRS major group doesn't fit
 // their own newest 990 text. Only the major group is stored (detailed codes failed a spot check). 4,049 orgs,

@@ -61,6 +61,7 @@ export const ENDPOINTS: Endpoint[] = [
         mission: "TO INSURE THAT ALL CHILDREN ...", programs: "...",
         team: { staff: 3, volunteers: 300, year: 2024 },
         latest_filing: { year: 2024, form: "990", url: "https://projects.propublica.org/nonprofits/organizations/341877332/202512999349300001/full" },
+        latest_990: { tax_year: 2024, form: "990", irs_processed_year: 2025, note: "Returns reach the IRS 1 to 2 years after the tax year, so newer years may not be filed yet." },
         financials: {
           latest: { year: 2024, revenue: 327923, expenses: null, assets: 414989, source: "IRS master file" },
           history: [{ year: 2024, revenue: 327923, expenses: null, assets: 414989, source: "IRS master file" }, { year: 2023, revenue: 356039, expenses: 247555, assets: 354331, source: "IRS SOI (Form 990)" }],
@@ -153,7 +154,7 @@ export const ENDPOINTS: Endpoint[] = [
   },
   {
     id: "answer", method: "GET", path: "/api/v1/answer", title: "Answer a research question", mcpTool: "answer_research_question",
-    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. steps: the step-by-step evidence (how the question was read, the cause set, the data, per-year totals with the biggest recipients and funders, the computation, the baseline, checks such as a start-year spike, and the SQL), built from the same query results, no extra Claude call. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
+    summary: "An aggregate answer (how much money goes to a cause, its share, trend, states, top funders or recipients, grant sizes, concentration, how many orgs run deficits) from fixed SQL over 990-PF grants and Form 990 lines, with method, caveats, coverage and what the data can't answer. data_years: the filing years it covers and which are still arriving (a later tax year with under 90% of the fullest year's filings is partial). steps: the step-by-step evidence (how the question was read, the cause set, the data, per-year totals with the biggest recipients and funders, the computation, the baseline, checks such as a start-year spike, and the SQL), built from the same query results, no extra Claude call. With q, one small Claude call reads the question (about $0.006 per new question, cached 24 h); with spec, no Claude call. MCP takes the spec directly.",
     params: [
       { name: "q", in: "query", type: "string", example: "how much foundation money goes to climate", desc: "The question in plain words, up to 300 characters." },
       { name: "spec", in: "query", type: "string", example: '{"metric":"total","causes":[{"name":"climate","label":"climate","ntee":[],"keywords":[]}]}', desc: "Instead of q: the structured question as JSON (metric, causes, source, yearFrom, yearTo, states, county, area, condition, perResident, order, ntee). ntee \"corrected\" counts NTEE-coded causes by corrected groups (orgs whose IRS code doesn't fit their 990 text count under a suggested major group, with a footnote on what moved). Default \"irs\". No Claude call." },
@@ -175,6 +176,7 @@ export const ENDPOINTS: Endpoint[] = [
         { n: 5, key: "compute", title: "Computed", line: "share = $2.4B / $186.1B = 1.3% of identified foundation grant dollars", details: ["a year = ... / 3 full years = ..."] },
       ],
       follow_ups: [],
+      data_years: { form: "990-PF", from: 2022, to: 2024, newest_per_org: false, latest_full: 2024, partial: [{ year: 2025, share: 0.54 }], partial_in_range: [], trend_end_partial: false, note: "Covers 990-PF grants for tax years 2022 to 2024. Returns arrive 1 to 2 years late, so 2025 is still incomplete." },
       chart: null, queries: [{ title: "Foundation grants to climate, by tax year", sql: "SELECT ..." }], ms: 250,
     },
   },

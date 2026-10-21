@@ -47,6 +47,7 @@ export function AnswerCard({ a }: { a: Answer }) {
         </figure>
       )}
       {a.basis && !none && <p className="chat-basis">{a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
+      {a.recency && !none && <p className="chat-basis chat-recency">{a.recency.note}</p>}
       {a.bullets.length > 0 && <ul className="ins-points">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.missing.length > 0 && (
         <div className="answer-missing">

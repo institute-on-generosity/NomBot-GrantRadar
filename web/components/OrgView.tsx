@@ -10,7 +10,7 @@ import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase } from "@/components/text";
-import { getOrg, type Income } from "@/lib/org";
+import { getOrg, formName, LATEST_RETURN_NOTE, type Income } from "@/lib/org";
 import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
@@ -64,6 +64,11 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
         {o.website && <> · <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title="Their website, as listed on their Form 990">{o.website.replace(/^www\./, "").replace(/\/.*$/, "")} ↗</a></>}
       </p>
+      {o.latest990 && (
+        <p className="sub latest-990" title={LATEST_RETURN_NOTE}>
+          Latest 990: tax year {o.latest990.year}{o.latest990.form !== "990" && <> (Form {formName(o.latest990.form)})</>}{o.latest990.processed && <>, processed by the IRS in {o.latest990.processed}</>}
+        </p>
+      )}
       {o.tax?.revocation && (o.tax.status === "revoked" || o.tax.status === "conflict") && <Revoked r={o.tax.revocation} conflict={o.tax.status === "conflict"} onPub78={o.tax.pub78.eligible} />}
       {(o.team || o.age != null) && <Team team={o.team} age={o.age} since={o.ruling} />}
 
