@@ -220,12 +220,14 @@ async function NightlySection() {
     },
   };
   return (
-    <Section id="nightly" title="Nightly checks" aside="Linux helper cron: data quality 3:30, benchmark 4:00, IRS watch 6:15, Parquet snapshot Sunday 3:30">
+    <Section id="nightly" title="Nightly checks" aside="Linux helper cron: data quality 3:30, benchmark and home prompts 4:00, IRS watch 6:15, Parquet snapshot Sunday 3:30">
       <div className={s.grid}>
         <Card label="Data quality" level={qLevel} value={q?.at ? `${q.pass ?? 0} pass, ${q.warn ?? 0} warn, ${q.fail ?? 0} fail` : "no run yet"}
           detail={q?.at ? `${agoText(q.at)}, ${q.duration_s ?? "?"} s, read-only` : "quality_check.py has not reported"} />
         <Card label="Benchmark" level={bLevel} value={b?.at ? `${b.score ?? 0}/${b.total ?? 150}` : "no run yet"}
           detail={b?.at ? `${agoText(b.at)}${b.prev_score != null ? `, previous night ${b.prev_score}` : ""}${b.errors ? `, ${b.errors} API errors` : ""}` : "nightly_benchmark.py has not reported"} />
+        <Card label="Home prompts" level={!b?.prompts ? "off" : b.prompts.ok < b.prompts.total ? "bad" : "ok"} value={b?.prompts ? `${b.prompts.ok}/${b.prompts.total}` : "–"}
+          detail={b?.prompts ? (b.prompts.failing.length ? b.prompts.failing.slice(0, 3).map((f) => `${f.group}: ${f.status}`).join(", ") : "every Research tab prompt answers ok") : "home-prompts.json not on the helper"} />
         <Card label="Misleading answers" level={!b?.at ? "off" : (b.misleading ?? 0) > 0 ? "bad" : "ok"} value={b?.at ? `${b.misleading ?? 0}` : "–"}
           detail="must stay 0" />
         <Card label="Benchmark cost" value={b?.at ? `$${(b.cost_usd ?? 0).toFixed(2)}` : "–"}

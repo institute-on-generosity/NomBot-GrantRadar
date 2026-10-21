@@ -152,6 +152,7 @@ export type BenchSummary = {
   newly_failing?: { id: string; q: string; was: string; now: string }[]; newly_failing_count?: number; fixed?: string[];
   misleading_list?: { id: string; q: string; why: string }[]; cost_usd?: number; router_calls?: number; wall_s?: number;
   trend?: { date: string; score: number; total: number; misleading: number }[];
+  prompts?: { ok: number; total: number; failing: { group: string; q: string; status: string; headline: string }[] } | null; // home Research prompts
 };
 export type RestoreTest = { at?: string; ok?: boolean; file?: string; duration_s?: number; restore_s?: number; tables_matched?: number; tables_total?: number; error?: string | null };
 export type Helper = {

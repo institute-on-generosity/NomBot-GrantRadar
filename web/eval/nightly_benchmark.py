@@ -15,6 +15,9 @@ Files (all in ~/iog-qa unless set):
   ~/.config/iog-host/benchmark-key.txt   API key named "benchmark" (read scope, chmod 600, never printed)
   benchmark.json            last run: score, statuses, newly failing vs the previous night, token cost, per question
   benchmark-history.jsonl   one line per full run (date, score, misleading, statuses, tokens, cost)
+  home-prompts.json         the home page Research prompts ([{group, q}]), after a change to web/lib/examples.ts:
+                            npx tsx -e 'import("./lib/examples").then(m=>console.log(JSON.stringify(m.PROMPT_SETS.find(s=>s.word==="research").groups.flatMap(g=>g.prompts.map(q=>({group:g.label,q}))))))' > /tmp/hp.json
+                            then copy it here. Each prompt must answer ok without "closest graded label": summary.prompts
 Sends X-App: nightly-benchmark, so /admin keeps these calls out of its usage charts. The router reads each new
 question with one Claude call on the app's key (cached 24 h); the API returns that call's tokens to this client.
 """
@@ -340,6 +343,32 @@ def last_history():
     return lines
 
 
+def check_prompts(key):
+    # The home Research tab's prompts (home-prompts.json): each must come back ok, on its own label, so a click never
+    # lands on a partial answer. Missing file: skipped.
+    try:
+        with open(os.path.join(QA, "home-prompts.json")) as f:
+            ps = json.load(f)
+    except (OSError, ValueError):
+        return None, []
+
+    def one(p):
+        try:
+            a = call_api(key, p["q"])
+        except Exception as err:
+            return {**p, "status": "error", "headline": str(err)[:120]}, None
+        head = a.get("headline") or ""
+        st = "not research" if not a.get("research") else a.get("status") or "?"
+        if st == "ok" and "closest graded label" in head:
+            st = "closest label"
+        return {**p, "status": st, "headline": head[:160]}, (a.get("router") or {}).get("usage")
+    with cf.ThreadPoolExecutor(PARALLEL) as ex:
+        out = list(ex.map(one, ps))
+    res = [r for r, _ in out]
+    failing = [r for r in res if r["status"] != "ok"]
+    return {"ok": len(res) - len(failing), "total": len(res), "failing": failing[:40]}, [u for _, u in out if u]
+
+
 def main():
     only = None
     if "--only" in sys.argv:
@@ -355,6 +384,7 @@ def main():
     t0 = time.time()
     with cf.ThreadPoolExecutor(PARALLEL) as ex:
         res = list(ex.map(lambda b: run_one(b, key, db), qs))
+    prompts, p_usage = check_prompts(key) if not only else (None, [])
     wall = time.time() - t0
     if conn:
         conn.close()
@@ -373,7 +403,7 @@ def main():
     newly = [{"id": r["id"], "q": r["q"][:120], "was": prev[r["id"]], "now": r["status"]}
              for r in res if prev.get(r["id"]) == "ok" and r["status"] != "ok"]
     fixed = [r["id"] for r in res if r["id"] in prev and prev[r["id"]] != "ok" and r["status"] == "ok"]
-    c = cost([r["usage"] for r in res if r["usage"]])
+    c = cost([r["usage"] for r in res if r["usage"]] + p_usage)
     errors = sum(1 for r in res if r["engine"] == "error")
     misleading = [{"id": r["id"], "q": r["q"][:120], "why": (r["review"] or "")[:200]} for r in res if r["status"] == "misleading"]
     entry = {"date": started.strftime("%Y-%m-%d"), "at": started.isoformat(timespec="seconds"), "score": ok, "total": len(res),
@@ -384,7 +414,7 @@ def main():
         "newly_failing": newly[:25], "newly_failing_count": len(newly), "fixed": fixed[:25], "misleading_list": misleading[:10],
         "prev_score": hist[-1]["score"] if hist else None, "cost_usd": c["usd"], "router_calls": c["calls"], "wall_s": round(wall),
         "trend": [{"date": h["date"], "score": h["score"], "total": h["total"], "misleading": h["misleading"]} for h in trend],
-        "partial_run": bool(only),
+        "partial_run": bool(only), "prompts": prompts,
     }
     out = {"summary": summary, "cost": c, "base": BASE, "results": res}
     os.makedirs(QA, exist_ok=True)
@@ -398,8 +428,9 @@ def main():
             json.dump([{"id": r["id"], "status": r["status"]} for r in res], f)
     else:
         print(json.dumps(out, indent=1)[:4000])
+    pr = f"{prompts['ok']}/{prompts['total']}" if prompts else "skipped"
     print(f"{started:%F %T} benchmark {ok}/{len(res)} ok, misleading {statuses['misleading']}, {statuses}, "
-          f"errors {errors}, newly failing {len(newly)}, router calls {c['calls']} (${c['usd']:.3f}), {wall:.0f} s")
+          f"errors {errors}, newly failing {len(newly)}, home prompts {pr}, router calls {c['calls']} (${c['usd']:.3f}), {wall:.0f} s")
 
 
 if __name__ == "__main__":
