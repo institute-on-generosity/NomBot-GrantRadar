@@ -9,7 +9,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { claude, fallback as fallbackOpts, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
-import { ROUTER_SYSTEM } from "./answerRoute";
+import { ROUTER_SYSTEM, leanSchema } from "./answerRoute";
 import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
 import { fedProgram } from "./fedPrograms";
@@ -278,11 +278,16 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 - kind "answer": the follow-up asks for a number, share, ranking, trend or count. Start from the LAST spec and change only what the follow-up changes ("and for women and girls?" swaps the cause; "by state?" sets metric by_state; "in Ohio?" sets states; "since 2023?" sets years; "government money?" changes source). Fill spec fully.
 - kind "text": it asks why, what it means, how to interpret or what to do (no new number needed). spec: copy the last spec.
 - kind "search": it asks to see or list specific organizations. spec: copy the last spec.
+- The spec fields go at the top level, beside kind and standalone.
 - standalone: the follow-up rewritten as a complete question that makes sense alone, e.g. "How much foundation money goes to women and girls in New York?"`;
 
-const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend({ spec: llmSpecSchema });
+const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend(llmSpecSchema.shape);
+// Flat (spec fields beside kind and standalone) and without the prose descriptions, as the router's format: the nested
+// spec went over the structured-output grammar limit ("compiled grammar is too large", found Oct 21).
+const followZod = betaZodOutputFormat(followSchema);
+const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
 
-const cached = memo<Resolved>("follow-up:v14", 1000, 24 * 3600_000); // v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v15", 1000, 24 * 3600_000); // v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
@@ -312,12 +317,12 @@ async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
     max_tokens: 1200,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    output_config: { effort: "low", format: betaZodOutputFormat(followSchema) },
+    output_config: { effort: "low", format: followFormat },
     system: FOLLOW_SYSTEM,
     messages: [{ role: "user", content: `Thread so far:\n${thread}\n\nFollow-up: ${text}` }],
   });
   const o = res.stop_reason === "refusal" ? null : res.parsed_output;
   if (!o) return { kind: "text", standalone: text };
-  if (o.kind === "answer") return { kind: "answer", spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o.spec) }), standalone: o.standalone || text };
+  if (o.kind === "answer") return { kind: "answer", spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }), standalone: o.standalone || text };
   return { kind: o.kind, standalone: o.standalone || text };
 }

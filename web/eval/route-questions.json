@@ -74,7 +74,7 @@
   {"q": "Gates Foundation", "research": false},
   {"q": "list foundations in Ohio by assets", "research": false},
   {"q": "Are foundations giving more to mental health than they used to?", "metric": ["trend"], "label": "mental_health"},
-  {"q": "Biggest grantmakers for animal welfare", "metric": ["top_funders"], "ntee": "D"},
+  {"q": "Biggest grantmakers for animal welfare", "metric": ["top_funders"], "label": "animal_welfare"},
   {"q": "Sum of foundation grants to museums in 2024", "metric": ["total"], "ntee": "A5", "yearFrom": 2024},
   {"q": "How much foundation money goes to racial equity?", "metric": ["total"], "label": "racial_equity"},
   {"q": "Which foundations fund immigrant legal services?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "services"},
@@ -90,6 +90,10 @@
   {"q": "Which foundations fund efforts to reduce health disparities?", "metric": ["top_funders"], "label": "health_equity"},
   {"q": "Is foundation funding for health equity growing?", "metric": ["trend"], "label": "health_equity"},
   {"q": "How much foundation money goes to health?", "metric": ["total"], "ntee": "E"},
+  {"q": "How much foundation money goes to animal welfare?", "metric": ["total"], "label": "animal_welfare"},
+  {"q": "Is animal welfare funding growing?", "metric": ["trend"], "label": "animal_welfare"},
+  {"q": "Which foundations fund spay and neuter programs?", "metric": ["top_funders"], "label": "animal_welfare"},
+  {"q": "Which states get the most foundation money for animal shelters?", "metric": ["by_state"], "ntee": "D20"},
   {"q": "how much foundation money goes to arts and culture with corrected NTEE categories?", "metric": ["total"], "ntee": "A", "nteeBasis": "corrected"},
   {"q": "which states get the most foundation money for food banks", "metric": ["by_state"], "ntee": "K31", "nteeBasis": "irs"}
 ]

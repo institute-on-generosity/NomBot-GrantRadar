@@ -3,7 +3,7 @@
 // Search filters by them (lib/search.ts), the org page and API show them (lib/orgLabels.ts, lib/org.ts, lib/api.ts).
 // Client-safe: no database imports here (lib/filters.ts, used by client components, imports it).
 
-export const LABELS = { climate: "Climate", women_girls: "Women and girls", substance_use: "Substance use and addiction", housing_homelessness: "Housing and homelessness", ai_tech_learning_work: "Tech and AI skills", racial_equity: "Racial equity", immigrants_refugees: "Immigrants and refugees", mental_health: "Mental health", education: "Education and learning", health_equity: "Health equity" } as const;
+export const LABELS = { climate: "Climate", women_girls: "Women and girls", substance_use: "Substance use and addiction", housing_homelessness: "Housing and homelessness", ai_tech_learning_work: "Tech and AI skills", racial_equity: "Racial equity", immigrants_refugees: "Immigrants and refugees", mental_health: "Mental health", education: "Education and learning", health_equity: "Health equity", animal_welfare: "Animal welfare" } as const;
 export type LabelSlug = keyof typeof LABELS;
 export const LABEL_SLUGS = Object.keys(LABELS) as LabelSlug[];
 export const isLabel = (s: unknown): s is LabelSlug => typeof s === "string" && s in LABELS;
@@ -56,6 +56,9 @@ const NAMES: Record<LabelSlug, RegExp> = {
   education: /\beducation(al)?\b|\bschools?\b|\bk-?12\b|\buniversit(y|ies)\b|\bcolleges?\b|\bliteracy\b|\btutor(s|ing)?\b|\bscholarships?\b|\bpre-?(school|k)\b|\bearly (childhood|learning)\b|\bhead start\b|\blibrar(y|ies)\b|\bteachers?\b|\bstudents?\b|\bstem education\b|\bged\b|\besl\b|\badult (basic )?education\b/i,
   // Health equity named outright: plain "health" or "health care" is NTEE E, not this label.
   health_equity: /\bhealth(care| care)? (equity|inequit(y|ies)|inequalit(y|ies)|disparit(y|ies)|justice|gaps?)\b|\b(disparities|inequities|inequalities|gaps) in (health|health ?care|care)\b|\bequit(y|able) (in|of) (health|health ?care|care)\b|\bhealth-equity\b|\bminority health\b|\bcommunity health workers?\b|\bpromotor(a|as|es)( de salud)?\b|\bsocial determinants of health\b/i,
+  // Animal welfare named outright. Plain "animal shelters", "humane societies", "rescues" and "animals" stay NTEE D20 / D
+  // (search keeps its NTEE results, and most small rescues sit in the partial tier, see generosity-data docs/labels).
+  animal_welfare: /\banimal (welfare|protection|rights|cruelty|advocacy|sanctuar(y|ies)|abuse)\b|\banti-?cruelty\b|\bcruelty to animals\b|\bwelfare of animals\b|\bspay(ing)?( (and|&|\/) ?|\/)neuter(ing)?\b|\btrap[- ]neuter[- ]return\b|\bwildlife rehab(ilitation|ilitators?)?\b|\bfarm (animal )?sanctuar(y|ies)\b|\bhumane education\b|\bpet food (banks?|pantr(y|ies))\b|\bspcas?\b/i,
   mental_health: /\bmental(ly)? (health|illness(es)?|ill|disorders?|wellness|wellbeing|well-being)\b|\bpsychiatr|\bsuicid|\bcrisis (lines?|hotlines?|text)\b|\b988\b|\bdepression\b|\banxiety\b|\bptsd\b|\bpost-?traumatic stress\b|\bbipolar\b|\bschizophreni|\beating disorders?\b|\bbehavioral health\b|\bpsychotherap|\bnami\b|\bself-harm\b/i,
 };
 // Topical education, job and hobby schools and plain after-school care only matter for the education label ("digital
@@ -86,6 +89,7 @@ const WHOLE: Record<LabelSlug, string[]> = {
     "immigration policy", "immigration policy and advocacy", "immigration advocacy", "immigration reform", "immigration policy research", "immigration policy groups", "immigration debate"],
   education: ["education and learning", "education", "learning", "education and schools", "schools and education", "education funding", "educational", "education and youth learning"],
   health_equity: ["health equity", "health equity and health disparities", "health disparities", "health inequities", "health inequity", "health inequality", "health inequalities", "health justice", "health equity and disparities", "health disparities and health equity", "equity in health", "health care equity", "healthcare equity", "reducing health disparities"],
+  animal_welfare: ["animal welfare", "animal welfare and protection", "animal protection", "animal welfare and rights", "animal rights and welfare", "animal rights and animal welfare", "welfare of animals", "animal welfare and rescue", "animal rescue and welfare", "animal welfare and animal rescue"],
   mental_health: ["mental health", "mental illness", "mental illnesses", "mental health and mental illness", "mental health and wellness", "mental wellness", "mental health care", "mental and behavioral health", "behavioral and mental health", "behavioral health", "mental health and suicide prevention"],
 };
 // What each label counts, for the caveat on a narrower question.
@@ -99,6 +103,7 @@ export const LABEL_SCOPE: Record<LabelSlug, string> = {
   immigrants_refugees: "refugee resettlement, immigration legal services, citizenship and newcomer services, aid to refugees abroad, and immigrant rights (the services sub-type, without immigration policy groups)",
   mental_health: "mental health treatment and counseling, crisis lines and suicide prevention, peer support, and mental health advocacy and research",
   health_equity: "closing health gaps by race, income, place, gender, disability or immigration status, through care and outreach aimed at those gaps, community health workers and promotoras, minority health, health disparities research and policy, and a more diverse health workforce",
+  animal_welfare: "animal shelters, humane societies and SPCAs, rescue, foster and adoption, spay and neuter, vet care and pet food for animals in need, sanctuaries, wildlife rehabilitation, and anti-cruelty work and animal rights",
   education: "schools, colleges and universities and their foundations, early childhood education, tutoring and literacy, scholarships and college access, adult education, libraries, STEM education, teacher training and education policy",
 };
 const FILLER = /\b(the|orgs?|organi[sz]ations?|nonprofits?|non-profits?|charities|charity|groups?|causes?|funding|money|grants?|giving|sector|issues?|efforts?|programs?|services?|work|related|focused)\b/g;

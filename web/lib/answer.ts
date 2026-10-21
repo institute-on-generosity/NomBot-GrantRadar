@@ -140,12 +140,19 @@ function tsq(keywords: string[]): string {
 // credit-union network with one green-lending program would count all its government grants as climate).
 // The sub-type a label cause counts (immigrants_refugees: services or policy), null for the whole label. The research
 // layer's labels arrays carry label:tier only, so a sub-type answers from grant_clean joined to org_labels.
+// Labels whose partial tier is mostly main-focus orgs (animal_welfare: no-990-text orgs and support trusts were moved
+// to partial, generosity-data docs/labels/animal_welfare.md): grant answers headline primary + partial, so the label
+// carries no tier column (causeSql, cubeWhere) and the tier wording drops (tiered). Whole-org money (primaryOnly) still
+// counts primary only.
+const ALL_TIERS: ReadonlySet<string> = new Set<LabelSlug>(["animal_welfare"]);
+const bothTiers = (c: C | null | undefined) => !!c && !c.all && !!c.label && ALL_TIERS.has(c.label);
+const isTiered = (c: C | null | undefined) => !!c && !c.all && !!c.label && !ALL_TIERS.has(c.label);
 const labelSub = (c: C | null | undefined): LabelSub | null => (c && !c.all && c.label && c.subtype && c.subtype !== "all" ? c.subtype : null);
 function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primaryOnly = false): CauseSql {
   if (!c || c.all) return { join: "", where: [], tier: null, kind: "all" };
   p.cause(c);
   const sub = labelSub(c);
-  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}${sub ? ` AND ${p.add(sub)}::text = ANY(l${sfx}.subtypes)` : ""}`, where: [], tier: `l${sfx}.tier`, kind: "label", primaryOnly };
+  if (c.label) return { join: `JOIN org_labels l${sfx} ON l${sfx}.ein = ${ein} AND l${sfx}.label = ${p.add(c.label)}${primaryOnly ? ` AND l${sfx}.tier = 'primary'` : ""}${sub ? ` AND ${p.add(sub)}::text = ANY(l${sfx}.subtypes)` : ""}`, where: [], tier: bothTiers(c) && !primaryOnly ? null : `l${sfx}.tier`, kind: "label", primaryOnly };
   if (c.ntee.length) return { join: "", where: [nteeMatch(c, p, ein, ntee)], tier: null, kind: "ntee" };
   const kws = c.keywords.length ? c.keywords : [c.name.toLowerCase()];
   const q = tsq(kws);
@@ -288,7 +295,7 @@ function cubeWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }
   if (linkedOnly || (c && !c.all)) w.push(`${x}.linked`);
   if (c && !c.all) {
     p.cause(c);
-    if (c.label) { const l = c.label; w.push(`${x}.labels <> '{}'`, `${x}.labels && ${p.add([`${l}:primary`, `${l}:partial`])}::text[]`); primary = () => `${p.add(`${l}:primary`)}::text = ANY(${x}.labels)`; }
+    if (c.label) { const l = c.label; w.push(`${x}.labels <> '{}'`, `${x}.labels && ${p.add([`${l}:primary`, `${l}:partial`])}::text[]`); if (!bothTiers(c)) primary = () => `${p.add(`${l}:primary`)}::text = ANY(${x}.labels)`; }
     else w.push(`${x}.ntee3 LIKE ANY(${p.add(c.ntee.map((n) => `${n}%`))}::text[])`);
   }
   if (pl.states.length) w.push(`${x}.recipient_state = ANY(${p.add(pl.states)}::text[])`);
@@ -428,11 +435,13 @@ async function resolvePlace(s: Spec): Promise<Place> {
 // ------------------------------------------------------------------ label grades (for caveats)
 type Grade = { name: string; primary?: number; partial?: number; recall?: number; nPrimary?: number; nPartial?: number; subRight?: number; nSub?: number; subPolicy?: number };
 const gradeMemo = memo<Record<string, Grade>>("answer-grades", 2, 3600_000);
+// animal_welfare's stored recall comes from a grade of the NTEE stratum only (g2), not the whole label: not shown.
+const NO_RECALL = new Set(["animal_welfare"]);
 const grades = () => gradeMemo("all", async () => {
   const r = await db.query(`SELECT label, name, grading FROM cause_labels`);
   return Object.fromEntries(r.rows.map((x) => [x.label, {
     name: x.name, primary: x.grading?.primary?.exact?.p, partial: x.grading?.partial?.in_label?.p ?? x.grading?.partial?.in_label_weighted,
-    recall: x.grading?.recall_est, nPrimary: x.grading?.primary?.exact?.n, nPartial: x.grading?.partial?.in_label?.n,
+    recall: NO_RECALL.has(x.label) ? undefined : x.grading?.recall_est, nPrimary: x.grading?.primary?.exact?.n, nPartial: x.grading?.partial?.in_label?.n,
     subRight: x.grading?.subtypes?.right_weighted, nSub: x.grading?.subtypes?.right?.n, subPolicy: x.grading?.subtypes?.policy_precision,
   }]));
 });
@@ -502,6 +511,9 @@ const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly
     ? `This counts immigration policy and advocacy groups of every viewpoint, from groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies) to groups that argue for more (FWD.us, the National Immigration Forum), so their funders count here whatever side they take. Groups that serve immigrants are left out unless they also run named policy work.${g?.subPolicy != null ? ` Lower confidence: ${pct(g.subPolicy)} of sampled policy orgs were judged policy groups, below the 90% bar. Most misses are immigrant community groups.` : ""}`
     : "This counts the whole immigrants and refugees label: orgs that serve immigrants and refugees and immigration policy groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies)."}${g?.subRight != null ? ` The split into the two sub-types graded ${pct(g.subRight)} right on ${g.nSub ?? "a"} sampled orgs.` : ""}`,
   education: () => "Education is graded within one org of the bar (95% main focus, 90% partial), and counts are a floor: the label finds about 73% of education orgs. It counts all learning, from schools and universities to tutoring, literacy, scholarships and libraries.",
+  animal_welfare: (_g, primaryOnly) => primaryOnly
+    ? "Only orgs whose main focus is animal welfare are counted here, so this is a floor. Many animal welfare groups sit in the partial tier because they filed no 990 text to confirm their focus, and their money is left out."
+    : "Animal welfare counts main focus and partial orgs together. Most partial orgs are animal welfare groups at heart that filed no 990 text to confirm it, or trusts that support one animal charity. Main focus orgs alone would leave out much of the real animal welfare money.",
   health_equity: (g) => `Health equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of orgs doing this work.`,
   mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
 };
@@ -512,13 +524,15 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
   const via = c.via ? ` Matched to codes through our cause taxonomy (term "${c.via}").` : "";
   if (cs.kind === "label") {
     const g = (await grades())[c.label!];
-    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : "Primary is a floor, primary + partial an upper bound."}`);
+    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : bothTiers(c) ? "Primary and partial are both counted here." : "Primary is a floor, primary + partial an upper bound."}`);
     const extra = LABEL_CAVEAT[c.label as LabelSlug];
     const sub = labelSub(c);
     if (extra) caveats.push(extra(g, Boolean(cs.primaryOnly), sub));
     const subNote = sub ? `, ${LABEL_SUBTYPES[c.label as LabelSlug]!.names[sub].toLowerCase()} sub-type only` : "";
     return cs.primaryOnly
       ? `${g?.name ?? c.label} label (org_labels)${subNote}, primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
+      : bothTiers(c)
+      ? `${g?.name ?? c.label} label (org_labels)${subNote}, primary and partial counted together: primary = the main stated purpose, partial = mostly main focus orgs with no 990 text to confirm it, plus support trusts and orgs with one animal program.${via}`
       : `${g?.name ?? c.label} label (org_labels)${subNote}: primary = the main stated purpose, partial = one program among others.${via}`;
   }
   if (cs.kind === "ntee") {
@@ -830,7 +844,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v38: spec.ntee "corrected" (generosity-data 072 suggested NTEE groups), the "With corrected categories?" chip.
 // v39: health_equity label (graded g2), with its caveat (LABEL_CAVEAT).
 // v40: corrected NTEE footnote splits orgs added with no IRS code (uncoded_vote_llm) from orgs moved.
-const answerMemo = memo<Answer>("answer:v40", 500, 6 * 3600_000);
+// v41: animal_welfare label (graded g2), headlined on primary + partial (ALL_TIERS), with its caveat (LABEL_CAVEAT).
+const answerMemo = memo<Answer>("answer:v41", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -949,7 +964,7 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
       const g = gr[c.label];
       const grade = g?.primary != null ? `primary graded ${pct(g.primary)} right on ${g.nPrimary ?? "a"} sampled orgs${g.recall != null ? `, recall about ${pct(g.recall)}` : ""}` : undefined;
       return { name: c.name, kind: "label", labelName: g?.name ?? LABELS[c.label as LabelSlug] ?? c.label, grade, subtype: subs.get(c),
-        tiers: primaryOnly ? "primary tier only (main stated purpose)" : grantSrc ? "primary as the headline, primary + partial as the upper bound" : "primary and partial tiers" };
+        tiers: primaryOnly ? "primary tier only (main stated purpose)" : bothTiers(c as C) ? "primary and partial tiers, both in the headline" : grantSrc ? "primary as the headline, primary + partial as the upper bound" : "primary and partial tiers" };
     }
     if (c.ntee.length) return { name: `${c.name} (NTEE ${c.ntee.join(", ")})`, kind: "ntee" };
     return { name: c.name, kind: "keyword" };
@@ -1336,7 +1351,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   // year on a trend, the whole span otherwise) and, on a trend, the year before the start (spike check).
   const ce = causes[0] && !causes[0].all ? causes[0] : null;
   const keyYears = s.metric === "trend" && y.full.length > 1 ? [y.full[0], y.full.at(-1)!] : null;
-  const evMovers = ce && s.metric !== "compare" ? movers(ctx, ce, pl, y, keyYears, !!ce.label).catch(() => []) : Promise.resolve([]);
+  const evMovers = ce && s.metric !== "compare" ? movers(ctx, ce, pl, y, keyYears, isTiered(ce)).catch(() => []) : Promise.resolve([]);
   const evPrev = ce && s.metric === "trend" && y.from - 1 >= G_FIRST && y.full.length >= 3 && y.full[0] === y.from ? yearSum(ctx, ce, pl, y.from - 1).catch(() => null) : Promise.resolve(null);
   const [den, gcav, ...ms] = await Promise.all([fDenom(ctx, pl, y), grantCaveats(pl), ...causes.map((c) => c ? fMoney(ctx, c, pl, y, `${cap(pl.g.grants)} to ${c.name}, by tax year`) : null)]);
   // Schedule I money with no named recipient: beside a national all-causes total, never inside any total.
@@ -1409,7 +1424,7 @@ async function foundationTotal(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   }
 
   // One or two causes.
-  const label = causes.map((c) => c!.label != null);
+  const label = causes.map((c) => isTiered(c));
   const rowsOut: Row[] = [];
   const series: Row[] = [];
   causes.forEach((c, i) => {
@@ -1826,7 +1841,7 @@ GROUP BY 1
 UNION ALL
 SELECT 'label:' || split_part(l.t, ':', 1), coalesce(sum(x.usd) FILTER (WHERE x.tax_year = ${pa}), 0)::float8, coalesce(sum(x.usd) FILTER (WHERE x.tax_year = ${pz}), 0)::float8
 FROM ${pl.g.cube} x CROSS JOIN LATERAL unnest(x.labels) AS l(t)
-WHERE l.t LIKE '%:primary' AND ${w}
+WHERE (l.t LIKE '%:primary' OR l.t = ANY(${p.add([...ALL_TIERS].map((l) => `${l}:partial`))}::text[])) AND ${w}
 GROUP BY 1`, p);
   } else {
   const pw = [...placeWhere(pl, p, "g.recipient_state", "g.county_fips"), ...filtGc(pl.f, p), ...gExtra(pl, p, "g")];
@@ -1838,7 +1853,7 @@ FROM ${pl.g.clean} g WHERE ${gNtee} ~ '^[A-Z]' AND g.tax_year IN (${pa}, ${pz}) 
 GROUP BY 1
 UNION ALL
 SELECT 'label:' || l.label, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pa}), 0)::float8, coalesce(sum(g.amount) FILTER (WHERE g.tax_year = ${pz}), 0)::float8
-FROM ${pl.g.clean} g JOIN org_labels l ON l.ein = g.recipient_ein AND l.tier = 'primary'
+FROM ${pl.g.clean} g JOIN org_labels l ON l.ein = g.recipient_ein AND (l.tier = 'primary' OR l.label = ANY(${p.add([...ALL_TIERS])}::text[]))
 WHERE g.tax_year IN (${pa}, ${pz}) ${pw.length ? `AND ${and(pw)}` : ""}
 GROUP BY 1`, p);
   }
@@ -1850,7 +1865,7 @@ GROUP BY 1`, p);
   })).sort((p1, p2) => (s.order === "least" ? p1.growth - p2.growth : p2.growth - p1.growth));
   if (!list.length) throw new Unanswerable("Too few grants in this place to compare causes.");
   const top = list[0], bottom = list.at(-1)!;
-  const caveats = [`Causes are NTEE major groups (the recipient's main code) plus the graded labels' primary tier, which overlap NTEE groups. Groups under ${money(minBase)} in ${a} are left out.`, ...(await grantCaveats(pl))];
+  const caveats = [`Causes are NTEE major groups (the recipient's main code) plus the graded labels' primary tier (animal welfare counts primary and partial), which overlap NTEE groups. Groups under ${money(minBase)} in ${a} are left out.`, ...(await grantCaveats(pl))];
   return {
     headline: `${top.cause.replace(/ \(.+\)$/, "")} ${s.order === "least" ? "fell" : "grew"} ${s.order === "least" && top.growth < 0 ? "the most" : "fastest"}: ${signed(top.growth)} in ${pl.g.grants}, ${a} to ${z}`,
     numbers: [{ value: signed(top.growth), label: top.cause }, { value: signed(bottom.growth), label: bottom.cause }, { value: String(list.length), label: "causes compared" }],

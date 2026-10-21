@@ -1,5 +1,5 @@
 // Cause-label checks (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity,
-// immigrants_refugees, mental_health, education, health_equity; generosity-data migration 032): the question parse sets the label
+// immigrants_refugees, mental_health, education, health_equity, animal_welfare; generosity-data migration 032): the question parse sets the label
 // only when the question names the cause, the filter edits work, search keeps only labeled orgs, and the
 // API returns labels. No Claude calls unless --llm (then ~10 parses with PARSE_MODEL; tokens are printed).
 //   npm run test:labels          rules, filters, search, API
@@ -46,6 +46,12 @@ const CASES: [string, string | null][] = [
   ["health equity organizations in Georgia", "health_equity"],
   ["groups reducing health disparities in Mississippi", "health_equity"],
   ["community health worker programs in Texas", "health_equity"],
+  ["animal welfare nonprofits in Ohio", "animal_welfare"],
+  ["low-cost spay and neuter programs in Texas", "animal_welfare"],
+  ["wildlife rehabilitation centers in Florida", "animal_welfare"],
+  ["farm animal sanctuaries in New York", "animal_welfare"],
+  ["animal shelters in Ohio", null],
+  ["zoos and aquariums in California", null],
   ["health care nonprofits in Ohio", null],
   ["community health centers in Kentucky", null],
   ["financial literacy groups in Ohio", null],
@@ -116,13 +122,13 @@ check(applyOverrides(base, { label: "bogus" }).label === "climate", "unknown lab
 
 // 4. Search: every result carries the label, primary only by default; partial adds orgs.
 const labeled = async (label: string, partial: boolean) => {
-  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery", housing_homelessness: "homeless shelter", ai_tech_learning_work: "coding", racial_equity: "racial justice", immigrants_refugees: "refugee", mental_health: "mental health", education: "literacy tutoring", health_equity: "health equity" }[label] ?? label, label, labelPartial: partial, limit: 50 });
+  const r = await search({ q: { climate: "climate", women_girls: "women and girls", substance_use: "addiction recovery", housing_homelessness: "homeless shelter", ai_tech_learning_work: "coding", racial_equity: "racial justice", immigrants_refugees: "refugee", mental_health: "mental health", education: "literacy tutoring", health_equity: "health equity", animal_welfare: "animal rescue" }[label] ?? label, label, labelPartial: partial, limit: 50 });
   const eins = r.results.map((x) => x.ein.replace("-", ""));
   const { rows } = await db.query("SELECT ein, tier FROM org_labels WHERE label = $1 AND ein = ANY($2)", [label, eins]);
   const tier = new Map(rows.map((x) => [x.ein.trim(), x.tier]));
   return { r, all: eins.every((e) => tier.has(e)), primaryOnly: eins.every((e) => tier.get(e) === "primary") };
 };
-for (const label of ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work", "racial_equity", "immigrants_refugees", "mental_health", "education", "health_equity"]) {
+for (const label of ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work", "racial_equity", "immigrants_refugees", "mental_health", "education", "health_equity", "animal_welfare"]) {
   const p = await labeled(label, false), a = await labeled(label, true);
   check(p.r.total > 0 && p.all && p.primaryOnly && p.r.results.every((x) => x.label?.tier === "primary"), `search label=${label}: ${p.r.total} primary orgs, all labeled primary`);
   check(a.all && a.r.total > p.r.total, `search label=${label} + partial: ${a.r.total} orgs (> ${p.r.total}), all labeled`);
@@ -153,6 +159,8 @@ const ed = await apiOrg("131624241", "http://x"); // UNITED NEGRO COLLEGE FUND I
 check(!("error" in ed) && ed.org.labels.some((l) => l.label === "education" && l.name === "Education and learning" && l.tier === "primary" && Boolean(l.why)), "api org UNCF: education, primary, with why");
 const he = await apiOrg("850868589", "http://x"); // Buffalo Center for Health Equity
 check(!("error" in he) && he.org.labels.some((l) => l.label === "health_equity" && l.name === "Health equity" && l.tier === "primary" && Boolean(l.why)), "api org Buffalo Center for Health Equity: health_equity, primary, with why");
+const aw = await apiOrg("530225390", "http://x"); // Humane World for Animals (formerly the Humane Society of the United States)
+check(!("error" in aw) && aw.org.labels.some((l) => l.label === "animal_welfare" && l.name === "Animal welfare" && l.tier === "primary" && Boolean(l.why)), "api org Humane World for Animals: animal_welfare, primary, with why");
 // Sub-types: resettlement agencies are services, restriction and research groups policy (org pages, API, search filter).
 // Services orgs may also run named policy work (both); restriction groups are policy only.
 const sub = async (ein: string, name: string, want: "services" | "policy") => {

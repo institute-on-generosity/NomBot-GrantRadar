@@ -82,6 +82,8 @@
   { "q": "How much foundation money goes to mental health?", "metric": ["total"], "label": "mental_health", "headlineNot": "closest graded label", "caveatHas": "not its NTEE code" },
   { "q": "How much foundation money goes to suicide prevention?", "metric": ["total"], "label": "mental_health", "headlineHas": "mental health orgs \\(the closest graded label to suicide prevention\\)" },
   { "q": "How much foundation money goes to education?", "metric": ["total"], "label": "education", "headlineNot": "closest graded label", "caveatHas": "within one org of the bar" },
+  { "q": "How much foundation money goes to animal welfare?", "metric": ["total"], "label": "animal_welfare", "headlineNot": "closest graded label", "caveatHas": "main focus and partial orgs together" },
+  { "q": "How much government money goes to animal welfare nonprofits?", "metric": ["total"], "label": "animal_welfare", "caveatHas": "so this is a floor" },
   { "q": "How much foundation money goes to health equity?", "metric": ["total"], "label": "health_equity", "headlineNot": "closest graded label", "caveatHas": "Health equity counts are a floor" },
   { "q": "How much foundation money goes to racial justice?", "metric": ["total"], "label": "racial_equity", "headlineNot": "closest graded label", "caveatHas": "counts are a floor" },
   { "q": "Did foundation giving to racial justice spike after 2020 and then fall back?", "metric": ["trend"], "label": "racial_equity" },
