@@ -91,5 +91,8 @@
   { "q": "Which foundations give the most to refugee resettlement?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "services", "caveatHas": "serve immigrants and refugees" },
   { "q": "Which foundations fund immigration policy groups?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "policy", "headlineNot": "closest graded label", "caveatHas": "argue for less immigration" },
   { "q": "If we fix miscoded organizations, how much foundation money goes to the arts?", "metric": ["total", "share"], "ntee": "A", "nteeBasis": "corrected", "caveatHas": "Corrected categories\\. .*[0-9,]+ orgs \\(\\$" },
-  { "q": "What share of foundation money goes to community improvement groups, with corrected categories?", "metric": ["share", "total"], "ntee": "S", "nteeBasis": "corrected", "caveatHas": "moved out" }
+  { "q": "What share of foundation money goes to community improvement groups, with corrected categories?", "metric": ["share", "total"], "ntee": "S", "nteeBasis": "corrected", "caveatHas": "moved out" },
+  { "q": "Which mental health nonprofits in California get little foundation money for their size?", "metric": ["underfunded"], "label": "mental_health", "states": ["CA"], "headlineHas": "established mental health", "caveatHas": "can't link" },
+  { "q": "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "metric": ["underfunded"], "label": "housing_homelessness", "states": ["TX"], "caveatHas": "not that it lacks money" },
+  { "q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31", "headlineHas": "food banks" }
 ]

@@ -45,6 +45,7 @@ export function describeSpec(s: Spec): string {
     case "general_support": return `What share of foundation money for ${cause}${place} is general operating support?`;
     case "out_of_state": return `How much foundation money for ${cause}${place} comes from other states?`;
     case "overlap_funders": return `Which foundations fund both ${cause}?`;
+    case "underfunded": return `Which ${/(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`}${place} get little foundation money for their size?`;
     case "count_orgs": {
       const cond = s.condition === "deficit" ? "run deficits" : s.condition === "low_cash" ? "have under 3 months of cash" : s.condition === "gov_reliant" ? "rely on government grants" : s.condition === "surplus" ? "run surpluses" : "are there";
       if (s.by === "year") return `What share of ${cause} organizations${place} ${s.condition ? cond : "run deficits"}, by year?`;
@@ -171,6 +172,13 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
       if (s.by !== "recipient_size") add(`What share of ${subj}${place} ${s.condition === "low_cash" ? "have under 3 months of cash" : "run deficits"}, by revenue size?`, { by: "recipient_size", condition: s.condition === "low_cash" ? "low_cash" : "deficit", streak: 0, recipientSize: null });
       add(`How much government money goes to ${subj}${place}?`, { metric: "total", source: "government_grants", condition: null, by: null });
     },
+    underfunded: () => {
+      const subj = /(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`;
+      const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
+      add(`Who gets the most money${forX}${place}?`, { metric: "top_recipients", source: "foundation_grants", recipientSize: null });
+      add(`How many ${subj}${place} rely on government grants?`, { metric: "count_orgs", condition: "gov_reliant", by: null, source: "foundation_grants", recipientSize: null });
+      add(`Which foundations give the most to ${cause}${place}?`, { metric: "top_funders", source: "foundation_grants", recipientSize: null });
+    },
     top_recipients: () => {
       if (fed) add(`Which federal agencies give the most to nonprofits${forX}?`, { metric: "top_funders" });
       if (!pf) add(`Is ${money}${of ? ` for${of}` : ""} growing?`, { metric: "trend" });
@@ -277,7 +285,7 @@ const FOLLOW_SYSTEM = `${ROUTER_SYSTEM}
 You are resolving a FOLLOW-UP in a research thread. You get the earlier questions with their specs (JSON) and the new message.
 - kind "answer": the follow-up asks for a number, share, ranking, trend or count. Start from the LAST spec and change only what the follow-up changes ("and for women and girls?" swaps the cause; "by state?" sets metric by_state; "in Ohio?" sets states; "since 2023?" sets years; "government money?" changes source). Fill spec fully.
 - kind "text": it asks why, what it means, how to interpret or what to do (no new number needed). spec: copy the last spec.
-- kind "search": it asks to see or list specific organizations. spec: copy the last spec.
+- kind "search": it asks to see or list specific organizations. spec: copy the last spec. Orgs that get little foundation money for their size ("which ones are under-funded?") are kind "answer" with metric underfunded.
 - The spec fields go at the top level, beside kind and standalone.
 - standalone: the follow-up rewritten as a complete question that makes sense alone, e.g. "How much foundation money goes to women and girls in New York?"`;
 
@@ -287,7 +295,7 @@ const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), stan
 const followZod = betaZodOutputFormat(followSchema);
 const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
 
-const cached = memo<Resolved>("follow-up:v15", 1000, 24 * 3600_000); // v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v16", 1000, 24 * 3600_000); // v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());

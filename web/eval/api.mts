@@ -338,6 +338,15 @@ try {
   check(Array.isArray(b.follow_ups), "answer: follow_ups array");
   check(b.data_years?.from === 2020 && b.data_years.to === 2024 && /1 to 2 years late/.test(b.data_years.note) && !/;|—/.test(b.data_years.note), `answer: data_years note (${b.data_years?.note})`);
 
+  // ---------- answer: under-funded orgs (metric underfunded), spec, no Claude call ----------
+  const UF_SPEC = { metric: "underfunded", causes: [{ name: "mental health", label: "mental_health", ntee: [], keywords: [] }], states: ["CA"] };
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify(UF_SPEC))}`, "answer under-funded mental health orgs in CA (spec)");
+  const uf: J[] = b.underfunded_orgs ?? [];
+  check(uf.length > 0 && uf.length <= 10 && uf.every((o) => /^\d{9}$/.test(o.ein) && o.state === "CA" && o.revenue > 0 && o.foundation_usd_a_year <= 0.25 * o.peer_median_usd_a_year + 1), `answer: underfunded_orgs listed below a quarter of peers (${uf.length})`);
+  check(b.caveats?.some((c: string) => /can't link/.test(c)) && !b.caveats.some((c: string) => /;|—/.test(c)), "answer: underfunded caveat on unlinked grants, plain words");
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify(FB_SPEC))}`, "answer food bank trend again");
+  check(b.underfunded_orgs === null, "answer: underfunded_orgs null on other metrics");
+
   // ---------- MCP ----------
   const client = new Client({ name: "nombot-api-test", version: "1.0.0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${BASE}/mcp`), { requestInit: { headers: { Authorization: `Bearer ${KEY}` } } }));

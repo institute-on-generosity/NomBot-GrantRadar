@@ -1624,3 +1624,13 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
 .org-news { list-style: none; font-size: 14px; }
 .org-news li { display: flex; flex-direction: column; gap: 2px; padding: 9px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
 .org-news span { color: var(--mute); font-size: 13px; }
+/* Under-funded orgs table in research answers (components/AnswerOrgs.tsx) */
+.answer-orgs { margin: 0 0 12px; }
+.answer-orgs-scroll { overflow-x: auto; }
+.answer-orgs table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.answer-orgs th { text-align: left; font-weight: 600; color: var(--ink-2); padding: 6px 8px; border-bottom: 1px solid var(--line, #e5e5e5); white-space: nowrap; }
+.answer-orgs td { padding: 6px 8px; border-bottom: 1px solid var(--line, #eee); vertical-align: top; white-space: nowrap; }
+.answer-orgs td:first-child { white-space: normal; min-width: 180px; }
+.answer-orgs td small { display: block; color: var(--mute); font-size: 12px; }
+.answer-orgs a { color: var(--g-dark); text-decoration: none; }
+.answer-orgs a:hover { text-decoration: underline; }

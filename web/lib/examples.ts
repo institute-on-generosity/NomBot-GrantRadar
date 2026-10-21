@@ -34,6 +34,7 @@ const RESEARCH_GROUPS = [
   { label: "Racial equity", prompts: ["How has racial equity funding changed since 2020?", "Who are the biggest foundation funders of racial equity?", "Which foundations give the most to Native American communities?"] },
   { label: "Immigrants", prompts: ["How much goes to immigrant services vs immigration policy?", "Which states get the most foundation money for immigrants and refugees?", "Who are the top recipients of foundation money for immigrants?"] },
   { label: "Foundations", prompts: ["Which states get the least foundation money per resident?", "What share of foundation giving comes from the 100 largest foundations?", "What is the median payout rate by foundation size?", "Which causes are growing fastest in foundation funding?"] },
+  { label: "Under-funded orgs", prompts: ["Which mental health nonprofits in California get little foundation money for their size?", "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "Which food banks are overlooked by foundations for their size?"] },
   { label: "Finances", prompts: ["How many nonprofits ran deficits two years in a row?", "What share of nonprofit revenue do the largest 1% of nonprofits take in?", "How many nonprofits in Mississippi have less than three months of cash?"] },
   { label: "Household giving", prompts: ["Do high-income households give a larger share of income than low-income households?", "How has itemized charitable giving changed since 2015?"] },
 ];

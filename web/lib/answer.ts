@@ -46,6 +46,7 @@ export type Answer = {
   steps?: Step[];                  // "Show the steps": the evidence chain (lib/answerSteps), deterministic
   followUps?: string[];            // chips the numbers suggest ("Since 2021?" after a start-year spike)
   recency?: Recency | null;        // the filing years the answer covers, and which are still arriving (recencyOf)
+  orgs?: OrgPick[];                // metric underfunded: the orgs listed, linked to their pages
   ms: number;
 };
 // form: the filings read. partial: tax years with returns still arriving (share = filings in / the fullest year's).
@@ -920,7 +921,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v41: animal_welfare label (graded g2), headlined on primary + partial (ALL_TIERS), with its caveat (LABEL_CAVEAT).
 // v42: data recency note (recencyOf): the filing years covered, partial years read from filings per tax year.
 // v43: trend headlines end at the newest full year (partialEnd), "(partial)" labels from filings per tax year (loadFullYears).
-const answerMemo = memo<Answer>("answer:v43", 500, 6 * 3600_000);
+// v44: underfunded metric (orgs in a cause getting little foundation money for their size), Answer.orgs.
+const answerMemo = memo<Answer>("answer:v44", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1373,6 +1375,7 @@ async function dispatch(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     case "concentration": return concentration(ctx, s, pl);
     case "overlap_funders": return overlap(ctx, s, pl);
     case "count_orgs": return countOrgs(ctx, s, pl);
+    case "underfunded": return underfunded(ctx, s, pl);
     default: throw new Unanswerable("Our IRS data can't answer this question.");
   }
 }
@@ -2944,6 +2947,126 @@ const fedLinkNote = () => fedLinkMemo("all", async () => {
 });
 
 // ---- how many orgs (and how many run deficits, have thin cash, rely on government grants)
+// ---- under-funded orgs (metric underfunded; Joshua Elder Oct 19, Kate Oct 15: "orgs doing X that get little
+// foundation money"). Within one cause (graded label primary tier, NTEE codes or keywords), established public
+// charities with real programs: a full Form 990 in the newest years, a prior-year column, IRS ruling 3+ years
+// before it, program expenses 70%+ of expenses, under half of revenue from fees (program service revenue),
+// $500K to $50M in revenue (or the recipientSize asked). Not DAF sponsors, community foundations, United Ways,
+// supporting orgs or orgs granting a quarter or more of their spending on. Peers = the same cause and revenue band,
+// nationwide. Under-funded = 990-PF grants a year per revenue dollar at most a quarter of the peer median, and
+// Schedule I grants under 10% of revenue. Ranked by the shortfall in dollars against the peer median. Before
+// listing, the top candidates are checked for unlinked grants under their name in their state (pg_trgm), and
+// any with them are set aside: about 40% of grant dollars don't name a recipient we can link.
+export type OrgPick = { ein: string; name: string; city: string; state: string; tax_year: number; revenue: number; foundation_usd_a_year: number; foundation_grants: number; funders: number; peer_median_usd_a_year: number; government_share: number; contributions_share: number; program_share: number; charity_grants_usd_a_year: number; since: number | null };
+const UF_SHARE = 0.25, UF_PROGRAM = 0.7, UF_FEES = 0.5, UF_GIFTS = 0.5, UF_ASSETS = 4, UF_SI = 0.1, UF_CHECK = 40, UF_SHOW = 10;
+// Not the overlooked-org kind: government authorities and their affiliates, school booster clubs and PTAs (they raise
+// money for one school or team).
+const UF_NOT_NAME = String.raw`\m(housing|redevelopment|development|public facilit(y|ies)) (authority|corporation|corp|finance)\M|\mauthority\M|\mbooster|\mpta\M|\mpto\M|parent teacher`;
+const UF_CAVEAT = "Under-funded here means few foundation grants for the org's size compared with similar orgs, not that it lacks money: many of these orgs run on government contracts or individual gifts. About a third of foundation grants (40% of grant dollars) name a recipient we can't link to an organization, so some orgs listed may get grants we can't see. We checked each listed org's name against those unlinked grants in its state and set aside any with a match.";
+type UfRow = { ein: string | null; name: string; city: string; state: string; tax_year: number; revenue: number; expenses: number; contributions: number; government_grants: number; program_expenses: number; since: number | null; pf_usd: number; pf_n: number; funders: number; si_usd: number; med: number; band: number; gap: number;
+  n_here: number; n_under: number; n_bands: number; peers: { band: number; n: number; med: number; any: number }[] | null; y0: number; y1: number };
+async function underfunded(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  const c0 = (s.causes[0] ?? null) as C | null;
+  // NTEE causes count by corrected groups here: an org whose IRS code doesn't fit its own 990 text isn't a peer.
+  const c = c0 && !c0.label && c0.ntee.length ? { ...c0, corr: true } : c0;
+  if (!c) throw new Unanswerable("Name a cause (\"mental health\", \"food banks\") to find orgs in it that get little foundation money for their size.");
+  const gy1 = FULL.pf, gy0 = gy1 - 2; // three full years of 990-PF grants
+  const fy1 = FULL.f990 + 1, fy0 = FULL.f990 - 1; // newest Form 990 per org, 2023 to 2025 today
+  const rb: [number, number] = pl.f.rb ?? [3, 6];
+  if (pl.f.rb) ctx.honored.add("recipientSize");
+  const p = new P();
+  const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
+  const here = placeWhere(pl, p, "lat.state", "lat.county_fips");
+  const [g0, g1, f0, f1, b0, b1] = [gy0, gy1, fy0, fy1, rb[0], rb[1]].map((x) => p.add(x));
+  const sql = `WITH lat AS (
+  SELECT DISTINCT ON (f.ein) f.ein, f.tax_year, f.object_id, f.revenue, f.expenses, f.contributions, f.program_revenue, f.government_grants, f.total_assets, f.revenue_band, f.state, f.county_fips
+  FROM org_finance_year f ${cs.join}
+  WHERE ${and([`f.tax_year BETWEEN ${f0} AND ${f1}`, "f.source = 'filing'", "f.form = '990'", ...cs.where])}
+  ORDER BY f.ein, f.tax_year DESC),
+el AS (
+  SELECT lat.*, o.name, o.city, ff.program_expenses, CASE WHEN o.ruling ~ '^[0-9]{4}' THEN left(o.ruling, 4)::int END AS since, (${and(here)}) AS here
+  FROM lat JOIN filing_flag ff ON ff.object_id = lat.object_id JOIN orgs o ON o.ein = lat.ein
+  WHERE lat.revenue_band BETWEEN ${b0} AND ${b1} AND lat.revenue > 0 AND lat.expenses >= 0.5 * lat.revenue AND coalesce(ff.cy_salaries, 0) > 0
+    AND o.subsection = '03' AND o.foundation IN ('11', '12', '15', '16')
+    AND ff.py_revenue > 0 AND o.ruling ~ '^[0-9]{4}' AND left(o.ruling, 4)::int <= lat.tax_year - 3
+    AND ff.program_expenses >= ${UF_PROGRAM} * lat.expenses
+    AND coalesce(lat.program_revenue, 0) < ${UF_FEES} * lat.revenue AND coalesce(lat.contributions, 0) >= ${UF_GIFTS} * lat.revenue
+    AND coalesce(lat.total_assets, 0) <= ${UF_ASSETS} * lat.revenue
+    AND o.name !~* ${p.add(UF_NOT_NAME)}
+    AND NOT EXISTS (SELECT 1 FROM charity_funder_profile cf WHERE cf.ein = lat.ein AND cf.funder_class IN ('daf_sponsor', 'community_foundation', 'united_way'))
+    AND coalesce((SELECT sum(gy.total) FROM org_given_year gy WHERE gy.ein = lat.ein AND gy.year = lat.tax_year), 0) < 0.25 * lat.expenses),
+pf AS (SELECT g.recipient_ein AS ein, sum(g.amount)::float8 AS usd, count(*)::int AS n, count(DISTINCT g.funder_ein)::int AS funders
+  FROM grant_clean g WHERE g.recipient_ein IN (SELECT ein FROM el) AND g.tax_year BETWEEN ${g0} AND ${g1} GROUP BY 1),
+si AS (SELECT g.recipient_ein AS ein, sum(g.amount)::float8 AS usd
+  FROM charity_grant_clean g WHERE g.recipient_ein IN (SELECT ein FROM el) AND g.tax_year BETWEEN ${g0} AND ${g1} GROUP BY 1),
+x AS (SELECT el.*, coalesce(pf.usd, 0) AS pf_usd, coalesce(pf.n, 0) AS pf_n, coalesce(pf.funders, 0) AS funders, coalesce(si.usd, 0) AS si_usd,
+  coalesce(pf.usd, 0) / (${g1} - ${g0} + 1) / el.revenue AS ratio FROM el LEFT JOIN pf USING (ein) LEFT JOIN si USING (ein)),
+pm AS (SELECT revenue_band AS band, count(*)::int AS n, percentile_cont(0.5) WITHIN GROUP (ORDER BY ratio)::float8 AS med, avg((pf_usd > 0)::int)::float8 AS any FROM x GROUP BY 1),
+u AS (SELECT x.*, pm.med, (pm.med * x.revenue - x.pf_usd / (${g1} - ${g0} + 1))::float8 AS gap FROM x JOIN pm ON pm.band = x.revenue_band
+  WHERE x.here AND pm.med > 0 AND x.ratio <= ${UF_SHARE} * pm.med AND x.si_usd / (${g1} - ${g0} + 1) < ${UF_SI} * x.revenue),
+t AS (SELECT (SELECT count(*) FROM x WHERE here)::int AS n_here, (SELECT count(*) FROM u)::int AS n_under,
+  (SELECT count(*) FROM pm WHERE med > 0)::int AS n_bands, (SELECT json_agg(pm ORDER BY band) FROM pm) AS peers)
+SELECT r.ein, r.name, r.city, r.state, r.tax_year, r.revenue::float8, r.expenses::float8, coalesce(r.contributions, 0)::float8 AS contributions, coalesce(r.government_grants, 0)::float8 AS government_grants,
+  r.program_expenses::float8, r.since, r.pf_usd, r.pf_n, r.funders, r.si_usd, r.med, r.revenue_band AS band, r.gap, t.*, ${g0}::int AS y0, ${g1}::int AS y1
+FROM t LEFT JOIN LATERAL (SELECT * FROM u ORDER BY gap DESC, ein LIMIT ${UF_CHECK}) r ON true ORDER BY r.gap DESC NULLS LAST`;
+  const rows = await ctx.q<UfRow>(`Established ${orgsOf(causeName(c, pl))} by foundation grants per revenue dollar against peers of the same size`, sql, p);
+  const t = rows[0];
+  ctx.span = { kind: "f990", from: fy0, to: Math.min(fy1, Math.max(...rows.map((r) => r.tax_year ?? fy0))), newest: true };
+  const caveats: string[] = [];
+  const note = await causeNote(c, cs, caveats);
+  const what = orgsOf(causeName(c, pl));
+  const inW = pl.label === "the US" ? "" : ` in ${pl.label}`;
+  if (!t || !t.n_here) throw new Unanswerable(`No established ${what}${inW} with ${R_NAMES[rb[0] - 1].replace(/ to .*/, "")} or more in revenue and a full Form 990 in our data.`);
+  if (!t.n_bands) throw new Unanswerable(`Most ${what} this size get no foundation grants at all, so no org stands out as under-funded against its peers.`);
+  // Unlinked grants under each candidate's name in its state (2022-24, no recipient EIN): any match sets it aside.
+  const cand = rows.filter((r) => r.ein);
+  const pk = new P();
+  const nameKey = (x: string) => `trim(regexp_replace(regexp_replace(upper(${x}), '[^A-Z0-9 ]', ' ', 'g'), '\\m(THE|INC|INCORPORATED|CORP|CORPORATION|CO|LLC|LTD)\\M|\\s+', ' ', 'g'))`;
+  const unl = cand.length ? await ctx.q<{ ein: string; n: number; usd: number; names: string }>("Unlinked grants under the same name in the same state (checked before listing)",
+    `WITH c AS (SELECT ein, state, ${nameKey("name")} AS k FROM unnest(${pk.add(cand.map((r) => r.ein))}::text[], ${pk.add(cand.map((r) => r.name))}::text[], ${pk.add(cand.map((r) => r.state))}::text[]) AS c(ein, name, state)),
+g AS (SELECT g.recipient_state AS state, g.amount, g.recipient_name, ${nameKey("g.recipient_name")} AS k FROM grants g
+  WHERE g.recipient_ein IS NULL AND g.amount > 0 AND g.tax_year BETWEEN ${pk.add(gy0)} AND ${pk.add(gy1)} AND g.recipient_state = ANY(${pk.add([...new Set(cand.map((r) => r.state))])}::text[]))
+SELECT c.ein, count(*)::int AS n, sum(g.amount)::float8 AS usd, string_agg(DISTINCT g.recipient_name, ' | ') AS names
+FROM c JOIN g ON g.state = c.state AND left(g.k, 4) = left(c.k, 4) AND similarity(g.k, c.k) >= 0.6 GROUP BY 1`, pk) : [];
+  const hit = new Map(unl.map((r) => [r.ein, r]));
+  const yrsN = t.y1 - t.y0 + 1;
+  const list = cand.filter((r) => !hit.has(r.ein!)).slice(0, UF_SHOW);
+  const picks: OrgPick[] = list.map((r) => ({
+    ein: r.ein!, name: orgName(r.name), city: r.city, state: r.state, tax_year: r.tax_year, revenue: r.revenue,
+    foundation_usd_a_year: Math.round(r.pf_usd / yrsN), foundation_grants: r.pf_n, funders: r.funders, peer_median_usd_a_year: Math.round(r.med * r.revenue),
+    government_share: +(r.government_grants / r.revenue).toFixed(3), contributions_share: +(r.contributions / r.revenue).toFixed(3), program_share: +(r.program_expenses / Math.max(1, r.expenses)).toFixed(3),
+    charity_grants_usd_a_year: Math.round(r.si_usd / yrsN), since: r.since,
+  }));
+  if (!picks.length) throw new Unanswerable(`No ${what}${inW} stand out: each one with few linked foundation grants has grants under its name we couldn't link, so we can't say it's under-funded.`);
+  const govMost = picks.filter((o) => o.government_share >= 0.5).length;
+  const nUnder = t.n_under - hit.size; // the top ${UF_CHECK} were checked for unlinked grants, the rest weren't
+  const none = picks.filter((o) => o.foundation_grants === 0).length;
+  const bandName = (k: number) => R_NAMES[k - 1];
+  const peerTxt = (t.peers ?? []).filter((x) => x.n >= 5).map((x) => `${bandName(x.band)}: ${int(x.n)} orgs, median ${money(x.med * 100)} of foundation grants a year per $100 of revenue, ${pct(x.any)} with any`).join(". ");
+  const u = unit(Math.max(...picks.map((o) => Math.max(o.peer_median_usd_a_year, o.foundation_usd_a_year)), 1));
+  const nm = (x: string) => orgName(x, 40);
+  const chartVals = picks.flatMap((o) => [{ name: nm(o.name), series: "Foundation grants a year", amount: +(o.foundation_usd_a_year / u.div).toFixed(3) }, { name: nm(o.name), series: "Peer median for its size", amount: +(o.peer_median_usd_a_year / u.div).toFixed(3) }]);
+  caveats.unshift(UF_CAVEAT);
+  if (t.n_under > UF_CHECK) caveats.push(`Only the ${UF_CHECK} largest shortfalls were checked for unlinked grants, so the count of ${int(nUnder)} may include a few orgs that do get grants under another name.`);
+  if (hit.size) caveats.push(`${int(hit.size)} of the top ${int(cand.length)} candidates were set aside because grants under their name in their state aren't linked to them (for example ${[...hit.values()].slice(0, 2).map((h) => `"${h.names.split(" | ")[0]}"`).join(" and ")}).`);
+  caveats.push(`Foundation grants are 990-PF grants paid in tax years ${t.y0} to ${t.y1}. Grants from donor-advised funds and other charities (Schedule I) are shown but not ranked: orgs getting 10% or more of revenue that way are left out.`);
+  return {
+    headline: `${int(nUnder)} of ${int(t.n_here)} established ${what}${inW} get under a quarter of the foundation money their peers get for their size`,
+    numbers: [{ value: int(nUnder), label: "get little foundation money for their size" }, { value: int(t.n_here), label: `established ${what} checked` },
+      { value: pct(none / picks.length), label: `of the ${picks.length} listed got no linked foundation grant, ${t.y0} to ${t.y1}` }],
+    bullets: [`${nm(picks[0].name)} (${picks[0].state}): ${b(money(picks[0].revenue))} revenue, ${b(money(picks[0].foundation_usd_a_year))} a year from foundations`,
+      `Peers its size get about ${b(money(picks[0].peer_median_usd_a_year))} a year`,
+      ...(govMost ? [`${b(`${govMost} of ${picks.length}`)} listed get half or more of revenue from government grants`] : []),
+      ...(hit.size ? [`${b(int(hit.size))} set aside for unlinked grants under their name`] : [])],
+    chart: { title: `Foundation grants a year vs peers of the same size: ${what}${inW}`, sub: u.title, spec: hbar(chartVals, "name", "amount", u.title, u.fmt, undefined) },
+    rows: picks.map((o) => ({ ...o })), orgs: picks, orgCount: t.n_here,
+    causeNote: note, caveats,
+    coverage: [{ label: "Established orgs checked", value: int(t.n_here) }, { label: "Size", value: `${R_NAMES[rb[0] - 1].replace(/ to .*/, "")} to ${R_NAMES[rb[1] - 1].replace(/.* to /, "")} in revenue` }, { label: "Foundation grant years", value: `${t.y0}–${t.y1}` }],
+    method: `Each org's newest full Form 990 (tax years ${fy0} to ${fy1}). Established = a prior-year column on that return and an IRS ruling at least 3 years before it. Real programs = paid staff, spending at least half of revenue (no one-time windfalls), program expenses at least ${pct(UF_PROGRAM)} of expenses and under ${pct(UF_FEES)} of revenue from fees, at least ${pct(UF_GIFTS)} from gifts and grants (government grants included) and assets under ${UF_ASSETS} times revenue (not property holders or endowed orgs). Left out: government authorities, school booster clubs and PTAs, DAF sponsors, community foundations, United Ways, supporting orgs and orgs granting a quarter or more of their spending on. Peers = every such org in the cause nationwide in the same revenue band (${peerTxt || "see the SQL"}). Under-funded = 990-PF grants a year per revenue dollar at most ${pct(UF_SHARE)} of the peer median, and Schedule I grants under ${pct(UF_SI)} of revenue. Ranked by the shortfall in dollars (peer median times revenue, minus grants received). The top ${UF_CHECK} were checked for unlinked grants under a similar name in their state.`,
+    sources: [SRC.f990, SRC.pf, SRC.si, ...(c.label ? [SRC.labels] : []), ...(c.ntee.length ? [SRC.ntee] : [])], searchQuery: searchFor(s, pl),
+  };
+}
+
 async function countOrgs(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   const c = s.causes[0] ?? null;
   const p = new P();
@@ -3398,6 +3521,8 @@ export function answerBrief(a: Answer, rows = 15, opts: { steps?: boolean } = {}
     premise: a.premise ?? null, basis: a.basis ?? null,
     // The filing years behind the answer and which are still arriving (null when it uses no 990 or grant data)
     data_years: a.recency ?? null,
+    // metric underfunded: the orgs listed (foundation grants a year vs the peer median for their size), else null
+    underfunded_orgs: a.orgs ?? null,
     ...(opts.steps ? {
       steps: (a.steps ?? []).map((st) => ({ n: st.n, key: st.key, title: st.title, line: text(st.line), details: st.details.map(text), ...(st.evidence ? { evidence: st.evidence } : {}) })),
       follow_ups: a.followUps ?? [],

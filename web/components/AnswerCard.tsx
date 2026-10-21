@@ -4,6 +4,7 @@ import type { Answer } from "@/lib/answer";
 import { InsightChart } from "./InsightChart";
 import { SlideButton } from "./SlideButton";
 import { AnswerSteps } from "./AnswerSteps";
+import { AnswerOrgs } from "./AnswerOrgs";
 
 // A research answer at the top of the results (lib/answer.ts): the headline, key numbers, one chart,
 // 2-3 bullets, what our data can't answer and where to find it, then "How we got this" (cause set,
@@ -49,6 +50,7 @@ export function AnswerCard({ a }: { a: Answer }) {
       {a.basis && !none && <p className="chat-basis">{a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
       {a.recency && !none && <p className="chat-basis chat-recency">{a.recency.note}</p>}
       {a.bullets.length > 0 && <ul className="ins-points">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
+      {a.orgs && !none && <AnswerOrgs orgs={a.orgs} />}
       {a.missing.length > 0 && (
         <div className="answer-missing">
           <b>{none ? "Why we can't answer this" : "What this leaves out"}</b>

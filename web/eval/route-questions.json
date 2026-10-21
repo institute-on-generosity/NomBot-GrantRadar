@@ -95,5 +95,9 @@
   {"q": "Which foundations fund spay and neuter programs?", "metric": ["top_funders"], "label": "animal_welfare"},
   {"q": "Which states get the most foundation money for animal shelters?", "metric": ["by_state"], "ntee": "D20"},
   {"q": "how much foundation money goes to arts and culture with corrected NTEE categories?", "metric": ["total"], "ntee": "A", "nteeBasis": "corrected"},
-  {"q": "which states get the most foundation money for food banks", "metric": ["by_state"], "ntee": "K31", "nteeBasis": "irs"}
+  {"q": "which states get the most foundation money for food banks", "metric": ["by_state"], "ntee": "K31", "nteeBasis": "irs"},
+  {"q": "Which mental health nonprofits in California get little foundation money for their size?", "metric": ["underfunded"], "label": "mental_health", "states": ["CA"]},
+  {"q": "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "metric": ["underfunded"], "label": "housing_homelessness", "states": ["TX"]},
+  {"q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31"},
+  {"q": "youth development groups in Georgia that get few foundation grants compared to their budgets", "metric": ["underfunded"], "ntee": "O", "states": ["GA"]}
 ]

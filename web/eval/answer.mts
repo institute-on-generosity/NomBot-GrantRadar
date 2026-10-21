@@ -283,6 +283,19 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [/in 2024 \. |in 2024\./.test(a.headline) && !/2025/.test(a.headline) && a.bullets.some((x) => /2025 is partial/.test(x)) ? 1 : 0, 1] },
   { name: "partial end: deficits by year through 2025 headlines 2024", s: spec({ metric: "count_orgs", condition: "deficit", by: "year", yearFrom: 2023, yearTo: 2025, causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
     check: async (a) => [/in 2024/.test(a.headline) && !/in 2025/.test(a.headline) && a.bullets.some((x) => /2025 is partial/.test(x)) ? 1 : 0, 1] },
+  // Under-funded orgs (Oct 21): each listed org's linked 990-PF grants 2022-24 against direct SQL, all under a quarter of
+  // the peer median, all in the state asked, and the unlinked-grants caveat in plain words.
+  { name: "underfunded: mental health in California, listed orgs vs direct SQL", s: spec({ metric: "underfunded", causes: [mental], states: ["CA"] }),
+    check: async (a) => {
+      const os = a.orgs ?? [];
+      const direct = await Promise.all(os.map((o) => one(`SELECT coalesce(sum(amount), 0) FROM grant_clean WHERE recipient_ein = $1 AND tax_year BETWEEN 2022 AND 2024`, [o.ein])));
+      const ok = os.length > 0 && os.every((o, i) => Math.abs(o.foundation_usd_a_year - direct[i] / 3) <= 1 && o.state === "CA" && o.foundation_usd_a_year <= 0.25 * o.peer_median_usd_a_year + 1);
+      return [ok && a.caveats.some((c) => /can't link/.test(c)) ? 1 : 0, 1];
+    } },
+  { name: "underfunded: food banks (NTEE) nationwide lists orgs", s: spec({ metric: "underfunded", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [(a.orgs?.length ?? 0) >= 5 && /established food banks/.test(a.headline) ? 1 : 0, 1] },
+  { name: "underfunded: no cause is unanswerable with a plain reason", s: spec({ metric: "underfunded" }),
+    check: async (a) => [a.status === "unanswerable" && /Name a cause/.test(a.headline) ? 1 : 0, 1] },
   { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
     check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];

@@ -19,6 +19,7 @@ export const METRICS = [
   "concentration",    // share going to the top 1% / top 10 recipients
   "overlap_funders",  // foundations that fund both X and Y
   "count_orgs",       // how many orgs (optionally: run deficits, thin cash, rely on government grants)
+  "underfunded",      // orgs in a cause with real programs and budgets that get little foundation money for their size
   "breakdown",        // foundation grants split by one dimension (by): cause, county, recipient size, funder size ...
   "none",             // nothing in our data answers it (see missing)
 ] as const;
