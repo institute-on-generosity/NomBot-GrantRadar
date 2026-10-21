@@ -29,7 +29,7 @@ export const REGIONS = ["appalachia"] as const;
 export const CHARITY_FUNDERS = ["daf_sponsor", "community_foundation", "united_way", "other"] as const;
 export const CONDITIONS = ["deficit", "low_cash", "gov_reliant", "surplus"] as const;
 export const MISSING = ["individual_giving", "corporate_giving", "federal_awards", "daf_grants", "foreign_giving", "forecast", "volunteering", "other"] as const;
-export const LABELS = ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work", "racial_equity", "immigrants_refugees", "mental_health"] as const;
+export const LABELS = ["climate", "women_girls", "substance_use", "housing_homelessness", "ai_tech_learning_work", "racial_equity", "immigrants_refugees", "mental_health", "education"] as const;
 // Breakdown dimensions (metric breakdown, foundation grants; research layer of generosity-data 038-040).
 // county_poverty / county_income / county_race / county_age: counties grouped by Census ACS 5-year bands (county_acs).
 // agency / program: federal_awards only (awarding agency, assistance listing). income: household_giving only (IRS SOI AGI classes).
@@ -46,7 +46,7 @@ const range = (what: string) => z.object({
 
 export const causeSchema = z.object({
   name: z.string().describe("The cause in plain words, e.g. 'climate', 'animal shelters', 'homelessness'"),
-  label: z.enum(LABELS).nullable().describe("Graded cause label when the cause is climate/clean energy, women and girls, substance use/addiction/opioids, housing/homelessness, tech and AI skills (computer science, coding, digital and AI literacy, tech careers), racial equity/racial justice/racism, immigrants/refugees/asylum, or mental health (mental illness, crisis care, suicide prevention); else null"),
+  label: z.enum(LABELS).nullable().describe("Graded cause label when the cause is climate/clean energy, women and girls, substance use/addiction/opioids, housing/homelessness, tech and AI skills (computer science, coding, digital and AI literacy, tech careers), racial equity/racial justice/racism, immigrants/refugees/asylum, mental health (mental illness, crisis care, suicide prevention), or education (schools, colleges, early childhood education, tutoring, literacy, scholarships, libraries, adult education); else null"),
   ntee: z.array(z.string()).describe("NTEE code prefixes when the cause maps cleanly to codes (e.g. ['D20'] animal shelters/humane societies, ['K31'] food banks, ['B'] education, ['E'] health, ['A'] arts). Empty when no clean code"),
   keywords: z.array(z.string()).describe("2-6 lowercase words or short phrases that name the cause in mission text, used only when there is no label and no clean NTEE code"),
 });

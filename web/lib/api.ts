@@ -30,7 +30,7 @@ export function parseSearch(p: SearchParams) {
   const max_revenue = /^\d+$/.test(maxRaw) ? Number(maxRaw) : null;
   const ntee = p.ntee && /^[A-Z][0-9A-Z]{0,4}$/.test(p.ntee.toUpperCase()) ? p.ntee.toUpperCase() : null;
   const limit = Math.min(Math.max(Number(p.limit) || 10, 1), 50);
-  // Graded cause label (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health): primary tier only unless label_tier=all.
+  // Graded cause label (climate, women_girls, substance_use, housing_homelessness, ai_tech_learning_work, racial_equity, immigrants_refugees, mental_health, education): primary tier only unless label_tier=all.
   const label = isLabel(p.label) ? p.label : null;
   const label_tier = label ? (p.label_tier === "all" ? "all" : "primary") : null;
   // A label with sub-types (immigrants_refugees): services (default), policy or all.

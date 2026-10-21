@@ -295,7 +295,7 @@ function filterChips(f: Filters, p: Params): Chip[] {
         ...CAUSES.map((c) => ({ label: causeLabel(c), href: go({ cause: c }), on: f.ntee === c })),
         ...LABEL_SLUGS.map((l) => ({ label: labelName(l), href: go({ label: l, tier: "", sub: "" }), on: f.label === l, note: "Graded label, any IRS code" }))],
     },
-    // Graded cause labels (climate, women and girls, substance use, housing and homelessness, tech and AI skills, racial equity, immigrants and refugees, mental health): shown when the question names one or the user picks it.
+    // Graded cause labels (climate, women and girls, substance use, housing and homelessness, tech and AI skills, racial equity, immigrants and refugees, mental health, education): shown when the question names one or the user picks it.
     // Primary: the cause is the org's main work. Partial adds orgs where it's one named goal among others.
     // A label with sub-types (immigrants and refugees: serving immigrants, or immigration policy groups of any stance)
     // shows which one is counted (the default unless the question or the chip picks another) and offers the others.

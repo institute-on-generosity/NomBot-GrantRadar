@@ -26,7 +26,7 @@
   {"q": "Do community foundations or DAF sponsors give more to education?", "metric": ["breakdown"], "by": ["charity_funder"], "source": "charity_grants"},
   {"q": "food banks in Ohio", "research": false},
   {"q": "best climate nonprofits in California", "research": false},
-  {"q": "How much do corporate foundations give to education?", "metric": ["total"], "funderType": "company", "ntee": "B"},
+  {"q": "How much do corporate foundations give to education?", "metric": ["total"], "funderType": "company", "label": "education"},
   {"q": "What share of nonprofit revenue goes to the largest 1% of nonprofits?", "metric": ["concentration"], "source": "revenue"},
   {"q": "What share of foundation money goes to the largest 1% of nonprofits by revenue?", "metric": ["concentration"], "by": ["recipient_size"], "source": "foundation_grants"},
   {"q": "How much foundation money goes to school districts and public colleges?", "metric": ["total"], "recipientKind": "public_entity"},
@@ -82,5 +82,8 @@
   {"q": "Which foundations fund immigration policy and advocacy groups?", "metric": ["top_funders"], "label": "immigrants_refugees", "subtype": "policy"},
   {"q": "How much foundation money goes to immigration reform advocacy?", "metric": ["total"], "label": "immigrants_refugees", "subtype": "policy"},
   {"q": "How much do foundations give to suicide prevention?", "metric": ["total"], "label": "mental_health"},
-  {"q": "Which states get the most foundation money for mental health per resident?", "metric": ["by_state"], "label": "mental_health", "perResident": true}
+  {"q": "Which states get the most foundation money for mental health per resident?", "metric": ["by_state"], "label": "mental_health", "perResident": true},
+  {"q": "How much foundation money goes to education?", "metric": ["total"], "label": "education"},
+  {"q": "Is foundation funding for education growing?", "metric": ["trend"], "label": "education"},
+  {"q": "Which foundations fund adult literacy programs?", "metric": ["top_funders"], "label": "education"}
 ]
