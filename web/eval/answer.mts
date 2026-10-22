@@ -335,6 +335,43 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [a.who && a.who.parts.some((x) => x.key === "international" && x.usd > 0) ? 1 : 0, 1] },
   { name: "who received: a cause answer has no split", s: spec({ causes: [climate] }),
     check: async (a) => [a.who == null && !a.caveats.some((c) => /went to governments/.test(c)) ? 1 : 0, 1] },
+  // Financial health (Oct 21, Joshua Elder): one org's full years against its raw filing_flag rows, partial years left
+  // out, 990-EZ indicators left blank, and a cause's listed orgs re-checked year by year on the raw rows.
+  { name: "financial health: Feeding America 2024 revenue, expenses, months of cash vs filing_flag", s: spec({ metric: "financial_health", ein: "363673599" }),
+    check: async (a) => {
+      const y = a.health?.years.find((x) => x.year === 2024);
+      const r = (await db.query(`SELECT cy_revenue, cy_expenses, cash, program_expenses FROM filing_flag WHERE ein = '363673599' AND tax_year = 2024 ORDER BY object_id DESC LIMIT 1`)).rows[0];
+      const ok = !!y && y.revenue === Number(r.cy_revenue) && y.expenses === Number(r.cy_expenses) && Math.abs(y.months_cash! - Number(r.cash) / (Number(r.cy_expenses) / 12)) < 1e-9
+        && Math.abs(y.program_ratio! - Number(r.program_expenses) / Number(r.cy_expenses)) < 1e-9 && /^Feeding America: /.test(a.headline) && a.caveats.some((c) => /not a rating/.test(c));
+      return [ok ? y!.surplus : -1, Number(r.cy_revenue) - Number(r.cy_expenses)];
+    } },
+  { name: "financial health: a partial-year return is left out", s: spec({ metric: "financial_health", ein: "741152599" }),
+    check: async (a) => [a.health && a.health.years.every((y) => y.year <= 2024) && a.health.partial_return === 2025 && a.caveats.some((c) => /2025 returns are still arriving/.test(c)) ? 1 : 0, 1] },
+  { name: "financial health: 990-EZ years leave cash and government share blank", s: spec({ metric: "financial_health", ein: "570755705" }),
+    check: async (a) => [a.health && a.health.years.length >= 2 && a.health.years.every((y) => y.form === "990EZ" && y.months_cash == null && y.government_share == null && y.fundraising_per_dollar == null) ? 1 : 0, 1] },
+  { name: "financial health: unknown EIN is unanswerable", s: spec({ metric: "financial_health", ein: "000000001" }),
+    check: async (a) => [a.status === "unanswerable" ? 1 : 0, 1] },
+  { name: "financial health: mental health CA deficits 3 years in a row, listed orgs vs raw rows", s: spec({ metric: "financial_health", causes: [mental], states: ["CA"], condition: "deficit", streak: 3 }),
+    check: async (a) => {
+      const os = a.healthOrgs ?? [];
+      let ok = os.length >= 5 && /ran deficits all 3 years/.test(a.headline);
+      for (const o of os) {
+        const rows = (await db.query(`SELECT DISTINCT ON (tax_year) tax_year, form, cy_revenue, cy_expenses, py_revenue, py_expenses FROM filing_flag WHERE ein = $1 AND tax_year BETWEEN 2022 AND 2025 ORDER BY tax_year, object_id DESC`, [o.ein])).rows;
+        const def = (y: number) => { const own = rows.find((r) => r.tax_year === y); if (own) return Number(own.cy_expenses) > Number(own.cy_revenue); const n = rows.find((r) => r.tax_year === y + 1 && r.form === "990"); return !!n && Number(n.py_expenses) > Number(n.py_revenue); };
+        if (!(def(2022) && def(2023) && def(2024)) || o.state !== "CA") ok = false;
+      }
+      return [ok ? 1 : 0, 1];
+    } },
+  { name: "financial health: arts NY under 3 months of cash, listed orgs vs raw rows", s: spec({ metric: "financial_health", causes: [{ name: "arts", label: null, ntee: ["A"], keywords: [] }], states: ["NY"], condition: "low_cash" }),
+    check: async (a) => {
+      const os = a.healthOrgs ?? [];
+      const raw = await Promise.all(os.map(async (o) => (await db.query(`SELECT cash, cy_expenses, unrestricted_net_assets FROM filing_flag WHERE ein = $1 AND tax_year = $2 AND form = '990' ORDER BY object_id DESC LIMIT 1`, [o.ein, o.tax_year])).rows[0]));
+      const ok = os.length >= 5 && raw.every((r) => r && Number(r.cash) * 12 / Number(r.cy_expenses) < 3 && (r.unrestricted_net_assets == null || Number(r.unrestricted_net_assets) * 12 / Number(r.cy_expenses) < 3));
+      return [ok ? 1 : 0, 1];
+    } },
+  { name: "financial health: food banks peer medians by size, all-sizes row vs direct SQL", s: spec({ metric: "financial_health", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.find((r) => r.revenue_band === "All sizes")?.orgs ?? -1), await one(`SELECT count(*) FROM (SELECT DISTINCT ON (f.ein) f.* FROM filing_flag f WHERE f.tax_year = 2024 ORDER BY f.ein, f.object_id DESC) f JOIN orgs o ON o.ein = f.ein
+        WHERE f.form = '990' AND f.cy_expenses > 0 AND o.ntee_cd LIKE 'K31%' AND o.subsection = '03' AND coalesce(o.foundation, '') NOT IN ('02','03','04')`)] },
   { name: "steps: climate total share = headline", s: spec({ causes: [climate] }),
     check: async (a) => [(a.steps?.find((x) => x.key === "compute")?.line ?? "").includes(a.numbers.find((n) => n.value.endsWith("%"))!.value) ? 1 : 0, 1] },
 ];
@@ -365,6 +402,19 @@ for (const c of cases) {
     if (filed && !(a.recency && /tax years? \d{4}/.test(a.recency.note) && /1 to 2 years late/.test(a.recency.note))) bad.push(`recency note missing: ${a.recency?.note ?? "none"}`);
     if (a.recency && /[;—]/.test(a.recency.note)) bad.push("recency note has a semicolon or em dash");
     if (bad.length) { fail++; console.log(`         ✗ ${bad.join(", ")}`); }
+  }
+}
+
+// Named-org financial health questions are found by name in SQL, with no Claude call (lib/answerRoute).
+{
+  const { orgHealthName, findOrgByName } = await import("../lib/answerRoute");
+  const want: [string, string | null][] = [["Is Feeding America financially healthy?", "363673599"], ["How financially stable is the Red Cross?", "530196605"], ["Doctors Without Borders' finances", "133433452"], ["Are food banks in Ohio financially healthy?", null], ["financial health of food banks in Ohio", null]];
+  for (const [q, ein] of want) {
+    const n = orgHealthName(q);
+    const o = n ? await findOrgByName(n) : null;
+    const ok = (o?.ein ?? null) === ein;
+    if (!ok) fail++;
+    console.log(`${ok ? "  ok" : "   ✗"} org health route: ${q} -> ${o ? `${o.ein} ${o.name}` : "router call"}`);
   }
 }
 

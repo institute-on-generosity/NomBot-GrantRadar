@@ -25,6 +25,8 @@ const threads: [string, string[]][] = [
   ["What share of food banks ran deficits each year?", []],
   ["How much federal grant money went to Head Start providers?", ["Which states get the most money for Head Start providers per resident?"]],
   ["Which federal agencies give the most to nonprofits in Ohio?", []],
+  ["Which mental health nonprofits in California ran deficits 3 years in a row?", []],
+  ["Is Feeding America financially healthy?", []],
 ];
 
 let fails = 0;

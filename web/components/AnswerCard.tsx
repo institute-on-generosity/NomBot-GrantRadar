@@ -6,6 +6,7 @@ import { SlideButton } from "./SlideButton";
 import { AnswerSteps } from "./AnswerSteps";
 import { AnswerOrgs } from "./AnswerOrgs";
 import { AnswerWho } from "./AnswerWho";
+import { AnswerHealth, AnswerHealthOrgs } from "./AnswerHealth";
 
 // A research answer at the top of the results (lib/answer.ts): the headline, key numbers, one chart,
 // 2-3 bullets, what our data can't answer and where to find it, then "How we got this" (cause set,
@@ -53,6 +54,8 @@ export function AnswerCard({ a }: { a: Answer }) {
       {a.bullets.length > 0 && <ul className="ins-points">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.orgs && !none && <AnswerOrgs orgs={a.orgs} />}
       {a.who && !none && <AnswerWho who={a.who} />}
+      {a.health && !none && <AnswerHealth h={a.health} />}
+      {a.healthOrgs && !none && <AnswerHealthOrgs orgs={a.healthOrgs} />}
       {a.missing.length > 0 && (
         <div className="answer-missing">
           <b>{none ? "Why we can't answer this" : "What this leaves out"}</b>

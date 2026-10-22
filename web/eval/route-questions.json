@@ -100,5 +100,9 @@
   {"q": "Which mental health nonprofits in California get little foundation money for their size?", "metric": ["underfunded"], "label": "mental_health", "states": ["CA"]},
   {"q": "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "metric": ["underfunded"], "label": "housing_homelessness", "states": ["TX"]},
   {"q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31"},
-  {"q": "youth development groups in Georgia that get few foundation grants compared to their budgets", "metric": ["underfunded"], "ntee": "O", "states": ["GA"]}
+  {"q": "youth development groups in Georgia that get few foundation grants compared to their budgets", "metric": ["underfunded"], "ntee": "O", "states": ["GA"]},
+  {"q": "Which mental health nonprofits in California ran deficits 3 years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "label": "mental_health", "states": ["CA"]},
+  {"q": "Which arts groups in New York have under 3 months of cash?", "metric": ["financial_health"], "condition": "low_cash", "ntee": "A", "states": ["NY"]},
+  {"q": "What are the median cash reserves and program ratios of arts nonprofits by size?", "metric": ["financial_health"], "ntee": "A"},
+  {"q": "How many food banks in Ohio ran deficits three years in a row?", "metric": ["count_orgs"], "condition": "deficit", "streak": 3, "ntee": "K31", "states": ["OH"]}
 ]

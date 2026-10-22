@@ -21,6 +21,7 @@ import { LABELS, LABEL_SCOPE, LABEL_SUBTYPES, labelPhrase, narrowerThanLabel, ty
 import { fedProgram, type FedProgram } from "./fedPrograms";
 import { buildSteps, type CauseInfo, type Evidence, type Movers, type Step, type StepInput } from "./answerSteps";
 import { whoSplit, whoTaggedSql, type Who } from "./recipientTypes";
+import { orgFinancialHealth, healthJson, monthsText, R_BANDS as FH_BANDS, HEALTH_CAVEATS, HEALTH_METHOD, HEALTH_NOTE, type OrgHealth, type QueryLog } from "./financialHealth";
 
 export type Num = { value: string; label: string; note?: string };
 export type Row = Record<string, string | number | boolean | null>;
@@ -49,6 +50,8 @@ export type Answer = {
   recency?: Recency | null;        // the filing years the answer covers, and which are still arriving (recencyOf)
   orgs?: OrgPick[];                // metric underfunded: the orgs listed, linked to their pages
   who?: Who | null;                // "Who received it": foundation grant $ by recipient type (lib/recipientTypes)
+  health?: OrgHealth | null;       // metric financial_health with an ein: one org's indicators by year (lib/financialHealth)
+  healthOrgs?: HealthPick[];       // metric financial_health for a cause: the orgs listed with their indicators and flags
   ms: number;
 };
 // form: the filings read. partial: tax years with returns still arriving (share = filings in / the fullest year's).
@@ -930,7 +933,9 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v45: "Who received it" (Answer.who) on foundation grant totals and recipient-kind splits: governments, public
 // universities, international bodies, companies (generosity-data 079), with a one-line share caveat.
 // v46: corrected NTEE counts orgs with no IRS code under their suggested detailed code where graded (suggested_code).
-const answerMemo = memo<Answer>("answer:v46", 500, 6 * 3600_000);
+// v47: financial_health metric (one org's indicators over its full filing years, or a cause's orgs: deficit streaks,
+// months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
+const answerMemo = memo<Answer>("answer:v47", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1012,7 +1017,7 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
   if (a.status === "unanswerable") return [];
   const s = await resolveCauses(s0);
   // Organization counts and finances read Form 990 returns whatever the source says (dispatch: countOrgs, orgFinanceBy).
-  const orgCounts = s.source !== "federal_awards" && s.source !== "household_giving" && s.source !== "foundation_finances" && (s.metric === "count_orgs" || (s.metric === "trend" && !!s.condition));
+  const orgCounts = s.metric === "financial_health" || (s.source !== "federal_awards" && s.source !== "household_giving" && s.source !== "foundation_finances" && (s.metric === "count_orgs" || (s.metric === "trend" && !!s.condition)));
   const grantSrc = isGrantSrc(s) && !orgCounts;
   // Years used and why those years.
   let years: StepInput["years"] = null;
@@ -1058,7 +1063,8 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
   });
   const pl = ctx.places[0];
   const linked = s.causes.length > 0;
-  const source = orgCounts ? "Form 990 and 990-EZ returns, the newest per organization, against the IRS master file"
+  const source = s.metric === "financial_health" ? "Form 990 and 990-EZ returns, one per organization per tax year, full years only"
+    : orgCounts ? "Form 990 and 990-EZ returns, the newest per organization, against the IRS master file"
     : grantSrc
     ? `${pl?.g.form ?? "990-PF grants"} to ${linked ? "identified recipients" : "US organizations"}${pl && pl.g.kind === "charity" ? ` by ${pl.g.givers}` : ""}, placed by the recipient's address`
     : s.source === "federal_awards" ? "federal grants and cooperative agreements to nonprofits (USAspending), placed where the work happens"
@@ -1332,6 +1338,8 @@ FROM (SELECT ns.ein, ${sm} AS sm, ${un} AS un, ${im.replace("x.ntee", "o.ntee_cd
 }
 
 async function dispatch(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  // Financial health reads each org's own Form 990s whatever the source says.
+  if (s.metric === "financial_health") return s.ein ? orgHealthAnswer(ctx, s) : causeHealth(ctx, s, pl);
   if (s.source === "foundation_finances") return foundationPayout(ctx, s, pl);
   // Nonprofit finances over time or by size (org_finance_year): "share of food banks running deficits by year".
   if (s.source !== "household_giving" && s.source !== "federal_awards" && ((s.metric === "count_orgs" && (s.by === "year" || s.by === "recipient_size")) || (s.metric === "trend" && s.condition))) return orgFinanceBy(ctx, s, pl);
@@ -3550,6 +3558,160 @@ GROUP BY 1 ORDER BY 1`, p);
   };
 }
 
+// ---- financial health (Joshua Elder, Oct 19: diligence from 990s): indicators, never a rating (lib/financialHealth)
+// One org (spec.ein): its full filing years, flags and peers. A cause: its orgs' deficit streaks or cash, the largest
+// listed with their indicators, and peer medians (months of cash, program ratio) by revenue band.
+export type HealthPick = { ein: string; name: string; city: string; state: string; tax_year: number; revenue: number; years: number; deficit_years: number;
+  consecutive_deficits: number; deficit_total: number; months_cash: number | null; program_ratio: number | null; liabilities_to_assets: number | null; government_share: number | null; flags: string[] };
+const qlog = (ctx: Ctx): QueryLog => (title, sql, vals) => { ctx.queries.push({ title, sql: inline(sql, vals) }); };
+const lcFirst = (x: string) => (/^[A-Z][a-z]/.test(x) ? x.charAt(0).toLowerCase() + x.slice(1) : x);
+const pctR = (x: number | null) => (x == null ? "n/a" : `${Math.round(x * 100)}%`);
+
+async function orgHealthAnswer(ctx: Ctx, s: Spec): Promise<Out> {
+  const full = FULL.f990;
+  const h = await orgFinancialHealth(s.ein!, full, { log: qlog(ctx) });
+  if (!h) throw new Unanswerable(`We couldn't find an organization with EIN ${s.ein} in the IRS master file.`);
+  const name = orgName(h.name);
+  const partialNote = h.partial_return ? `Its ${h.partial_return} return is in, but ${h.partial_return} returns are still arriving for most orgs, so that year isn't counted.` : null;
+  if (!h.years.length) throw new Unanswerable(`${name} has no e-filed Form 990 or 990-EZ for tax years ${h.window.from} to ${h.window.to} in our data. 990-N filers (under $50K in receipts) and orgs filing on paper report no finances here.${partialNote ? ` ${partialNote}` : ""}`);
+  const ys = h.years, first = ys[0], last = ys.at(-1)!;
+  ctx.span = { kind: "f990", from: first.year, to: last.year, byYear: true };
+  const own = [...ys].reverse().find((y) => y.source === "filing");
+  const cashY = [...ys].reverse().find((y) => y.months_cash != null);
+  const progY = [...ys].reverse().find((y) => y.program_ratio != null);
+  const n = ys.length, d = h.deficit_years;
+  const lead = h.flags.length ? h.flags.slice(0, 2).map(lcFirst).join(", ")
+    : `${d ? `a deficit in ${d} of ${n} years` : `no deficit in ${n === 1 ? "its one full year" : `${n} full years`} (${yrs(first.year, last.year)})`}${cashY ? `, ${monthsText(cashY.months_cash)} of cash in ${cashY.year}` : ""}`;
+  const pe = h.peers;
+  const caveats = [...HEALTH_CAVEATS, ...(partialNote ? [partialNote] : []), ...h.notes.map((x) => `${x}.`),
+    ...(ys.some((y) => y.form === "990EZ") ? ["Some years are 990-EZ returns, so cash, unrestricted net assets, cost to raise $1 and government share are blank for them."] : []),
+    ...(ys.some((y) => y.source === "prior_year") ? [`${listYears(ys.filter((y) => y.source === "prior_year").map((y) => y.year))} ${ys.filter((y) => y.source === "prior_year").length > 1 ? "come" : "comes"} from the next year's Form 990 prior-year column: revenue, expenses and assets only.`] : [])];
+  const u = unit(Math.max(...ys.map((y) => Math.max(y.revenue, y.expenses)), 1));
+  const chartVals = ys.flatMap((y) => [{ year: String(y.year), series: "Revenue", amount: +(y.revenue / u.div).toFixed(3) }, { year: String(y.year), series: "Expenses", amount: +(y.expenses / u.div).toFixed(3) }]);
+  const bullets = [
+    ...(pe && pe.median_months_cash != null ? [`Peers its size (${pe.band_name}, NTEE ${pe.ntee}, ${int(pe.n)} orgs): median ${b(monthsText(pe.median_months_cash))} of cash`] : []),
+    ...(pe && pe.median_program_ratio != null ? [`Peers' median program ratio: ${b(pctR(pe.median_program_ratio))} of expenses`] : []),
+    ...(own && own.fundraising_per_dollar != null ? [`Fundraising cost ${b(`$${own.fundraising_per_dollar.toFixed(2)}`)} per $1 of gifts and grants, ${own.year}`] : []),
+    ...(own && own.liabilities_to_assets != null ? [`Liabilities ${b(pctR(own.liabilities_to_assets))} of assets, ${own.year}`] : []),
+  ];
+  return {
+    headline: `${name}: ${lead}`,
+    numbers: [
+      { value: `${d} of ${n}`, label: `years with a deficit, ${yrs(first.year, last.year)}` },
+      ...(cashY ? [{ value: monthsText(cashY.months_cash), label: `of cash, ${cashY.year}`, ...(pe?.median_months_cash != null ? { note: `Peers' median: ${monthsText(pe.median_months_cash)}` } : {}) }] : []),
+      ...(progY ? [{ value: pctR(progY.program_ratio), label: `of expenses on programs, ${progY.year}`, ...(pe?.median_program_ratio != null ? { note: `Peers' median: ${pctR(pe.median_program_ratio)}` } : {}) }] : []),
+    ],
+    bullets,
+    chart: { title: `Revenue and expenses by tax year: ${name}`, sub: u.title, spec: vbar(chartVals, "year", "amount", "Tax year", u.title, u.fmt, "series") },
+    rows: healthJson(h).years.map((y) => ({ ...y })),
+    health: h, orgCount: 1,
+    causeNote: `One organization: ${name} (EIN ${h.ein}).`,
+    caveats: [HEALTH_NOTE, ...caveats],
+    coverage: [{ label: "Tax years", value: `${yrs(first.year, last.year)} (${n} full ${n === 1 ? "year" : "years"})` }, { label: "Newest full year", value: String(full) }, ...(pe ? [{ label: "Peers", value: `${int(pe.n)} orgs, NTEE ${pe.ntee}, ${pe.band_name}, ${pe.year}` }] : [])],
+    method: `${HEALTH_METHOD} Window: the 5 tax years up to ${full}, the newest full year (a later year with under 90% of the fullest year's returns is partial and left out). Deficits in a row count back from the newest year shown, and a missing year breaks the run. Peers = own Form 990s of 501(c)(3) public charities in the same NTEE code (else major group) and revenue band, same tax year, 20 or more orgs.`,
+    sources: [SRC.f990, SRC.bmf], searchQuery: h.name,
+  };
+}
+
+type HealthBand = { band: number | null; n: number; mc: number | null; mp: number | null; dshare: number };
+async function causeHealth(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
+  const c = (s.causes[0] ?? null) as C | null;
+  const y1 = FULL.f990, y0 = y1 - 4;
+  const cond = s.condition === "deficit" || s.condition === "low_cash" ? s.condition : null;
+  const N = cond === "deficit" ? Math.max(s.streak || 1, 1) : 1;
+  if (cond) ctx.honored.add("condition");
+  if (cond === "deficit" && s.streak) ctx.honored.add("streak");
+  const base = (p: P) => {
+    const cs = causeSql(c, p, "f.ein", "f.ntee_cd", "", true);
+    return { cs, where: ["f.subsection = '03'", "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...cs.where, ...placeWhere(pl, p, "f.state", "f.county_fips"), ...filtEin(pl.f, p, "f.ein")] };
+  };
+  // Thin cash, as in the org flags: under 3 months of cash and no larger unrestricted reserves (unrestricted net assets
+  // under 3 months too, or not reported). Endowed museums and orchestras hold reserves in investments (Oct 21 grade).
+  const hit = cond === "deficit" ? `k.deficit_streak >= ${N}` : cond === "low_cash" ? "k.form = '990' AND k.source = 'filing' AND k.cash IS NOT NULL AND k.expenses > 0 AND k.cash * 12.0 / k.expenses < 3 AND (k.una IS NULL OR k.una * 12.0 / k.expenses < 3)" : "false";
+  const panel = cond === "low_cash" ? "k.form = '990' AND k.source = 'filing' AND k.cash IS NOT NULL AND k.expenses > 0" : `k.run_n >= ${N}`;
+  const p1 = new P(), b1 = base(p1);
+  const [py0, py1] = [p1.add(y0), p1.add(y1)];
+  const sel = ctx.q<{ orgs: number; panel: number; hits: number; top: { ein: string; revenue: number }[] | null }>(
+    `${cond === "deficit" ? `Orgs whose newest full year ends ${N === 1 ? "in a deficit" : `${N} deficit years in a row`}` : cond === "low_cash" ? "Orgs with under 3 months of cash in their newest full year" : "Orgs with full-year finances"}, largest first`,
+    `WITH y AS (
+  SELECT f.ein, f.tax_year, f.form, f.source, f.revenue, f.expenses, f.cash, f.unrestricted_net_assets AS una, f.deficit_streak,
+         count(*) OVER (PARTITION BY f.ein ORDER BY f.tax_year RANGE BETWEEN ${N - 1} PRECEDING AND CURRENT ROW) AS run_n,
+         row_number() OVER (PARTITION BY f.ein ORDER BY f.tax_year DESC) AS rn
+  FROM org_finance_year f ${b1.cs.join}
+  WHERE ${and([`f.tax_year BETWEEN ${py0} AND ${py1}`, "f.revenue IS NOT NULL", "f.expenses IS NOT NULL", ...b1.where])}),
+k AS (SELECT * FROM y WHERE rn = 1 AND tax_year >= ${py1} - 1)
+SELECT count(*)::int AS orgs, count(*) FILTER (WHERE ${panel})::int AS panel, count(*) FILTER (WHERE ${panel} AND ${hit})::int AS hits,
+  (SELECT json_agg(x) FROM (SELECT k.ein, k.revenue FROM k WHERE ${panel}${cond ? ` AND ${hit}` : ""} AND k.revenue > 0 ORDER BY k.revenue DESC, k.ein LIMIT 25) x) AS top
+FROM k`, p1);
+  const p2 = new P(), b2 = base(p2);
+  const bands = ctx.q<HealthBand>(`Peer medians by revenue band: own Form 990s, tax year ${y1}`, `SELECT f.revenue_band::int AS band, count(*)::int AS n,
+  (percentile_cont(0.5) WITHIN GROUP (ORDER BY f.cash * 12.0 / f.expenses) FILTER (WHERE f.cash IS NOT NULL))::float8 AS mc,
+  (percentile_cont(0.5) WITHIN GROUP (ORDER BY ff.program_expenses::float8 / f.expenses) FILTER (WHERE ff.program_expenses IS NOT NULL))::float8 AS mp,
+  avg(f.deficit::int)::float8 AS dshare
+FROM org_finance_year f JOIN filing_flag ff ON ff.object_id = f.object_id ${b2.cs.join}
+WHERE ${and([`f.tax_year = ${p2.add(y1)}`, "f.source = 'filing'", "f.form = '990'", "f.expenses > 0", ...b2.where])}
+GROUP BY GROUPING SETS ((f.revenue_band), ()) ORDER BY 1 NULLS LAST`, p2);
+  const [[r], bandRows] = await Promise.all([sel, bands]);
+  const caveats: string[] = [];
+  const note = await causeNote(c, b1.cs, caveats);
+  const what = c ? orgsOf(causeName(c, pl)) : `nonprofits${pl.f.rb ? ` (${pl.f.to.replace(/^organizations /, "")})` : ""}`;
+  const inW = pl.label === "the US" ? "" : ` in ${pl.label}`;
+  if (!r?.orgs) throw new Unanswerable(`No ${what}${inW} have e-filed Form 990 or 990-EZ finances for ${y1 - 1} or ${y1} in our data.`);
+  if (cond === "deficit" && !r.panel) throw new Unanswerable(`None of these ${what}${inW} has ${N} straight full years of returns in our data. Form 990 data here starts with tax year ${y0 + 2} for most orgs, so 3 years in a row is the most it can show.`);
+  // The listed orgs, recomputed one by one with the org-level rules (the same figures as their org pages).
+  const top = (r.top ?? []).map((t) => t.ein);
+  const log = qlog(ctx);
+  const healths = await Promise.all(top.map((e, i) => orgFinancialHealth(e, y1, { peers: false, log: i === 0 ? (t, q, v) => log(`${t}, for each listed org (first shown)`, q, v) : undefined })));
+  const where = await db.query(`SELECT ein, city FROM orgs WHERE ein = ANY($1::text[])`, [top]);
+  const city = new Map(where.rows.map((x) => [x.ein as string, (x.city as string | null) ?? ""]));
+  const picks: HealthPick[] = healths.filter((h): h is OrgHealth => !!h && h.years.length > 0).filter((h) => {
+    if (cond === "deficit") return h.consecutive_deficits >= N;
+    if (cond === "low_cash") { const l = [...h.years].reverse().find((y) => y.source === "filing"); return l?.months_cash != null && l.months_cash < 3 && (l.months_unrestricted == null || l.months_unrestricted < 3); }
+    return true;
+  }).slice(0, UF_SHOW).map((h) => {
+    const l = h.years.at(-1)!, lo = [...h.years].reverse().find((y) => y.source === "filing");
+    const run = h.years.slice(h.years.length - h.consecutive_deficits);
+    return { ein: h.ein, name: orgName(h.name), city: city.get(h.ein) ?? "", state: h.state ?? "", tax_year: l.year, revenue: l.revenue, years: h.years.length, deficit_years: h.deficit_years,
+      consecutive_deficits: h.consecutive_deficits, deficit_total: run.reduce((t, y) => t + Math.min(0, y.surplus), 0),
+      months_cash: lo?.months_cash != null ? +lo.months_cash.toFixed(2) : null, program_ratio: lo?.program_ratio != null ? +lo.program_ratio.toFixed(3) : null,
+      liabilities_to_assets: lo?.liabilities_to_assets != null ? +lo.liabilities_to_assets.toFixed(3) : null, government_share: lo?.government_share != null ? +lo.government_share.toFixed(3) : null, flags: h.flags };
+  });
+  const all = bandRows.find((x) => x.band == null);
+  const byBand = bandRows.filter((x) => x.band != null && x.n >= 5);
+  ctx.span = { kind: "f990", from: cond === "deficit" ? y1 - N + 1 : y1 - 1, to: y1, byYear: false };
+  caveats.unshift(HEALTH_NOTE, ...HEALTH_CAVEATS.slice(0, 4));
+  caveats.push(`Each org's newest full year is ${y1 - 1} or ${y1}. Orgs whose newest return is older are left out.`, "Peer medians use own Form 990s only: 990-EZ reports cash together with investments, so it isn't comparable.");
+  if (cond === "deficit" && N >= 2) caveats.push(`${N} years in a row = deficits in the org's newest full year and the ${N - 1 === 1 ? "year" : `${N - 1} years`} right before it. Counted among the ${int(r.panel)} orgs with all ${N} years in our data. Form 990 data here starts with tax year ${y0 + 2} for most orgs.`);
+  const share = r.hits / Math.max(1, r.panel);
+  const cm = all?.mc ?? null, cp = all?.mp ?? null;
+  const headline = cond === "deficit"
+    ? `${int(r.hits)} of ${int(r.panel)} ${what}${inW} ${N >= 2 ? `with ${N} straight years of returns ran deficits ${N === 2 ? "both years" : `all ${N} years`}` : "ran a deficit in their newest full year"} (${pct(share)})`
+    : cond === "low_cash" ? `${int(r.hits)} of ${int(r.panel)} ${what}${inW} filing Form 990 had under 3 months of cash and no larger unrestricted reserves in their newest full year (${pct(share)})`
+      : `${cap(what)}${inW} filing Form 990: median ${monthsText(cm)} of cash and ${pctR(cp)} of expenses on programs in ${y1}`;
+  const bandName = (k: number) => FH_BANDS[k - 1];
+  const lowest = byBand.filter((x) => x.mc != null).sort((a, z) => a.mc! - z.mc!)[0];
+  return {
+    headline,
+    numbers: [
+      ...(cond ? [{ value: int(r.hits), label: cond === "deficit" ? (N >= 2 ? `ran deficits ${N} years in a row` : "ran a deficit") : "under 3 months of cash, no larger reserves" }, { value: pct(share), label: `of ${int(r.panel)} with the years needed` }] : [{ value: int(r.orgs), label: `${what} with full-year finances` }]),
+      { value: monthsText(cm), label: `median cash on hand, ${y1}`, note: "Own Form 990s" },
+      ...(!cond ? [{ value: pctR(cp), label: `median spent on programs, ${y1}` }] : []),
+    ],
+    bullets: [
+      ...(picks[0] ? [`Largest listed: ${orgName(picks[0].name, 40)}, ${b(money(picks[0].revenue))} revenue in ${picks[0].tax_year}`] : []),
+      ...(lowest ? [`Thinnest cash by size: ${lowest.band != null ? bandName(lowest.band) : ""}, median ${b(monthsText(lowest.mc))}`] : []),
+      ...(cp != null && cond ? [`Median program ratio ${b(pctR(cp))} of expenses, ${y1}`] : []),
+    ],
+    chart: byBand.length ? { title: `Median months of cash by revenue size: ${what}${inW}, ${y1}`, sub: "Own Form 990s", spec: hbar(byBand.map((x) => ({ size: bandName(x.band!), months: +(x.mc ?? 0).toFixed(2) })), "size", "months", "Median months of cash", ".1f") } : null,
+    rows: [...byBand, ...(all ? [all] : [])].map((x) => ({ revenue_band: x.band != null ? bandName(x.band) : "All sizes", orgs: x.n, median_months_cash: x.mc != null ? +x.mc.toFixed(2) : null, median_program_ratio: x.mp != null ? +x.mp.toFixed(3) : null, share_with_deficit: +x.dshare.toFixed(3) })),
+    healthOrgs: picks, orgCount: r.orgs,
+    causeNote: note, caveats,
+    coverage: [{ label: "Orgs with full-year finances", value: int(r.orgs) }, { label: "Newest full year", value: String(y1) }, { label: "Peer medians", value: `${int(all?.n ?? 0)} own Form 990s, ${y1}` }],
+    method: `${HEALTH_METHOD} 501(c)(3) public charities on the IRS master file in the cause set${inW ? `, based in ${pl.label}` : ""} (private foundations left out), with a Form 990 or 990-EZ for ${y1 - 1} or ${y1} (the newest full year, by filings per tax year). ${cond === "deficit" ? `Deficits in a row count back from each org's newest full year, and a missing year breaks the run. ` : cond === "low_cash" ? "Thin cash = under 3 months of cash and unrestricted net assets also under 3 months (or not reported), so orgs with reserves in investments aren't counted. " : ""}Listed: the largest by revenue (above zero)${cond ? " that meet the condition" : ""}, up to ${UF_SHOW}, each recomputed from its own returns as on its org page. Peer medians by revenue band from the same charities' own Form 990s in ${y1}.`,
+    sources: [SRC.f990, SRC.bmf, ...(c?.label ? [SRC.labels] : []), ...(c?.ntee.length ? [SRC.ntee] : [])], searchQuery: searchFor(s, pl),
+  };
+}
+
 // ------------------------------------------------------------------ compact form for tools (Research Buddy, MCP, API)
 // Everything a model or partner needs to quote the answer honestly, without the chart spec or SQL text.
 // opts.steps: the evidence chain as plain text (partners: /api/v1/answer, MCP), links reduced to names with EINs in evidence.
@@ -3566,6 +3728,10 @@ export function answerBrief(a: Answer, rows = 15, opts: { steps?: boolean } = {}
     // metric underfunded: the orgs listed (foundation grants a year vs the peer median for their size), else null
     underfunded_orgs: a.orgs ?? null,
     // Foundation grant totals with no cause: the dollars split by who received them (generosity-data 079), else null
+    // metric financial_health: one org's indicators by year with flags and peers (spec.ein), else null
+    financial_health: a.health ? { ein: a.health.ein, name: a.health.name, ...healthJson(a.health) } : null,
+    // metric financial_health for a cause: the orgs listed with their indicators and flags, else null
+    financial_health_orgs: a.healthOrgs ?? null,
     who_received: a.who ? { total_usd: a.who.total, parts: a.who.parts.map((x) => ({ type: x.key, label: x.label, usd: x.usd, share: x.share })), government_and_public_university_share: a.who.public_share, international_and_company_share: a.who.other_share, linked_share_all_usd: a.who.all_link_rate, linked_share_nonprofit_usd: a.who.nonprofit_link_rate, note: a.who.note } : null,
     ...(opts.steps ? {
       steps: (a.steps ?? []).map((st) => ({ n: st.n, key: st.key, title: st.title, line: text(st.line), details: st.details.map(text), ...(st.evidence ? { evidence: st.evidence } : {}) })),

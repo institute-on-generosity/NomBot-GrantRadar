@@ -19,6 +19,7 @@ import type { BoardLink } from "@/lib/people";
 import { OrgFunding } from "@/components/OrgFunding";
 import { OrgNews } from "@/components/OrgNews";
 import { OrgSimilar } from "@/components/OrgSimilar";
+import { OrgHealthSection } from "@/components/OrgHealth";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ back?: string }>; modal?: boolean };
 
@@ -109,6 +110,9 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
         {o.flag && <YearOverYear d={o.flag} />}
       </section>
+
+      {/* Financial indicators over the full filing years, with flags and peers (lib/financialHealth); streams in */}
+      <Suspense fallback={null}><OrgHealthSection ein={o.ein.replace(/\D/g, "")} /></Suspense>
 
       {/* Grants received (foundations, charities, federal) and given; streams in after the profile */}
       <Suspense fallback={<p className="hint">Loading grants…</p>}><OrgFunding ein={o.ein} /></Suspense>

@@ -97,5 +97,10 @@
   { "q": "Which housing and homelessness nonprofits in Texas are under-funded by foundations?", "metric": ["underfunded"], "label": "housing_homelessness", "states": ["TX"], "caveatHas": "not that it lacks money" },
   { "q": "Which food banks are overlooked by foundations for their size?", "metric": ["underfunded"], "ntee": "K31", "headlineHas": "food banks" },
   { "q": "How much did foundations give to organizations in Texas from 2022 to 2024?", "metric": ["total"], "states": ["TX"], "who": true, "caveatHas": "went to governments and public universities" },
-  { "q": "How much did family foundations give in total from 2022 to 2024?", "metric": ["total"], "funderType": "family", "who": true }
+  { "q": "How much did family foundations give in total from 2022 to 2024?", "metric": ["total"], "funderType": "family", "who": true },
+  { "q": "Is Feeding America financially healthy?", "metric": ["financial_health"], "headlineHas": "^Feeding America:", "caveatHas": "not a rating" },
+  { "q": "How financially stable is the Red Cross?", "metric": ["financial_health"], "headlineHas": "Red Cross", "caveatHas": "Partial years are left out" },
+  { "q": "Which mental health nonprofits in California ran deficits 3 years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "label": "mental_health", "states": ["CA"], "headlineHas": "3 years", "caveatHas": "not a rating" },
+  { "q": "Which food banks in Ohio ran deficits 3 or more years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "ntee": "K31", "states": ["OH"], "caveatHas": "Donated goods" },
+  { "q": "What are the median cash reserves and program ratios of arts nonprofits by size?", "metric": ["financial_health"], "ntee": "A", "headlineHas": "median" }
 ]

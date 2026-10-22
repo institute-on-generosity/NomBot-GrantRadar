@@ -348,6 +348,19 @@ try {
   check(b.underfunded_orgs === null, "answer: underfunded_orgs null on other metrics");
 
   check(b.who_received === null, "answer: who_received null on a cause answer");
+  check(b.financial_health === null && b.financial_health_orgs === null, "answer: financial_health fields null on other metrics");
+
+  // ---------- financial health (metric financial_health, org financial_health field), spec, no Claude call ----------
+  const fhRaw = (await sql(`SELECT cy_revenue, cy_expenses FROM filing_flag WHERE ein = '363673599' AND tax_year = 2024 ORDER BY object_id DESC LIMIT 1`))[0];
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify({ metric: "financial_health", ein: "363673599" }))}`, "answer financial health of one org (spec)");
+  const fy = b.financial_health?.years?.find((y: J) => y.tax_year === 2024);
+  check(fy && fy.revenue === Number(fhRaw.cy_revenue) && fy.surplus === Number(fhRaw.cy_revenue) - Number(fhRaw.cy_expenses) && b.financial_health.years.every((y: J) => y.tax_year <= b.financial_health.latest_full_year), "answer: financial_health 2024 revenue and surplus vs SQL, full years only");
+  check(Array.isArray(b.financial_health?.flags) && /not a rating/.test(b.financial_health?.note ?? "") && !b.financial_health.flags.some((f: string) => /;|—/.test(f)), "answer: financial_health flags in plain words, not a rating");
+  b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify({ metric: "financial_health", causes: [{ name: "mental health", label: "mental_health", ntee: [], keywords: [] }], states: ["CA"], condition: "deficit", streak: 3 }))}`, "answer mental health CA deficit streaks (spec)");
+  const fo: J[] = b.financial_health_orgs ?? [];
+  check(fo.length > 0 && fo.length <= 10 && fo.every((o) => /^\d{9}$/.test(o.ein) && o.state === "CA" && o.consecutive_deficits >= 3), `answer: financial_health_orgs ran deficits 3 years in a row (${fo.length})`);
+  b = await ok("/api/v1/org/363673599", "org financial_health");
+  check(b.org?.financial_health?.years?.find((y: J) => y.tax_year === 2024)?.revenue === Number(fhRaw.cy_revenue) && b.org.financial_health.window?.to === b.org.financial_health.latest_full_year, "org: financial_health field vs SQL");
 
   // ---------- who received it (generosity-data 079): answers with no cause, funder pages ----------
   b = await ok(`/api/v1/answer?spec=${encodeURIComponent(JSON.stringify({ metric: "total", states: ["TX"] }))}`, "answer Texas total (spec)");

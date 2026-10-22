@@ -20,6 +20,7 @@ export const METRICS = [
   "overlap_funders",  // foundations that fund both X and Y
   "count_orgs",       // how many orgs (optionally: run deficits, thin cash, rely on government grants)
   "underfunded",      // orgs in a cause with real programs and budgets that get little foundation money for their size
+  "financial_health", // financial indicators: one org (ein) over its full filing years, or a cause's orgs (deficit streaks, reserves, peer medians by size)
   "breakdown",        // foundation grants split by one dimension (by): cause, county, recipient size, funder size ...
   "none",             // nothing in our data answers it (see missing)
 ] as const;
@@ -89,15 +90,17 @@ export const specSchema = z.object({
   recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (school districts and public colleges only, never private colleges)"),
   charityFunder: z.enum(CHARITY_FUNDERS).nullable().describe("charity_grants only: daf_sponsor (donor-advised fund sponsors), community_foundation, united_way, other (other grantmaking charities); null = all"),
   ntee: z.enum(NTEE_BASES).describe("How NTEE-coded causes count orgs: irs (default, the IRS code) or corrected (orgs whose IRS code doesn't fit their own 990 text count under a suggested NTEE major group, and orgs with no IRS code count under a suggested detailed code or major group, generosity-data org_ntee_suggested). corrected only when the question asks for corrected, fixed or better categories or codes. Graded labels are never affected"),
+  ein: z.string().nullable().optional().describe("financial_health only: one organization's 9-digit EIN for its own indicators (years of revenue, expenses, deficits, months of cash, program ratio, revenue mix, liabilities, flags, peer medians). Null = the cause's orgs"),
   premise: z.enum(PREMISES).nullable().describe("A direction the question takes as given, not asks: rise / fall (\"why did X fall\", \"given the drop in X\"), more / less (the first thing named gets more or less than the second, \"why do X get less than Y\"). Null for open or yes/no questions (\"did X fall?\", \"how has X changed\"). The answer leads with a correction when the data disagrees"),
 });
 
 // The spec as Claude fills it in structured outputs (router, follow-ups): Appalachia rides on area ("appalachia"),
 // because a separate nullable region field makes the compiled grammar too large (Oct 17). fromLlmSpec maps it back.
-export const llmSpecSchema = specSchema.omit({ region: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable() });
+// ein is never model-filled: the router finds a named org itself (lib/answerRoute orgHealthQuestion).
+export const llmSpecSchema = specSchema.omit({ region: true, ein: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable() });
 export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
   const { area, ...rest } = o;
-  return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null };
+  return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null, ein: null };
 }
 
 export type Cause = z.infer<typeof specCauseSchema>;
@@ -108,7 +111,7 @@ export type Source = Spec["source"];
 export const DEFAULT_SPEC: Spec = {
   metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null, region: null,
   area: null, condition: null, streak: 0, topN: 0, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
-  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null, premise: null, ntee: "irs",
+  by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null, premise: null, ntee: "irs", ein: null,
 };
 
 // Canonical form: upper-case states, trimmed words, so equal questions share one cache entry. Specs from
@@ -148,6 +151,8 @@ export function normalizeSpec(s: Spec): Spec {
     charityFunder: s.source === "charity_grants" ? s.charityFunder ?? null : null,
     premise: s.premise ?? null,
     ntee: s.ntee === "corrected" ? "corrected" : "irs",
+    // One organization (financial_health only): 9 digits, else none.
+    ein: s.metric === "financial_health" && typeof s.ein === "string" && /^\d{9}$/.test(s.ein.replace(/\D/g, "")) ? s.ein.replace(/\D/g, "") : null,
   };
 }
 

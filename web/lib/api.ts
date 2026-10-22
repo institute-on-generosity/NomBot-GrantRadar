@@ -4,6 +4,8 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg, LATEST_RETURN_NOTE } from "./org";
+import { orgFinancialHealth, healthJson } from "./financialHealth";
+import { partialYears } from "./answer";
 import { orgNews, ORG_NEWS_NOTE } from "./orgNews";
 import { TAX_STATUS_NOTE } from "./taxStatus";
 import { orgFunding, FUNDING_NOTES } from "./orgFunding";
@@ -88,6 +90,8 @@ export async function apiOrg(einRaw: string, base: string) {
     orgFunding(ein),
   ]);
   const similar = await similarOrgs(ein, { limit: 10 }); // generosity-data 070 (lib/similar)
+  // Financial indicators over the full filing years (lib/financialHealth), the same as the org page and the research answer
+  const fh = await partialYears("f990").then((p) => orgFinancialHealth(ein, p.latestFull)).catch(() => null);
   const top10 = <T,>(xs: T[]) => xs.slice(0, 10);
 
   const latest = o.years[0] ?? null;
@@ -121,6 +125,9 @@ export async function apiOrg(einRaw: string, base: string) {
         history: o.years.map((y) => ({ year: y.year, revenue: y.revenue, expenses: y.expenses, assets: y.assets, source: y.source })),
         income: o.income,
       },
+      // Indicators by full tax year (revenue, expenses, surplus, months of cash, program ratio, revenue mix, liabilities to
+      // assets), consecutive deficits, plain flags and peer medians. Indicators, not a rating. Null with no e-filed 990s
+      financial_health: fh && fh.years.length ? healthJson(fh) : null,
       health: o.flag
         ? {
             year: o.flag.year, form: o.flag.form, rating: o.flag.rating.level,

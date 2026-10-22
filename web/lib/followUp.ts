@@ -45,6 +45,7 @@ export function describeSpec(s: Spec): string {
     case "general_support": return `What share of foundation money for ${cause}${place} is general operating support?`;
     case "out_of_state": return `How much foundation money for ${cause}${place} comes from other states?`;
     case "overlap_funders": return `Which foundations fund both ${cause}?`;
+    case "financial_health": return healthQuestion(s, cause, place);
     case "underfunded": return `Which ${/(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`}${place} get little foundation money for their size?`;
     case "count_orgs": {
       const cond = s.condition === "deficit" ? "run deficits" : s.condition === "low_cash" ? "have under 3 months of cash" : s.condition === "gov_reliant" ? "rely on government grants" : s.condition === "surplus" ? "run surpluses" : "are there";
@@ -54,6 +55,17 @@ export function describeSpec(s: Spec): string {
     }
     default: return `How much ${money} goes to ${cause}${place}?`;
   }
+}
+
+// Financial health (metric financial_health): one org (ein) or a cause's orgs by condition.
+const ORGS_RE = /(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|churches|programs|clubs)$/i;
+const orgsOfCause = (cause: string) => (!cause || cause === "all causes" ? "nonprofits" : ORGS_RE.test(cause) ? cause : `${cause} organizations`);
+function healthQuestion(s: Spec, cause: string, place: string): string {
+  if (s.ein) return `How financially healthy is the organization with EIN ${s.ein}?`;
+  const subj = orgsOfCause(cause);
+  if (s.condition === "deficit") return s.streak >= 2 ? `Which ${subj}${place} ran deficits ${s.streak} years in a row?` : `Which ${subj}${place} ran a deficit?`;
+  if (s.condition === "low_cash") return `Which ${subj}${place} have under 3 months of cash?`;
+  return `How financially healthy are ${subj}${place}?`;
 }
 
 // Foundation finances (990-PF payout against the 5% rule, assets): no causes, so their own questions and chips.
@@ -171,6 +183,17 @@ export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
       if (s.by !== "year") add(`What share of ${subj}${place} ${s.condition === "low_cash" ? "have under 3 months of cash" : "run deficits"}, by year?`, { by: "year", condition: s.condition === "low_cash" ? "low_cash" : "deficit", streak: 0 });
       if (s.by !== "recipient_size") add(`What share of ${subj}${place} ${s.condition === "low_cash" ? "have under 3 months of cash" : "run deficits"}, by revenue size?`, { by: "recipient_size", condition: s.condition === "low_cash" ? "low_cash" : "deficit", streak: 0, recipientSize: null });
       add(`How much government money goes to ${subj}${place}?`, { metric: "total", source: "government_grants", condition: null, by: null });
+      add(`Which ${subj}${place} ran deficits 3 years in a row?`, { metric: "financial_health", condition: "deficit", streak: 3, by: null, recipientSize: null });
+    },
+    financial_health: () => {
+      const subj = orgsOfCause(cause);
+      const place = s.county ? ` in ${s.county}` : s.states.length === 1 ? ` in ${STATE[s.states[0]] ?? s.states[0]}` : "";
+      const h = (c: Partial<Spec>) => ({ metric: "financial_health" as const, ein: null, by: null, ...c });
+      if (!(s.condition === "deficit" && s.streak === 3) || s.ein) add(`Which ${subj}${place} ran deficits 3 years in a row?`, h({ condition: "deficit", streak: 3 }));
+      if (s.condition !== "low_cash" || s.ein) add(`Which ${subj}${place} have under 3 months of cash?`, h({ condition: "low_cash", streak: 0 }));
+      if (s.condition || s.ein) add(`How financially healthy are ${subj}${place}?`, h({ condition: null, streak: 0 }));
+      if (!s.ein) add(`What share of ${subj}${place} run deficits, by year?`, { metric: "count_orgs", ein: null, by: "year", condition: "deficit", streak: 0 });
+      if (c && !s.ein) add(`Which ${subj}${place} get little foundation money for their size?`, { metric: "underfunded", ein: null, condition: null, streak: 0, source: "foundation_grants" });
     },
     underfunded: () => {
       const subj = /(shelters|banks|pantries|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|programs|clubs)$/i.test(cause) ? cause : `${cause} organizations`;
@@ -295,7 +318,7 @@ const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), stan
 const followZod = betaZodOutputFormat(followSchema);
 const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
 
-const cached = memo<Resolved>("follow-up:v17", 1000, 24 * 3600_000); // v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v18", 1000, 24 * 3600_000); // v18: financial_health metric (router prompt), its chips; v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
