@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "NomBot System Architecture",
-    "output": ".archify/architecture-nombot-v5-20261017-144245/nombot.html",
+    "output": ".archify/architecture-nombot-v6-20261021-192416/nombot.html",
     "quality_profile": "showcase"
   },
   "components": [
@@ -14,7 +14,7 @@
       "sublabel": "verified insights rows",
       "pos": [
         470,
-        170
+        150
       ],
       "size": [
         170,
@@ -29,7 +29,7 @@
       "tag": "prompt-cached · 24 h",
       "pos": [
         720,
-        170
+        150
       ],
       "size": [
         180,
@@ -43,7 +43,7 @@
       "sublabel": "/research/ask · chips",
       "pos": [
         980,
-        170
+        150
       ],
       "size": [
         170,
@@ -55,10 +55,10 @@
       "type": "backend",
       "label": "Answer engine",
       "sublabel": "fixed SQL · premise check",
-      "tag": "foundation · charity · federal · 990",
+      "tag": "grants · 990 · household · payout · who",
       "pos": [
         1220,
-        170
+        150
       ],
       "size": [
         220,
@@ -72,7 +72,7 @@
       "sublabel": "+ advisors · browser",
       "pos": [
         40,
-        310
+        270
       ],
       "size": [
         150,
@@ -86,7 +86,7 @@
       "sublabel": "public HTTPS URL",
       "pos": [
         250,
-        310
+        270
       ],
       "size": [
         160,
@@ -101,7 +101,7 @@
       "tag": "skips /api/v1, /mcp",
       "pos": [
         470,
-        310
+        270
       ],
       "size": [
         170,
@@ -115,7 +115,7 @@
       "sublabel": "Next.js · question box",
       "pos": [
         720,
-        310
+        270
       ],
       "size": [
         180,
@@ -129,7 +129,7 @@
       "sublabel": "Opus 5.5 → filters",
       "pos": [
         980,
-        310
+        270
       ],
       "size": [
         170,
@@ -144,7 +144,7 @@
       "tag": "migrations 033–046",
       "pos": [
         1220,
-        300
+        260
       ],
       "size": [
         220,
@@ -158,13 +158,13 @@
       "sublabel": "FLAG · people · grants in/out",
       "pos": [
         470,
-        680
+        600
       ],
       "size": [
         170,
         64
       ],
-      "tag": "990-PF · Sched I · federal"
+      "tag": "Pub 78 · news · similar orgs"
     },
     {
       "id": "results",
@@ -174,7 +174,7 @@
       "tag": "0–100 + why",
       "pos": [
         720,
-        450
+        390
       ],
       "size": [
         180,
@@ -189,7 +189,7 @@
       "tag": "+ keywords",
       "pos": [
         980,
-        450
+        390
       ],
       "size": [
         150,
@@ -200,15 +200,15 @@
       "id": "db",
       "type": "database",
       "label": "Postgres 17 + pgvector",
-      "sublabel": "orgs · 990 text · grants",
-      "tag": "filing_flag · board · county_need",
+      "sublabel": "orgs · 990 text · grants · people",
+      "tag": "labels · grant links · recipient types",
       "pos": [
         1220,
-        450
+        390
       ],
       "size": [
         220,
-        440
+        430
       ]
     },
     {
@@ -219,7 +219,7 @@
       "tag": "top 15 · 990 text",
       "pos": [
         720,
-        590
+        510
       ],
       "size": [
         180,
@@ -234,7 +234,7 @@
       "tag": "Sonnet 5.5",
       "pos": [
         980,
-        590
+        510
       ],
       "size": [
         150,
@@ -248,7 +248,7 @@
       "sublabel": "apps · AI agents",
       "pos": [
         40,
-        810
+        720
       ],
       "size": [
         150,
@@ -260,10 +260,10 @@
       "type": "backend",
       "label": "Partner API + MCP",
       "sublabel": "/api/v1 · /mcp",
-      "tag": "api_keys · rate limit",
+      "tag": "api_keys · iog_internal · api_calls",
       "pos": [
         470,
-        810
+        720
       ],
       "size": [
         170,
@@ -274,14 +274,14 @@
       "id": "sources",
       "type": "external",
       "label": "Public data",
-      "sublabel": "IRS 990 · 990-PF · Schedule I",
-      "tag": "+ ACS · USAspending · FAC · EDGAR",
+      "sublabel": "IRS 990 · PF · Sched I · SOI · Pub 78",
+      "tag": "ACS · USAspending · BLS · Giving USA · GDELT",
       "pos": [
-        1515,
-        300
+        1500,
+        260
       ],
       "size": [
-        205,
+        215,
         80
       ]
     },
@@ -289,14 +289,14 @@
       "id": "etl",
       "type": "backend",
       "label": "Python ETL",
-      "sublabel": "load · link grants · board",
-      "tag": "FAC UEI→EIN · GivingTuesday XML",
+      "sublabel": "load · link grants · board people",
+      "tag": "GivingTuesday lake · IoG Guides · FAC",
       "pos": [
-        1515,
-        450
+        1500,
+        390
       ],
       "size": [
-        205,
+        215,
         80
       ]
     },
@@ -306,28 +306,14 @@
       "label": "Cause labels",
       "sublabel": "label_causes.py · claude -p",
       "pos": [
-        1515,
-        590
+        1500,
+        510
       ],
       "size": [
-        205,
+        215,
         64
       ],
-      "tag": "Haiku screen · Sonnet/Opus check"
-    },
-    {
-      "id": "embed",
-      "type": "backend",
-      "label": "Embedding job",
-      "sublabel": "nomic 512-dim · GPU",
-      "pos": [
-        1515,
-        710
-      ],
-      "size": [
-        205,
-        64
-      ]
+      "tag": "Claude subscription · graded"
     },
     {
       "id": "miner",
@@ -335,11 +321,11 @@
       "label": "Insights miner",
       "sublabel": "mine_insights.py",
       "pos": [
-        1515,
-        826
+        1500,
+        630
       ],
       "size": [
-        205,
+        215,
         64
       ]
     },
@@ -350,7 +336,7 @@
       "sublabel": "~/Backups · newest 3",
       "pos": [
         1220,
-        960
+        870
       ],
       "size": [
         220,
@@ -364,7 +350,7 @@
       "sublabel": "Sonnet 5.5 · its data only",
       "pos": [
         470,
-        60
+        40
       ],
       "size": [
         170,
@@ -378,10 +364,129 @@
       "sublabel": "browser only · PNG / PPTX",
       "pos": [
         980,
-        730
+        630
       ],
       "size": [
         150,
+        64
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "Claude client",
+      "sublabel": "lib/llm.ts · claude(feature)",
+      "tag": "each call → llm_usage tokens",
+      "pos": [
+        720,
+        40
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "claude",
+      "type": "external",
+      "label": "Claude API",
+      "sublabel": "Opus 5.5 · Sonnet 5.5",
+      "tag": "parse · route · rerank · buddy",
+      "pos": [
+        1500,
+        40
+      ],
+      "size": [
+        215,
+        64
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "frontend",
+      "label": "/admin dashboard",
+      "sublabel": "ADMIN_PASSWORD · internal",
+      "tag": "health · API calls · tokens",
+      "pos": [
+        720,
+        750
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "checks",
+      "type": "backend",
+      "label": "Nightly checks",
+      "sublabel": "data quality 3:30 · cron",
+      "tag": "benchmark + home prompts 4:00",
+      "pos": [
+        470,
+        995
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "beat",
+      "type": "backend",
+      "label": "Heartbeat",
+      "sublabel": "heartbeat.py · every minute",
+      "tag": "load · GPU · jobs · checks",
+      "pos": [
+        720,
+        995
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "gpujobs",
+      "type": "backend",
+      "label": "Batch jobs",
+      "sublabel": "Ollama Qwen2.5-7B · faiss",
+      "tag": "NTEE check · similar orgs",
+      "pos": [
+        980,
+        995
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "restore",
+      "type": "database",
+      "label": "Backup copy",
+      "sublabel": "restore test Sundays",
+      "pos": [
+        1220,
+        995
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "embedw",
+      "type": "backend",
+      "label": "Embed worker",
+      "sublabel": "nomic 512-dim · GPU",
+      "tag": "pending rows → vectors",
+      "pos": [
+        1500,
+        995
+      ],
+      "size": [
+        215,
         64
       ]
     }
@@ -408,12 +513,14 @@
         "db",
         "backup",
         "askfind",
-        "export"
+        "export",
+        "llm",
+        "admin"
       ]
     },
     {
       "kind": "region",
-      "label": "Postgres 17 · local",
+      "label": "Postgres 17 + pgvector · DB nombot",
       "wraps": [
         "layer",
         "db",
@@ -422,12 +529,22 @@
     },
     {
       "kind": "region",
-      "label": "generosity-data ETL",
+      "label": "generosity-data ETL · on the Mac",
       "wraps": [
         "etl",
         "labels",
-        "embed",
         "miner"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Linux helper · Tailscale · RTX 3070",
+      "wraps": [
+        "checks",
+        "beat",
+        "gpujobs",
+        "restore",
+        "embedw"
       ]
     }
   ],
@@ -502,21 +619,13 @@
       "id": "closest",
       "from": "search",
       "to": "analysis",
-      "label": "200 closest",
-      "labelAt": [
-        1055,
-        528
-      ]
+      "label": "200 closest"
     },
     {
       "id": "panel-data",
       "from": "analysis",
       "to": "db",
-      "label": "funders",
-      "labelAt": [
-        1157,
-        610
-      ]
+      "label": "funders"
     },
     {
       "id": "org-data",
@@ -587,12 +696,6 @@
       "label": "labels"
     },
     {
-      "id": "vectors",
-      "from": "embed",
-      "to": "db",
-      "label": "vectors"
-    },
-    {
       "id": "insights",
       "from": "miner",
       "to": "db",
@@ -629,6 +732,62 @@
       "to": "labels",
       "label": "after_load.sh",
       "variant": "dashed"
+    },
+    {
+      "id": "llm-route",
+      "from": "router",
+      "to": "llm",
+      "label": "spec call"
+    },
+    {
+      "id": "llm-ask",
+      "from": "askfind",
+      "to": "llm",
+      "label": "ask"
+    },
+    {
+      "id": "messages",
+      "from": "llm",
+      "to": "claude",
+      "label": "Messages API · API key"
+    },
+    {
+      "id": "admin-read",
+      "from": "admin",
+      "to": "db",
+      "label": "usage · logs · freshness"
+    },
+    {
+      "id": "heartbeat",
+      "from": "beat",
+      "to": "admin",
+      "label": "POST heartbeat"
+    },
+    {
+      "id": "bench",
+      "from": "checks",
+      "to": "api",
+      "label": "/api/v1/answer · read key"
+    },
+    {
+      "id": "batch-out",
+      "from": "gpujobs",
+      "to": "db",
+      "label": "NTEE fixes · org_similar",
+      "variant": "dashed"
+    },
+    {
+      "id": "offsite",
+      "from": "backup",
+      "to": "restore",
+      "label": "nightly copy",
+      "variant": "dashed"
+    },
+    {
+      "id": "vec2",
+      "from": "embedw",
+      "to": "db",
+      "label": "vectors"
     }
   ],
   "cards": [
@@ -636,11 +795,11 @@
       "dot": "cyan",
       "title": "Search path",
       "items": [
-        "Opus 5.5 turns a question into filters + search text; cause-label chips (climate, women and girls)",
+        "Opus 5.5 turns a question into filters + search text; cause-label chips",
         "One query: SQL filters, 2,000 nearest on a half-precision HNSW index, keyword hits",
         "Sonnet 5.5 scores the top 40, 0–100 with a reason",
         "Analysis panel from the 200 closest; Export slide builds PNG / PPTX in the browser",
-        "Org page: grants received (990-PF, Schedule I by funder type, federal awards) and given (Schedule I incl. not itemized)",
+        "Org page: grants received and given, FLAG, people, Pub 78 status, In the news, Similar organizations",
         "Research Buddy (Opus 5.5) cites 990 text and calls the research_answer tool"
       ]
     },
@@ -649,10 +808,21 @@
       "title": "Research answers",
       "items": [
         "Regex screen, then the prompt-cached Sonnet 5.5 router writes a spec",
-        "Fixed SQL on foundation_grants, charity_grants, federal_awards or 990 lines; never model-written SQL",
-        "Premise check corrects false assumptions; trust note when a cause has no graded label",
-        "Buddy, /api/v1/answer and MCP call the same engine",
-        "Findings: miner writes verified patterns; Ask about this finding answers from that finding's data"
+        "Fixed SQL on the research layer, grants, Schedule I, federal awards, 990 lines, IRS SOI household giving and finance panels; never model-written SQL",
+        "Trends deflated by BLS CPI-U; national totals checked against IRS SOI and Giving USA benchmarks",
+        "Who received it: recipient types (079) on grant totals and funder pages",
+        "Premise check corrects false assumptions; IRS or corrected NTEE groups",
+        "Buddy, /api/v1/answer and MCP call the same engine"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Claude usage",
+      "items": [
+        "App: claude(feature) in lib/llm.ts for parse, rerank, overview, themes, router, follow-ups, Buddy and Ask about this finding",
+        "One llm_usage row per Messages API call: model, feature, exact tokens; no prompt text",
+        "Partner API and MCP make no Claude calls except answer?q=",
+        "Cause labels run on the Claude subscription via claude -p, not the API key"
       ]
     },
     {
@@ -661,21 +831,31 @@
       "items": [
         "MacBook: launchd service on :4000, public URL via Tailscale Funnel",
         "SITE_PASSWORD on every page; /api/v1 and /mcp need a Bearer key instead",
-        "Keys: sha256 in api_keys, per-key rate limit, daily usage; no Claude calls except answer?q=",
-        "Nightly pg_dump at 2:30 AM, newest 3 kept"
+        "/admin adds ADMIN_PASSWORD: health, Linux helper, data freshness, API calls, Claude tokens, nightly checks",
+        "Keys: sha256 in api_keys, scopes (read, iog_internal), rate limit; every call in api_calls (90 days)",
+        "Nightly pg_dump at 2:30 AM, newest 3 kept, copied to the Linux helper and restore-tested Sundays"
       ]
     },
     {
       "dot": "emerald",
       "title": "Data",
       "items": [
-        "IRS: 1.8M orgs, SOI, 907,095 990 filings, 5.72M foundation grants, 3.41M Schedule I grants",
-        "Schedule I flags DAF sponsors, community foundations, United Ways; missing XML recovered from GivingTuesday",
-        "Census SAIPE + ACS 5-year, USAspending federal awards, SEC EDGAR company foundation flag",
-        "Federal awards linked by UEI through the Federal Audit Clearinghouse crosswalk (load_fac_crosswalk.py, relink_federal.py)",
-        "Cause labels: label_causes.py on the Claude subscription (claude -p); after_load.sh tops them up",
-        "org_labels feed search chips, research answers, API/MCP and the Parquet snapshot",
-        "Research layer: grant_cube, charity cube, grant-size histograms, rollups, cause_lookup"
+        "IRS: 1.8M orgs, 907,095 990 filings, 14.8M foundation grants (2012–2021 from the GivingTuesday data lake), 8.5M Schedule I lines",
+        "Census SAIPE + ACS, USAspending (linked by UEI via the Federal Audit Clearinghouse), SEC EDGAR, BLS CPI-U, IRS SOI individual returns",
+        "IRS Pub 78 and revocations, GDELT news org links, board people (4.86M seats)",
+        "IoG Giving Guides: internal, iog_internal scope only",
+        "Cause labels: label_causes.py on the subscription; after_load.sh tops them up",
+        "Research layer: grant_cube, charity cube, histograms, rollups, cause_lookup"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Linux helper",
+      "items": [
+        "Embed worker writes nomic vectors straight to Postgres",
+        "Ollama (Qwen2.5-7B) for the NTEE check and service areas; faiss builds similar orgs weekly",
+        "Data quality 3:30 and the 150-question benchmark + home prompts 4:00 via the live API",
+        "Heartbeat every minute to /admin"
       ]
     }
   ]
