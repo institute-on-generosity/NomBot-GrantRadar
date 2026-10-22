@@ -148,6 +148,18 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein IN (SELECT ein FROM company_foundations)`)] },
   { name: "company foundations to education", s: spec({ funderType: "company", causes: [{ name: "education", label: null, ntee: ["B"], keywords: [] }] }),
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND o.ntee_cd LIKE 'B%' AND g.funder_ein IN (SELECT ein FROM company_foundations)`)] },
+  // Corrected NTEE (spec.ntee corrected): orgs with no IRS code count under their suggested detailed code where graded
+  // (org_ntee_suggested.suggested_code, generosity-data 96dcb5b), so a detailed cause (K31 food banks) now adds them.
+  // Rows without a code (and the IRS-mismatch rows) still count only at the major-group level.
+  { name: "food banks $ 2022-24, corrected: uncoded orgs with suggested code K31 added", s: spec({ ntee: "corrected", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024
+      AND ((o.ntee_cd LIKE 'K31%' AND g.recipient_ein NOT IN (SELECT ein FROM org_ntee_suggested)) OR g.recipient_ein IN (SELECT ein FROM org_ntee_suggested WHERE suggested_code = 'K31'))`)] },
+  { name: "food banks corrected: footnote counts K31 uncoded orgs as added", s: spec({ ntee: "corrected", causes: [{ name: "food banks", label: null, ntee: ["K31"], keywords: [] }] }),
+    check: async (a) => { const n = Number(/(\d[\d,]*) orgs? \([^)]*\) added that had no IRS code/.exec(a.caveats.join(" "))?.[1]?.replace(/,/g, "") ?? -1);
+      return [n, await one(`SELECT count(DISTINCT ns.ein) FROM org_ntee_suggested ns JOIN grant_clean g ON g.recipient_ein = ns.ein AND g.tax_year BETWEEN 2022 AND 2024 WHERE ns.suggested_code = 'K31' AND coalesce(ns.irs_ntee, '') = ''`)]; } },
+  { name: "education $ 2022-24, corrected: major group still counts rows without a code", s: spec({ ntee: "corrected", causes: [{ name: "education", label: null, ntee: ["B"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024
+      AND ((o.ntee_cd LIKE 'B%' AND g.recipient_ein NOT IN (SELECT ein FROM org_ntee_suggested)) OR g.recipient_ein IN (SELECT ein FROM org_ntee_suggested WHERE suggested_major = 'B'))`)] },
   { name: "top company foundations, all causes", s: spec({ metric: "top_funders", funderType: "company" }),
     check: async (a) => [Number(a.rows[0].usd), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.funder_ein=$1 AND g.funder_ein IN (SELECT ein FROM company_foundations)`, [a.rows[0].funder_ein])] },
   { name: "top company foundations are all flagged", s: spec({ metric: "top_funders", funderType: "company" }),

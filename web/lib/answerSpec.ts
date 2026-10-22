@@ -39,7 +39,8 @@ export const MEASURES = ["dollars", "grants", "average_grant"] as const;
 export const FUNDER_TYPES = ["family", "operating", "trust", "company"] as const;
 // Directional premises a question presupposes (checked against the computed answer, lib/answer.ts).
 export const PREMISES = ["rise", "fall", "more", "less"] as const;
-// NTEE basis for NTEE-coded causes: the IRS code, or corrected major groups (generosity-data 072, 4,049 orgs).
+// NTEE basis for NTEE-coded causes: the IRS code, or corrected codes (generosity-data 072: 4,049 miscoded orgs by major
+// group, 42,973 orgs with no IRS code by detailed code where graded, else major group).
 export const NTEE_BASES = ["irs", "corrected"] as const;
 export const RECIPIENT_KINDS = ["nonprofit", "school_district", "public_college", "private_college", "public_entity"] as const;
 const range = (what: string) => z.object({
@@ -87,7 +88,7 @@ export const specSchema = z.object({
   funderType: z.enum(FUNDER_TYPES).nullable().describe("family (foundations with Family in the name, a floor), operating (private operating foundations), trust (charitable trusts), company (company or corporate foundations, e.g. the Walmart Foundation)"),
   recipientKind: z.enum(RECIPIENT_KINDS).nullable().describe("Only this kind of recipient: nonprofit (identified IRS-registered org), school_district, public_college, private_college, public_entity (school districts and public colleges only, never private colleges)"),
   charityFunder: z.enum(CHARITY_FUNDERS).nullable().describe("charity_grants only: daf_sponsor (donor-advised fund sponsors), community_foundation, united_way, other (other grantmaking charities); null = all"),
-  ntee: z.enum(NTEE_BASES).describe("How NTEE-coded causes count orgs: irs (default, the IRS code) or corrected (orgs whose IRS code doesn't fit their own 990 text count under a suggested NTEE major group, generosity-data org_ntee_suggested). corrected only when the question asks for corrected, fixed or better categories or codes. Graded labels are never affected"),
+  ntee: z.enum(NTEE_BASES).describe("How NTEE-coded causes count orgs: irs (default, the IRS code) or corrected (orgs whose IRS code doesn't fit their own 990 text count under a suggested NTEE major group, and orgs with no IRS code count under a suggested detailed code or major group, generosity-data org_ntee_suggested). corrected only when the question asks for corrected, fixed or better categories or codes. Graded labels are never affected"),
   premise: z.enum(PREMISES).nullable().describe("A direction the question takes as given, not asks: rise / fall (\"why did X fall\", \"given the drop in X\"), more / less (the first thing named gets more or less than the second, \"why do X get less than Y\"). Null for open or yes/no questions (\"did X fall?\", \"how has X changed\"). The answer leads with a correction when the data disagrees"),
 });
 

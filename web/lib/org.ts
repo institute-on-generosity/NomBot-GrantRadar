@@ -96,21 +96,24 @@ export async function latestReturn(ein: string): Promise<LatestReturn | null> {
 export const formName = (f: string) => (f === "990EZ" ? "990-EZ" : f === "990PF" ? "990-PF" : f);
 
 // Corrected NTEE group (generosity-data org_ntee_suggested, migration 072): orgs whose IRS major group doesn't fit
-// their own newest 990 text. Only the major group is stored (detailed codes failed a spot check). 4,049 orgs,
+// their own newest 990 text. Only the major group is stored for them (detailed codes failed a spot check). 4,049 orgs,
 // graded 94% right on a fresh sample of 150 by hand and by a blind judge. Rows with method uncoded_vote_llm are orgs
 // with no IRS code at all (irs_ntee '', 42,973 orgs): a suggested group from similar orgs and their own filings,
-// graded 98% on 150. kind tells the two apart, irs_code is null for uncoded orgs.
+// graded 98% on 150. 21,274 of them also have a detailed code (suggested_code, generosity-data 96dcb5b, graded 98.7%
+// on 150). kind tells the two apart, irs_code is null for uncoded orgs, code is the detailed code or null.
 export const NTEE_SUGGESTED_NOTE = "Suggested from the org's own 990 text by a model check, graded 94% right on a sample of 150. The IRS code is unchanged.";
 export const NTEE_UNCODED_NOTE = "No IRS code on file. Suggested group from similar orgs and their own filings, graded 98% right on a sample of 150.";
-export type NteeSuggested = { kind: "corrected" | "uncoded"; major: string; name: string; quote: string | null; irs_code: string | null; note: string };
+export const NTEE_UNCODED_CODE_NOTE = `${NTEE_UNCODED_NOTE} Detailed code graded 98.7% on 150.`;
+export type NteeSuggested = { kind: "corrected" | "uncoded"; major: string; code: string | null; name: string; quote: string | null; irs_code: string | null; note: string };
 export async function suggestedNtee(ein: string): Promise<NteeSuggested | null> {
-  const { rows: [r] } = await db.query("SELECT suggested_major, quote, irs_ntee, method FROM org_ntee_suggested WHERE ein = $1", [ein]);
+  const { rows: [r] } = await db.query("SELECT suggested_major, suggested_code, quote, irs_ntee, method FROM org_ntee_suggested WHERE ein = $1", [ein]);
   if (!r) return null;
   const major = String(r.suggested_major ?? "").trim();
   if (!major) return null;
   const irs = String(r.irs_ntee ?? "").trim();
   const uncoded = !irs || r.method === "uncoded_vote_llm";
-  return { kind: uncoded ? "uncoded" : "corrected", major, name: nteeLabel(major) ?? major, quote: (r.quote as string | null)?.trim() || null, irs_code: irs || null, note: uncoded ? NTEE_UNCODED_NOTE : NTEE_SUGGESTED_NOTE };
+  const code = String(r.suggested_code ?? "").trim() || null;
+  return { kind: uncoded ? "uncoded" : "corrected", major, code, name: nteeLabel(major) ?? major, quote: (r.quote as string | null)?.trim() || null, irs_code: irs || null, note: uncoded ? (code ? NTEE_UNCODED_CODE_NOTE : NTEE_UNCODED_NOTE) : NTEE_SUGGESTED_NOTE };
 }
 
 // Where the money comes from, Form 990 Part VIII (or 990-EZ Part I) as loaded in the SOI extract.

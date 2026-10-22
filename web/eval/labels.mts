@@ -188,6 +188,13 @@ check(!("error" in none) && none.org.labels.length === 0, "api org without label
 const brown = await apiOrg("050258809", "http://x");
 check(!("error" in brown) && brown.org.ntee_suggested?.major === "B" && brown.org.ntee_suggested.name === "Education" && !!brown.org.ntee_suggested.quote && brown.org.ntee?.code?.startsWith("S") === true, "api org ntee_suggested: Brown S412, likely B");
 check(!("error" in none) && none.org.ntee_suggested === null, "api org without a suggestion: ntee_suggested null");
+check(!("error" in brown) && brown.org.ntee_suggested?.code === null, "api org ntee_suggested: IRS-mismatch row has code null");
+// Uncoded orgs with a detailed code (generosity-data 96dcb5b): South Michigan Food Bank has no IRS code, suggested K31
+const smfb = await apiOrg("382445948", "http://x");
+check(!("error" in smfb) && smfb.org.ntee === null && smfb.org.ntee_suggested?.kind === "uncoded" && smfb.org.ntee_suggested.major === "K" && smfb.org.ntee_suggested.code === "K31"
+  && /Detailed code graded 98\.7% on 150\./.test(smfb.org.ntee_suggested.note) && !/[;\u2014]/.test(smfb.org.ntee_suggested.note), "api org ntee_suggested: uncoded food bank, code K31 with the 98.7% note");
+const chamber = await apiOrg("010029480", "http://x"); // Biddeford Saco Chamber of Commerce: uncoded, major S only
+check(!("error" in chamber) && chamber.org.ntee_suggested?.kind === "uncoded" && chamber.org.ntee_suggested.code === null && !/98\.7/.test(chamber.org.ntee_suggested.note), "api org ntee_suggested: uncoded without a code, code null, no 98.7% note");
 
 await db.end();
 console.log(fails ? `\n${fails} failed` : "\nall passed");

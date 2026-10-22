@@ -177,18 +177,21 @@ function causeSql(c: C | null, p: P, ein: string, ntee: string, sfx = "", primar
   };
 }
 // Corrected NTEE groups (spec.ntee "corrected", generosity-data 072): an org in org_ntee_suggested counts under its
-// suggested major group only (no detailed code was graded reliable), every other org under its IRS code. Org-level
+// suggested detailed code where it has one (orgs with no IRS code, generosity-data 096, graded 98.7% on 150), else its
+// suggested major group (orgs whose IRS code didn't fit), every other org under its IRS code. Org-level
 // tables test the EIN. The cube has no EIN, so its corrected source (CUBE_CORR) adds each listed org's grants back
 // under the suggested group and takes them out of the IRS one. Graded labels are never affected.
+// The suggested code of an org_ntee_suggested row: the detailed code (e.g. B20) if any, else the major group (B).
+const SUG = (a = "ns") => `coalesce(${a}.suggested_code, ${a}.suggested_major::text)`;
 function nteeMatch(c: C, p: P, ein: string, ntee: string): string {
   const pats = p.add(c.ntee.map((n) => `${n}%`));
   if (!c.corr || !ein) return `${ntee} LIKE ANY(${pats}::text[])`;
-  return `((${ntee} LIKE ANY(${pats}::text[]) AND ${ein} NOT IN (SELECT ein FROM org_ntee_suggested)) OR ${ein} IN (SELECT ein FROM org_ntee_suggested WHERE suggested_major::text LIKE ANY(${pats}::text[])))`;
+  return `((${ntee} LIKE ANY(${pats}::text[]) AND ${ein} NOT IN (SELECT ein FROM org_ntee_suggested)) OR ${ein} IN (SELECT ns.ein FROM org_ntee_suggested ns WHERE ${SUG()} LIKE ANY(${pats}::text[])))`;
 }
-// The corrected NTEE code of a grant row (breakdowns by cause on grant_clean): the suggested major group, else the IRS code.
-const corrNtee = (ein: string, ntee: string) => `coalesce((SELECT ns.suggested_major::text FROM org_ntee_suggested ns WHERE ns.ein = ${ein}), ${ntee})`;
+// The corrected NTEE code of a grant row (breakdowns by cause on grant_clean): the suggested code, else the IRS code.
+const corrNtee = (ein: string, ntee: string) => `coalesce((SELECT ${SUG()} FROM org_ntee_suggested ns WHERE ns.ein = ${ein}), ${ntee})`;
 // grant_cube / charity_grant_cube with corrected groups: the cube plus, for each listed org's grants, one row at minus
-// the amount under its IRS ntee3 and one at plus the amount under the suggested major group. Same columns, so every
+// the amount under its IRS ntee3 and one at plus the amount under the suggested code (SUG). Same columns, so every
 // cube query reads it unchanged. recipients and funders are 0 on the added rows (not additive anyway). ~0.1-0.3 s.
 const CUBE_CORR: Record<"pf" | "charity", string> = {
   pf: `(SELECT tax_year, recipient_state, rural, ntee3, recipient_kind, linked, recipient_band, funder_band, funder_type, labels, usd, n, gos_usd, gos_n, recipients, funders FROM grant_cube
@@ -199,7 +202,7 @@ SELECT g.tax_year::smallint, g.recipient_state, CASE WHEN cn.population < 50000 
   (m.sg * g.amount)::bigint, m.sg, (m.sg * CASE WHEN g.gos THEN g.amount ELSE 0 END)::bigint, CASE WHEN g.gos THEN m.sg ELSE 0 END, 0, 0
 FROM org_ntee_suggested ns
 CROSS JOIN LATERAL (SELECT * FROM grant_clean g0 WHERE g0.recipient_ein = ns.ein OFFSET 0) g
-CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (ns.suggested_major::text, 1)) m(ntee3, sg)
+CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (${SUG()}, 1)) m(ntee3, sg)
 JOIN grants gr ON gr.id = g.id LEFT JOIN public_entities pe ON pe.id = gr.recipient_entity
 LEFT JOIN county_need cn ON cn.county_fips = g.county_fips
 LEFT JOIN recipient_profile rp ON rp.ein = g.recipient_ein LEFT JOIN funder_profile fp ON fp.ein = g.funder_ein)`,
@@ -211,7 +214,7 @@ SELECT g.tax_year, g.recipient_state, CASE WHEN cn.population < 50000 THEN true 
   (m.sg * g.amount)::bigint, m.sg, (m.sg * CASE WHEN g.gos THEN g.amount ELSE 0 END)::bigint, CASE WHEN g.gos THEN m.sg ELSE 0 END
 FROM org_ntee_suggested ns
 CROSS JOIN LATERAL (SELECT * FROM charity_grant_clean g0 WHERE g0.recipient_ein = ns.ein OFFSET 0) g
-CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (ns.suggested_major::text, 1)) m(ntee3, sg)
+CROSS JOIN LATERAL (VALUES (left(g.recipient_ntee, 3), -1), (${SUG()}, 1)) m(ntee3, sg)
 LEFT JOIN county_need cn ON cn.county_fips = g.county_fips)`,
 };
 // Does spec.ntee "corrected" change this answer: an NTEE-coded cause, a split by NTEE group, or fastest-growing causes.
@@ -926,7 +929,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v44: underfunded metric (orgs in a cause getting little foundation money for their size), Answer.orgs.
 // v45: "Who received it" (Answer.who) on foundation grant totals and recipient-kind splits: governments, public
 // universities, international bodies, companies (generosity-data 079), with a one-line share caveat.
-const answerMemo = memo<Answer>("answer:v45", 500, 6 * 3600_000);
+// v46: corrected NTEE counts orgs with no IRS code under their suggested detailed code where graded (suggested_code).
+const answerMemo = memo<Answer>("answer:v46", 500, 6 * 3600_000);
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1269,12 +1273,12 @@ async function run(ctx: Ctx, s0: Spec): Promise<Out> {
 
 // ---- corrected NTEE groups (spec.ntee "corrected", generosity-data 072)
 export const CORR_CHIP = "With corrected categories?";
-const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). Each added org had no IRS code and counts under a group suggested from similar orgs and its own filings (graded 98% right on a sample of 150). The IRS codes are unchanged and stay the default.";
+const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). Each added org had no IRS code and counts under a group suggested from similar orgs and its own filings (graded 98% right on a sample of 150). About half of them also have a detailed code (graded 98.7% on 150). The IRS codes are unchanged and stay the default.";
 // Offer the chip only when an NTEE-coded cause has orgs that move in or out of it.
 const corrMoves = async (s: Spec): Promise<boolean> => {
   const pats = [...new Set(s.causes.filter((c) => !c.label && c.ntee.length).flatMap((c) => c.ntee.map((n) => `${n}%`)))];
   if (!pats.length) return false;
-  const r = await db.query(`SELECT EXISTS (SELECT 1 FROM org_ntee_suggested WHERE suggested_major::text LIKE ANY($1::text[]) OR irs_ntee LIKE ANY($1::text[])) AS x`, [pats]).catch(() => null);
+  const r = await db.query(`SELECT EXISTS (SELECT 1 FROM org_ntee_suggested ns WHERE ${SUG()} LIKE ANY($1::text[]) OR irs_ntee LIKE ANY($1::text[])) AS x`, [pats]).catch(() => null);
   return !!r?.rows[0]?.x;
 };
 // The footnote: how many orgs and dollars (grant sources) moved into and out of each corrected cause, in the
@@ -1288,7 +1292,7 @@ async function corrNote(ctx: Ctx, s: Spec, pl: Place, out: Out) {
   const run1 = async (c: C | null) => {
     const p = new P();
     const pats = c ? p.add(c.ntee.map((n) => `${n}%`)) : null;
-    const sm = pats ? `ns.suggested_major::text LIKE ANY(${pats}::text[])` : "true", im = pats ? `coalesce(x.ntee, '') LIKE ANY(${pats}::text[])` : "false";
+    const sm = pats ? `${SUG()} LIKE ANY(${pats}::text[])` : "true", im = pats ? `coalesce(x.ntee, '') LIKE ANY(${pats}::text[])` : "false";
     const un = "coalesce(ns.irs_ntee, '') = ''";
     let sql: string;
     if (grant && y) {
@@ -1323,7 +1327,7 @@ FROM (SELECT ns.ein, ${sm} AS sm, ${un} AS un, ${im.replace("x.ntee", "o.ntee_cd
     notes.push(`${amt(r.n_in, r.usd_in)} counted under a different NTEE major group than their IRS code${r.n_add ? `, and ${amt(r.n_add, r.usd_add)} with no IRS code added under a suggested group` : ""}${when}.`);
   }
   out.caveats.unshift(`Corrected categories. ${notes.join(" ")} ${CORR_GRADE}`);
-  out.causeNote = `${out.causeNote ? `${out.causeNote.replace(/\s+$/, "")} ` : ""}By corrected category: orgs in org_ntee_suggested count under their suggested NTEE major group.`;
+  out.causeNote = `${out.causeNote ? `${out.causeNote.replace(/\s+$/, "")} ` : ""}By corrected category: orgs in org_ntee_suggested count under their suggested NTEE code (detailed for about half the orgs with no IRS code, else the major group).`;
   out.coverage = [...out.coverage, { label: "NTEE basis", value: "Corrected categories" }];
 }
 
