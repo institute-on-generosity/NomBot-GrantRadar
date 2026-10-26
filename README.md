@@ -149,7 +149,7 @@ Authorization: Bearer nb_live_…
 | Database | Postgres 17 + pgvector (Homebrew) | Supabase Pro, shared with GrantRadar |
 | Data | All US (since Oct 13; was WV, KY, TN, VA, OH) | All US |
 | ETL | Python, run by hand | GitHub Actions, monthly |
-| App | Next.js, `localhost` | Vercel |
+| App | Next.js 16.4.3 (security: GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r), `localhost` | Vercel |
 | LLM | Claude API (`@anthropic-ai/sdk`): parse and Research Buddy on Opus 5.5 (`LLM_MODEL`); relevance scoring, the AI overview, Ask about this finding and the research-answer router on Sonnet 5.5 (`FAST_MODEL`) | Same |
 | Partner API | Bearer API keys (Postgres `api_keys`), remote MCP via `@modelcontextprotocol/sdk` 1.30.1 (Streamable HTTP) | Same |
 | Charts | Vega-Lite (vega 6.4.0, vega-lite 6.4.3, vega-embed 7.3.0), Research and the Overview chart, lazy-loaded | Same |
@@ -383,6 +383,7 @@ Funders read the 990 before the proposal: liquidity, reserves, revenue and expen
 - [ ] **API live**
 
 **Oct 26–Nov 1: Quality**
+- [x] **Next.js 16.4.3 (Oct 26), security:** GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r. Evals green: test:answer, test:followups, eval:route 106/106, research 104/104, test:labels, test:people, test:api 269/269
 - [x] 50-query eval, ≥90% relevant: **91%** (was 35%) · median ~7s (was ~14s), goal <2s
 
 **Nov 2–8: Web UI**
