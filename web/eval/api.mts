@@ -429,6 +429,30 @@ try {
   m = await call("get_finances", { ein: "000000001" });
   check(m.isError && m.text === "Not found.", "MCP get_finances: unknown EIN is Not found");
   await client.close();
+
+  // Search export (Oct 26): place tiers with evidence, NTEE code, foundation grants 2022-24, top funder, latest 990,
+  // website, and a relevance status on every row. unscored=1: no relevance calls (one cached question parse).
+  {
+    const t = performance.now();
+    const res = await fetch(`${BASE}/export?${new URLSearchParams({ question: "Youth sports programs in Inglewood, CA", unscored: "1" })}`);
+    const text = await res.text();
+    timings.push(["export: youth sports in Inglewood (unscored)", Math.round(performance.now() - t)]);
+    const parseCsv = (line: string) => { const out: string[] = []; let cur = "", q = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (q) { if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; } else if (ch === '"') q = true; else if (ch === ",") { out.push(cur); cur = ""; } else cur += ch; } out.push(cur); return out; };
+    const lines = text.split("\n");
+    const head = parseCsv(lines[0]);
+    const want = ["relevance", "relevance_status", "place_tier", "place_evidence", "ntee_code", "foundation_grants_2022_24", "top_funder", "latest_990_year", "website", "zip"];
+    check(res.status === 200 && want.every((k) => head.includes(k)), `export: CSV has ${want.join(", ")}`);
+    const rows = lines.slice(1).filter(Boolean).map((l) => Object.fromEntries(parseCsv(l).map((v, i) => [head[i], v])));
+    check(rows.length > 0 && rows.every((r) => r.relevance_status === "unscored" && r.relevance === ""), "export: unscored=1 marks every row unscored");
+    check(["in the place", "serves the place, HQ elsewhere", "nearby"].every((t) => rows.some((r) => r.place_tier === t)), "export: three place tiers");
+    const ill = rows.find((r) => r.ein === "84-3026438");
+    check(!!ill && ill.place_tier === "in the place" && /^name: Named for Inglewood, mailed from Los Angeles/.test(ill.place_evidence), "export: Inglewood Little League (LA 90065) in the place by name, flagged mailed from elsewhere");
+    const [g] = await sql(`SELECT coalesce(sum(amount), 0)::bigint AS usd FROM grant_clean WHERE recipient_ein = '843026438' AND tax_year BETWEEN 2022 AND 2024`);
+    check(!!ill && Number(ill.foundation_grants_2022_24) === Number(g.usd), "export: foundation grants 2022-24 vs SQL");
+    const pp = rows.find((r) => r.ein === "95-4623022"); // Dodgers Foundation: a 2022 grant purpose names Inglewood
+    check(!!pp && pp.place_tier === "serves the place, HQ elsewhere" && /grant purpose: .*Inglewood/i.test(pp.place_evidence), "export: Dodgers Foundation serves Inglewood by grant purpose");
+    check(rows.filter((r) => r.place_tier === "in the place").every((r) => /^(HQ|HQ ZIP|name):/.test(r.place_evidence)), "export: every in-place row says why");
+  }
 } finally {
   execFileSync("npm", ["run", "-s", "api-key", "--", "revoke", KEY_ID], { cwd: join(import.meta.dirname, ".."), encoding: "utf8" });
   console.log(`Test key #${KEY_ID} revoked.`);

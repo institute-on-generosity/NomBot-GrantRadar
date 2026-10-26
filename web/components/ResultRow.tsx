@@ -35,7 +35,14 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
           {facts.join(" · ")}
           <HealthBadges h={r.health} />
         </div>
+        {r.place && r.place.basis !== "hq" && (
+          // Why a place tier lists it: named for the city but mailed from elsewhere, or a filing or grant that names the city.
+          <p className={`place-why${r.place.basis === "name" ? " flag" : ""}`}>
+            {r.place.note}{r.place.quote && <>: <q>{r.place.quote}</q></>}
+          </p>
+        )}
         <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
+        {r.prefer && r.prefer.length > 0 && <p className="prefer-hit">Mentions {r.prefer.join(", ")}</p>}
         <div className="row-tools">
           <StarButton withLabel org={{ ein: r.ein, name: r.name, city: r.city, state: r.state, cause: r.ntee?.label ?? null, revenue: r.revenue?.amount ?? null, year: r.revenue?.year ?? null }} />
           <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />

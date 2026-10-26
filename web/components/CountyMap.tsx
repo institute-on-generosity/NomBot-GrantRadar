@@ -68,7 +68,8 @@ export function CountyMap({ counts, appalachia, label = "organizations", onSelec
 
   const focus = useMemo(() => (focusStates?.length ? new Set(focusStates) : null), [focusStates]);
   const appSet = useMemo(() => new Set(appalachia ?? []), [appalachia]);
-  const appCounties = useMemo(() => GEO.counties.filter((c) => appSet.has(c.fips)), [appSet]);
+  // Appalachia's hatching and legend only where the map shows Appalachian counties (none on a California map).
+  const appCounties = useMemo(() => GEO.counties.filter((c) => appSet.has(c.fips) && (!focus || focus.has(c.state))), [appSet, focus]);
 
   const summary = useMemo(() => {
     let total = 0, n = 0, top: County | null = null, topN = 0;

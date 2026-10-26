@@ -11,7 +11,7 @@ import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 import { searchCandidates } from "./rerank";
 import { orgAge } from "./org";
-import { orgHealth, type Health as OrgHealth } from "./search";
+import { orgHealth, type Health as OrgHealth, type Result } from "./search";
 
 export const LANDSCAPE = 200;
 
@@ -74,8 +74,10 @@ const grantYears = async (): Promise<[number, number]> => {
   return [to - 2, to];
 };
 
-async function build(filters: Filters, includeInactive: boolean): Promise<Landscape> {
-  const { results } = await searchCandidates(filters, { limit: LANDSCAPE, includeInactive });
+// matched: the organizations to describe instead of the search's closest candidates. A city search passes its
+// relevance-checked matches across place tiers, so the panel describes the matches, not every org in the city.
+async function build(filters: Filters, includeInactive: boolean, matched?: Result[]): Promise<Landscape> {
+  const results = matched ?? (await searchCandidates(filters, { limit: LANDSCAPE, includeInactive })).results;
   const eins = results.map((r) => r.ein.replace("-", ""));
   // Only states whose nonprofits are loaded: elsewhere every county would look like a gap.
   const loaded = new Set(LOADED_STATES.map(([c]) => c));
@@ -220,7 +222,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v24", 200, 3600_000); // v24: median income; v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
-export function landscape(filters: Filters, includeInactive = false) {
-  return cached(JSON.stringify([filters, includeInactive]), () => build(filters, includeInactive));
+const cached = memo<Landscape>("landscape:v25", 200, 3600_000); // v25: matched orgs only for place tiers; v24: median income; v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
+export function landscape(filters: Filters, includeInactive = false, matched?: Result[]) {
+  return cached(JSON.stringify([filters, includeInactive, matched?.map((r) => r.ein) ?? null]), () => build(filters, includeInactive, matched));
 }

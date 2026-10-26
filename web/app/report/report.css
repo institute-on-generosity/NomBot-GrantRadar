@@ -1,0 +1,38 @@
+/* Search report (/report): a document, not an app page. Prints as is ("Save as PDF"). */
+.report { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; color: var(--ink); }
+.report-wait { color: var(--mute); }
+.report-head { border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 8px; position: relative; }
+.report-kicker { font-size: 12.5px; color: var(--mute); margin: 0 0 4px; }
+.report h1 { font-size: 24px; line-height: 1.25; margin: 0; padding-right: 140px; }
+.report-tools { position: absolute; top: 0; right: 0; }
+.report section { margin-top: 22px; }
+.report h2 { font-size: 17px; margin: 0 0 4px; }
+.report h2 small { font-size: 12.5px; font-weight: 400; color: var(--mute); margin-left: 8px; }
+.report ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
+.report li { margin: 3px 0; }
+.report-note { font-size: 12.5px; color: var(--mute); margin: 0 0 8px; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 12.5px; line-height: 1.4; }
+.report-table th { text-align: left; font-weight: 600; color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 6px 8px 6px 0; }
+.report-table td { vertical-align: top; border-bottom: 1px solid var(--line); padding: 8px 10px 8px 0; }
+.report-table td > * { display: block; }
+.report-table td span { color: var(--ink-2); }
+.report-table td .mission { color: var(--mute); margin-top: 2px; }
+.report-table th:first-child, .report-table td:first-child { width: 34%; }
+.report-table.compact th:first-child, .report-table.compact td:first-child { width: auto; }
+.report-foot { margin-top: 28px; font-size: 12px; color: var(--mute); }
+@media (max-width: 720px) {
+  .report h1 { padding-right: 0; }
+  .report-tools { position: static; margin-top: 10px; }
+  .report-table, .report-table thead, .report-table tbody, .report-table tr, .report-table td { display: block; width: auto !important; }
+  .report-table thead { display: none; }
+  .report-table tr { border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .report-table td { border: 0; padding: 2px 0; }
+}
+@media print {
+  .report { max-width: none; padding: 0; }
+  .report-tools { display: none; }
+  .report h1 { font-size: 16pt; padding-right: 0; }
+  .report h2 { font-size: 12pt; break-after: avoid; }
+  .report-table { font-size: 8.5pt; }
+  .report-table tr { break-inside: avoid; }
+}

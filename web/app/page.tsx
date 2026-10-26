@@ -82,7 +82,7 @@ async function Results({ searchParams }: { searchParams: SearchParams }) {
   }
   const n = Math.min(Math.max(Number(p.n) || 10, 10), 100);
   const includeInactive = p.all === "1";
-  const overrides: Overrides = { st: p.st, city: p.city, region: p.region, max: p.max, min: p.min, cause: p.cause, label: p.label, tier: p.tier, sub: p.sub, drop: p.drop };
+  const overrides: Overrides = { st: p.st, city: p.city, county: p.county, region: p.region, max: p.max, min: p.min, cause: p.cause, label: p.label, tier: p.tier, sub: p.sub, drop: p.drop };
   // Content plan, per question (lib/answerSpec contentPlan):
   //   research  ("how much…", "what share…", "which states…"): redirected to /research/ask, the answer
   //             card only. No org search, landscape, AI overview or relevance scoring runs.
@@ -139,15 +139,20 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   const res = await searchCandidates(filters, { includeInactive, limit: n });
   const ranking = rank(question, res, n);
   const rankingAll = n >= POOL ? ranking : rank(question, res, POOL); // the overview reads every scored candidate (same cached scores)
+  // Place tiers: the panel and AI overview describe the matches (strong, across tiers), not every org in the city.
+  const matched = res.tiers ? rankingAll.then(({ results }) => results.filter((r) => !r.relevance || isStrong(r))) : undefined;
   const patterns = filters.requirements.map((r) => r.pattern);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
   const must = filters.requirements.map((r) => r.label).join(" + ");
-  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0 };
+  // Tiered place search (lib/tiers.ts): sections per tier, and the county one click away when nothing matches.
+  const tiers = res.tiers?.map((t) => ({ tier: t.tier, title: t.title, note: t.note, total: t.total }));
+  const county = res.scope?.kind === "city" && res.scope.county ? { name: res.scope.county.name, href: url(p, { county: res.scope.county.name, city: "", n: "" }) } : undefined;
+  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0, tiers, county, widened: res.widened };
   // Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
   // instead of React keeping the old list on screen until the new scores arrive.
   const orgList = (
-    <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
+    <Suspense key={`results:${url(p, { n: "" })}`} fallback={<ResultList rows={res.tiers ? res.tiers.flatMap((t) => t.results.slice(0, n)) : res.results.slice(0, n)} total={res.total} pending {...rowProps} />}>
       <RankedList ranking={ranking} rankingAll={rankingAll} total={res.total} {...rowProps} />
     </Suspense>
   );
@@ -156,6 +161,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
       <PrintButton label="Print summary" />
       <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
+      <a href={`/report?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`} target="_blank" rel="noreferrer">Download report</a>
       <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
     </div>
   );
@@ -165,11 +171,12 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
       <div className="serp-head">
         <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
-        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", region: "", max: "", min: "", cause: "", label: "", tier: "", drop: "", n: "" }) : undefined} />
+        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", county: "", region: "", max: "", min: "", cause: "", label: "", tier: "", drop: "", n: "" }) : undefined} />
       </div>
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
 
+      {res.widened && <p className="notice">Few organizations have {res.widened} as their main focus, so ones where it is one goal among others are included.</p>}
       <ResearchBuddy key={url(p, { n: "" })} convKey={url(p, { n: "" })} startOpen={p.buddy === "1"} startAsk={(p.ask ?? "").slice(0, 1000)} question={question} overrides={overrides} all={includeInactive} />
 
       {card ? (
@@ -188,8 +195,8 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       <div className="serp">
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
-          <Landscape question={question} filters={filters} includeInactive={includeInactive} total={res.total}
-            overview={(v) => <Suspense fallback={<AiOverviewSkeleton compact={v.visual} />}><OverviewPanel question={question} candidates={res.results} filters={filters} includeInactive={includeInactive} {...v} /></Suspense>}
+          <Landscape question={question} filters={filters} includeInactive={includeInactive} total={res.total} matched={matched}
+            overview={(v) => <Suspense fallback={<AiOverviewSkeleton compact={v.visual} />}><OverviewPanel question={question} candidates={matched ?? res.results} filters={filters} includeInactive={includeInactive} {...v} /></Suspense>}
             gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
             map={(m) => <LandscapeMap {...m} />} />
         </Suspense>
@@ -208,15 +215,17 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
 
 // The AI overview reads the closest candidates in search order, so it runs alongside relevance scoring
 // instead of after it (~3-5s sooner). Its citations point into its own list (o.orgs), not the scored order.
-async function OverviewPanel({ question, candidates, filters, includeInactive, visual, story }: { question: string; candidates: Result[]; filters: Filters; includeInactive: boolean; visual: boolean; story?: string }) {
+async function OverviewPanel({ question, candidates: given, filters, includeInactive, visual, story }: { question: string; candidates: Result[] | Promise<Result[]>; filters: Filters; includeInactive: boolean; visual: boolean; story?: string }) {
+  const candidates = await given;
   // County need for the AI overview: high-poverty counties with none of the 200 closest organizations.
-  const l = await landscape(filters, includeInactive);
+  const l = await landscape(filters, includeInactive, given instanceof Promise ? candidates : undefined);
   const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have ${l.povertyCut}%+ poverty (the poorest quarter, up to 20%); ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
   const o = await overview(question, candidates, need, story);
   return o ? <AiOverview o={o} question={question} visual={visual} /> : visual ? null : <p className="ls-note">No overview for these results.</p>;
 }
 
-type RowProps = { patterns: string[]; back: string; focus: string; must: string; noMention: boolean };
+type TierHead = { tier: string; title: string; note: string; total: number };
+type RowProps = { patterns: string[]; back: string; focus: string; must: string; noMention: boolean; tiers?: TierHead[]; county?: { name: string; href: string }; widened?: string };
 
 async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; rankingAll: ReturnType<typeof rank>; total: number }) {
   const [{ results, scored }, all] = await Promise.all([ranking, rankingAll]);
@@ -226,7 +235,9 @@ async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ran
 
 // pending: search order, while relevance scores are still being computed.
 // Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
-function ResultList({ rows, total, pending = false, scored = false, strongTotal, patterns, back, focus, must, noMention }: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
+function ResultList(props: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
+  if (props.tiers) return <TieredList {...props} tiers={props.tiers} />;
+  const { rows, total, pending = false, scored = false, strongTotal, patterns, back, focus, must, noMention } = props;
   const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
   const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
   const row = (r: Result | Ranked, i: number) => (
@@ -260,6 +271,50 @@ function ResultList({ rows, total, pending = false, scored = false, strongTotal,
   );
 }
 
+// Tiered place results: one section per tier (in the city, serving it from elsewhere, nearby), each ordered by
+// relevance with its weaker matches folded. One notice up top when the must-mention phrase matched nothing.
+function TieredList({ rows, pending = false, scored = false, patterns, back, focus, must, noMention, tiers, county }: RowProps & { tiers: TierHead[]; rows: (Result | Ranked)[]; pending?: boolean; scored?: boolean; strongTotal?: number; total: number }) {
+  const row = (r: Result | Ranked, i: number) => (
+    <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
+      relevance={"relevance" in r ? r.relevance : null} />
+  );
+  const strongAll = rows.filter((r) => !("relevance" in r) || isStrong(r)).length;
+  return (
+    <div className={`results${pending ? " ranking" : ""}`}>
+      <div className="bar">
+        <span>{scored ? `${strongAll} strong ${strongAll === 1 ? "match" : "matches"} in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}` : `${rows.length} results in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}`}</span>
+        {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first in each group</span>}
+      </div>
+      {noMention && (
+        <p className="notice">
+          No organization here mentions <b>{must}</b> in its filings. The lists below are the closest matches.
+          {county && <> <NavLink href={county.href}>Search all of {county.name}</NavLink></>}
+        </p>
+      )}
+      {tiers.map((t) => {
+        const own = rows.filter((r) => r.place?.tier === t.tier);
+        const strong = own.filter((r) => !("relevance" in r) || isStrong(r));
+        const weak = own.filter((r) => "relevance" in r && !isStrong(r));
+        return (
+          <section key={t.tier} className="tier" aria-label={t.title}>
+            <h2>{t.title}</h2>
+            <p>{t.note}</p>
+            {strong.length === 0 && <p className="tier-empty">{own.length ? "No strong matches here." : "No matches here."}</p>}
+            {strong.map(row)}
+            {weak.length > 0 && (
+              <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
+                <summary>Show {weak.length} weaker {weak.length === 1 ? "match" : "matches"} <span>relevance under 50</span></summary>
+                {weak.map((r, i) => row(r, strong.length + i))}
+              </details>
+            )}
+          </section>
+        );
+      })}
+      {county && !noMention && <p className="tier-more"><NavLink href={county.href}>Search all of {county.name}</NavLink></p>}
+    </div>
+  );
+}
+
 // Chips for the filters in effect. Each change keeps the question and starts from the top.
 function filterChips(f: Filters, p: Params): Chip[] {
   const go = (change: Partial<Params>) => url(p, { n: "", ...change });
@@ -268,10 +323,11 @@ function filterChips(f: Filters, p: Params): Chip[] {
     ...(f.topic ? [{ key: "topic", kind: "topic", label: f.topic } as Chip] : []),
     {
       key: "place", kind: f.states.length || f.appalachia ? "set" : "unset",
-      label: f.cities.length
-        ? `${f.cities.map(titleCase).join(", ")}${f.states.length === 1 ? `, ${f.states[0]}` : ""}`
+      label: f.county && f.states.length === 1 ? `${f.cities.length === 1 ? `${titleCase(f.cities[0])} and the rest of ` : ""}${f.county.replace(/\s+county$/i, "")} County, ${f.states[0]}`
+        : f.cities.length
+        ? `${f.cities.map(titleCase).join(", ")}${f.states.length === 1 ? `, ${f.states[0]}` : ""}${p.county === undefined && f.cities.length === 1 ? " and nearby" : ""}`
         : f.placeLabel ?? (f.states.length > 3 ? `${f.states.length} states` : f.states.join(", ") || "Any state"),
-      removeHref: f.cities.length ? go({ city: "any" }) : f.appalachia ? go({ region: "none", st: "all" }) : f.states.length ? go({ st: "all" }) : undefined,
+      removeHref: f.county ? go({ city: "any", county: "" }) : f.cities.length ? go({ city: "any" }) : f.appalachia ? go({ region: "none", st: "all" }) : f.states.length ? go({ st: "all" }) : undefined,
       options: [
         ...(f.cities.length && f.states.length === 1 ? [{ label: `Anywhere in ${LOADED_STATES.find(([c]) => c === f.states[0])?.[1] ?? f.states[0]}`, href: go({ city: "any" }), on: false }] : []),
         { label: "Any state", href: go({ st: "all", region: "none" }), on: !f.states.length && !f.appalachia },

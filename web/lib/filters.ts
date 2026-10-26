@@ -6,8 +6,9 @@ import type { Filters } from "./parse";
 
 // label: a graded cause label slug, or "none". tier: "all" adds partial-tier orgs, "primary" removes them.
 // sub: a sub-type of a label that has them (immigrants_refugees: services, policy, all); a new label resets it.
-export type Overrides = { st?: string; city?: string; region?: string; max?: string; min?: string; cause?: string; label?: string; tier?: string; sub?: string; drop?: string };
-export const OVERRIDE_KEYS = ["st", "city", "region", "max", "min", "cause", "label", "tier", "sub", "drop"] as const;
+// county: search a county of the question's state instead of its city ("Los Angeles County").
+export type Overrides = { st?: string; city?: string; county?: string; region?: string; max?: string; min?: string; cause?: string; label?: string; tier?: string; sub?: string; drop?: string };
+export const OVERRIDE_KEYS = ["st", "city", "county", "region", "max", "min", "cause", "label", "tier", "sub", "drop"] as const;
 
 // Every state is loaded (plus DC and Puerto Rico), A–Z by name for the place chip.
 export const LOADED_STATES: [string, string][] = [
@@ -33,7 +34,7 @@ const stateName = (code: string) => LOADED_STATES.find(([c]) => c === code)?.[1]
 
 export function applyOverrides(f: Filters, o: Overrides): Filters {
   const out: Filters = { ...f };
-  if (o.st || o.city === "any") { out.cities = []; out.placeLabel = undefined; } // a new state or "anywhere in" drops the city
+  if (o.st || o.city === "any") { out.cities = []; out.county = undefined; out.placeLabel = undefined; } // a new state or "anywhere in" drops the city
   if (o.st || o.region === "none") out.appalachia = undefined; // picking a state means the whole state
   if (o.region === "appalachia") { out.appalachia = true; out.states = []; out.cities = []; out.placeLabel = "Appalachia"; }
   if (o.st === "all") { out.states = []; out.placeLabel = undefined; }
@@ -43,7 +44,12 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
   }
   if (o.city && o.city !== "any") { // a city picked from the landscape bars
     out.cities = [o.city.toUpperCase()];
+    out.county = undefined;
     out.placeLabel = o.city.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase());
+  }
+  if (o.county && out.states.length === 1 && !o.st) { // the city's county, offered when the city has too little
+    out.county = o.county.slice(0, 60); out.cities = []; out.appalachia = undefined;
+    out.placeLabel = `${out.county}, ${out.states[0]}`;
   }
   if (o.max === "none") out.maxRevenue = undefined;
   else if (o.max && /^\d+$/.test(o.max)) { out.maxRevenue = Number(o.max); out.minRevenue = undefined; }
@@ -64,10 +70,10 @@ export function applyOverrides(f: Filters, o: Overrides): Filters {
   return out;
 }
 
-export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.region || o.max || o.min || o.cause || o.label || o.tier || o.sub || o.drop);
+export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.county || o.region || o.max || o.min || o.cause || o.label || o.tier || o.sub || o.drop);
 
 // Short summary of the filters in effect, stored with feedback and shown in the eval report.
 export const describeFilters = (f: Filters) => ({
-  topic: f.topic, states: f.states, cities: f.cities, appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, minRevenue: f.minRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
+  topic: f.topic, states: f.states, cities: f.cities, county: f.county ?? null, near: f.near ?? false, prefer: (f.prefer ?? []).map((r) => r.label), preferLabel: f.preferLabel ?? null, appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, minRevenue: f.minRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
   label: f.label ? `${f.label}${f.labelSub ? `:${f.labelSub}` : ""}${f.labelPartial ? "+partial" : ""}` : null, requirements: f.requirements.map((r) => r.label), parser: f.parser,
 });

@@ -23,12 +23,15 @@ import { themes } from "@/lib/themes";
 // overview(), told it sits with the visual and given the chart's takeaway as its story), Key facts and
 // one chart from the landscape (no Claude, so they show first), Track record, then related searches.
 // Export slide sits in the panel header's "⋯" menu. total: every organization the search matched.
-export async function Landscape({ question, filters, includeInactive, total, map, overview, gems }: {
+export async function Landscape({ question, filters, includeInactive, total, map, overview, gems, matched }: {
   question: string; filters: Filters; includeInactive: boolean; total: number; gems?: React.ReactNode;
+  matched?: Promise<import("@/lib/search").Result[]>; // place tiers: describe these (the relevance-checked matches) only
   overview: (o: { visual: boolean; story?: string }) => React.ReactNode;
   map: (m: MapData) => React.ReactNode;
 }) {
-  const l = await landscape(filters, includeInactive);
+  const m = matched ? await matched : undefined;
+  const l = await landscape(filters, includeInactive, m);
+  if (m) total = m.length;
   const first = { key: "overview", label: "Overview", title: "AI overview", node: overview({ visual: false }) };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const facts = overviewFacts(l, total);

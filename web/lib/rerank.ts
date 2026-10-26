@@ -9,8 +9,12 @@ import { claude, fallback, SCORE_MODEL } from "./llm";
 import { memo } from "./memo";
 import type { Filters } from "./parse";
 import { search, type Result } from "./search";
+import { placeScope, tieredSearch, type TierBlock } from "./tiers";
+import { TIER_ORDER } from "./place";
+import { labelPhrase } from "./labels";
 
-export const POOL = 40;  // candidates Claude scores per question
+export const POOL = 40;
+const THIN = 10; // fewer main-focus results than this: the label's partial tier is added  // candidates Claude scores per question
 export const STRONG = 50; // scores below this are near-misses: shown only on request (rubric: 40-69 = missing a key part)
 export const isStrong = (r: { relevance?: Relevance | null }) => !r.relevance || r.relevance.score >= STRONG;
 const BATCH = 5;         // scored in parallel batches: time is dominated by writing the reasons, so smaller batches finish sooner (40 results: ~3.3s at 5, ~4.5s at 10)
@@ -25,24 +29,31 @@ Score each organization 0-100 for how well its actual work (mission, programs, n
 - 40-69: related, but missing a key part of the request.
 - 0-39: not what was asked (different cause, wrong place, only shares a word).
 Scores are absolute, not relative: if nothing fits well, score everything low. Judge only from the facts given; when the description is missing, rely on the name and cause and stay below 70 unless the name makes the fit unmistakable.
-"why": one or two plain sentences (under 30 words) explaining the score: what fits the question and what is missing or unconfirmed.`;
+"why": one or two plain sentences (under 30 words) explaining the score: what fits the question and what is missing or unconfirmed. No semicolons or dashes.`;
+// Tiered place searches (lib/tiers.ts) group results by place themselves (in the city, serving it, nearby), so the
+// score is about the work, and a soft preference ("ideally", "especially") raises a score without capping it.
+const PLACE_NOTE = `
+Results are already grouped by place (in the city, serving it from elsewhere, nearby), and "place" says why each one is listed. Judge how well the work fits; don't lower a score because the address is outside the city.
+Words after "ideally", "especially" or "preferably" are preferences, not requirements: an organization that fits the main request scores 70+ even without them, and higher with them.`;
 
+// UI copy has no semicolons or dashes as punctuation, even when the model slips: they become sentences or commas.
+const plain = (t: string) => t.replace(/\s+[—–]\s+|\s*—\s*/g, ", ").replace(/\s*;\s*([a-z]?)/g, (_, c: string) => `. ${c.toUpperCase()}`).replace(/\s+/g, " ").trim();
 const schema = z.object({ results: z.array(z.object({ id: z.string(), score: z.number(), why: z.string() })) });
 
 // The rubric is absolute, so batches scored separately stay comparable.
-async function scoreFresh(question: string, results: Result[]): Promise<Map<string, Relevance>> {
+async function scoreFresh(question: string, results: Result[], placed = false): Promise<Map<string, Relevance>> {
   const batches = Array.from({ length: Math.ceil(results.length / BATCH) }, (_, i) => results.slice(i * BATCH, (i + 1) * BATCH));
-  const maps = await Promise.all(batches.map((b) => scoreBatch(question, b)));
+  const maps = await Promise.all(batches.map((b) => scoreBatch(question, b, placed)));
   return new Map(maps.flatMap((m) => [...m]));
 }
 
-async function scoreBatch(question: string, results: Result[]): Promise<Map<string, Relevance>> {
+async function scoreBatch(question: string, results: Result[], placed = false): Promise<Map<string, Relevance>> {
   const out = new Map<string, Relevance>();
   const client = claude("rerank");
   if (!client || !results.length) return out;
   // Short ids ("r1"…) come back reliably; EINs sometimes come back altered.
   const items = results.map((r, i) => ({
-    id: `r${i + 1}`, name: r.name, place: [r.city, r.state].filter(Boolean).join(", "), cause: r.ntee?.label ?? null,
+    id: `r${i + 1}`, name: r.name, place: [r.city, r.state].filter(Boolean).join(", ") + (r.place ? ` (${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""})` : ""), cause: r.ntee?.label ?? null,
     revenue: r.revenue ? `$${r.revenue.amount.toLocaleString("en-US")}` : null,
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
   }));
@@ -51,47 +62,66 @@ async function scoreBatch(question: string, results: Result[]): Promise<Map<stri
     max_tokens: 4096,
     ...fallback(SCORE_MODEL),
     output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-    system: SYSTEM,
+    system: placed ? SYSTEM + PLACE_NOTE : SYSTEM,
     messages: [{ role: "user", content: `Question: ${question}\n\nOrganizations:\n${JSON.stringify(items)}` }],
   });
   if (res.stop_reason === "refusal") return out;
   for (const v of res.parsed_output?.results ?? []) {
     const r = results[Number(v.id.replace(/\D/g, "")) - 1];
-    if (r) out.set(r.ein, { score: Math.max(0, Math.min(100, Math.round(v.score))), why: v.why });
+    if (r) out.set(r.ein, { score: Math.max(0, Math.min(100, Math.round(v.score))), why: plain(v.why) });
   }
   return out;
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = memo<Map<string, Relevance>>("rerank:v2", 300, 24 * 3600_000);
-function score(question: string, results: Result[]) {
-  const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
-  return cached(key, () => scoreFresh(question, results).catch((err) => {
+const cached = memo<Map<string, Relevance>>("rerank:v5", 300, 24 * 3600_000); // v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
+function score(question: string, results: Result[], placed = false) {
+  const key = `${placed ? "placed|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
+  return cached(key, () => scoreFresh(question, results, placed).catch((err) => {
     console.error("Relevance scoring failed; keeping search order", err);
     return new Map<string, Relevance>();
   }));
 }
 
-type Found = Awaited<ReturnType<typeof search>>;
+type Found = Awaited<ReturnType<typeof search>> & { tiers?: TierBlock[]; scope?: Awaited<ReturnType<typeof placeScope>>; widened?: string };
+// Candidates scored per tier: the city's own orgs first, then the evidence and nearby tiers.
+export const TIER_POOL: Record<string, number> = { in: POOL, county: POOL, serves: 25, nearby: 40, wider: 25 };
 
 // Step 1: search candidates (fast, ~0.5s): enough for the page to show results right away.
 // One search serves the results, "Show more" and the landscape (its 200 closest): fetched once at SHARED
 // rows and cached briefly, instead of the same candidate query running twice per page.
 const SHARED = 200; // = LANDSCAPE (lib/landscape.ts)
-const found = memo<Found>("candidates:v1", 200, 10 * 60_000);
+const found = memo<Found>("candidates:v2", 200, 10 * 60_000); // v2: place tiers (city, serving, nearby; county)
 export async function searchCandidates(filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }): Promise<Found> {
   const want = Math.max(limit, POOL), size = Math.max(want, SHARED);
-  const res = await found(JSON.stringify([filters, includeInactive, size]), () => search({ ...filters, includeInactive, limit: size }));
-  return { ...res, results: res.results.slice(0, want) };
+  const res = await found(JSON.stringify([filters, includeInactive, size]), async () => {
+    const run = async (f: Filters) => {
+      const scope = await placeScope(f);
+      return scope ? tieredSearch(f, scope, { includeInactive, limit: size }) : search({ ...f, includeInactive, limit: size });
+    };
+    const first: Found = await run(filters);
+    // Thin results on a cause label's main focus: include its partial tier too, and say so.
+    if (filters.label && !filters.labelPartial && first.total < THIN) return { ...(await run({ ...filters, labelPartial: true })), widened: labelPhrase(filters.label) };
+    return first;
+  });
+  if (!res.tiers) return { ...res, results: res.results.slice(0, want) };
+  const tiers = res.tiers.map((t) => ({ ...t, results: t.results.slice(0, want) }));
+  return { ...res, tiers, results: tiers.flatMap((t) => t.results) };
 }
 
 // Step 2: score the top POOL candidates and order by score (ties and unscored keep search order).
+// Tiered: each tier's top TIER_POOL are scored, each tier is ordered on its own and keeps up to limit rows.
 export async function rank(question: string, res: Found, limit: number) {
-  const scores = await score(question, res.results.slice(0, POOL));
+  const pool = res.tiers ? res.tiers.flatMap((t) => t.results.slice(0, TIER_POOL[t.tier] ?? POOL)) : res.results.slice(0, POOL);
+  const scores = await score(question, pool, Boolean(res.tiers));
   const ranked: Ranked[] = res.results.map((r) => ({ ...r, relevance: scores.get(r.ein) ?? null }));
   const order = new Map(ranked.map((r, i) => [r.ein, i]));
-  ranked.sort((a, b) => (b.relevance?.score ?? -1) - (a.relevance?.score ?? -1) || order.get(a.ein)! - order.get(b.ein)!);
-  return { results: ranked.slice(0, limit), scored: scores.size > 0 };
+  const tierOf = (r: Ranked) => (r.place ? TIER_ORDER.indexOf(r.place.tier) : 0);
+  ranked.sort((a, b) => tierOf(a) - tierOf(b) || (b.relevance?.score ?? -1) - (a.relevance?.score ?? -1) || order.get(a.ein)! - order.get(b.ein)!);
+  if (!res.tiers) return { results: ranked.slice(0, limit), scored: scores.size > 0 };
+  // Each tier keeps every strong match it has (they're few: only TIER_POOL are scored), then fills up to limit.
+  const seen = new Map<number, number>();
+  return { results: ranked.filter((r) => { const t = tierOf(r), n = seen.get(t) ?? 0; seen.set(t, n + 1); return n < limit || (r.relevance != null && isStrong(r)); }), scored: scores.size > 0 };
 }
 
 // Both steps, for callers that want the final order in one go (CSV export, eval).

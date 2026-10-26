@@ -135,3 +135,14 @@
   .kp-card { background: none; padding: 0 0 8pt; }
 }
 @media (max-width: 640px) { .row-tools .src { display: none; } }
+
+/* Place tiers (lib/tiers.ts): one section per tier, each with its own strong and weaker matches. */
+.tier { margin: 22px 0 6px; }
+.tier:first-of-type { margin-top: 4px; }
+.tier h2 { font-size: 17px; font-weight: 600; margin: 0; color: var(--ink); }
+.tier p { font-size: 12.5px; color: var(--mute); margin: 2px 0 0; }
+.tier-empty { font-size: 14px; color: var(--ink-2); margin: 6px 0 10px; }
+.place-why { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 0; }
+.place-why q { color: var(--mute); }
+.place-why.flag::before { content: "Mailed from elsewhere · "; font-weight: 600; color: var(--ink); }
+.prefer-hit { font-size: 12.5px; color: var(--g, var(--ink-2)); margin: 2px 0 0; }

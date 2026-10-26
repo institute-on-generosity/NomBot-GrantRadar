@@ -20,7 +20,8 @@
     "test:api": "tsx eval/api.mts",
     "test:admin": "tsx eval/admin.mts",
     "test:iog": "tsx eval/iog.mts",
-    "test:people": "tsx eval/people.mts"
+    "test:people": "tsx eval/people.mts",
+    "test:place": "tsx eval/place.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
