@@ -12,6 +12,7 @@
 // computed numbers, never model-written.
 import { db } from "./db";
 import { memo } from "./memo";
+import { cityScope, placeEins } from "./place";
 import { nteeLabel } from "./ntee";
 import { LOADED_STATES } from "./filters";
 import { money } from "../components/money";
@@ -300,7 +301,7 @@ const filtEin = (f: Filt, p: P, ein: string) => (f.rb ? [`${ein} IN (SELECT ein 
 // Sums come from grant_cube (alias x) when the cause is a label or NTEE prefixes of up to 3 characters
 // and there's no county; otherwise from grant_clean. Same grants, same numbers (eval/answer-cube.mts).
 const cubeCause = (c: C | null) => !c || c.all || (!!c.label && !labelSub(c)) || (!c.label && c.ntee.length > 0 && c.ntee.every((n) => n.length <= 3));
-const cubeOk = (ctx: Ctx, c: C | null, pl: Place) => ctx.cube && !pl.county && !pl.region && cubeCause(c) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company"; // no company column in the cube
+const cubeOk = (ctx: Ctx, c: C | null, pl: Place) => ctx.cube && !pl.county && !pl.city && !pl.region && cubeCause(c) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company"; // no company column in the cube
 type CubeSql = { where: string[]; primary: (() => string) | null }; // primary: adds its parameter only when used
 function cubeWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, linkedOnly: boolean, x = "x"): CubeSql {
   const w = [`${x}.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`];
@@ -323,7 +324,7 @@ function cubeWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }
 }
 const cubeSum = (cs: CubeSql, col = "usd", x = "x") => (cs.primary ? `coalesce(sum(${x}.${col}) FILTER (WHERE ${cs.primary()}), 0)::float8` : `coalesce(sum(${x}.${col}), 0)::float8`);
 // grant_recipient_year (alias r): identified recipients by year and grant address; no funder columns.
-const ryOk = (ctx: Ctx, pl: Place) => ctx.cube && pl.g.kind === "pf" && !pl.f.fb && !pl.f.ftype && !pl.f.kinds;
+const ryOk = (ctx: Ctx, pl: Place) => ctx.cube && !pl.city && pl.g.kind === "pf" && !pl.f.fb && !pl.f.ftype && !pl.f.kinds;
 function ryWhere(c: C | null, p: P, pl: Place, y: { from: number; to: number }, r = "r"): { join: string; where: string[] } {
   const w = [`${r}.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}`];
   let join = "";
@@ -373,7 +374,10 @@ async function resolveCauses(s: Spec): Promise<Spec> {
 // shared by every copy of the Place, so compute() can say when an answer couldn't honor one (honorGuard).
 type Region = { key: string; name: string; fips: string[] };
 // corr: NTEE groups counted corrected (corrApplies): g.cube is the corrected cube, clean breakdowns use corrNtee.
-type Place = { states: string[]; county: { fips: string; name: string; state: string } | null; region: Region | null; area: "rural" | "urban" | null; label: string; f: Filt; g: GSrc; used: Set<string>; corr?: boolean };
+// city: a city's ZIPs (zip_places: the most common org mailing city) and the orgs with an HQ there; its county
+// rides in county, so every county-level query still narrows to it and the guard can say "covers Los Angeles County".
+type City = { name: string; label: string; zips: string[]; eins: string[] };
+type Place = { states: string[]; county: { fips: string; name: string; state: string } | null; city: City | null; region: Region | null; area: "rural" | "urban" | null; label: string; f: Filt; g: GSrc; used: Set<string>; corr?: boolean };
 
 // ------------------------------------------------------------------ grant sources: 990-PF or Schedule I
 // Foundation grants (grant_clean, grant_cube) and Schedule I grants by public charities (charity_grant_clean,
@@ -409,6 +413,18 @@ function placeWhere(pl: Place, p: P, stateCol: string, countyCol: string): strin
   else if (pl.states.length) w.push(`${stateCol} = ANY(${p.add(pl.states)}::text[])`);
   if (pl.region) { w.push(`${countyCol} = ANY(${p.add(pl.region.fips)}::char(5)[])`); pl.used.add("region"); }
   if (pl.area) { w.push(`${countyCol} IN (SELECT county_fips FROM county_need WHERE county_fips <> '00000' AND population ${pl.area === "rural" ? "<" : ">="} ${RURAL_POP})`); pl.used.add("area"); }
+  // City: grant rows (alias g) by the recipient address ZIP (generosity-data 085 index); org and filing rows (o, f) by
+  // HQ. Other tables (cubes, population, federal places) stay at the city's county, and the guard says so.
+  if (pl.city) {
+    const [a, col] = stateCol.split(".");
+    if (a === "g" && col === "recipient_state") {
+      w.push(`${a}.id IN (SELECT id FROM ${pl.g.kind === "charity" ? "charity_grants" : "grants"} WHERE left(recipient_zip, 5) = ANY(${p.add(pl.city.zips)}::text[]))`);
+      pl.used.add("city");
+    } else if ((a === "o" || a === "f") && col === "state") {
+      w.push(`${a}.ein = ANY(${p.add(pl.city.eins)}::char(9)[])`);
+      pl.used.add("city");
+    }
+  }
   return w;
 }
 const and = (w: string[]) => (w.length ? w.join("\n  AND ") : "true");
@@ -433,16 +449,23 @@ async function resolvePlace(s: Spec): Promise<Place> {
       [base, s.states.length ? s.states : null]);
     county = r.rows[0] ?? null;
   }
+  let city: City | null = null;
+  if (s.city && s.states.length === 1) {
+    const sc = await cityScope(s.city, s.states[0]);
+    if (!sc) throw new Unanswerable(`We couldn't find a city named "${s.city}" in ${stateName(s.states[0])}.`);
+    city = { name: sc.label.split(",")[0], label: sc.label, zips: sc.zips, eins: await placeEins(sc.state, sc.city, sc.zips) };
+    if (!county && sc.county) county = { fips: sc.county.fips, name: sc.county.name, state: sc.state };
+  }
   const fips = s.region ? await regionFips(s.region) : [];
   const region: Region | null = s.region && fips.length ? { key: s.region, name: REGION_NAME[s.region] ?? s.region, fips } : null;
   const stateWords = s.states.length ? (s.states.length <= 3 ? s.states.map(stateName).join(", ") : `${s.states.length} states`) : "";
-  const where = county ? `${county.name}, ${county.state}` : region ? (stateWords ? `the Appalachian counties of ${stateWords}` : region.name) : stateWords || "the US";
+  const where = city ? city.label : county ? `${county.name}, ${county.state}` : region ? (stateWords ? `the Appalachian counties of ${stateWords}` : region.name) : stateWords || "the US";
   const area = s.area ? `${s.area} counties of ` : "";
   const g0 = gsrcOf(s), corr = corrApplies(s);
   const g = corr ? { ...g0, cube: CUBE_CORR[g0.kind] } : g0;
   const f = filtersOf(s);
   // Foundation size, foundation type and recipient kind exist only for 990-PF grants.
-  return { states: s.states, county, region, area: s.area, label: `${area}${where}`, f: g.kind === "charity" ? { ...f, fb: null, ftype: null, kinds: null, from: "" } : f, g, used: new Set<string>(), corr };
+  return { states: s.states, county, city, region, area: s.area, label: `${area}${where}`, f: g.kind === "charity" ? { ...f, fb: null, ftype: null, kinds: null, from: "" } : f, g, used: new Set<string>(), corr };
 }
 
 // ------------------------------------------------------------------ label grades (for caveats)
@@ -935,7 +958,7 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v46: corrected NTEE counts orgs with no IRS code under their suggested detailed code where graded (suggested_code).
 // v47: financial_health metric (one org's indicators over its full filing years, or a cause's orgs: deficit streaks,
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
-const answerMemo = memo<Answer>("answer:v47", 500, 6 * 3600_000);
+const answerMemo = memo<Answer>("answer:v48", 500, 6 * 3600_000); // v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
@@ -1163,7 +1186,8 @@ function honorGuard(ctx: Ctx, s: Spec, out: Out, missing: Answer["missing"]) {
   const pl = ctx.places[0];
   if (s.region && !pl?.region) add(`Region: ${s.region}`, "We couldn't map this region to counties, so the answer isn't limited to it.", `Not limited to ${s.region}`);
   else if (pl?.region && !used.has("region")) add(`Limited to ${pl.region.name}`, `This kind of answer can't be limited to ${pl.region.name}'s counties, so it covers ${s.states.length ? "the states asked" : "the whole US"}.`, `Not limited to ${pl.region.name}`);
-  if (pl?.county && !used.has("county")) add(`Limited to ${pl.county.name}`, `This kind of answer can't be limited to one county, so it covers ${s.states.length ? "the state" : "the whole US"}.`, `Not limited to ${pl.county.name}`);
+  if (pl?.city && !used.has("city")) add(`Limited to ${pl.city.label}`, `This kind of answer can't be limited to one city, so it covers ${used.has("county") && pl.county ? `${pl.county.name}, ${pl.county.state}` : "the state"}.`, `Covers ${used.has("county") && pl.county ? `${pl.county.name}, ${pl.county.state}` : "the state"}, not only ${pl.city.name}`);
+  else if (pl?.county && !used.has("county")) add(`Limited to ${pl.county.name}`, `This kind of answer can't be limited to one county, so it covers ${s.states.length ? "the state" : "the whole US"}.`, `Not limited to ${pl.county.name}`);
   if (s.area && !used.has("area")) add(`Limited to ${s.area} counties`, `This kind of answer can't be split by ${s.area} and urban counties, so it covers all counties.`, `Not limited to ${s.area} counties`);
   // Set size, multi-year conditions, org conditions.
   if (s.topN && !ctx.honored.has("topN")) add(`The ${s.topN} largest funders as a group`, "This answer can't total a top-N funder set for this source, so it shows the top 10.", `Not the top ${s.topN} as a group`);
@@ -1401,7 +1425,7 @@ const causeName = (c: Cause | null, pl?: Place) => {
   const base = c ? c.name : pl?.f.to || "all causes";
   return c && pl?.f.to ? `${base} (${pl.f.to})` : base;
 };
-const searchFor = (s: Spec, pl: Place) => (s.causes[0] ? `${s.causes[0].name}${pl.county ? ` in ${pl.county.name}, ${pl.county.state}` : s.states.length === 1 ? ` in ${stateName(s.states[0])}` : ""}` : null);
+const searchFor = (s: Spec, pl: Place) => (s.causes[0] ? `${s.causes[0].name}${pl.city ? ` in ${pl.city.label}` : pl.county ? ` in ${pl.county.name}, ${pl.county.state}` : s.states.length === 1 ? ` in ${stateName(s.states[0])}` : ""}` : null);
 
 // Residents of the place (Census 2024 county estimates), for per-resident figures.
 async function placePop(ctx: Ctx, pl: Place): Promise<number> {
@@ -2035,13 +2059,13 @@ async function byState(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   if (foundation && ctx.cube && !pl.region && cubeCause(c) && (c || hasFilt(pl.f)) && !(pl.g.kind === "charity" && pl.f.rb) && pl.f.ftype !== "company") {
     // Research cube: same sums as grant_clean for a cause or filters, by recipient state.
     cs = causeSql(c, new P(), "", "");
-    const cw = cubeWhere(c, p, { ...pl, county: null, area: null }, y, !!c);
+    const cw = cubeWhere(c, p, { ...pl, county: null, city: null, area: null }, y, !!c);
     sql = `SELECT x.recipient_state AS state, coalesce(sum(x.usd), 0)::float8 AS usd, ${cubeSum(cw)} AS primary_usd FROM ${pl.g.cube} x
 WHERE ${and(cw.where)} GROUP BY 1`;
   } else if (foundation && pl.g.kind === "charity" && ctx.cube && !pl.region && cubeCause(c) && !pl.f.rb) {
     // Schedule I, all causes: charity_grant_cube (all recipients, identified or not).
     cs = causeSql(c, new P(), "", "");
-    const cw = cubeWhere(c, p, { ...pl, county: null, area: null }, y, !!c);
+    const cw = cubeWhere(c, p, { ...pl, county: null, city: null, area: null }, y, !!c);
     sql = `SELECT x.recipient_state AS state, coalesce(sum(x.usd), 0)::float8 AS usd, ${cubeSum(cw)} AS primary_usd FROM ${pl.g.cube} x
 WHERE ${and(cw.where)} GROUP BY 1`;
   } else if (foundation && pl.g.kind === "pf" && !c && !hasFilt(pl.f) && !pl.region) {
@@ -2049,7 +2073,7 @@ WHERE ${and(cw.where)} GROUP BY 1`;
     sql = `SELECT t.state, sum(t.usd)::float8 AS usd, sum(t.usd)::float8 AS primary_usd FROM grant_totals t
 WHERE t.tax_year BETWEEN ${p.add(y.from)} AND ${p.add(y.to)}${states ? ` AND t.state = ANY(${p.add(states)}::text[])` : ""} GROUP BY 1`;
   } else if (foundation) {
-    const gw = grantWhere(c, p, { ...pl, county: null, area: null }, y, pl.g.kind === "charity" ? !!c : true); // Schedule I with no cause: all recipients, as on the cube
+    const gw = grantWhere(c, p, { ...pl, county: null, city: null, area: null }, y, pl.g.kind === "charity" ? !!c : true); // Schedule I with no cause: all recipients, as on the cube
     cs = gw.cs;
     sql = `SELECT g.recipient_state AS state, sum(g.amount)::float8 AS usd, ${primarySum(cs, "g.amount")} AS primary_usd FROM ${pl.g.clean} g ${cs.join}
 WHERE ${and(gw.where)} GROUP BY 1`;
@@ -2123,7 +2147,7 @@ SELECT v.state, v.usd, v.primary_usd, pop.pop FROM v JOIN pop USING (state) WHER
 const DOMINANT = 0.5;
 async function topOrgShare(ctx: Ctx, c: C, pl: Place, y: Years, state: string, stateUsd: number) {
   const p = new P();
-  const gw = grantWhere(c, p, { ...pl, states: [state], county: null, area: null }, y, true);
+  const gw = grantWhere(c, p, { ...pl, states: [state], county: null, city: null, area: null }, y, true);
   const [r] = await ctx.q<{ name: string; usd: number }>(`Largest recipient in ${stateName(state)} (single-organization check)`, `SELECT o.name, ${primarySum(gw.cs, "g.amount")} AS usd
 FROM ${pl.g.clean} g ${gw.cs.join} JOIN orgs o ON o.ein = g.recipient_ein
 WHERE ${and(gw.where)}

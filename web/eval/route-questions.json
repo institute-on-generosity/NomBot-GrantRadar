@@ -104,5 +104,8 @@
   {"q": "Which mental health nonprofits in California ran deficits 3 years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "label": "mental_health", "states": ["CA"]},
   {"q": "Which arts groups in New York have under 3 months of cash?", "metric": ["financial_health"], "condition": "low_cash", "ntee": "A", "states": ["NY"]},
   {"q": "What are the median cash reserves and program ratios of arts nonprofits by size?", "metric": ["financial_health"], "ntee": "A"},
-  {"q": "How many food banks in Ohio ran deficits three years in a row?", "metric": ["count_orgs"], "condition": "deficit", "streak": 3, "ntee": "K31", "states": ["OH"]}
+  {"q": "How many food banks in Ohio ran deficits three years in a row?", "metric": ["count_orgs"], "condition": "deficit", "streak": 3, "ntee": "K31", "states": ["OH"]},
+  {"q": "how much foundation grant money went to youth sports organizations in Inglewood, CA?", "metric": ["total"], "source": "foundation_grants", "states": ["CA"], "city": "Inglewood", "noCityMissing": true},
+  {"q": "which foundations fund health nonprofits in Inglewood, California?", "metric": ["top_funders"], "states": ["CA"], "city": "Inglewood", "noCityMissing": true},
+  {"q": "how much foundation money went to dental care nonprofits in Los Angeles County?", "metric": ["total"], "states": ["CA"], "county": "Los Angeles", "city": null}
 ]

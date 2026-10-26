@@ -13,6 +13,7 @@ export type Expect = {
   q: string; research?: boolean; metric?: string[]; source?: string; by?: string[]; charityFunder?: string; funderType?: string; recipientKind?: string;
   label?: string; subtype?: string; ntee?: string; perResident?: boolean; perPoverty?: boolean; condition?: string; missing?: string; states?: string[]; area?: string;
   order?: string; measure?: string; funderSizeMin?: number; recipientSizeMax?: number; yearFrom?: number; yearTo?: number; region?: string; topN?: number; streak?: number;
+  city?: string | null; county?: string; noCityMissing?: boolean; // place scope (Oct 26): a city is in the data, never missing
   premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
   nteeBasis?: string;       // spec.ntee: "irs" | "corrected"
 };
@@ -33,6 +34,9 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   if (e.ntee && !(c0?.ntee ?? []).some((n) => n.startsWith(e.ntee!) || e.ntee!.startsWith(n))) bad.push(`ntee ${c0?.ntee.join("+")}, want ${e.ntee}`);
   if (e.missing && !s.missing.includes(e.missing as Spec["missing"][number])) bad.push(`missing ${s.missing.join("+")}, want ${e.missing}`);
   if (e.states && !e.states.every((x) => s.states.includes(x))) bad.push(`states ${s.states.join(",")}, want ${e.states.join(",")}`);
+  if (e.city !== undefined && (s.city ?? null)?.toLowerCase() !== (e.city ?? null)?.toLowerCase()) bad.push(`city ${s.city}, want ${e.city}`);
+  if (e.county !== undefined && !(s.county ?? "").toLowerCase().startsWith((e.county ?? "").toLowerCase())) bad.push(`county ${s.county}, want ${e.county}`);
+  if (e.noCityMissing && s.missing.includes("other") && /\b(city|town|local)\b/i.test(s.missingNote ?? "")) bad.push(`missing note ${s.missingNote}: the city is in the data`);
   if (e.funderSizeMin && s.funderSize?.min !== e.funderSizeMin) bad.push(`funderSize.min ${s.funderSize?.min}, want ${e.funderSizeMin}`);
   if (e.recipientSizeMax && s.recipientSize?.max !== e.recipientSizeMax) bad.push(`recipientSize.max ${s.recipientSize?.max}, want ${e.recipientSizeMax}`);
   for (const k of ["yearFrom", "yearTo"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);

@@ -186,6 +186,13 @@ const cases: { name: string; s: Spec; check?: (a: Awaited<ReturnType<typeof answ
   // Benchmarks (generosity-data 053): national coverage share of IRS SOI grants paid (foundations + 4947 trusts)
   { name: "national foundation total: share of IRS SOI 2022", s: spec({ metric: "total" }),
     check: async (a) => [Number(a.coverage.find((c) => c.label.startsWith("Vs IRS SOI"))!.value.match(/^([\d.]+)%/)![1]), await one(`SELECT round(100 * (SELECT sum(usd) FROM grant_totals WHERE tax_year=2022) / (SELECT sum(value) FROM benchmarks WHERE source IN ('irs_soi_pf','irs_soi_trust') AND measure='grants_paid' AND year=2022))`)] },
+  // City (Oct 26): grants placed by the recipient address ZIP (generosity-data zip_places 083, index 085), orgs by HQ.
+  { name: "youth sports $ in Inglewood, CA 2022-24 (recipient ZIPs)", s: spec({ states: ["CA"], city: "Inglewood", causes: [{ name: "youth sports", label: null, ntee: ["N6"], keywords: [] }] }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND g.recipient_ein IS NOT NULL AND o.ntee_cd LIKE 'N6%' AND left(g.recipient_zip, 5) IN (SELECT zip5 FROM zip_places WHERE state='CA' AND city='INGLEWOOD')`)] },
+  { name: "all foundation $ to Inglewood, CA 2022-24 (recipient ZIPs)", s: spec({ states: ["CA"], city: "Inglewood" }),
+    check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.grants_usd), 0)), await one(`SELECT sum(g.amount) ${CLEAN} AND g.tax_year BETWEEN 2022 AND 2024 AND z.county_fips = '06037' AND left(g.recipient_zip, 5) IN (SELECT zip5 FROM zip_places WHERE state='CA' AND city='INGLEWOOD')`.replace("LEFT JOIN orgs o", "JOIN zip_regions z ON z.zip5 = left(g.recipient_zip, 5)::char(5) LEFT JOIN orgs o"))] }, // city ZIPs inside its county, as the answer places them
+  { name: "youth sports orgs in Inglewood, CA (HQ)", s: spec({ metric: "count_orgs", states: ["CA"], city: "Inglewood", causes: [{ name: "youth sports", label: null, ntee: ["N6"], keywords: [] }] }),
+    check: async (a) => [Number(a.numbers[0].value.replace(/,/g, "")), await one(`SELECT count(*) FROM orgs WHERE state='CA' AND ntee_cd LIKE 'N6%' AND coalesce(foundation, '') NOT IN ('02','03','04') AND (upper(city)='INGLEWOOD' OR left(zip, 5) IN (SELECT zip5 FROM zip_places WHERE state='CA' AND city='INGLEWOOD'))`)] },
   // Never mislead (Oct 17): regions, top-N funder sets, multi-year conditions, years outside the data, invalid NTEE keys.
   { name: "Appalachia (ARC counties), foundation $ 2022-24", s: spec({ region: "appalachia" }),
     check: async (a) => [Number(a.rows.reduce((t, r) => t + Number(r.grants_usd), 0)), await one(`SELECT sum(amount) FROM grant_clean WHERE tax_year BETWEEN 2022 AND 2024 AND county_fips IN (SELECT county_fips FROM zip_regions WHERE appalachia)`)] },
@@ -403,6 +410,18 @@ for (const c of cases) {
     if (a.recency && /[;—]/.test(a.recency.note)) bad.push("recency note has a semicolon or em dash");
     if (bad.length) { fail++; console.log(`         ✗ ${bad.join(", ")}`); }
   }
+}
+
+// City answers never say city data is missing, and say plainly when an answer covers the county or state instead.
+{
+  const a = await answer("youth sports in Inglewood", spec({ states: ["CA"], city: "Inglewood", causes: [{ name: "youth sports", label: null, ntee: ["N6"], keywords: [] }], missing: ["other"], missingNote: "City-level data (Inglewood)" }));
+  const ok = /Inglewood, CA/.test(a.headline) && !a.missing.some((m) => /city/i.test(m.what));
+  if (!ok) fail++;
+  console.log(`${ok ? "  ok" : "   ✗"} city: no false city-level caveat, headline names Inglewood, CA: ${a.headline}`);
+  const b = await answer("youth sports by state from Inglewood", spec({ metric: "by_state", states: ["CA"], city: "Inglewood", causes: [{ name: "youth sports", label: null, ntee: ["N6"], keywords: [] }] }));
+  const ok2 = b.missing.some((m) => /Limited to Inglewood/.test(m.what));
+  if (!ok2) fail++;
+  console.log(`${ok2 ? "  ok" : "   ✗"} city: a state ranking says it isn't limited to Inglewood`);
 }
 
 // Named-org financial health questions are found by name in SQL, with no Claude call (lib/answerRoute).

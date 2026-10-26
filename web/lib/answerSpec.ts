@@ -71,6 +71,7 @@ export const specSchema = z.object({
   yearTo: z.number().int().nullable(),
   states: z.array(z.string()).describe("Two-letter codes of the place asked about; empty = whole US"),
   county: z.string().nullable().describe("County name if the question names one, e.g. 'Cook County'"),
+  city: z.string().nullable().optional().describe("City or town the question names, e.g. 'Inglewood' (its state in states). Grants are placed by the recipient's address ZIPs (generosity-data zip_places)"),
   region: z.enum(REGIONS).nullable().describe("A region that is a set of counties: appalachia (Appalachian Regional Commission counties)"),
   area: z.enum(["rural", "urban"]).nullable(),
   condition: z.enum(CONDITIONS).nullable().describe("For count_orgs: deficit, low_cash (under 3 months of cash), gov_reliant (half or more of revenue from government grants), surplus"),
@@ -97,10 +98,12 @@ export const specSchema = z.object({
 // The spec as Claude fills it in structured outputs (router, follow-ups): Appalachia rides on area ("appalachia"),
 // because a separate nullable region field makes the compiled grammar too large (Oct 17). fromLlmSpec maps it back.
 // ein is never model-filled: the router finds a named org itself (lib/answerRoute orgHealthQuestion).
-export const llmSpecSchema = specSchema.omit({ region: true, ein: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable() });
+// city is a plain string there ("" = none): another nullable field would grow the compiled grammar past its limit.
+export const llmSpecSchema = specSchema.omit({ region: true, ein: true, city: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable(),
+  city: z.string().describe("City or town the question names, e.g. 'Inglewood' for Inglewood, CA (its state in states); empty when none") });
 export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
-  const { area, ...rest } = o;
-  return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null, ein: null };
+  const { area, city, ...rest } = o;
+  return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null, ein: null, city: city.trim() || null };
 }
 
 export type Cause = z.infer<typeof specCauseSchema>;
@@ -110,7 +113,7 @@ export type Source = Spec["source"];
 
 export const DEFAULT_SPEC: Spec = {
   metric: "total", causes: [], source: "foundation_grants", yearFrom: null, yearTo: null, states: [], county: null, region: null,
-  area: null, condition: null, streak: 0, topN: 0, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
+  city: null, area: null, condition: null, streak: 0, topN: 0, perResident: false, perPoverty: false, order: "most", missing: [], missingNote: null,
   by: null, measure: null, recipientSize: null, funderSize: null, funderType: null, recipientKind: null, charityFunder: null, premise: null, ntee: "irs", ein: null,
 };
 
@@ -138,6 +141,10 @@ export function normalizeSpec(s: Spec): Spec {
     })),
     states: [...new Set(s.states.map((x) => x.toUpperCase().trim()).filter((x) => /^[A-Z]{2}$/.test(x)))],
     county: s.county?.trim() || null,
+    // A city needs one state; a city's own missing-data note ("city-level data") is wrong once the city is applied.
+    city: s.city?.trim() && s.states.length === 1 ? s.city.trim().replace(/,.*$/, "").slice(0, 60) : null,
+    ...(s.city?.trim() && s.states.length === 1 && s.missing.includes("other") && /\b(city|cities|town|municipal|local)\b/i.test(s.missingNote ?? "")
+      ? { missing: s.missing.filter((m) => m !== "other"), missingNote: null } : {}),
     region: s.region ?? null,
     streak: typeof s.streak === "number" && s.streak >= 2 ? Math.min(Math.round(s.streak), 10) : 0,
     topN: typeof s.topN === "number" && s.topN > 10 ? Math.min(Math.round(s.topN), 5000) : 0, // top 10 is every top_funders answer already
