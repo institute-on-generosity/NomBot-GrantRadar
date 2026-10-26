@@ -6,6 +6,7 @@ import { applyOverrides, money, OVERRIDE_KEYS, type Overrides } from "@/lib/filt
 import { NEAR_MILES, TIER_ORDER, tierNote, tierTitle, type Scope } from "@/lib/place";
 import { fundersOf, fundingOf, GRANT_YEARS, labelsOf, placeCoverage } from "@/lib/placeReport";
 import { parseQuestion } from "@/lib/parse";
+import { labelPhrase } from "@/lib/labels";
 import { isStrong, rankedSearch, STRONG, type Ranked } from "@/lib/rerank";
 import "./report.css";
 
@@ -62,7 +63,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         <h2>Method</h2>
         <ul>
           {scope ? <li><b>Place.</b> {placeText(scope)}</li> : <li><b>Place.</b> {filters.placeLabel ?? (filters.states.join(", ") || "Anywhere in the US")}, by HQ address.</li>}
-          <li><b>Topic.</b> {filters.topic || "Any"}{filters.prefer?.length ? `, with a preference for ${filters.prefer.map((p) => p.label).join(" and ")} (ranks higher, never required)` : ""}{filters.requirements.length ? `. Must mention ${filters.requirements.map((r) => r.label).join(" and ")} in the 990 text` : ""}.</li>
+          <li><b>Topic.</b> {filters.topic || "Any"}{filters.prefer?.length ? `. Preference (ranks higher, never required): ${filters.prefer.map((p) => p.label).join(" and ")}` : ""}{filters.preferLabel && filters.preferLabel !== filters.label ? `. Organizations graded ${labelPhrase(filters.preferLabel)} rank higher, and others that fit still show` : ""}{filters.boostLabels?.length ? `. Organizations graded ${filters.boostLabels.map(labelPhrase).join(" or ")} rank a little higher (graded labels miss some orgs, so they never filter here)` : ""}{filters.requirements.length ? `. Must mention ${filters.requirements.map((r) => r.label).join(" and ")} in the 990 text` : ""}.</li>
           <li><b>Finding matches.</b> Meaning and keyword search over 990 mission and program text, plus the name and IRS cause code (NTEE) for organizations with no 990 text. Claude scored the closest {res.tiers ? "candidates in each group" : "40 candidates"} from 0 to 100 against the question. Strong matches score {STRONG} or more.</li>
           <li><b>Sources and years.</b> IRS exempt organization master file (names, addresses, cause codes, revenue), Form 990 and 990-EZ e-files for tax years 2021 to 2025 (mission, programs, finances), 990-PF foundation grants {g0} to {g1}, Schedule I grant purposes from 2021, Census 2024 ZIP code points.</li>
         </ul>
@@ -108,7 +109,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         {leads.length ? (
           <table className="report-table compact">
             <thead><tr><th>Organization</th><th>EIN</th><th>Address</th><th>Cause code</th><th>Why listed</th></tr></thead>
-            <tbody>{leads.map((r) => <tr key={r.ein}><td>{titleCase(r.name)}</td><td>{r.ein}</td><td>{address(r)}</td><td>{r.ntee ? `${r.ntee.code} ${r.ntee.label ?? ""}` : "None"}</td><td>{r.relevance?.why ?? r.place?.note ?? ""}</td></tr>)}</tbody>
+            <tbody>{leads.map((r) => <tr key={r.ein}><td>{titleCase(r.name)}</td><td className="nowrap">{r.ein}</td><td>{address(r)}</td><td>{r.ntee ? `${r.ntee.code} ${r.ntee.label ?? ""}` : "None"}</td><td>{r.relevance?.why ?? r.place?.note ?? ""}</td></tr>)}</tbody>
           </table>
         ) : <p className="report-note">None.</p>}
       </section>
@@ -165,4 +166,8 @@ function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<
   );
 }
 
-const clip = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`);
+// Filing excerpts in the report's house style: semicolons and dashes used as punctuation become commas.
+const clip = (t0: string, n: number) => {
+  const t = t0.replace(/\s*;\s*/g, ", ").replace(/\s+[—–]\s+|\s*—\s*/g, ", ");
+  return t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`;
+};

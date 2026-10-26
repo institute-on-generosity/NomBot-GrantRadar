@@ -1,6 +1,6 @@
 // Place scope and soft preference checks (Oct 26, Keith's Inglewood, CA test case; generosity-data 083-085).
 //   whole words in "must mention" (van is not advance), soft preferences (ideally, especially) never filter,
-//   the rule parser reads "in Inglewood, CA" / "near" / "Los Angeles County", city and county scopes,
+//   girls and youth development boost (never filter unless "only girls"), the rule parser reads "in Inglewood, CA" / "near" / "Los Angeles County", city and county scopes,
 //   and the tiered search finds the hand-checked "clearly relevant" orgs for the three Inglewood questions
 //   within the candidates Claude scores (ground truth: ~/Desktop/inglewood-test/q*_ground_truth.csv, EINs below).
 // No Claude calls unless --llm (then Claude parses the Inglewood questions and their rephrasings, ~9 calls).
@@ -14,7 +14,7 @@ if (!llm) process.env.ANTHROPIC_API_KEY = ""; // rule parser, unscored search
 const { wordRe } = await import("../lib/search");
 const { soften, parseQuestion } = await import("../lib/parse");
 const { cityScope, countyScope, cityPointers } = await import("../lib/place");
-const { searchCandidates, TIER_POOL } = await import("../lib/rerank");
+const { searchCandidates, TIER_POOL, scoredPool } = await import("../lib/rerank");
 const { db } = await import("../lib/db");
 type Filters = import("../lib/parse").Filters;
 
@@ -44,6 +44,26 @@ const req = (label: string, ...syn: string[]) => ({ label, pattern: [label, ...s
   const f = soften("Youth leadership development nonprofits in Inglewood, CA, ideally focused on girls", { ...base, q: "youth leadership development", semantic: "youth leadership development", topic: "youth leadership development", label: "women_girls" });
   check("ideally girls: women and girls is a preferred label, not a filter", !f.label && f.preferLabel === "women_girls");
   check("youth leadership: NTEE O boost", (f.nteeBoost ?? []).includes("O"));
+}
+// Girls boost, never filter, unless the question says only girls (Oct 26: co-ed youth leadership orgs must still show).
+for (const [q, topic] of [["girls mentoring and leadership programs in Inglewood", "girls mentoring and leadership"], ["youth leadership for girls in Inglewood, CA", "youth leadership for girls"],
+  ["Youth leadership development nonprofits in Inglewood, CA, ideally focused on girls", "youth leadership development"]] as const) {
+  for (const label of ["women_girls", undefined] as const) {
+    const f = soften(q, { ...base, q: topic, semantic: topic, topic, label });
+    check(`girls boost: "${q}" (parse label ${label ?? "none"}): women and girls preferred, no filter, youth development boosted`, !f.label && f.preferLabel === "women_girls" && (f.boostLabels ?? []).includes("youth_development"), JSON.stringify({ label: f.label, preferLabel: f.preferLabel, boost: f.boostLabels }));
+  }
+}
+for (const q of ["girls-only leadership programs in Inglewood, CA", "leadership programs only for girls in Inglewood, CA", "youth leadership programs that serve only girls in Inglewood"]) {
+  const f = soften(q, { ...base, q: "girls leadership programs", semantic: "girls leadership programs", topic: "girls leadership programs" });
+  check(`only girls: "${q}": women and girls filters`, f.label === "women_girls", JSON.stringify({ label: f.label, preferLabel: f.preferLabel }));
+}
+{
+  const f = soften("women and girls nonprofits in Ohio", { ...base, cities: [], states: ["OH"], q: "women and girls", semantic: "women and girls", topic: "women and girls", label: "women_girls" });
+  check("women and girls named: still a label filter", f.label === "women_girls");
+  const g = soften("youth development nonprofits in Inglewood, CA", { ...base, q: "youth development", semantic: "youth development", topic: "youth development", label: "youth_development" });
+  check("youth development named: a boost, not a filter (the label finds about 54%)", !g.label && (g.boostLabels ?? []).includes("youth_development"));
+  const b = soften("boys and girls clubs in Inglewood, CA", { ...base, q: "boys and girls clubs", semantic: "boys and girls clubs", topic: "boys and girls clubs" });
+  check("boys and girls clubs: no girls preference", !b.preferLabel && !b.label);
 }
 {
   const f = soften("youth leadership programs Inglewood, CA", { ...base, q: "youth leadership programs", semantic: "youth leadership", topic: "youth leadership", requirements: [req("leadership development", "leadership")] });
@@ -98,6 +118,10 @@ const CASES: { q: string; f: Partial<Filters>; eins: string[] }[] = [
     eins: ["952408623", "952769432", "752986675", "954702923", "954533883", "452749493", "882962296"] },
   { q: "Youth leadership development nonprofits in Inglewood, CA, ideally focused on girls", f: { q: "youth leadership development", semantic: "youth leadership development", topic: "youth leadership development", nteeHint: "O", label: "women_girls" },
     eins: ["954302067", "951644033", "237203822", "263413373", "450508517", "954295918", "954845105", "954801559", "861626430", "454320402"] },
+  { q: "girls mentoring and leadership programs in Inglewood", f: { q: "girls mentoring and leadership programs", semantic: "girls mentoring and leadership", topic: "girls mentoring and leadership", nteeHint: "O", label: "women_girls" },
+    eins: ["954302067", "951644033", "237203822", "263413373", "450508517", "954295918", "954845105", "954801559", "861626430", "454320402"] },
+  { q: "youth leadership programs in Inglewood", f: { q: "youth leadership programs", semantic: "youth leadership programs", topic: "youth leadership programs", nteeHint: "O" },
+    eins: ["954302067", "951644033", "237203822", "263413373", "450508517", "954295918", "954845105", "954801559", "861626430", "454320402"] },
   { q: "Youth sports programs in Inglewood, CA", f: { q: "youth sports programs", semantic: "youth sports programs", topic: "youth sports", nteeHint: "N" },
     eins: ["334463604", "843026438", "474068904", "931724843", "922270458", "800228843", "824575394", "844965829"] },
 ];
@@ -106,7 +130,7 @@ for (const c of CASES) {
   const t = Date.now();
   const res = await searchCandidates(f, { limit: 10 });
   const ms = Date.now() - t;
-  const pooled = new Set((res.tiers ?? []).flatMap((b) => b.results.slice(0, TIER_POOL[b.tier]).map((r) => r.ein.replace("-", ""))));
+  const pooled = new Set((res.tiers ?? []).flatMap((b) => scoredPool(b.results, TIER_POOL[b.tier]).map((r) => r.ein.replace("-", ""))));
   const found = c.eins.filter((e) => pooled.has(e));
   check(`search: ${c.q.slice(0, 48)}… clearly relevant in the scored pool >= 80%`, found.length / c.eins.length >= 0.8,
     `${found.length}/${c.eins.length}, ${ms} ms, tiers ${(res.tiers ?? []).map((b) => `${b.tier} ${b.total}`).join(", ")}${found.length < c.eins.length ? `, missing ${c.eins.filter((e) => !pooled.has(e)).join(" ")}` : ""}`);
@@ -115,11 +139,11 @@ for (const c of CASES) {
 // 6. Claude's parse of the questions and their rephrasings (raw/ captures): soft parts never filter.
 if (llm) {
   const qs = ["Health nonprofits in Inglewood, CA, especially mobile dental care (dental bus)", "mobile dental clinics Inglewood, CA", "mobile dental van programs Inglewood, CA",
-    "Youth leadership development nonprofits in Inglewood, CA, ideally focused on girls", "girls mentoring and leadership programs Inglewood, CA", "youth leadership programs Inglewood, CA",
+    "Youth leadership development nonprofits in Inglewood, CA, ideally focused on girls", "girls mentoring and leadership programs Inglewood, CA", "youth leadership programs Inglewood, CA", "youth leadership for girls in Inglewood, CA",
     "Youth sports programs in Inglewood, CA", "youth sports leagues Inglewood, CA", "dental clinics in Los Angeles County"];
   for (const q of qs) {
     const f = await parseQuestion(q);
-    const soft = /ideally|especially/i.test(q);
+    const soft = /ideally|especially/i.test(q) || /\bgirls\b/i.test(q);
     const ok = f.cities[0] === "INGLEWOOD" || /los angeles/i.test(f.county ?? "");
     check(`llm: ${q}`, ok && (!soft || (f.requirements.length === 0 && !f.label)), JSON.stringify({ cities: f.cities, county: f.county, req: f.requirements.map((r) => r.label), prefer: f.prefer?.map((r) => r.label), label: f.label, preferLabel: f.preferLabel }));
   }

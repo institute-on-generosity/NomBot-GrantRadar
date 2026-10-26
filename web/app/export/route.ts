@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return [
       r.relevance?.score, r.relevance ? "scored" : "unscored", r.relevance?.why,
       r.place ? TIER[r.place.tier] : "", r.place ? `${BASIS[r.place.basis]}: ${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""}` : "",
-      r.name, r.ein, r.street, r.city, r.state, r.zip, r.ntee?.code, r.ntee?.label, r.label ? `${r.label.label} (${r.label.tier})` : "",
+      r.name, r.ein, r.street, r.city, r.state, r.zip, r.ntee?.code, r.ntee?.label, [...new Set([r.label, ...(r.topicLabels ?? [])].filter((l) => l != null).map((l) => `${l!.label} (${l!.tier})`))].join(", "),
       r.revenue?.amount, r.revenue?.year, r.filing?.year ?? r.health?.year ?? r.financials?.tax_year ?? "",
       f ? Math.round(f.total) : 0, f?.top?.name ?? "", f?.top ? Math.round(f.top.amount) : "",
       r.website ?? "", r.exact == null ? "" : r.exact ? "yes" : "no", r.mission, `${origin}/org/${r.ein}`,

@@ -11,7 +11,7 @@ import type { Filters } from "./parse";
 import { search, type Result } from "./search";
 import { placeScope, tieredSearch, type TierBlock } from "./tiers";
 import { TIER_ORDER } from "./place";
-import { labelPhrase } from "./labels";
+import { labelName, labelPhrase } from "./labels";
 
 export const POOL = 40;
 const THIN = 10; // fewer main-focus results than this: the label's partial tier is added  // candidates Claude scores per question
@@ -36,18 +36,27 @@ const PLACE_NOTE = `
 Results are already grouped by place (in the city, serving it from elsewhere, nearby), and "place" says why each one is listed. Judge how well the work fits; don't lower a score because the address is outside the city.
 Words after "ideally", "especially" or "preferably" are preferences, not requirements: an organization that fits the main request scores 70+ even without them, and higher with them.`;
 
+// A preferred cause label from the question ("girls mentoring and leadership programs", "ideally focused on girls"), not
+// "only girls": it ranks first, but co-ed programs that otherwise fit are still good matches (Oct 26, Keith's test).
+const softLabelNote = (name: string) => `
+The user named ${name} as a focus but not as the only group served: organizations focused on it fit best, and organizations that serve everyone but otherwise fit the request still score 50 or more, a little lower.`;
+// The preferences read from the question, named: without them the scorer sometimes treated "especially mobile dental
+// care" as required and scored Inglewood clinics with no dental program 45 (Oct 26).
+const softPrefNote = (prefs: string[]) => `
+Preferences in this question (nice to have, never required): ${prefs.join(", ")}. An organization that fits the rest of the request scores 70 or more even when none of them is confirmed. One that also does them scores higher.`;
+
 // UI copy has no semicolons or dashes as punctuation, even when the model slips: they become sentences or commas.
 const plain = (t: string) => t.replace(/\s+[—–]\s+|\s*—\s*/g, ", ").replace(/\s*;\s*([a-z]?)/g, (_, c: string) => `. ${c.toUpperCase()}`).replace(/\s+/g, " ").trim();
 const schema = z.object({ results: z.array(z.object({ id: z.string(), score: z.number(), why: z.string() })) });
 
 // The rubric is absolute, so batches scored separately stay comparable.
-async function scoreFresh(question: string, results: Result[], placed = false): Promise<Map<string, Relevance>> {
+async function scoreFresh(question: string, results: Result[], placed = false, note = ""): Promise<Map<string, Relevance>> {
   const batches = Array.from({ length: Math.ceil(results.length / BATCH) }, (_, i) => results.slice(i * BATCH, (i + 1) * BATCH));
-  const maps = await Promise.all(batches.map((b) => scoreBatch(question, b, placed)));
+  const maps = await Promise.all(batches.map((b) => scoreBatch(question, b, placed, note)));
   return new Map(maps.flatMap((m) => [...m]));
 }
 
-async function scoreBatch(question: string, results: Result[], placed = false): Promise<Map<string, Relevance>> {
+async function scoreBatch(question: string, results: Result[], placed = false, note = ""): Promise<Map<string, Relevance>> {
   const out = new Map<string, Relevance>();
   const client = claude("rerank");
   if (!client || !results.length) return out;
@@ -55,6 +64,8 @@ async function scoreBatch(question: string, results: Result[], placed = false): 
   const items = results.map((r, i) => ({
     id: `r${i + 1}`, name: r.name, place: [r.city, r.state].filter(Boolean).join(", ") + (r.place ? ` (${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""})` : ""), cause: r.ntee?.label ?? null,
     revenue: r.revenue ? `$${r.revenue.amount.toLocaleString("en-US")}` : null,
+    // Graded labels (Claude read the org's filings, or its name when it filed no text): evidence for orgs with no description.
+    ...(r.topicLabels?.length ? { graded_labels: r.topicLabels.map((l) => `${labelName(l.label)} (${l.tier === "primary" ? "main focus" : "partial focus"})`).join(", ") } : {}),
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
   }));
   const res = await client.beta.messages.parse({
@@ -62,7 +73,7 @@ async function scoreBatch(question: string, results: Result[], placed = false): 
     max_tokens: 4096,
     ...fallback(SCORE_MODEL),
     output_config: { effort: "low", format: betaZodOutputFormat(schema) },
-    system: placed ? SYSTEM + PLACE_NOTE : SYSTEM,
+    system: (placed ? SYSTEM + PLACE_NOTE : SYSTEM) + note,
     messages: [{ role: "user", content: `Question: ${question}\n\nOrganizations:\n${JSON.stringify(items)}` }],
   });
   if (res.stop_reason === "refusal") return out;
@@ -74,18 +85,24 @@ async function scoreBatch(question: string, results: Result[], placed = false): 
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = memo<Map<string, Relevance>>("rerank:v5", 300, 24 * 3600_000); // v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
-function score(question: string, results: Result[], placed = false) {
-  const key = `${placed ? "placed|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
-  return cached(key, () => scoreFresh(question, results, placed).catch((err) => {
+const cached = memo<Map<string, Relevance>>("rerank:v6", 300, 24 * 3600_000); // v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
+function score(question: string, results: Result[], placed = false, note = "") {
+  const key = `${placed ? "placed|" : ""}${note ? "soft|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
+  return cached(key, () => scoreFresh(question, results, placed, note).catch((err) => {
     console.error("Relevance scoring failed; keeping search order", err);
     return new Map<string, Relevance>();
   }));
 }
 
-type Found = Awaited<ReturnType<typeof search>> & { tiers?: TierBlock[]; scope?: Awaited<ReturnType<typeof placeScope>>; widened?: string };
+type Found = Awaited<ReturnType<typeof search>> & { tiers?: TierBlock[]; scope?: Awaited<ReturnType<typeof placeScope>>; widened?: string; softLabel?: string; softPrefs?: string[] };
 // Candidates scored per tier: the city's own orgs first, then the evidence and nearby tiers.
 export const TIER_POOL: Record<string, number> = { in: POOL, county: POOL, serves: 25, nearby: 40, wider: 25 };
+// Orgs carrying a boosted label (the topic's, or a preferred one) just below a tier's pool are scored too, up to this
+// many from the next LABEL_REACH: the label is graded evidence the meaning search can miss (a girls' leadership group
+// for "youth leadership programs").
+const LABEL_EXTRA = 10, LABEL_REACH = 60;
+export const scoredPool = (results: Result[], n: number) =>
+  [...results.slice(0, n), ...results.slice(n, n + LABEL_REACH).filter((r) => r.topicLabels?.length).slice(0, LABEL_EXTRA)];
 
 // Step 1: search candidates (fast, ~0.5s): enough for the page to show results right away.
 // One search serves the results, "Show more" and the landscape (its 200 closest): fetched once at SHARED
@@ -104,16 +121,19 @@ export async function searchCandidates(filters: Filters, { limit, includeInactiv
     if (filters.label && !filters.labelPartial && first.total < THIN) return { ...(await run({ ...filters, labelPartial: true })), widened: labelPhrase(filters.label) };
     return first;
   });
-  if (!res.tiers) return { ...res, results: res.results.slice(0, want) };
-  const tiers = res.tiers.map((t) => ({ ...t, results: t.results.slice(0, want) }));
-  return { ...res, tiers, results: tiers.flatMap((t) => t.results) };
+  const softLabel = filters.preferLabel && filters.preferLabel !== filters.label ? labelPhrase(filters.preferLabel) : undefined;
+  const softPrefs = filters.prefer?.length ? filters.prefer.map((p) => p.label) : undefined;
+  const keep = want + LABEL_REACH; // the label reach below a pool rides along (lib/rerank scoredPool)
+  if (!res.tiers) return { ...res, softLabel, softPrefs, results: res.results.slice(0, keep) };
+  const tiers = res.tiers.map((t) => ({ ...t, results: t.results.slice(0, keep) }));
+  return { ...res, softLabel, softPrefs, tiers, results: tiers.flatMap((t) => t.results) };
 }
 
 // Step 2: score the top POOL candidates and order by score (ties and unscored keep search order).
 // Tiered: each tier's top TIER_POOL are scored, each tier is ordered on its own and keeps up to limit rows.
 export async function rank(question: string, res: Found, limit: number) {
-  const pool = res.tiers ? res.tiers.flatMap((t) => t.results.slice(0, TIER_POOL[t.tier] ?? POOL)) : res.results.slice(0, POOL);
-  const scores = await score(question, pool, Boolean(res.tiers));
+  const pool = res.tiers ? res.tiers.flatMap((t) => scoredPool(t.results, TIER_POOL[t.tier] ?? POOL)) : scoredPool(res.results, POOL);
+  const scores = await score(question, pool, Boolean(res.tiers), (res.softPrefs ? softPrefNote(res.softPrefs) : "") + (res.softLabel ? softLabelNote(res.softLabel) : ""));
   const ranked: Ranked[] = res.results.map((r) => ({ ...r, relevance: scores.get(r.ein) ?? null }));
   const order = new Map(ranked.map((r, i) => [r.ein, i]));
   const tierOf = (r: Ranked) => (r.place ? TIER_ORDER.indexOf(r.place.tier) : 0);

@@ -372,6 +372,13 @@ function filterChips(f: Filters, p: Params): Chip[] {
         ],
       } as Chip;
     })(f.label)] : []),
+    // A preferred label ("girls mentoring and leadership programs", "ideally focused on girls"): ranks its orgs first and
+    // keeps the rest. One tap makes it a filter ("only girls").
+    ...(f.preferLabel && f.preferLabel !== f.label ? [((l): Chip => ({
+      key: "prefer-label", kind: "set", label: `Ranks higher: ${labelName(l)}`,
+      options: [{ label: `Ranks higher: ${labelName(l)}`, href: go({}), on: true, note: "Its orgs first, others still shown" },
+        { label: `Only ${labelName(l)}`, href: go({ label: l, tier: "", sub: "" }), on: false, note: "Graded label, as a filter" }],
+    }))(f.preferLabel)] : []),
     ...f.requirements.map((r): Chip => ({
       key: `must-${reqSlug(r.label)}`, kind: "must", label: `Must mention: ${r.label}`,
       removeHref: go({ drop: [...dropped, reqSlug(r.label)].join(",") }),

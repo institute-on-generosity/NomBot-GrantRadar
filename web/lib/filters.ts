@@ -74,6 +74,6 @@ export const hasOverrides = (o: Overrides) => Boolean(o.st || o.city || o.county
 
 // Short summary of the filters in effect, stored with feedback and shown in the eval report.
 export const describeFilters = (f: Filters) => ({
-  topic: f.topic, states: f.states, cities: f.cities, county: f.county ?? null, near: f.near ?? false, prefer: (f.prefer ?? []).map((r) => r.label), preferLabel: f.preferLabel ?? null, appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, minRevenue: f.minRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
+  topic: f.topic, states: f.states, cities: f.cities, county: f.county ?? null, near: f.near ?? false, prefer: (f.prefer ?? []).map((r) => r.label), preferLabel: f.preferLabel ?? null, boostLabels: f.boostLabels ?? [], appalachia: f.appalachia ?? false, maxRevenue: f.maxRevenue ?? null, minRevenue: f.minRevenue ?? null, ntee: f.ntee ?? null, nteeHint: f.nteeHint ?? null,
   label: f.label ? `${f.label}${f.labelSub ? `:${f.labelSub}` : ""}${f.labelPartial ? "+partial" : ""}` : null, requirements: f.requirements.map((r) => r.label), parser: f.parser,
 });

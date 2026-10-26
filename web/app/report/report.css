@@ -19,6 +19,7 @@
 .report-table td .mission { color: var(--mute); margin-top: 2px; }
 .report-table th:first-child, .report-table td:first-child { width: 34%; }
 .report-table.compact th:first-child, .report-table.compact td:first-child { width: auto; }
+.report-table td.nowrap { white-space: nowrap; }
 .report-foot { margin-top: 28px; font-size: 12px; color: var(--mute); }
 @media (max-width: 720px) {
   .report h1 { padding-right: 0; }
@@ -35,4 +36,8 @@
   .report h2 { font-size: 12pt; break-after: avoid; }
   .report-table { font-size: 8.5pt; }
   .report-table tr { break-inside: avoid; }
+  .report-table thead { display: table-header-group; } /* the header row repeats on every page */
+  .report-note { break-after: avoid; }                 /* a group's note stays with its table */
+  .report h2 + .report-table, .report-note + .report-table { break-before: avoid; }
 }
+@page { margin: 14mm 12mm; }

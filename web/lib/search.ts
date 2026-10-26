@@ -20,6 +20,7 @@ export type SearchInput = {
   keep?: string[]; // listed orgs always shown, with or without a topic match (named for the city, or serving it)
   zips?: string[]; eins?: string[]; // place scope (lib/place.ts): HQ ZIPs, or listed orgs (named for a city, or serving it); OR'd with cities
   prefer?: Requirement[]; preferLabel?: string; // soft preferences ("ideally girls", "especially mobile dental"): a ranking boost, never a filter
+  boostLabels?: string[]; // graded labels the topic points to (youth development, women and girls; lib/parse.ts soften): a boost, and extra candidates in a small place
   nteeBoost?: string[]; // NTEE prefixes the topic points to (lib/topicHints): a boost, and extra candidates in a small place
   labelSub?: string; // sub-type of a label that has them (immigrants_refugees): services (default), policy, or all
   mode?: SearchMode;
@@ -38,6 +39,7 @@ export type Result = {
   exact: boolean | null; score: number; data_completeness: "full" | "partial" | "basic"; sources: Source[];
   label: { label: string; tier: "primary" | "partial"; subtypes?: string[] } | null; // the cause label filter's tier for this org (null without one); subtypes for labels with them
   prefer?: string[]; // soft preferences this org's name or filing text mentions
+  topicLabels?: { label: string; tier: "primary" | "partial" }[]; // boosted labels (preferred or the topic's) this org carries
   place?: PlaceEvidence; // tiered place search (lib/tiers.ts): which tier and why
 };
 
@@ -97,7 +99,7 @@ export function reqTsquery(patterns: string[]) {
 // Postgres can't cache a plan across embeddings, and the check below never changes while the server runs.
 let hasVectors: Promise<boolean> | undefined;
 
-export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT, label, labelPartial = false, labelSub, zips = [], eins = [], prefer = [], preferLabel, nteeBoost = [], keep = [] }: SearchInput) {
+export async function search({ q, semantic, states = [], cities = [], appalachia = false, maxRevenue, minRevenue, ntee, nteeHint, requirements = [], includeInactive = false, sort = "match", limit = 10, offset = 0, mode = "hybrid", kwWeight = KW_WEIGHT, label, labelPartial = false, labelSub, zips = [], eins = [], prefer = [], preferLabel, nteeBoost = [], keep = [], boostLabels = [] }: SearchInput) {
   // A label with sub-types filters to one (the default unless asked); "all" or a label without them: no filter.
   const subs = isLabel(label) ? LABEL_SUBTYPES[label] : undefined;
   const sub = subs && labelSub !== "all" ? (labelSub === "services" || labelSub === "policy" ? labelSub : subs.default) : null;
@@ -164,6 +166,11 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
        UNION
        (SELECT o.ein FROM orgs o WHERE cardinality($24::text[]) > 0 AND $20::text IS NULL AND o.ein = ANY($24::char(9)[]) AND ${PLACE})
        UNION
+       -- Small place: every org carrying a label the topic points to or the user prefers (youth development, women and girls), most of
+       -- them named-only small groups the meaning search can't see.
+       (SELECT o.ein FROM org_labels l JOIN orgs o USING (ein)
+        WHERE ${SMALL} AND $20::text IS NULL AND (l.label = ANY($30::text[]) OR l.label = $26) AND ${PLACE} LIMIT ${HINT_CAP})
+       UNION
        -- A cause label (climate, women and girls): every labeled org in the place is a candidate (a few
        -- thousand at most, from org_labels_label_tier), ranked below by meaning like any other search.
        (SELECT o.ein FROM org_labels l JOIN orgs o USING (ein)
@@ -173,10 +180,13 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
      f AS (SELECT f.* FROM financials_latest f JOIN cand USING (ein)),
      lab AS (SELECT l.ein, l.tier AS label_tier, l.subtypes AS label_subtypes FROM org_labels l JOIN cand USING (ein) WHERE l.label = $20),
      plab AS (SELECT l.ein, l.tier AS pref_tier FROM org_labels l JOIN cand USING (ein) WHERE l.label = $26),
+     blab AS (SELECT l.ein, sum(CASE WHEN l.label = $26 THEN 0 WHEN l.tier = 'primary' THEN 0.06 ELSE 0.03 END) AS lab_boost,
+                     array_agg(l.label || ':' || l.tier ORDER BY l.label = $26 DESC, l.tier DESC) AS lab_hits
+              FROM org_labels l JOIN cand USING (ein) WHERE l.label = ANY($30::text[]) OR l.label = $26 GROUP BY l.ein),
      x AS (SELECT x.ein, tax_year AS x_year, cy_revenue AS x_rev, py_revenue AS x_prev, cy_expenses AS x_exp, cash AS x_cash
            FROM flag_latest x JOIN cand USING (ein)),
      base AS (
-       SELECT o.ein, o.name, o.city, o.state, o.street, o.zip, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period, t.website, plab.pref_tier,
+       SELECT o.ein, o.name, o.city, o.state, o.street, o.zip, o.ntee_cd, o.search AS osearch, o.revenue_amt, o.tax_period, t.website, plab.pref_tier, coalesce(blab.lab_boost, 0) AS lab_boost, blab.lab_hits,
               t.ein IS NOT NULL AS has_text, t.object_id, t.tax_year AS text_year, t.form AS text_form,
               t.mission AS raw_mission, t.programs, t.employees, t.volunteers, t.embedding, t.embedding_model, t.search AS tsearch,
               f.ein IS NOT NULL AS has_fin, f.tax_year AS fin_year, f.form AS fin_form, f.revenue AS fin_rev, f.expenses, f.assets, f.net_assets,
@@ -184,7 +194,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               -- one revenue figure, the newest of the IRS master file (BMF) and the SOI extract, used for filtering AND display
               CASE WHEN o.revenue_amt IS NOT NULL AND (f.ein IS NULL OR left(o.tax_period, 4)::int > f.tax_year) THEN 'bmf'
                    WHEN f.ein IS NOT NULL THEN 'soi' END AS rev_src
-       FROM cand JOIN orgs o USING (ein) LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein) LEFT JOIN lab USING (ein) LEFT JOIN plab USING (ein)),
+       FROM cand JOIN orgs o USING (ein) LEFT JOIN t USING (ein) LEFT JOIN f USING (ein) LEFT JOIN x USING (ein) LEFT JOIN lab USING (ein) LEFT JOIN plab USING (ein) LEFT JOIN blab USING (ein)),
      v AS (
        SELECT *, CASE rev_src WHEN 'bmf' THEN revenue_amt WHEN 'soi' THEN fin_rev END AS rev,
                  CASE rev_src WHEN 'bmf' THEN left(tax_period, 4)::int WHEN 'soi' THEN fin_year END AS rev_year
@@ -196,7 +206,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               CASE WHEN $2::vector IS NOT NULL AND embedding_model = $3 THEN 1 - (embedding <=> $2::vector) END AS sim,
               CASE WHEN cardinality($8::text[]) = 0 THEN NULL
                    ELSE NOT EXISTS (SELECT 1 FROM unnest($8::text[]) p WHERE coalesce(raw_mission, '') || ' ' || coalesce(programs, '') !~* p) END AS exact,
-              ${SMALL} AND (($28::text <> '' AND osearch @@ to_tsquery('english', $28)) OR (cardinality($27::text[]) > 0 AND ntee_cd LIKE ANY($27::text[]))) AS hint,
+              ${SMALL} AND (($28::text <> '' AND osearch @@ to_tsquery('english', $28)) OR (cardinality($27::text[]) > 0 AND ntee_cd LIKE ANY($27::text[])) OR lab_hits IS NOT NULL) AS hint,
               cardinality($27::text[]) > 0 AND ntee_cd LIKE ANY($27::text[]) AS ntee_fit,
               ARRAY(SELECT i FROM generate_subscripts($25::text[], 1) i WHERE name || ' ' || coalesce(raw_mission, '') || ' ' || coalesce(programs, '') ~* ($25::text[])[i]) AS pref_hits
        FROM v
@@ -210,6 +220,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
                       + CASE WHEN ntee_fit THEN 0.05 ELSE 0 END                                           -- topic's NTEE codes (youth sports: N6, N4)
                       + least(cardinality(pref_hits), 2) * 0.05                                           -- soft preferences named in the text
                       + CASE pref_tier WHEN 'primary' THEN 0.08 WHEN 'partial' THEN 0.04 ELSE 0 END       -- preferred cause label
+                      + least(lab_boost, 0.1)                                                             -- labels the topic points to
                       + CASE WHEN label_tier = 'primary' AND $21 THEN 0.05 ELSE 0 END END AS score,      -- with partial included, primary first on ties
             count(*) OVER () AS total, count(*) FILTER (WHERE exact) OVER () AS exact_total
      FROM scored WHERE $1 = '' OR $20::text IS NOT NULL OR (kw > 0 AND $16 <> 'vector') OR sim IS NOT NULL OR exact OR hint OR ein = ANY($29::char(9)[])
@@ -219,7 +230,8 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
               score DESC, rev DESC NULLS LAST
      LIMIT $7 OFFSET $11`,
     [tsq, vec, MODEL_ID, states, maxRevenue ?? null, ntee ?? null, limit, requirements.map((r) => wordRe(r.pattern)), includeInactive, sort, offset, cities.map((c) => c.toUpperCase()), nteeHint ?? null, appalachia, minRevenue ?? null, mode, kwWeight, kwOnly ? tsq : words.join(" "), reqq, label ?? null, labelPartial, sub,
-     zips, eins.map((e) => e.replace("-", "")), prefer.map((r) => wordRe(r.pattern)), preferLabel ?? null, boost, nameq, keep.map((e) => e.replace("-", ""))],
+     zips, eins.map((e) => e.replace("-", "")), prefer.map((r) => wordRe(r.pattern)), preferLabel ?? null, boost, nameq, keep.map((e) => e.replace("-", "")),
+     boostLabels.filter((l) => l !== label && isLabel(l))],
   );
   return {
     total: Number(rows[0]?.total ?? 0),
@@ -244,6 +256,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
       filing: r.has_text ? { year: r.text_year, form: r.text_form } : null,
       exact: r.exact,
       ...(prefer.length ? { prefer: (r.pref_hits as number[]).map((i) => prefer[i - 1].label) } : {}),
+      ...(r.lab_hits?.length ? { topicLabels: (r.lab_hits as string[]).map((x) => { const [l, t] = x.split(":"); return { label: l, tier: t as "primary" | "partial" }; }) } : {}),
       label: label && r.label_tier ? { label, tier: r.label_tier, ...(r.label_subtypes ? { subtypes: r.label_subtypes } : {}) } : null,
       score: Math.round(Number(r.score) * 100) / 100,
       data_completeness: r.has_text && r.has_fin ? "full" : r.has_text || r.has_fin ? "partial" : "basic",
