@@ -13,7 +13,8 @@ import { claude, fallback, FAST_MODEL } from "./llm";
 const ROUTE_MODEL = process.env.ROUTE_MODEL || FAST_MODEL;
 import { memo } from "./memo";
 import { db } from "./db";
-import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
+import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Cause, type Spec } from "./answerSpec";
+import { causeOf, ENVIRONMENT, namesEnvironment, sdgRefs } from "./sdg";
 
 const SCREEN = new RegExp([
   String.raw`\bhow (much|many)\b`, String.raw`\bwhat (share|percent(age)?|portion|fraction|proportion)\b`, String.raw`\bshare of\b`, String.raw`\bpercent`,
@@ -115,6 +116,7 @@ topN: "the 100 largest foundations" = top_funders, topN 100. streak: "deficits t
 missing (parts we can't answer): individual_giving, corporate_giving (company giving outside company foundations), federal_awards (federal money to governments, public universities, companies, or contracts: for "how much did the federal government spend on climate" answer the nonprofit part with federal_awards and add federal_awards to missing), daf_grants (one donor's DAF account or DAF money by donor; DAF sponsors as a whole are charity_grants, not missing), foreign_giving, forecast, volunteering, other (+ missingNote). Government and federal grants to nonprofits are not missing.
 Filters (foundation_grants; null when not asked): recipientSize {min,max} = recipient's annual revenue in dollars ("small nonprofits under $1M" -> max 1000000; "the largest nonprofits, over $100M" -> min 100000000). funderSize {min,max} = foundation assets ("over $1 billion" -> min 1000000000; "small foundations" -> max 10000000). funderType: family, operating (private operating foundations), trust (charitable trusts), company (company or corporate foundations, e.g. the Walmart Foundation). recipientKind: school_district, public_college, private_college, public_entity (school districts and public colleges together, not private colleges), nonprofit. Filters combine with any metric: "how much do family foundations give to religion" = total, religion X, funderType family. "corporate foundations' giving to education" = total, education B, funderType company.
 ntee: irs (default) or corrected. corrected only when the question asks for corrected, fixed, better or more accurate NTEE codes or categories ("with corrected categories", "if we fix miscoded orgs", "counting orgs with no NTEE code"): orgs whose IRS code doesn't fit their 990 text, and orgs with no IRS code, then count under a suggested code. Keep the cause's NTEE codes as usual. Never for graded labels.
+SDGs (UN Sustainable Development Goals: "SDG 4", "Goal 13", "quality education", "life below water"): research as usual, one cause per goal named, name = the goal as asked ("SDG 14"), no ntee or keywords: the app fills the cause from its SDG taxonomy. An SDG is never missing data. One ranking across all 17 goals = metric none, missing other, missingNote "Ranking across all 17 SDGs".
 If nothing we have answers it, metric none.
 Growth after inflation (BLS CPI-U, real dollars) is in every trend answer: never put inflation in missing.
 Missing parts: answer the closest part we have and add missing other with missingNote = a short noun phrase (2-8 words, no period, not a sentence), e.g. "Overhead rates", "Board members", "Executive pay", "Grant relationships over time", "Organization age", "Grant purpose (capacity building, program, capital)", "Who grants serve (low-income people)", "Change in each funder's giving", "Rankings by funder state", "Money per nonprofit by cause", "Side-by-side with foundation grants", "State and local government grants alone", "Metro areas", "Congressional districts", "Where services are delivered", "Money flowing into DAFs", "Multi-year grants", "Grants under a dollar size". Examples: "which foundations increased their grantmaking most" = top_funders + "Change in each funder's giving"; "how does federal money compare with foundation grants" = federal_awards total + "Side-by-side with foundation grants"; "share of foundation grants that benefit low-income people" = share with keywords + "Who grants serve (low-income people)"; "capacity building vs program support" = metric none + grant purpose; "which causes get the least money relative to how many nonprofits work on them" = breakdown by cause, order least + "Money per nonprofit by cause"; "which states' foundations send the most money to other states" = out_of_state + "Rankings by funder state"; "state and local government money separate from federal" = government_grants + "State and local government grants alone". Questions about organizations' age or founding ("newest vs longest established nonprofits") or funding streaks ("which nonprofits got grants every year", "how long do funders keep funding a grantee") are research true, metric none + "Organization age" or "Grant relationships over time".
@@ -148,17 +150,36 @@ const routerFormat = { ...zodFormat, schema: leanSchema(zodFormat.schema) as typ
 
 export type Routed = { research: false } | { research: true; spec: Spec };
 
-const cached = memo<Routed>("answer-route:v31", 1000, 24 * 3600_000); // v31: youth_development label; v30: city (grants placed by recipient ZIP); v29: financial_health metric ("which X ran deficits 3 years in a row", reserves, program ratio) and named-org health questions found by name with no call; v28: corrected also covers orgs with no IRS code; v27: underfunded metric (orgs getting little foundation money for their size); v26: keywords name the whole cause (no bare "girls"), "share from the N largest foundations" = top_funders; v25: animal_welfare label; v24: health_equity label; v23: ntee irs | corrected; v22: education label; v21: immigrants_refugees sub-types (immigration policy named as such); v19: racial_equity, immigrants_refugees, mental_health labels (mental health no longer NTEE F); v17: cause name in the asker's words (narrower than a label); v16: ai_tech_learning_work label; v15: named federal programs (Head Start) as keyword causes; v14: housing_homelessness label; v13: two causes asked separately = top_funders / top_recipients with both; v12: grants back to 2012; v11: substance_use label; v10: foundation_finances (payout, assets), org finances by year or size; v9: never mislead (region, topN, streak, years outside the data, missing-note rules, inflation), household_giving; v2: breakdowns and filters; v3: charity_grants; v4: federal_awards, ACS; v5: audit rules (largest 1%, public_entity); v6: trimmed prompt, lean schema, company funderType; v7: company example; v8: premise, "where does X money go"
+const cached = memo<Routed>("answer-route:v32", 1000, 24 * 3600_000); // v32: SDG phrasing mapped to lib/sdg.ts causes (withSdg), a missing-part note always means missing other; v31: youth_development label; v30: city (grants placed by recipient ZIP); v29: financial_health metric ("which X ran deficits 3 years in a row", reserves, program ratio) and named-org health questions found by name with no call; v28: corrected also covers orgs with no IRS code; v27: underfunded metric (orgs getting little foundation money for their size); v26: keywords name the whole cause (no bare "girls"), "share from the N largest foundations" = top_funders; v25: animal_welfare label; v24: health_equity label; v23: ntee irs | corrected; v22: education label; v21: immigrants_refugees sub-types (immigration policy named as such); v19: racial_equity, immigrants_refugees, mental_health labels (mental health no longer NTEE F); v17: cause name in the asker's words (narrower than a label); v16: ai_tech_learning_work label; v15: named federal programs (Head Start) as keyword causes; v14: housing_homelessness label; v13: two causes asked separately = top_funders / top_recipients with both; v12: grants back to 2012; v11: substance_use label; v10: foundation_finances (payout, assets), org finances by year or size; v9: never mislead (region, topN, streak, years outside the data, missing-note rules, inflation), household_giving; v2: breakdowns and filters; v3: charity_grants; v4: federal_awards, ACS; v5: audit rules (largest 1%, public_entity); v6: trimmed prompt, lean schema, company funderType; v7: company example; v8: premise, "where does X money go"
 // onUsage: called with the call's token usage when the router actually calls Claude (not on a cache hit); the
 // nightly benchmark uses it to measure its cost (app/api/v1/answer, X-App: nightly-benchmark).
 export function routeQuestion(question: string, onUsage?: (u: RouteUsage) => void): Promise<Routed> {
   const q = question.replace(/\s+/g, " ").trim();
   if (!looksLikeResearch(q)) return Promise.resolve({ research: false });
   // A failed call isn't cached (memo drops rejections): the page falls back to a plain search this time.
-  return cached(q.toLowerCase(), async () => (await orgHealthRoute(q)) ?? routeFresh(q, onUsage)).catch((err) => {
+  return cached(q.toLowerCase(), async () => withSdg(q, (await orgHealthRoute(q)) ?? await routeFresh(q, onUsage))).catch((err) => {
     console.error("answer router failed; treating as a search", err);
     return { research: false } as const;
   });
+}
+
+// SDG phrasing ("SDG 4", "Goal 13", "life below water", "workforce development (SDG 8)"): the goal's causes come from the
+// SDG taxonomy (lib/sdg.ts), never the router's guess, so Browse by cause and research answers count the same set.
+// Each goal named replaces, in order, a router cause that names an SDG (else the first ones); two at most.
+export function withSdg(question: string, r: Routed): Routed {
+  if (!r.research) return r;
+  const refs = sdgRefs(question);
+  const sdg = (refs.length ? refs.map((x) => causeOf(x.sub ?? x.sdg.scope, x.sdg)) : namesEnvironment(question) ? [causeOf(ENVIRONMENT.scope, null)] : [])
+    .filter((c): c is NonNullable<typeof c> => !!c).slice(0, 2);
+  if (!sdg.length) return r;
+  const s = r.spec;
+  const named = s.causes.map((c, i) => (sdgRefs(c.name).length || namesEnvironment(c.name) || /\b(sdgs?|goal)\b/i.test(c.name) ? i : -1)).filter((i) => i >= 0);
+  const at = named.length ? named : s.causes.map((_, i) => i);
+  const causes: Cause[] = [...s.causes];
+  sdg.forEach((c, k) => { if (k < at.length) causes[at[k]] = c; else causes.push(c); });
+  // "Ranking across all 17 SDGs" stays the router's when no single goal was named; a named goal is never missing.
+  const missing = s.missing.filter((m) => !(m === "other" && /\bsdg|goal/i.test(s.missingNote ?? "")));
+  return { research: true, spec: normalizeSpec({ ...s, causes: causes.slice(0, 2), missing, missingNote: missing.includes("other") ? s.missingNote : null, metric: s.metric === "none" && missing.length === 0 ? "total" : s.metric }) };
 }
 
 async function routeFresh(question: string, onUsage?: (u: RouteUsage) => void): Promise<Routed> {

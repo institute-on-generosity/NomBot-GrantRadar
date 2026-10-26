@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 try { process.loadEnvFile(join(import.meta.dirname, "..", ".env.local")); } catch { /* no .env.local */ }
-const { routeMeasured, looksLikeResearch } = await import("../lib/answerRoute");
+const { routeMeasured, looksLikeResearch, withSdg } = await import("../lib/answerRoute");
 type Spec = import("../lib/answerSpec").Spec;
 
 export type Expect = {
@@ -16,6 +16,7 @@ export type Expect = {
   city?: string | null; county?: string; noCityMissing?: boolean; // place scope (Oct 26): a city is in the data, never missing
   premise?: string | null; // "rise" | "fall" | "more" | "less", or null = must not assume a direction
   nteeBasis?: string;       // spec.ntee: "irs" | "corrected"
+  causeHas?: string;        // regex the cause names must match ("\\(SDG 4\\)": SDG phrasing mapped to lib/sdg.ts)
 };
 export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   const bad: string[] = [];
@@ -41,6 +42,7 @@ export function check(e: Expect, research: boolean, s: Spec | null): string[] {
   if (e.recipientSizeMax && s.recipientSize?.max !== e.recipientSizeMax) bad.push(`recipientSize.max ${s.recipientSize?.max}, want ${e.recipientSizeMax}`);
   for (const k of ["yearFrom", "yearTo"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   if (e.nteeBasis !== undefined && s.ntee !== e.nteeBasis) bad.push(`ntee ${s.ntee}, want ${e.nteeBasis}`);
+  if (e.causeHas && !new RegExp(e.causeHas, "i").test(s.causes.map((c) => c.name).join(" | "))) bad.push(`causes ${s.causes.map((c) => c.name).join(" | ")}, want /${e.causeHas}/`);
   for (const k of ["region", "topN", "streak"] as const) if (e[k] !== undefined && s[k] !== e[k]) bad.push(`${k} ${s[k]}, want ${e[k]}`);
   return bad;
 }
@@ -63,7 +65,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       // A parse failure or API error is a failure here: in the app routeQuestion would quietly fall back to a plain search.
       const r = await routeMeasured(e.q).catch((err: unknown) => String(err).slice(0, 160));
       if (typeof r === "string") return { e, bad: [`router error (app falls back to search): ${r}`], screened: true, ...none };
-      return { e, bad: check(e, r.routed.research, r.routed.research ? r.routed.spec : null), screened: true, ...none, ...r.usage, ms: r.ms };
+      // SDG phrasing is mapped after the call, as routeQuestion does (withSdg).
+      const routed = withSdg(e.q, r.routed);
+      return { e, bad: check(e, routed.research, routed.research ? routed.spec : null), screened: true, ...none, ...r.usage, ms: r.ms };
     })));
   }
   const called = res.filter((r) => r.screened && r.input);

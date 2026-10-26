@@ -9,7 +9,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { claude, fallback as fallbackOpts, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
-import { ROUTER_SYSTEM, leanSchema } from "./answerRoute";
+import { ROUTER_SYSTEM, leanSchema, withSdg } from "./answerRoute";
 import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
 import { fedProgram } from "./fedPrograms";
@@ -318,7 +318,7 @@ const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), stan
 const followZod = betaZodOutputFormat(followSchema);
 const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
 
-const cached = memo<Resolved>("follow-up:v20", 1000, 24 * 3600_000); // v20: youth_development label; v19: city in the router prompt; v18: financial_health metric (router prompt), its chips; v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v21", 1000, 24 * 3600_000); // v21: SDG phrasing (withSdg), a missing-part note means missing other; v20: youth_development label; v19: city in the router prompt; v18: financial_health metric (router prompt), its chips; v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
@@ -354,6 +354,10 @@ async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
   });
   const o = res.stop_reason === "refusal" ? null : res.parsed_output;
   if (!o) return { kind: "text", standalone: text };
-  if (o.kind === "answer") return { kind: "answer", spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }), standalone: o.standalone || text };
+  if (o.kind === "answer") {
+    // SDG phrasing in the follow-up maps to lib/sdg.ts causes, as in the router (withSdg).
+    const r = withSdg(o.standalone || text, { research: true, spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }) });
+    return { kind: "answer", spec: r.research ? r.spec : normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }), standalone: o.standalone || text };
+  }
   return { kind: o.kind, standalone: o.standalone || text };
 }

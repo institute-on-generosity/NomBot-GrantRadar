@@ -77,7 +77,18 @@ main.wide { max-width: 1100px; }
 .prompt-blocks button:hover { background: var(--fill-2); color: var(--ink); }
 .prompt-blocks button.on { background: var(--g-tint); color: var(--g-dark); box-shadow: inset 0 0 0 1px var(--g-line); }
 .prompt-blocks button.on span { color: var(--g-dark); }
-.prompt-list { margin-top: 0; animation: settle .3s var(--spring) both; }
+.prompt-list { margin-top: 0; animation: settle .3s var(--spring) both; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.prompt-blocks-wrap { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.prompt-blocks-h, .prompt-sub-h { font-size: 12px; font-weight: 500; color: var(--mute); text-align: left; }
+.prompt-sub-h { text-align: center; }
+.prompt-sub { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.prompt-blocks.sdg { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.prompt-blocks.sdg button { justify-content: flex-start; padding: 9px 11px; }
+.prompt-blocks.sdg button em { font-style: normal; flex: 1; min-width: 0; line-height: 1.25; }
+.prompt-blocks.sdg button span { margin-left: auto; }
+.sdg-n { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: #fff; font-size: 12px; font-weight: 700; }
+.prompt-browse { font-size: 13px; font-weight: 500; color: var(--g-dark); text-decoration: none; }
+.prompt-browse:hover { text-decoration: underline; }
 .composer { width: 100%; background: var(--bg); border-radius: 22px; padding: 18px 12px 12px 20px; box-shadow: 0 0 0 1px var(--line), var(--shadow); transition: box-shadow .25s var(--spring); animation: settle .7s var(--spring) .06s both; }
 .composer:focus-within { box-shadow: 0 0 0 1px var(--g-line), 0 0 0 5px var(--g-tint), var(--shadow); }
 .composer input { width: 100%; border: 0; outline: 0; font: inherit; font-size: 17px; color: var(--ink); padding: 0 8px 20px 0; background: none; }
@@ -1648,3 +1659,4 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
 .fh-fact { font-size: 13px; color: var(--ink-2); margin: 6px 0 0; }
 .answer-orgs td.fh-cell { white-space: normal; min-width: 200px; font-size: 13px; color: var(--ink-2); }
 .fin-health td:first-child { min-width: 0; }
+.ins-browse { color: var(--g-dark); font-weight: 500; }

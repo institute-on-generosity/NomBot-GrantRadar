@@ -101,8 +101,11 @@ export const specSchema = z.object({
 // city is a plain string there ("" = none): another nullable field would grow the compiled grammar past its limit.
 export const llmSpecSchema = specSchema.omit({ region: true, ein: true, city: true }).extend({ causes: z.array(causeSchema), area: z.enum(["rural", "urban", "appalachia"]).nullable(),
   city: z.string().describe("City or town the question names, e.g. 'Inglewood' for Inglewood, CA (its state in states); empty when none") });
+// A missing-part note means "other" is missing: the router sometimes writes the note and leaves "other" out
+// (Oct 26: "state and local government grants alone" answered ok, 2 of 3 calls), so the note brings it in.
 export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
-  const { area, city, ...rest } = o;
+  const { area, city, ...r0 } = o;
+  const rest = r0.missingNote?.trim() && !r0.missing.includes("other") ? { ...r0, missing: [...r0.missing, "other" as const] } : r0;
   return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null, ein: null, city: city.trim() || null };
 }
 

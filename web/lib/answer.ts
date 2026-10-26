@@ -107,7 +107,9 @@ const b = (s: string) => `**${s}**`;
 const perRes = (x: number) => (x >= 100 ? `$${int(x)}` : `$${x.toFixed(2)}`);
 const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 // "animal shelters" names organizations already; "climate" needs "organizations" after it.
-const orgsOf = (name: string) => (/(shelters|banks|pantries|kitchens|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|theaters|churches|programs|clubs|trusts|funds)$/i.test(name) ? name : `${name} organizations`);
+// An SDG cause keeps its goal last: "life below water organizations (SDG 14)".
+const orgsOf = (name: string): string => { const m = /^(.+?)(\s\(SDG \d+\))$/.exec(name); return m ? `${orgsOf1(m[1])}${m[2]}` : orgsOf1(name); };
+const orgsOf1 = (name: string) => (/(shelters|banks|pantries|kitchens|schools|colleges|universities|hospitals|museums|clinics|organizations|orgs|groups|charities|nonprofits|centers|libraries|theaters|churches|programs|clubs|trusts|funds)$/i.test(name) ? name : `${name} organizations`);
 const yrs = (a: number, z: number) => (a === z ? `${a}` : `${a}–${String(z).slice(2)}`);
 
 // ------------------------------------------------------------------ SQL plumbing
@@ -962,11 +964,15 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v47: financial_health metric (one org's indicators over its full filing years, or a cause's orgs: deficit streaks,
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
 // v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
-const answerMemo = memo<Answer>("answer:v49", 500, 6 * 3600_000); // v49: youth_development; v48: city (recipient ZIPs, HQ)
+// v50: SDG causes (lib/sdg.ts): "(SDG n)" names stay last in org phrases and drop from the org search link.
+export const ANSWER_VERSION = "answer:v50";
+const answerMemo = memo<Answer>(ANSWER_VERSION, 500, 6 * 3600_000); // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
-export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
+// opts.memo false: the same queries as a cached answer, not kept here (Browse by cause keeps its own figures, lib/browse.ts).
+export function answer(question: string, spec: Spec, opts: { cube?: boolean; memo?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
   if (opts.cube === false) return compute(question, s, false);
+  if (opts.memo === false) return compute(question, s, true);
   return answerMemo(JSON.stringify(s), () => compute(question, s, true)).then((a) => ({ ...a, question }));
 }
 
@@ -1429,7 +1435,7 @@ const causeName = (c: Cause | null, pl?: Place) => {
   const base = c ? c.name : pl?.f.to || "all causes";
   return c && pl?.f.to ? `${base} (${pl.f.to})` : base;
 };
-const searchFor = (s: Spec, pl: Place) => (s.causes[0] ? `${s.causes[0].name}${pl.city ? ` in ${pl.city.label}` : pl.county ? ` in ${pl.county.name}, ${pl.county.state}` : s.states.length === 1 ? ` in ${stateName(s.states[0])}` : ""}` : null);
+const searchFor = (s: Spec, pl: Place) => (s.causes[0] ? `${s.causes[0].name.replace(/\s\(SDG \d+\)$/, "")}${pl.city ? ` in ${pl.city.label}` : pl.county ? ` in ${pl.county.name}, ${pl.county.state}` : s.states.length === 1 ? ` in ${stateName(s.states[0])}` : ""}` : null);
 
 // Residents of the place (Census 2024 county estimates), for per-resident figures.
 async function placePop(ctx: Ctx, pl: Place): Promise<number> {

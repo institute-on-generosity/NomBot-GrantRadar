@@ -104,5 +104,9 @@
   { "q": "How financially stable is the Red Cross?", "metric": ["financial_health"], "headlineHas": "Red Cross", "caveatHas": "Partial years are left out" },
   { "q": "Which mental health nonprofits in California ran deficits 3 years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "label": "mental_health", "states": ["CA"], "headlineHas": "3 years", "caveatHas": "not a rating" },
   { "q": "Which food banks in Ohio ran deficits 3 or more years in a row?", "metric": ["financial_health"], "condition": "deficit", "streak": 3, "ntee": "K31", "states": ["OH"], "caveatHas": "Donated goods" },
-  { "q": "What are the median cash reserves and program ratios of arts nonprofits by size?", "metric": ["financial_health"], "ntee": "A", "headlineHas": "median" }
+  { "q": "What are the median cash reserves and program ratios of arts nonprofits by size?", "metric": ["financial_health"], "ntee": "A", "headlineHas": "median" },
+  {"q": "How much foundation money goes to SDG 4?", "metric": ["total"], "label": "education", "headlineHas": "quality education \\(SDG 4\\)"},
+  {"q": "Who are the biggest foundation funders of life below water?", "metric": ["top_funders"], "headlineHas": "life below water \\(SDG 14\\)|oceans \\(SDG 14\\)"},
+  {"q": "How does SDG 4 compare to SDG 13?", "metric": ["compare"], "headlineHas": "SDG 13"},
+  {"q": "Which states get the most foundation money for workforce development (SDG 8)?", "metric": ["by_state"], "ntee": "J2", "headlineHas": "workforce development \\(SDG 8\\)"}
 ]

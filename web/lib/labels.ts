@@ -124,5 +124,7 @@ export const readsAsLabel = (name: string, label: LabelSlug) => (AS_LABEL[label]
 export function narrowerThanLabel(name: string, label: LabelSlug): boolean {
   const k = scopeKey(name);
   if (!k || /_/.test(name)) return false; // a bare slug or empty name is the label itself
+  // An SDG cause ("mental health (SDG 3)", lib/sdg.ts causeOf): the taxonomy chose this label as its whole scope.
+  if (/\(SDG (1[0-7]|[1-9])\)$/.test(name.trim())) return false;
   return k !== scopeKey(LABELS[label]) && !WHOLE[label].some((w) => scopeKey(w) === k);
 }
