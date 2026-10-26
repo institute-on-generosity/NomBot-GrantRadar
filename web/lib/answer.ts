@@ -551,6 +551,9 @@ const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly
     ? "Only orgs whose main focus is animal welfare are counted here, so this is a floor. Many animal welfare groups sit in the partial tier because they filed no 990 text to confirm their focus, and their money is left out."
     : "Animal welfare counts main focus and partial orgs together. Most partial orgs are animal welfare groups at heart that filed no 990 text to confirm it, or trusts that support one animal charity. Main focus orgs alone would leave out much of the real animal welfare money.",
   health_equity: (g) => `Health equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of orgs doing this work.`,
+  // generosity-data docs/labels/youth_development.md (c9f28ce): orgs with no 990 text count as main focus only when the
+  // name says youth, 4-H, scouting or mentoring. Sports leagues, boosters, schools and tutoring alone are out.
+  youth_development: (g) => `Youth development counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of the orgs doing this work, so the true total is higher. Small orgs that filed no 990 text count as main focus only when their name says youth, 4-H, scouting or mentoring. Youth sports leagues and booster clubs that only run games, schools, and tutoring alone are not counted.`,
   mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
 };
 
@@ -958,7 +961,8 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // v46: corrected NTEE counts orgs with no IRS code under their suggested detailed code where graded (suggested_code).
 // v47: financial_health metric (one org's indicators over its full filing years, or a cause's orgs: deficit streaks,
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
-const answerMemo = memo<Answer>("answer:v48", 500, 6 * 3600_000); // v48: city (recipient ZIPs, HQ)
+// v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
+const answerMemo = memo<Answer>("answer:v49", 500, 6 * 3600_000); // v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);

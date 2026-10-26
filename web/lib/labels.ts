@@ -3,7 +3,7 @@
 // Search filters by them (lib/search.ts), the org page and API show them (lib/orgLabels.ts, lib/org.ts, lib/api.ts).
 // Client-safe: no database imports here (lib/filters.ts, used by client components, imports it).
 
-export const LABELS = { climate: "Climate", women_girls: "Women and girls", substance_use: "Substance use and addiction", housing_homelessness: "Housing and homelessness", ai_tech_learning_work: "Tech and AI skills", racial_equity: "Racial equity", immigrants_refugees: "Immigrants and refugees", mental_health: "Mental health", education: "Education and learning", health_equity: "Health equity", animal_welfare: "Animal welfare" } as const;
+export const LABELS = { climate: "Climate", women_girls: "Women and girls", substance_use: "Substance use and addiction", housing_homelessness: "Housing and homelessness", ai_tech_learning_work: "Tech and AI skills", racial_equity: "Racial equity", immigrants_refugees: "Immigrants and refugees", mental_health: "Mental health", education: "Education and learning", health_equity: "Health equity", animal_welfare: "Animal welfare", youth_development: "Youth development" } as const;
 export type LabelSlug = keyof typeof LABELS;
 export const LABEL_SLUGS = Object.keys(LABELS) as LabelSlug[];
 export const isLabel = (s: unknown): s is LabelSlug => typeof s === "string" && s in LABELS;
@@ -59,6 +59,10 @@ const NAMES: Record<LabelSlug, RegExp> = {
   // Animal welfare named outright. Plain "animal shelters", "humane societies", "rescues" and "animals" stay NTEE D20 / D
   // (search keeps its NTEE results, and most small rescues sit in the partial tier, see generosity-data docs/labels).
   animal_welfare: /\banimal (welfare|protection|rights|cruelty|advocacy|sanctuar(y|ies)|abuse)\b|\banti-?cruelty\b|\bcruelty to animals\b|\bwelfare of animals\b|\bspay(ing)?( (and|&|\/) ?|\/)neuter(ing)?\b|\btrap[- ]neuter[- ]return\b|\bwildlife rehab(ilitation|ilitators?)?\b|\bfarm (animal )?sanctuar(y|ies)\b|\bhumane education\b|\bpet food (banks?|pantr(y|ies))\b|\bspcas?\b/i,
+  // Youth development named outright (youth development, leadership or empowerment). Plain "youth programs", "youth
+  // mentoring", after-school care, Boys & Girls Clubs, scouting and youth sports stay NTEE O / N: search boosts the label
+  // for them instead (lib/topicHints), since the label finds about 54% of these orgs.
+  youth_development: /\byouth[- ](development|leadership|empowerment|civic engagement)\b|\bpositive youth\b|\bteen leadership\b|\bleadership (development|programs?|training) for (youth|teens|young people|girls|boys)\b/i,
   mental_health: /\bmental(ly)? (health|illness(es)?|ill|disorders?|wellness|wellbeing|well-being)\b|\bpsychiatr|\bsuicid|\bcrisis (lines?|hotlines?|text)\b|\b988\b|\bdepression\b|\banxiety\b|\bptsd\b|\bpost-?traumatic stress\b|\bbipolar\b|\bschizophreni|\beating disorders?\b|\bbehavioral health\b|\bpsychotherap|\bnami\b|\bself-harm\b/i,
 };
 // Topical education, job and hobby schools and plain after-school care only matter for the education label ("digital
@@ -90,6 +94,7 @@ const WHOLE: Record<LabelSlug, string[]> = {
   education: ["education and learning", "education", "learning", "education and schools", "schools and education", "education funding", "educational", "education and youth learning"],
   health_equity: ["health equity", "health equity and health disparities", "health disparities", "health inequities", "health inequity", "health inequality", "health inequalities", "health justice", "health equity and disparities", "health disparities and health equity", "equity in health", "health care equity", "healthcare equity", "reducing health disparities"],
   animal_welfare: ["animal welfare", "animal welfare and protection", "animal protection", "animal welfare and rights", "animal rights and welfare", "animal rights and animal welfare", "welfare of animals", "animal welfare and rescue", "animal rescue and welfare", "animal welfare and animal rescue"],
+  youth_development: ["youth development", "positive youth development", "youth development programs", "developing young people", "youth development and mentoring"],
   mental_health: ["mental health", "mental illness", "mental illnesses", "mental health and mental illness", "mental health and wellness", "mental wellness", "mental health care", "mental and behavioral health", "behavioral and mental health", "behavioral health", "mental health and suicide prevention"],
 };
 // What each label counts, for the caveat on a narrower question.
@@ -104,6 +109,7 @@ export const LABEL_SCOPE: Record<LabelSlug, string> = {
   mental_health: "mental health treatment and counseling, crisis lines and suicide prevention, peer support, and mental health advocacy and research",
   health_equity: "closing health gaps by race, income, place, gender, disability or immigration status, through care and outreach aimed at those gaps, community health workers and promotoras, minority health, health disparities research and policy, and a more diverse health workforce",
   animal_welfare: "animal shelters, humane societies and SPCAs, rescue, foster and adoption, spay and neuter, vet care and pet food for animals in need, sanctuaries, wildlife rehabilitation, and anti-cruelty work and animal rights",
+  youth_development: "mentoring, youth clubs and centers, scouting and 4-H, leadership, character and life skills, after-school and summer enrichment, and youth jobs, outside the classroom",
   education: "schools, colleges and universities and their foundations, early childhood education, tutoring and literacy, scholarships and college access, adult education, libraries, STEM education, teacher training and education policy",
 };
 const FILLER = /\b(the|orgs?|organi[sz]ations?|nonprofits?|non-profits?|charities|charity|groups?|causes?|funding|money|grants?|giving|sector|issues?|efforts?|programs?|services?|work|related|focused)\b/g;
