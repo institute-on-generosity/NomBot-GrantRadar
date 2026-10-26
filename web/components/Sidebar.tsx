@@ -13,6 +13,7 @@ import { useStoredList } from "./useStored";
 const PanelIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden><rect x="3" y="4.5" width="18" height="15" rx="3.5" /><path d="M9 4.5v15" /></svg>;
 const FolderIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z" /></svg>;
 const ChartIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M5 20V11M12 20V5M19 20v-6" /></svg>;
+const GridIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" aria-hidden><rect x="4" y="4" width="6.5" height="6.5" rx="1.6" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6" /></svg>;
 const PlusIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>;
 
 const SHOWN = 8; // items per section before "See all"
@@ -58,6 +59,7 @@ export function Sidebar() {
         </div>
         <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">New search</span></NavLink>
         <NavLink href="/research" className={`side-new${here.path.startsWith("/research") ? " on" : ""}`} title="Research" current={here.path === "/research"} label="Loading research…"><ChartIcon /><span className="side-label">Research</span></NavLink>
+        <NavLink href="/browse" className={`side-new${here.path.startsWith("/browse") ? " on" : ""}`} title="Browse by cause" current={here.path === "/browse"} label="Loading causes…"><GridIcon /><span className="side-label">Browse by cause</span></NavLink>
 
         <nav className="side-scroll">
           <Section title="Starred" all="/saved" active={here.path === "/saved"}
