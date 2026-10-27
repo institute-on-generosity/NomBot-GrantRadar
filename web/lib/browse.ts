@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { answer, ANSWER_VERSION, type Num } from "./answer";
 import { DEFAULT_SPEC, normalizeSpec, type Metric, type Spec } from "./answerSpec";
 import { askHref } from "./researchQuestions";
-import { causeOf, covered, coverageOf, ENVIRONMENT, findSub, type Coverage, type Sdg, type Sub } from "./sdg";
+import { causeOf, causeQuestions, covered, coverageOf, ENVIRONMENT, findSub, type Coverage, type Sdg, type Sub } from "./sdg";
 
 export const BROWSE_VERSION = "browse:v1";
 const KEY = `${BROWSE_VERSION}|${ANSWER_VERSION}`;
@@ -36,15 +36,7 @@ export type Figures = {
 
 // The questions a Browse page links to: each routes (router + lib/sdg withSdg) to the spec its figure came from.
 export function asks(name: string): Record<Shown | "underfunded", string> {
-  return {
-    total: `How much foundation money goes to ${name}?`,
-    trend: `Is foundation money for ${name} growing?`,
-    top_funders: `Who are the biggest foundation funders of ${name}?`,
-    by_state: `Which states get the most foundation money for ${name}?`,
-    concentration: `How concentrated is foundation money for ${name}?`,
-    count_orgs: `How many nonprofits work on ${name}?`,
-    underfunded: `Which ${name} nonprofits get little foundation money for their size?`,
-  };
+  return causeQuestions(name);
 }
 export const askLink = (q: string) => askHref(q);
 

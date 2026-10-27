@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FiguresSkeleton, FullFigures } from "@/components/BrowseFigures";
-import { COVERAGE_TEXT, coverageOf, covered, ENVIRONMENT, findSub, inkOn, sdgSlug } from "@/lib/sdg";
+import { Below, Focal } from "@/components/BrowseFigures";
+import { covered, ENVIRONMENT, findSub, sdgSlug } from "@/lib/sdg";
 import "../../browse.css";
 
-// One subcategory: what it counts, its coverage and limits, the UN targets it serves, and its figures.
+// One subcategory (Oct 27 redesign): its foundation dollars and growth as the focal point, one chart by year, then
+// top funders and states, the crowded or under-funded line and one "Ask about this". Method under "How we count".
 function subOf(goal: string, id: string) {
   const f = findSub(id);
   if (!f || f.isScope || f.sub.coverage === "none") return null;
@@ -24,23 +25,17 @@ export default async function SubPage(props: PageProps<"/browse/[goal]/[sub]">) 
   const p = await props.params;
   const f = subOf(p.goal, p.sub);
   if (!f) notFound();
-  const s = f.sdg!, sub = f.sub, cov = coverageOf(sub);
+  const s = f.sdg!, sub = f.sub;
   return (
     <main className="br-page">
-      <Link href={`/browse/${sdgSlug(s.n)}`} className="back">← Goal {s.n}: {s.name}</Link>
-      <header className="br-head">
-        <b className="sdg-n big" style={{ background: s.color, color: inkOn(s.color) }}>{s.n}</b>
-        <div>
-          <p className="br-kicker">Goal {s.n}, {s.name}</p>
-          <h1 className="pagetitle">{sub.name}</h1>
-          <p className="br-sub">{sub.plain}</p>
-        </div>
-      </header>
-      <p className="br-counts">
-        <span className={`br-tag${cov === "keywords" ? " limited" : ""}`}>{COVERAGE_TEXT[cov]}{sub.pending && cov !== "label" ? ", label coming" : ""}</span>
-        {sub.targets?.length ? ` Serves UN targets ${sub.targets.join(", ")}.` : ""}{sub.note ? ` ${sub.note}` : ""}
-      </p>
-      <Suspense fallback={<FiguresSkeleton />}><FullFigures id={sub.id} searchName={sub.name.toLowerCase()} /></Suspense>
+      <Link href={`/browse/${sdgSlug(s.n)}`} className="back">← {s.n} · {s.name}</Link>
+      <h1 className="pagetitle br-title" title={[sub.plain, sub.targets?.length ? `Serves UN targets ${sub.targets.join(", ")}` : "", sub.note].filter(Boolean).join(". ")}>
+        <i className="sdg-dot big" style={{ background: s.color }} aria-hidden />{sub.name}
+      </h1>
+      <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={sub.id} chart /></Suspense>
+      <section className="br-sec">
+        <Suspense fallback={null}><Below id={sub.id} searchName={sub.name.toLowerCase()} /></Suspense>
+      </section>
     </main>
   );
 }

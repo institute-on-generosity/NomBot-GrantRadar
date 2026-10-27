@@ -110,7 +110,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {/* Where the money comes from and the year-over-year detail: one click away (they repeat cash and debts) */}
         {(o.flag?.income || o.income || o.flag) && (
           <details className="more-info">
-            <summary>Income sources and year over year</summary>
+            <summary><span className="when-closed">Income sources and year over year</span><span className="when-open">Hide income sources and year over year</span></summary>
             {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
             {o.flag && <YearOverYear d={o.flag} />}
           </details>
@@ -198,7 +198,7 @@ function Clamp({ text, at = 180 }: { text: string; at?: number }) {
   return (
     <>
       <p>{text.slice(0, i).trim()}</p>
-      <details className="more-info"><summary>Read all</summary><p>{text.slice(i).trim()}</p></details>
+      <details className="more-info"><summary><span className="when-closed">Read all</span><span className="when-open">Show less</span></summary><p>{text.slice(i).trim()}</p></details>
     </>
   );
 }

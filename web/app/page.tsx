@@ -303,7 +303,7 @@ function ResultList(props: RowProps & { rows: (Result | Ranked)[]; total: number
       {strong.map(row)}
       {strong.length > 0 && weak.length > 0 && (
         <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
-          <summary>Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</summary>
+          <summary><span className="when-closed">Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</span><span className="when-open">Hide looser matches</span></summary>
           {weak.map((r, i) => row(r, strong.length + i))}
         </details>
       )}
@@ -347,7 +347,7 @@ function TieredList({ rows, pending = false, scored = false, patterns, back, foc
             {strong.map(row)}
             {weak.length > 0 && (
               <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
-                <summary>Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</summary>
+                <summary><span className="when-closed">Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</span><span className="when-open">Hide looser matches</span></summary>
                 {weak.map((r, i) => row(r, strong.length + i))}
               </details>
             )}

@@ -1,5 +1,5 @@
 import type { PromptGroup, PromptSet } from "@/components/HeroFlip";
-import { findSub, SDGS, sdgSlug } from "./sdg";
+import { causeOf, causeQuestions, findSub, SDGS, sdgSlug } from "./sdg";
 
 // Example questions (every state is loaded; the first five, the home-page pills, stay in Appalachia, IoG's focus).
 // The first five are the home-page pills; all of them feed the search-bar suggestions.
@@ -60,10 +60,25 @@ const CROSS = [
   { label: "Household giving", prompts: ["Do high-income households give a larger share of income than low-income households?", "How has itemized charitable giving changed since 2015?"] },
 ];
 const subLabel = (id: string) => findSub(id)?.sub.name ?? id;
+// The goal panel's table (Oct 27): the whole goal first, then each subcategory, one question per column (How much,
+// Growing?, Top funders, Top states, Under-funded orgs), the same questions Browse asks. A subcategory with no data
+// gets no questions. Curated prompts that aren't one of those go under "More questions" (max 3).
+const COLS = ["total", "trend", "top_funders", "by_state", "underfunded"] as const;
+const tableOf = (g: (typeof SDGS)[number]) => {
+  const row = (label: string, sub: (typeof g.subs)[number]) => {
+    const c = causeOf(sub, g);
+    const q = c ? causeQuestions(c.name) : null;
+    return { label, q: q ? Object.fromEntries(COLS.map((k) => [k, q[k]])) as Record<(typeof COLS)[number], string> : null };
+  };
+  return [row(`All of ${g.name}`, g.scope), ...g.subs.map((s) => row(s.name, s))];
+};
 export const RESEARCH_GROUPS: PromptGroup[] = [
   ...SDGS.filter((g) => BY_SDG[g.n]).map((g) => {
     const subs = BY_SDG[g.n].map((x) => ({ label: subLabel(x.sub), prompts: x.prompts }));
-    return { label: `SDG ${g.n} ${g.name}`, prompts: subs.flatMap((x) => x.prompts), sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}` }, subs };
+    const table = tableOf(g);
+    const asked = new Set(table.flatMap((r) => (r.q ? Object.values(r.q) : [])));
+    const more = subs.flatMap((x) => x.prompts).filter((q) => !asked.has(q)).slice(0, 3);
+    return { label: `SDG ${g.n} ${g.name}`, prompts: [...table.flatMap((r) => (r.q ? Object.values(r.q) : [])), ...more], sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}` }, subs, table, more };
   }),
   ...CROSS,
 ];

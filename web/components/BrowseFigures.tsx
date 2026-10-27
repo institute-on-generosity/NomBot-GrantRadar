@@ -4,114 +4,91 @@ import { connection } from "next/server";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { orgName } from "@/components/text";
-import { askLink, cachedFigures, asks, entry, figures, figuresTimed, perOrgHint, type Figures, type Part } from "@/lib/browse";
+import { askLink, cachedFigures, asks, entry, figures, perOrgHint, type Part } from "@/lib/browse";
 
-const Ask = ({ q, children }: { q: string; children: React.ReactNode }) => (
-  <NavLink href={askLink(q)} className="br-ask" label="Working out the answer…">{children}</NavLink>
-);
 const val = (p: Part | null, i = 0) => (p && p.status !== "unanswerable" ? p.numbers[i] ?? null : null);
 
-// Compact line for a card: dollars, trend, orgs.
+// One number for a goal tile: foundation grants 2022 to 2024 (growth and org count in the tooltip).
 export async function MiniFigures({ id }: { id: string }) {
   await connection();
   const f = await figures(id).catch(() => null);
-  if (!f || f.status !== "ok") return <p className="br-mini muted">No figures yet</p>;
+  if (!f || f.status !== "ok") return <span className="br-num muted">n/a</span>;
   const t = val(f.parts.total), tr = val(f.parts.trend), n = val(f.parts.count_orgs);
-  return (
-    // One number per card: foundation grants 2022 to 2024 (growth and org count in the tooltip)
-    <p className="br-mini" title={[tr && `${tr.value} since 2020`, n && `${n.value} orgs`].filter(Boolean).join(" · ")}>
-      {t && <span><b>{t.value}</b> 2022 to 2024</span>}
-    </p>
-  );
+  return <span className="br-num" title={["2022 to 2024", tr && `${tr.value} since 2020`, n && `${n.value} orgs`].filter(Boolean).join(" · ")}>{t?.value ?? "n/a"}</span>;
 }
-export const MiniSkeleton = () => <p className="br-mini muted">Loading figures…</p>;
+export const MiniSkeleton = () => <span className="br-num muted">…</span>;
 
-export async function FullFigures({ id, searchName }: { id: string; searchName: string }) {
+// ---------- Browse redesign (Oct 27): one focal number, a ranked list, two compact top-5 columns ----------
+
+// The focal block: foundation grants 2022 to 2024, big, with growth since 2020 and a small by-year sparkline.
+export async function Focal({ id, chart = false }: { id: string; chart?: boolean }) {
   await connection();
-  const e = entry(id);
-  const { f, ms } = await figuresTimed(id).catch((err) => { console.error("browse figures failed", id, err); return { f: null, ms: 0 }; });
-  if (!e || !f) return <p className="hint">These figures couldn&apos;t be computed right now.</p>;
-  if (f.status !== "ok") return <p className="hint">{f.parts.total?.headline ?? "No foundation grants matched this cause."}</p>;
-  const q = asks(e.name);
-  const all = await cachedFigures();
-  const hint = perOrgHint(id, all);
+  const f = await figures(id).catch(() => null);
+  if (!f || f.status !== "ok") return <p className="hint">{f?.parts.total?.headline ?? "No foundation grants matched this cause."}</p>;
+  const t = val(f.parts.total), tr = val(f.parts.trend);
+  const q = asks(entry(id)?.name ?? "");
+  const max = Math.max(1, ...f.years.map((y) => y.usd));
   return (
-    <div className="br-figs">
-      <div className="br-tiles">
-        <Tile label="Foundation grants, 2022 to 2024" p={f.parts.total} i={0} q={q.total} />
-        <Tile label="Growth since 2020" p={f.parts.trend} i={0} q={q.trend} sub={val(f.parts.trend, 1)} />
-        <Tile label="Organizations" p={f.parts.count_orgs} i={0} q={q.count_orgs} sub={val(f.parts.count_orgs, 1)} />
-        <Tile label="Concentration" p={f.parts.concentration} i={0} q={q.concentration} sub={val(f.parts.concentration, 1)} />
-      </div>
-
-      {f.years.length > 0 && <Years f={f} />}
-
-      <div className="br-two">
-        <section>
-          <h3>Top foundation funders</h3>
-          {f.funders.length ? (
-            <ol className="br-list">{f.funders.map((x) => <li key={x.name}><span>{orgName(x.name)}{x.state ? `, ${x.state}` : ""}</span><b>{money(x.usd)}</b></li>)}</ol>
-          ) : <p className="muted">None found</p>}
-          <Ask q={q.top_funders}>Ask who funds it →</Ask>
-        </section>
-        <section>
-          <h3>Top states</h3>
-          {f.states.length ? (
-            <ol className="br-list">{f.states.map((x) => <li key={x.state}><span>{x.name}</span><b>{money(x.usd)}</b></li>)}</ol>
-          ) : <p className="muted">None found</p>}
-          <Ask q={q.by_state}>Ask which states get most →</Ask>
-        </section>
-      </div>
-
-      {hint && f.perOrg != null && (
-        <section className={`br-hint ${hint.tone}`}>
-          <h3>Crowded or under-funded?</h3>
-          <p><b>{money(f.perOrg)}</b> a year in foundation grants per org that e-files a 990. That ranks <b>{hint.rank}</b> of {hint.of} causes, against a median of {money(hint.median)}.</p>
-          <p>{hint.text}</p>
-          <Ask q={q.underfunded}>Find orgs here that get little foundation money for their size →</Ask>
-        </section>
-      )}
-
-      {/* Method folded under "How we count" (UX audit BG2: no internal table names or timings on the page) */}
-      <details className="more-info br-meta">
-        <summary>How we count</summary>
-        <p>{f.causeNote.replace(/\s*\(org_labels\)/g, "")}</p>
-        {f.recency && <p><b>Data years.</b> {f.recency}</p>}
-        <p className="muted" data-ms={ms}>Figures are the research answers for this cause, refreshed daily.</p>
-      </details>
-
-      <section className="br-asks">
-        <h3>Ask about it</h3>
-        <div className="chips suggest">
-          {Object.values(q).map((x) => <NavLink key={x} href={askLink(x)} className="chip link" label="Working out the answer…">{x.replace(/\s\(SDG \d+\)/, "")}</NavLink>)}
-          <NavLink href={`/?${new URLSearchParams({ question: searchName })}`} className="chip link" label="Finding organizations…" search>Find {searchName} orgs</NavLink>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Tile({ label, p, i, q, sub }: { label: string; p: Part | null; i: number; q: string; sub?: Part["numbers"][number] | null }) {
-  const n = val(p, i);
-  return (
-    <NavLink href={askLink(q)} className="br-tile" label="Working out the answer…">
-      <span className="br-tile-l">{label}</span>
-      <b>{n?.value ?? "n/a"}</b>
-      <span className="br-tile-s">{n ? n.label : "Not available"}{n?.note ? ` (${n.note})` : ""}</span>
-      {sub && <span className="br-tile-s">{sub.value} {sub.label}</span>}
-    </NavLink>
-  );
-}
-
-function Years({ f }: { f: Figures }) {
-  const max = Math.max(...f.years.map((y) => y.usd), 1);
-  return (
-    <section className="br-years" aria-label="Foundation grants by year">
-      {f.years.map((y) => (
-        <div key={y.year}><span className="br-bar" style={{ height: `${Math.max(4, (y.usd / max) * 64)}px` }} /><b>{money(y.usd)}</b><span>{y.year}</span></div>
-      ))}
+    <section className="br-focal">
+      <NavLink href={askLink(q.total)} className="br-big" label="Working out the answer…" title={t?.note ?? undefined}>{t?.value ?? "n/a"}</NavLink>
+      <span className="br-big-l">foundation grants, 2022–24</span>
+      {tr && <NavLink href={askLink(q.trend)} className={`br-trend ${tr.value.startsWith("−") ? "down" : "up"}`} label="Working out the answer…" title={tr.label}>{tr.value} since 2020</NavLink>}
+      {f.years.length > 1 && (chart
+        ? <div className="br-bars" aria-label="Foundation grants by year">{f.years.map((y) => <span key={y.year} title={`${y.year}: ${money(y.usd)}`}><i style={{ height: `${Math.max(4, (y.usd / max) * 72)}px` }} /><small>{String(y.year).slice(2)}</small></span>)}</div>
+        : <svg className="br-spark" viewBox={`0 0 ${(f.years.length - 1) * 20} 32`} preserveAspectRatio="none" aria-hidden>
+            <polyline fill="none" stroke="currentColor" strokeWidth="2" points={f.years.map((y, i) => `${i * 20},${30 - (y.usd / max) * 28}`).join(" ")} />
+          </svg>)}
     </section>
   );
 }
 
-export const FiguresSkeleton = () => <div className="br-figs"><div className="br-tiles">{[0, 1, 2, 3].map((i) => <div key={i} className="br-tile skel" />)}</div><p className="hint">Loading figures…</p></div>;
+// Subcategories as a ranked list: name, dollars 2022 to 2024 and a bar for its size against the largest.
+export async function SubList({ items }: { items: { id: string; name: string; href: string | null; note?: string }[] }) {
+  await connection();
+  const rows = await Promise.all(items.map(async (x) => ({ ...x, f: x.href ? await figures(x.id).catch(() => null) : null })));
+  const usd = (r: (typeof rows)[number]) => (r.f?.status === "ok" ? r.f.usdYear : 0);
+  rows.sort((a, b) => usd(b) - usd(a));
+  const max = Math.max(1, ...rows.map(usd));
+  return (
+    <ol className="br-rank">
+      {rows.map((r) => {
+        const v = r.f?.status === "ok" ? val(r.f.parts.total)?.value : null;
+        const body = <><span className="br-rank-n">{r.name}</span><span className="br-rank-bar"><i style={{ width: `${(100 * usd(r)) / max}%` }} /></span><b>{v ?? (r.href ? "n/a" : "Not in our data")}</b></>;
+        return <li key={r.id} title={r.note}>{r.href ? <NavLink href={r.href} className="br-rank-row">{body}</NavLink> : <span className="br-rank-row off">{body}</span>}</li>;
+      })}
+    </ol>
+  );
+}
+
+// Top funders and top states, five each, side by side; one "Ask about this" button; the crowded or under-funded
+// line; method under "How we count".
+export async function Below({ id, searchName }: { id: string; searchName: string }) {
+  await connection();
+  const f = await figures(id).catch(() => null);
+  if (!f || f.status !== "ok") return null;
+  const q = asks(entry(id)?.name ?? searchName);
+  const hint = perOrgHint(id, await cachedFigures());
+  return (
+    <>
+      <div className="br-two">
+        <section><h3>Top funders</h3>{f.funders.length ? <ol className="br-list">{f.funders.slice(0, 5).map((x) => <li key={x.name}><span title={x.state ?? undefined}>{orgName(x.name)}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
+        <section><h3>Top states</h3>{f.states.length ? <ol className="br-list">{f.states.slice(0, 5).map((x) => <li key={x.state}><span>{x.name}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
+      </div>
+      {hint && f.perOrg != null && (
+        <p className={`br-crowd ${hint.tone}`} title={hint.text}>
+          <b>{money(f.perOrg)}</b> a year per org, rank {hint.rank} of {hint.of} causes. <NavLink href={askLink(q.underfunded)} label="Working out the answer…">Find under-funded orgs →</NavLink>
+        </p>
+      )}
+      <div className="br-actions">
+        <NavLink href={askLink(q.top_funders)} className="br-ask-btn" label="Working out the answer…">Ask about this</NavLink>
+        <NavLink href={`/?${new URLSearchParams({ question: searchName })}`} className="br-ask-btn ghost" label="Finding organizations…" search>Find orgs</NavLink>
+      </div>
+      <details className="more-info br-meta">
+        <summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary>
+        <p>{f.causeNote.replace(/\s*\(org_labels\)/g, "")}</p>
+        {f.recency && <p><b>Data years.</b> {f.recency}</p>}
+        <p className="muted">Every figure is the research answer for this cause, refreshed daily. Click one to see it asked.</p>
+      </details>
+    </>
+  );
+}

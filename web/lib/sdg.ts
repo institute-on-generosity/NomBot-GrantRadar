@@ -310,3 +310,21 @@ export function inkOn(hex: string): string {
   const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   return (L + 0.05) / 0.05 > 1.05 / (L + 0.05) ? "#1d1d1f" : "#fff";
 }
+
+// One-word goal names for compact tiles (home Research tab, /research, /browse); the full name goes in the tooltip.
+export const SDG_SHORT: Record<number, string> = { 1: "Poverty", 2: "Hunger", 3: "Health", 4: "Education", 5: "Gender", 6: "Water", 7: "Energy", 8: "Work",
+  9: "Industry", 10: "Inequality", 11: "Cities", 12: "Consumption", 13: "Climate", 14: "Oceans", 15: "Land", 16: "Justice", 17: "Partnerships" };
+
+// The questions a cause answers in Browse and in the home goal panel, one per column (Oct 27). Each routes back to its
+// cause (lib/answerRoute withSdg; eval/browse.mts checks every covered cause).
+export function causeQuestions(name: string) {
+  return {
+    total: `How much foundation money goes to ${name}?`,
+    trend: `Is foundation money for ${name} growing?`,
+    top_funders: `Who are the biggest foundation funders of ${name}?`,
+    by_state: `Which states get the most foundation money for ${name}?`,
+    concentration: `How concentrated is foundation money for ${name}?`,
+    count_orgs: `How many nonprofits work on ${name}?`,
+    underfunded: `Which ${name} nonprofits get little foundation money for their size?`,
+  };
+}

@@ -46,7 +46,7 @@ export function AnswerHealth({ h, title }: { h: OrgHealth; title?: string }) {
       </div>
       {/* Secondary detail (fundraising cost, net assets, peers, method) folded under "Details" */}
       <details className="more-info">
-        <summary>Details</summary>
+        <summary><span className="when-closed">Details ({facts.length + 1})</span><span className="when-open">Hide details</span></summary>
         {facts.map((f) => <p key={f} className="fh-fact">{f}</p>)}
         <p className="chat-basis">{HEALTH_NOTE} Full years only{h.partial_return ? `, so ${h.partial_return} (still arriving) isn't shown` : ""}. n/a = not on that form or year.</p>
       </details>

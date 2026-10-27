@@ -51,7 +51,8 @@ for (const g of RESEARCH_GROUPS) for (const q of g.prompts) {
   if (!sdgRefs(q).length) continue;
   const r = withSdg(q, { research: true, spec: { ...DEFAULT_SPEC, causes: [dummy] } });
   const c = r.research ? r.spec.causes[0] : null;
-  ok(!!c && covered().some((f) => same(causeOf(f.sub, f.sdg), c)), `home prompt "${q}" maps to no covered cause: ${JSON.stringify(c)}`);
+  // Compared with the raw cause and with Browse's normalized one (subtype added), since the goal panel asks Browse's questions
+  ok(!!c && covered().some((f) => same(causeOf(f.sub, f.sdg), c) || same(entry(f.sub.id)?.spec?.causes[0], c)), `home prompt "${q}" maps to no covered cause: ${JSON.stringify(c)}`);
 }
 console.log(`taxonomy and links: ${checks - bad.length}/${checks}`);
 
