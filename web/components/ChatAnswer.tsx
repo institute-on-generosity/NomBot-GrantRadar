@@ -42,8 +42,8 @@ export function ChatAnswer({ a }: { a: Answer }) {
     <div className="chat-answer">
       {/* Focal point: the first key number, big; the headline under it; the other numbers as smaller figures. */}
       {a.numbers.length > 0 && (
-        <p className="chat-nums" aria-label="Key numbers">
-          {a.numbers.map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {n.label}</span>)}
+        <p className="chat-nums" aria-label="Key number">
+          <span title={a.numbers[0].note}><b>{a.numbers[0].value}</b> {a.numbers[0].label}</span>
         </p>
       )}
       <p className="chat-lead">{a.headline}</p>
@@ -54,15 +54,17 @@ export function ChatAnswer({ a }: { a: Answer }) {
         </figure>
       )}
       {/* Method notes (match basis, data years, number notes) folded under one quiet line */}
-      {!none && (a.basis || a.recency || a.numbers.some((n) => n.note)) && (
+      {!none && (a.basis || a.recency || a.numbers.length > 1 || a.bullets.length > 0) && (
         <details className="more-info">
           <summary>Details</summary>
+          {a.numbers.length > 1 && <p className="chat-nums more">{a.numbers.slice(1).map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {n.label}</span>)}</p>}
+          {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
           {a.basis && <p className="chat-basis">{a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
           {a.recency && <p className="chat-basis chat-recency">{a.recency.note}</p>}
           {a.numbers.filter((n) => n.note).map((n) => <p key={n.label} className="chat-basis">{n.value} {n.label}: {n.note}</p>)}
         </details>
       )}
-      {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
+      {none && a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
       {a.orgs && !none && <AnswerOrgs orgs={a.orgs} />}
       {a.health && !none && <AnswerHealth h={a.health} />}
       {a.healthOrgs && !none && <AnswerHealthOrgs orgs={a.healthOrgs} />}

@@ -28,13 +28,13 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
       <div className="row-main">
         <div className="name-line">
-          <NavLink href={href} className="name">{titleCase(r.name)}</NavLink>
+          <NavLink href={href} className="name" title={r.ntee?.label ?? undefined}>{titleCase(r.name)}</NavLink>
           {focused && <span className="lastviewed">last viewed</span>}
         </div>
         <div className="sub">
           {place && <span className="fact"><Icon name="pin" size={14} />{place}</span>}
           {r.revenue && <span className="fact" title={`Yearly income${r.revenue.year ? `, ${r.revenue.year}` : ""}`}><Icon name="money" size={14} />{money(r.revenue.amount)}</span>}
-          {r.ntee?.label && !hide?.cause && <span className="fact">{r.ntee.label}</span>}
+          {/* Cause: in the name's tooltip, not on the row (word cut, Oct 27) */}
           {/* Why a place tier lists it (named for the city but mailed from elsewhere, or a filing or grant naming it): one icon, text on hover */}
           {why && <span className={`fact place-why${r.place!.basis === "name" ? " flag" : ""}`} title={why} aria-label={why} tabIndex={0}><Icon name={r.place!.basis === "name" ? "warn" : "info"} size={14} /></span>}
           <HealthBadges h={r.health} />

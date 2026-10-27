@@ -18,10 +18,9 @@ export async function MiniFigures({ id }: { id: string }) {
   if (!f || f.status !== "ok") return <p className="br-mini muted">No figures yet</p>;
   const t = val(f.parts.total), tr = val(f.parts.trend), n = val(f.parts.count_orgs);
   return (
-    <p className="br-mini">
-      {t && <span><b>{t.value}</b> 2022 to 24</span>}
-      {tr && <span className={tr.value.startsWith("−") ? "down" : "up"}><b>{tr.value}</b> since 2020</span>}
-      {n && <span><b>{n.value}</b> orgs</span>}
+    // One number per card: foundation grants 2022 to 2024 (growth and org count in the tooltip)
+    <p className="br-mini" title={[tr && `${tr.value} since 2020`, n && `${n.value} orgs`].filter(Boolean).join(" · ")}>
+      {t && <span><b>{t.value}</b> 2022 to 2024</span>}
     </p>
   );
 }
@@ -84,7 +83,7 @@ export async function FullFigures({ id, searchName }: { id: string; searchName: 
       <section className="br-asks">
         <h3>Ask about it</h3>
         <div className="chips suggest">
-          {Object.values(q).map((x) => <NavLink key={x} href={askLink(x)} className="chip link" label="Working out the answer…">{x}</NavLink>)}
+          {Object.values(q).map((x) => <NavLink key={x} href={askLink(x)} className="chip link" label="Working out the answer…">{x.replace(/\s\(SDG \d+\)/, "")}</NavLink>)}
           <NavLink href={`/?${new URLSearchParams({ question: searchName })}`} className="chip link" label="Finding organizations…" search>Find {searchName} orgs</NavLink>
         </div>
       </section>

@@ -41,11 +41,14 @@ const pct = (n: number, of: number) => `${Math.round((100 * n) / Math.max(1, of)
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 // "youth sports programs" reads as a count noun; "climate" or "health" doesn't, so those say "strong matches".
-// Only a real group noun counts ("programs", "food banks"); a bare cause word ("arts", "climate") says "organizations".
+// The count's noun from the query: a group noun as is ("youth sports programs", "food banks"), a cause word plus
+// "groups" ("arts groups"), else "organizations".
 const GROUP = /(programs|groups|organizations|nonprofits|charities|banks|pantries|shelters|clubs|centers|centres|foundations|leagues|clinics|schools|museums|theaters|theatres|orchestras|libraries|camps|teams|hospitals|ministries|councils|associations|societies|funds|trusts|coalitions|networks|agencies|academies|homes|initiatives|projects|services)$/;
 export function countNoun(topic: string | undefined, scored: boolean) {
   const t = (topic ?? "").trim().toLowerCase();
   if (scored && t && t.split(/\s+/).length <= 5 && GROUP.test(t)) return t;
+  // A cause word gets "groups": "arts" -> "arts groups", "youth leadership" -> "youth leadership groups"
+  if (scored && t && t.split(/\s+/).length <= 3 && /^[a-z][a-z &'-]*$/.test(t)) return `${t} groups`;
   return scored ? "organizations" : "results";
 }
 
@@ -124,11 +127,11 @@ export type KeyTile = { value: string; label: string; note?: string };
 export function keyFactTiles(f: SummaryFacts, deficit: { count: number; of: number } | null): { tiles: KeyTile[]; basis: string; shown: number } {
   const n = f.strong, of = `of the ${num(n)} shown`;
   const [g0, g1] = f.grantYears;
-  // At most 3 tiles; the count itself is the summary's big number, so it isn't repeated here.
+  // Only facts the summary doesn't show (it has the count, median income and the share with grants): the panel adds
+  // the median years tax-exempt as a third (components/Landscape).
   const tiles: KeyTile[] = [];
-  if (f.revenue) tiles.push({ value: money(f.revenue.median), label: "median yearly income", note: f.revenue.reported === n ? of : `${num(f.revenue.reported)} ${of} report it` });
+  if (f.grantsTotal > 0) tiles.push({ value: money(f.grantsTotal), label: `from foundations, ${g0}–${g1}`, note: of });
   if (deficit && deficit.of >= 5) tiles.push({ value: pct(deficit.count, deficit.of), label: "overspent last year", note: `${num(deficit.of)} ${of} report` });
-  if (f.grantsTotal > 0) tiles.push({ value: money(f.grantsTotal), label: `from foundations, ${g0}–${g1}`, note: `${num(f.funded)} ${of} got grants` });
   return { tiles: tiles.slice(0, 3), basis: `${num(n)} shown · grants ${g0}–${g1}`, shown: n };
 }
 

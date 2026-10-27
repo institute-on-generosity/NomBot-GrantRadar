@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SummaryBody } from "./SummaryBody";
+import { money } from "@/lib/summaryFacts";
 import { Icon, type IconName } from "./Icons";
 
 // Tier chips: the same icons as the list's tier headings.
@@ -22,7 +23,7 @@ export function SearchSummary({ summary, question }: { summary: Summary; questio
       <div aria-live="polite">
         <Suspense fallback={<SummarySkeleton />}><SummaryText summary={summary} question={question} /></Suspense>
       </div>
-      <Suspense fallback={null}><Caveat head={summary.head} /></Suspense>
+      <Suspense fallback={null}><Tiles head={summary.head} /></Suspense>
     </section>
   );
 }
@@ -30,7 +31,7 @@ export function SearchSummary({ summary, question }: { summary: Summary; questio
 // The focal number big with a short noun ("42 programs"), the place tiers as icon chips (the words in the tooltip).
 function Count({ main, parts, more, busy, strong, weaker }: { main: string; parts: string[]; more: string | null; busy?: boolean; strong?: number; weaker?: number }) {
   const [n, ...rest] = main.split(" ");
-  const noun = rest.length > 2 ? rest[rest.length - 1] : rest.join(" ");
+  const noun = rest.join(" ");
   return (
     <div className="sum-count" {...(busy ? { "aria-busy": "true" } : { "data-strong": strong, "data-weaker": weaker })}>
       <p className="sum-head" title={main}><b className="sum-n">{n}</b> <span>{noun}</span></p>
@@ -54,10 +55,18 @@ async function ScoredCount({ head }: { head: Promise<SummaryHead> }) {
   return <Count main={line.main} parts={line.parts} more={line.more} strong={facts.strong} weaker={facts.weaker} />;
 }
 
-// The one caveat, as a warning icon with its text on hover or focus (figures live in the panel's Key facts).
-async function Caveat({ head }: { head: Promise<SummaryHead> }) {
-  const { caveat } = await head;
-  return caveat ? <p className="sum-warn" title={caveat} tabIndex={0}><Icon name="warn" /><span className="sr-only">{caveat}</span></p> : null;
+// Two small stat tiles after the line (median income, share with foundation grants; the years in the tooltip) and
+// the caveat as a warning icon with its text on hover or focus.
+async function Tiles({ head }: { head: Promise<SummaryHead> }) {
+  const { facts: f, caveat } = await head;
+  const [g0, g1] = f.grantYears;
+  return (
+    <p className="sum-tiles">
+      {f.revenue && <span title={`Median yearly income, ${f.revenue.reported} of the ${f.strong} report it`}><Icon name="money" /><b>{money(f.revenue.median)}</b> median income</span>}
+      {f.strong > 0 && <span title={`Got foundation grants, ${g0} to ${g1}`}><Icon name="gift" /><b>{Math.round((100 * f.funded) / f.strong)}%</b> got foundation grants</span>}
+      {caveat && <span className="sum-warn" title={caveat} tabIndex={0}><Icon name="warn" /><span className="sr-only">{caveat}</span></span>}
+    </p>
+  );
 }
 
 async function SummaryText({ summary, question }: { summary: Summary; question: string }) {

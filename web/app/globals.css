@@ -1714,3 +1714,16 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
 /* Breathable reading (Oct 27): running text stops at a comfortable line length */
 .sum-text, .chat-lead, .org > section > p, .hint, .greet-sub, .fh-fact, .report-summary p { max-width: var(--read); }
 .ico { flex: none; vertical-align: -3px; }
+/* Org top (Oct 27): name, place, 3 icon stats */
+.org-place { display: flex; align-items: center; gap: 6px; }
+.org-place .ico { color: var(--faint); }
+.org-place .site { display: inline-flex; margin-left: 8px; color: var(--mute); }
+.org-place .site:hover { color: var(--g); }
+.org-stats { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-6); margin: var(--s-5) 0 0; padding: 0; }
+.org-stats li { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 8px; }
+.org-stats .ico { color: var(--faint); grid-row: span 2; }
+.org-stats b { font-size: var(--t-num); font-weight: 650; letter-spacing: -.03em; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.org-stats span { font-size: var(--t-meta); color: var(--mute); grid-column: 2; }
+.na { color: var(--faint); font-size: var(--t-meta); }
+.chat-nums.more span:first-child { flex-basis: auto; font-size: inherit; }
+.chat-nums.more span:first-child b { font-size: var(--t-num-sm); margin-right: 0; }

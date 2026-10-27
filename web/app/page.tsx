@@ -15,6 +15,7 @@ import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
 import { Icon, type IconName } from "@/components/Icons";
+import { InsightsMemory } from "@/components/InsightsMemory";
 // Place tiers get one icon each: in the city = pin, serving it = arrow in, nearby = radius, county or wider = globe.
 const TIER_ICON: Record<string, IconName | undefined> = { in: "pin", serves: "arrowIn", nearby: "radius", county: "globe", wider: "globe" };
 import { parseQuestion } from "@/lib/parse";
@@ -224,10 +225,9 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
           </div>
         </div>
       ) : (
-      /* Results first; the analysis panel (Key facts, Did you know, Breakdown, Map, Themes, Funders) opens from the
-         "Insights" toggle in the list header (CSS only: the checkbox before .serp), so above the fold is the search box,
-         the count, one line and the list (Oct 27). */
-      <><input type="checkbox" id="insights" className="ins-toggle" aria-label="Show insights" />
+      /* Results first, with a slim panel of 3 Key facts; "More insights" (the checkbox before .serp, remembered per
+         browser) opens the full panel: Did you know, Breakdown, Map, Themes, Funders (Oct 27). */
+      <><input type="checkbox" id="insights" className="ins-toggle" aria-label="Show all insights" /><InsightsMemory />
       <div className="serp">
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "Overview", node: <RailSkeleton /> }]} />}>

@@ -4,6 +4,7 @@ import { NavLink } from "@/components/NavLink";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { money } from "@/components/money";
+import { Icon } from "@/components/Icons";
 import { nteeLabel } from "@/lib/ntee";
 import { BackLink } from "@/components/BackLink";
 import { RecordViewed } from "@/components/HistoryRecorder";
@@ -61,20 +62,17 @@ async function Org({ params, searchParams, modal }: Props) {
         : <BackLink fallback="/">← Back</BackLink>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
       <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} />{!modal && <PrintButton />}</div>
-      <p className="sub">
-        {[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
-        {o.ntee?.label && <> · {o.ntee.label}</>} · EIN {o.ein}
-        {o.website && <> · <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title="Their website, as listed on their Form 990">{o.website.replace(/^www\./, "").replace(/\/.*$/, "")} ↗</a></>}
+      {/* Top: name, place (website as an icon), then 3 icon stats. Cause, EIN and the latest 990 live in Details. */}
+      <p className="sub org-place">
+        <Icon name="pin" size={15} />{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
+        {o.website && <a className="site" href={`https://${o.website}`} target="_blank" rel="noreferrer" title={`Website: ${o.website.replace(/^www\./, "").replace(/\/.*$/, "")}`} aria-label="Website"><Icon name="globe" size={15} /></a>}
       </p>
-      {o.latest990 && (
-        <p className="sub latest-990" title={LATEST_RETURN_NOTE}>
-          Latest 990: tax year {o.latest990.year}{o.latest990.form !== "990" && <> (Form {formName(o.latest990.form)})</>}{o.latest990.processed && <>, processed by the IRS in {o.latest990.processed}</>}
-        </p>
-      )}
       {o.tax?.revocation && (o.tax.status === "revoked" || o.tax.status === "conflict") && <Revoked r={o.tax.revocation} conflict={o.tax.status === "conflict"} onPub78={o.tax.pub78.eligible} />}
-      {/* Focal number: the latest yearly income, big, with staff, volunteers and age beside it */}
-      {o.years[0]?.revenue != null && <p className="org-key"><b>{money(o.years[0].revenue)}</b> yearly income ({o.years[0].year})</p>}
-      {(o.team || o.age != null) && <Team team={o.team} age={o.age} since={o.ruling} />}
+      <ul className="org-stats">
+        {o.years[0]?.revenue != null && <li title={`Yearly income, ${o.years[0].year}`}><Icon name="money" size={18} /><b>{money(o.years[0].revenue)}</b><span>income</span></li>}
+        {o.team?.staff != null && <li title={`Form 990 (${o.team.year}): ${o.team.staff.toLocaleString("en-US")} staff${o.team.volunteers != null ? `, ${o.team.volunteers.toLocaleString("en-US")} volunteers` : ""}`}><Icon name="people" size={18} /><b>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? o.team.volunteers!.toLocaleString("en-US") : o.team.staff.toLocaleString("en-US")}</b><span>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? "volunteers" : "staff"}</span></li>}
+        {o.age != null && <li title={`Tax-exempt since ${o.ruling} (IRS ruling date)`}><Icon name="calendar" size={18} /><b>{o.age < 1 ? "<1" : o.age}</b><span>years</span></li>}
+      </ul>
 
       <section>
         <h2>Mission</h2>
@@ -100,8 +98,8 @@ async function Org({ params, searchParams, modal }: Props) {
                 <tr key={`${y.year}-${y.source}`}>
                   <td>{y.year}</td>
                   <td className="n">{money(y.revenue)}</td>
-                  <td className="n">{y.expenses != null ? money(y.expenses) : "—"}</td>
-                  <td className="n">{y.assets != null ? money(y.assets) : "—"}</td>
+                  <td className="n">{y.expenses != null ? money(y.expenses) : <span className="na">Not reported</span>}</td>
+                  <td className="n">{y.assets != null ? money(y.assets) : <span className="na">Not reported</span>}</td>
                   <td><Src href={y.url} inModal={modal ? o.ein : undefined}>{y.source}</Src></td>
                 </tr>
               ))}
@@ -109,8 +107,14 @@ async function Org({ params, searchParams, modal }: Props) {
           </table>
         ) : <p>No financial figures on file.</p>}
         {/* The 990's own split (with government grants) when there is one, else the SOI extract */}
-        {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
-        {o.flag && <YearOverYear d={o.flag} />}
+        {/* Where the money comes from and the year-over-year detail: one click away (they repeat cash and debts) */}
+        {(o.flag?.income || o.income || o.flag) && (
+          <details className="more-info">
+            <summary>Income sources and year over year</summary>
+            {o.flag?.income ? <IncomeMix i={{ ...o.flag.income, year: o.flag.income.year ?? 0, form: o.flag.form }} /> : o.income && <IncomeMix i={o.income} />}
+            {o.flag && <YearOverYear d={o.flag} />}
+          </details>
+        )}
       </section>
 
       {/* Financial indicators over the full filing years, with flags and peers (lib/financialHealth); streams in */}
@@ -129,7 +133,9 @@ async function Org({ params, searchParams, modal }: Props) {
       <section>
         <h2>Details</h2>
         <dl>
-          {o.ntee && !o.nteeSuggested && <><dt>Cause</dt><dd>{o.ntee.label} ({o.ntee.code})</dd></>}
+          <dt>EIN</dt><dd>{o.ein}</dd>
+          {o.latest990 && <><dt>Latest 990</dt><dd title={LATEST_RETURN_NOTE}>Tax year {o.latest990.year}{o.latest990.form !== "990" && <> (Form {formName(o.latest990.form)})</>}{o.latest990.processed && <>, processed {o.latest990.processed}</>}</dd></>}
+          {o.ntee && !o.nteeSuggested && <><dt>Cause</dt><dd title={`IRS code ${o.ntee.code}`}>{o.ntee.label}</dd></>}
           {o.nteeSuggested && <><dt>Cause</dt><dd className="org-labels">
             <span>IRS code: {o.ntee ? <>{o.ntee.code} ({o.ntee.label})</> : (o.nteeSuggested.irs_code ?? "none")}. Likely: <b>{o.nteeSuggested.name} ({o.nteeSuggested.major})</b>{o.nteeSuggested.code && <>, detailed code <b>{o.nteeSuggested.code}</b>{nteeLabel(o.nteeSuggested.code) && nteeLabel(o.nteeSuggested.code) !== o.nteeSuggested.name ? ` (${nteeLabel(o.nteeSuggested.code)})` : ""}</>}
               {o.nteeSuggested.quote && <small>&ldquo;{readable(o.nteeSuggested.quote)}&rdquo;</small>}
@@ -185,7 +191,7 @@ function Revoked({ r, conflict, onPub78 }: { r: NonNullable<TaxStatus["revocatio
 }
 
 // Long program text: the first few sentences, the rest one click away.
-function Clamp({ text, at = 320 }: { text: string; at?: number }) {
+function Clamp({ text, at = 180 }: { text: string; at?: number }) {
   if (text.length <= at + 80) return <p>{text}</p>;
   const cut = text.slice(0, at).search(/[.!?|]\s[^.!?|]*$/);
   const i = cut > 120 ? cut + 1 : at;
@@ -194,31 +200,6 @@ function Clamp({ text, at = 320 }: { text: string; at?: number }) {
       <p>{text.slice(0, i).trim()}</p>
       <details className="more-info"><summary>Read all</summary><p>{text.slice(i).trim()}</p></details>
     </>
-  );
-}
-
-// Staff and volunteers (Form 990 Part I lines 5-6): how the work gets done, e.g. entirely by volunteers.
-// Then the track record: years since the IRS ruling.
-function Team({ team, age, since }: { team: { staff: number | null; volunteers: number | null; year: number } | null; age: number | null; since: string | null }) {
-  const n = (v: number) => v.toLocaleString("en-US");
-  const allVolunteer = team?.staff === 0 && (team.volunteers ?? 0) > 0;
-  return (
-    <div className="team">
-      {team && (
-        <p title={`Form 990 (${team.year}), Part I lines 5–6`}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="9" cy="8.5" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.5" cy="9.5" r="2.4" /><path d="M15.5 14.2A4.6 4.6 0 0 1 20.5 19" /></svg>
-          {team.staff != null && <span><b>{n(team.staff)}</b> staff</span>}
-          {team.volunteers != null && <span><b>{n(team.volunteers)}</b> volunteers</span>}
-          {allVolunteer && <span className="badge">All-volunteer</span>}
-        </p>
-      )}
-      {age != null && (
-        <p title={`Tax-exempt since ${since} (IRS ruling date)`}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="4" y="5.5" width="16" height="14.5" rx="2.5" /><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" /></svg>
-          <span>{age < 1 ? <><b>Under 1</b> year</> : <><b>{age}</b> {age === 1 ? "year" : "years"}</>} tax-exempt</span>
-        </p>
-      )}
-    </div>
   );
 }
 

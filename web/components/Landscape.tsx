@@ -38,7 +38,8 @@ export async function Landscape({ question, filters, includeInactive, total, map
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const facts = overviewFacts(l, total);
   // Key facts wait for relevance scores (the summary's head), so they count the same organizations as the count line.
-  const withKey = keyFacts?.then((k) => ({ ...facts, tiles: k.tiles, basis: k.basis, shown: k.shown }));
+  const age = l.medianAge != null ? [{ value: `${l.medianAge} yrs`, label: "median time tax-exempt", note: `of the ${l.size} shown` }] : [];
+  const withKey = keyFacts?.then((k) => ({ ...facts, tiles: [...k.tiles, ...age].slice(0, 3), basis: k.basis, shown: k.shown }));
   const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
   const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
@@ -46,6 +47,7 @@ export async function Landscape({ question, filters, includeInactive, total, map
       { ...first, menu: withKey ? <Suspense fallback={null}><KeyMenu facts={withKey} question={question} /></Suspense> : <OverviewMenu facts={facts} question={question} />, node: (
         <>
           {withKey ? <Suspense fallback={<KeyFactsWait />}><KeyFacts facts={withKey} /></Suspense> : <OverviewVisual facts={facts} />}
+          <label htmlFor="insights" className="ins-more">More insights</label>
           <DidYouKnow facts={didYouKnow(l)} />
           {track}
           <Related question={question} />

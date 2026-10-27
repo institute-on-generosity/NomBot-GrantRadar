@@ -26,7 +26,7 @@ import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTil
 export type KeyFacts = ReturnType<typeof keyFactTiles>;
 export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts; largest: { ein: string; name: string; revenue: number }[]; shown: Result[] }; // shown: the strong set, for the panel (server only)
 export type Basis = "closest" | "strong";
-export type SummaryText = { text: string; explore: string[]; dropped: number; basis: Basis };
+export type SummaryText = { text: string; explore: string[]; dropped: number; basis: Basis; computed?: boolean }; // computed: the fallback lead
 // pending: instant. ai: the first description (closest matches). head: after scoring (count line, caveat, Key facts).
 // later: the description rewritten from the strong matches when they differ a lot from what ai read, else null.
 export type Summary = { pending: ReturnType<typeof pendingLine>; ai: Promise<SummaryText | null>; head: Promise<SummaryHead>; later: Promise<SummaryText | null> };
@@ -36,12 +36,12 @@ const CLOSEST = 20;  // unscored candidates the first description reads (69% rel
 
 const SYSTEM = `You write the one-line lead of the summary shown under a nonprofit search box, above the list of results.
 You get the user's question, figures computed from a set of matching organizations, and those organizations (IRS data, with their place when the question names one).
-Write "summary": ONE plain sentence of 8 to 12 words (never more than 15), saying what kinds of work most of these matches do (the main kinds of programs you see in the missions), like the lead of a researcher's brief.
+Write "summary": ONE complete plain sentence of 6 to 12 words (count them, never more than 12) saying what kinds of work these matches do, like "Mentoring and after-school leadership programs, mostly in Louisville and Lexington." Start with the kinds of programs. No filler such as "Most of these matches" or "These organizations".
 The page shows the count, typical size, foundation funding and the largest organizations under your sentence, computed from the data, so leave all of that out.
 Rules, strictly:
 - No numbers and no organization names.
 - Name only places that appear in the question or the organization lines (cities, states). No regions or neighborhoods from your own knowledge.
-- Start with "Most of the closest matches" or "Most of these matches". Never say how many matches or results there are.
+- Never say how many matches or results there are.
 - Describe only the organizations that fit the question. Ignore the ones that clearly don't, and never mention an organization to say it doesn't fit.
 - No semicolons, no dashes as punctuation, no colons, no lists, no citations, no advice, no hype.
 - Plain words for a busy reader.
@@ -136,11 +136,25 @@ async function fresh(question: string, input: Input, basis: Basis): Promise<Summ
   if (res.stop_reason === "refusal" || !o) return null;
   const checked = checkSummary(o.summary, allowedFrom([figures, ...lines, question], names));
   if (checked.dropped.length) console.warn("search summary: dropped", JSON.stringify(checked.dropped));
-  if (!checked.text) return null;
-  return { text: checked.text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length, basis };
+  // Never shown cut off: a lead over 15 words (or none left after the check) becomes a computed sentence.
+  const words = checked.text.split(/\s+/).filter(Boolean).length;
+  const text = checked.text && words <= 15 ? checked.text : fallbackLead(input);
+  if (text !== checked.text) console.warn("search summary: computed lead used", JSON.stringify({ words, text: checked.text }));
+  if (!text) return null;
+  return { text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length, basis, computed: text !== checked.text };
 }
 
-const cached = diskMemo<SummaryText | null>("search-summary:v7", 200, 7 * 24 * 3600_000); // bump when the prompt changes (v7: 8 to 12 words; v6: at most 15 words; v5: at most 18 words; v4: one lead sentence, no names or numbers; v3: closest matches first, no counts; v2: no outside place names)
+// The computed lead: the most common cause and the two most common cities ("Recreation & Sports groups, mostly in
+// Inglewood and Los Angeles."). Only names and places from the data, so it needs no check.
+export function fallbackLead(input: { facts: SummaryFacts; orgs: (SummaryOrg & { r: Result })[] }): string | null {
+  const count = (xs: (string | null | undefined)[]) => { const m = new Map<string, number>(); for (const x of xs) if (x) m.set(x, (m.get(x) ?? 0) + 1); return [...m].sort((a, b) => b[1] - a[1]); };
+  const cause = count(input.orgs.map((o) => o.cause))[0]?.[0];
+  const cities = count(input.orgs.map((o) => o.r.city && titleCase(o.r.city))).filter(([, n]) => n >= 2).slice(0, 2).map(([c]) => c);
+  if (!cause) return null;
+  return `Mostly ${cause.toLowerCase()}${cities.length ? `, based in ${cities.join(" and ")}` : ""}.`;
+}
+
+const cached = diskMemo<SummaryText | null>("search-summary:v9", 200, 7 * 24 * 3600_000, { toJSON: (v) => v, fromJSON: (j) => j as SummaryText | null, keep: (v) => v != null && !v.computed }); // fallbacks stay in memory only // bump when the prompt changes (v9: 6 to 12 words; v8: complete sentence ≤15 words, no filler, computed fallback; v7: 8 to 12 words; v6: at most 15 words; v5: at most 18 words; v4: one lead sentence, no names or numbers; v3: closest matches first, no counts; v2: no outside place names)
 const safe = (p: Promise<SummaryText | null>) => p.catch((err) => { console.error("search summary failed", err); return null; });
 const keyOf = (basis: Basis, question: string, eins: string[]) => `${basis}|${question.toLowerCase().replace(/\s+/g, " ").trim()}|${eins.join(",")}`;
 

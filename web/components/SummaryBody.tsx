@@ -14,7 +14,7 @@ export function SummaryBody({ first, later, question }: { first: SummaryText | n
         <>
           <p className="sum-text" data-basis={t.basis}>
             <span className="sum-ai" title={`Written by AI from the ${t.basis === "closest" ? "closest" : "strong"} matches' IRS filings. Check details.`} aria-label="AI-written"><Icon name="sparkle" size={13} /></span>
-            {short(t.text)}
+            <span>{t.text}</span>
           </p>
           <PublishSummary question={question} text={t.text} explore={t.explore} />
         </>
@@ -30,5 +30,3 @@ function Swap({ later, onSwap }: { later: Promise<SummaryText | null>; onSwap: (
   return null;
 }
 
-// One line: at most 15 words (the prompt asks for 15; a longer one is cut at a word).
-const short = (t: string) => { const w = t.split(/\s+/); return w.length <= 16 ? t : `${w.slice(0, 15).join(" ").replace(/[,.;:]$/, "")}…`; };

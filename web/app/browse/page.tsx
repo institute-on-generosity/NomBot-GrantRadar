@@ -21,18 +21,16 @@ export default function BrowsePage() {
           <h2>{p.name} <span>{p.plain}</span></h2>
           <div className="br-grid">
             {p.id === "planet" && (
-              <Link href={`/browse/${ENVIRONMENT.id}`} className="br-card env">
+              <Link href={`/browse/${ENVIRONMENT.id}`} className="br-card env" title={`All environment and animal groups. ${ENVIRONMENT.plain}.`}>
                 <div className="br-card-h"><b className="sdg-n env">E</b><strong>{ENVIRONMENT.name}</strong></div>
-                <p>All environment and animal groups. {ENVIRONMENT.plain}.</p>
-                <span className="br-tag">IRS codes, label coming</span>
                 <Suspense fallback={<MiniSkeleton />}><MiniFigures id={ENVIRONMENT.id} /></Suspense>
               </Link>
             )}
             {SDGS.filter((g) => g.pillar === p.id).map((g) => (
-              <Link key={g.n} href={`/browse/${sdgSlug(g.n)}`} className="br-card">
+              <Link key={g.n} href={`/browse/${sdgSlug(g.n)}`} className="br-card" title={g.plain}>
                 <div className="br-card-h"><b className="sdg-n" style={{ background: g.color, color: inkOn(g.color) }}>{g.n}</b><strong>{g.name}</strong></div>
-                <p>{g.plain}</p>
-                <span className={`br-tag${g.coverage === "limited" ? " limited" : ""}`}>{COVER[g.coverage]}</span>
+                {/* Only "limited data" is worth a mark (UX audit B1); the method lives under How we count */}
+                {g.coverage === "limited" && <span className="br-limited-ico" title={COVER[g.coverage]} aria-label={COVER[g.coverage]}>Limited data</span>}
                 <Suspense fallback={<MiniSkeleton />}><MiniFigures id={g.scope.id} /></Suspense>
               </Link>
             ))}

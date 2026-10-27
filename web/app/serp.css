@@ -194,7 +194,7 @@
   .serp-main > .sum-card, .serp-main > .dyk { order: 0; }
 }
 /* Narrow screens: Key facts repeat the summary's points (same set and years), so the panel starts at Track record */
-@media (max-width: 900px) { .serp-rail .kp-card[aria-label="Key facts"] { display: none; } }
+
 
 .serp-rail .dyk { margin: 0 0 var(--s-3); }
 
@@ -269,12 +269,16 @@
 @media (max-width: 640px) { .sum-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* Insights toggle (Oct 27): the analysis panel is hidden until asked for; the list takes the full width */
 .ins-toggle { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
-.ins-toggle:not(:checked) + .serp { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main"; }
-.ins-toggle:not(:checked) + .serp .serp-rail { display: none; }
+/* Slim panel by default: just Key facts (3 tiles) and "More insights" */
+.ins-toggle:not(:checked) + .serp { grid-template-columns: minmax(0, 1fr) 280px; }
+.ins-toggle:not(:checked) + .serp .serp-rail .kp-head,
+.ins-toggle:not(:checked) + .serp .serp-rail .ls-view:not(#kp-view-overview),
+.ins-toggle:not(:checked) + .serp #kp-view-overview > :not([aria-label="Key facts"]):not(.ins-more) { display: none; }
+.ins-toggle:not(:checked) + .serp #kp-view-overview { display: block !important; }
+.ins-more { display: inline-flex; margin-top: var(--s-2); font-size: var(--t-meta); color: var(--g-dark); cursor: pointer; }
+.ins-toggle:checked + .serp .ins-more { display: none; }
 .ins-toggle:checked + .serp .serp-main .ins-open, .ins-open:hover { color: var(--ink); background: var(--fill); }
 .ins-toggle:focus-visible + .serp .ins-open { outline: 3px solid var(--g-line); }
-.serp-main { max-width: 820px; }
-.ins-toggle:checked + .serp .serp-main { max-width: none; }
 .results > .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 .list-tools { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
 .ins-open { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 8px; font-size: var(--t-meta); color: var(--mute); cursor: pointer; }
@@ -283,6 +287,18 @@
 .sum-ai { color: var(--faint); cursor: help; align-self: center; display: inline-flex; }
 .sum-card [aria-live] { margin-top: 0; }
 .sum-warn { margin: var(--s-1) 0 0; }
-@media (max-width: 900px) { .ins-toggle:not(:checked) + .serp .serp-rail { display: none; } }
+@media (max-width: 900px) { .ins-toggle:not(:checked) + .serp { grid-template-columns: 1fr; } }
 /* Removal round: row sources live on the org page; rows keep Save, Compare and Why */
 .row-tools .src { display: none; }
+/* Removal round 2: row tools show on hover or focus (always on touch screens); a saved or picked one stays */
+.row-tools > * { opacity: 0; }
+.row:hover .row-tools > *, .row:focus-within .row-tools > *, .row-tools > .star.on, .row-tools > [aria-pressed="true"] { opacity: 1; }
+@media (hover: none) { .row-tools > * { opacity: 1; } }
+/* Lead line: sparkle on the first line's baseline; two stat tiles inline after it */
+.sum-text { align-items: flex-start; }
+.sum-ai { align-self: flex-start; margin-top: .3em; }
+p.sum-tiles { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s-5); margin: var(--s-2) 0 0; font-size: var(--t-small); color: var(--mute); }
+p.sum-tiles > span { display: inline-flex; align-items: center; gap: 6px; }
+p.sum-tiles b { font-size: var(--t-body); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+p.sum-tiles .ico { color: var(--faint); }
+p.sum-tiles .sum-warn { margin: 0; color: var(--warn); cursor: help; }
