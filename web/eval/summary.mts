@@ -63,9 +63,9 @@ check("pending line: one candidate, no tiers", pendingLine(1).main === "1 candid
 const kf = keyFactTiles(f, { count: 3, of: 6 });
 check("key facts: at most 3 tiles, the count left to the summary", kf.shown === f.strong && kf.tiles.length <= 3 && !kf.tiles.some((t) => t.label.includes("shown")));
 check("key facts: no repeat of the summary's median income", !kf.tiles.some((t) => t.label.includes("median")), JSON.stringify(kf.tiles));
-check("key facts: grants use the summary's years", kf.tiles.some((t) => t.label === "from foundations, 2022–2024" && t.value === "$1.2M" && t.note === "of the 7 shown"), JSON.stringify(kf.tiles));
-check("key facts: deficit share of the N shown", kf.tiles.some((t) => t.value === "50%" && t.note === "6 of the 7 shown report"));
-check("key facts: basis names the set and years", kf.basis === "7 shown · grants 2022–2024", kf.basis);
+check("key facts: grants use the summary's years", kf.tiles.some((t) => t.label === "from foundations, 2022–24" && t.value === "$1.2M" && !t.note), JSON.stringify(kf.tiles));
+check("key facts: deficit share, with how many report only when not all", kf.tiles.some((t) => t.value === "50%" && t.note === "6 report"));
+check("key facts: the base is stated once", kf.basis === "Of the 7 shown", kf.basis);
 check("key facts: small deficit samples skipped", !keyFactTiles(f, { count: 1, of: 2 }).tiles.some((t) => t.label.includes("spent more")));
 
 // 2b'. Points under the lead sentence: computed from the scored set
@@ -121,7 +121,7 @@ if (base) {
     check(`page: Key facts count = summary count (${q})`, key != null && key === sum, `key facts ${key}, summary ${sum}`);
     check(`page: instant count line before the scored one (${q})`, pend >= 0 && scored > pend, `${pend} ${scored}`);
     check(`page: description present and never states the count (${q})`, text.length > 30 && !statesCount(text), text.slice(0, 120));
-    check(`page: the lead is one complete sentence of at most 15 words (${q})`, text.split(/\s+/).filter(Boolean).length <= 15 && !text.endsWith("…"), text);
+    check(`page: the lead is one complete sentence of at most 18 words (${q})`, text.split(/\s+/).filter(Boolean).length <= 18 && !text.endsWith("…"), text);
     check(`page: no semicolons or em dashes in the summary (${q})`, !/[;—]/.test(text));
   }
 }

@@ -36,7 +36,7 @@ const CLOSEST = 20;  // unscored candidates the first description reads (69% rel
 
 const SYSTEM = `You write the one-line lead of the summary shown under a nonprofit search box, above the list of results.
 You get the user's question, figures computed from a set of matching organizations, and those organizations (IRS data, with their place when the question names one).
-Write "summary": ONE complete plain sentence of 6 to 12 words (count them, never more than 12) saying what kinds of work these matches do, like "Mentoring and after-school leadership programs, mostly in Louisville and Lexington." Start with the kinds of programs. No filler such as "Most of these matches" or "These organizations".
+Write "summary": ONE complete plain sentence of at most 12 words (a hard limit: count them) saying what kinds of work these matches do, like "Mentoring and after-school leadership programs, mostly in Louisville and Lexington." Start with the kinds of programs. No filler such as "Most of these matches" or "These organizations".
 The page shows the count, typical size, foundation funding and the largest organizations under your sentence, computed from the data, so leave all of that out.
 Rules, strictly:
 - No numbers and no organization names.
@@ -136,9 +136,9 @@ async function fresh(question: string, input: Input, basis: Basis): Promise<Summ
   if (res.stop_reason === "refusal" || !o) return null;
   const checked = checkSummary(o.summary, allowedFrom([figures, ...lines, question], names));
   if (checked.dropped.length) console.warn("search summary: dropped", JSON.stringify(checked.dropped));
-  // Never shown cut off: a lead over 15 words (or none left after the check) becomes a computed sentence.
+  // Never shown cut off: a lead over 18 words (or none left after the check) becomes a computed sentence.
   const words = checked.text.split(/\s+/).filter(Boolean).length;
-  const text = checked.text && words <= 15 ? checked.text : fallbackLead(input);
+  const text = checked.text && words <= 18 ? checked.text : fallbackLead(input); // 18: room for a complete 16-17 word sentence
   if (text !== checked.text) console.warn("search summary: computed lead used", JSON.stringify({ words, text: checked.text }));
   if (!text) return null;
   return { text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length, basis, computed: text !== checked.text };
@@ -154,7 +154,7 @@ export function fallbackLead(input: { facts: SummaryFacts; orgs: (SummaryOrg & {
   return `Mostly ${cause.toLowerCase()}${cities.length ? `, based in ${cities.join(" and ")}` : ""}.`;
 }
 
-const cached = diskMemo<SummaryText | null>("search-summary:v9", 200, 7 * 24 * 3600_000, { toJSON: (v) => v, fromJSON: (j) => j as SummaryText | null, keep: (v) => v != null && !v.computed }); // fallbacks stay in memory only // bump when the prompt changes (v9: 6 to 12 words; v8: complete sentence ≤15 words, no filler, computed fallback; v7: 8 to 12 words; v6: at most 15 words; v5: at most 18 words; v4: one lead sentence, no names or numbers; v3: closest matches first, no counts; v2: no outside place names)
+const cached = diskMemo<SummaryText | null>("search-summary:v11", 200, 7 * 24 * 3600_000, { toJSON: (v) => v, fromJSON: (j) => j as SummaryText | null, keep: (v) => v != null && !v.computed }); // fallbacks stay in memory only // bump when the prompt changes (v11: ≤12 asked, ≤18 kept; v10: ≤15 asked; v9: 6 to 12 words; v8: complete sentence ≤15 words, no filler, computed fallback; v7: 8 to 12 words; v6: at most 15 words; v5: at most 18 words; v4: one lead sentence, no names or numbers; v3: closest matches first, no counts; v2: no outside place names)
 const safe = (p: Promise<SummaryText | null>) => p.catch((err) => { console.error("search summary failed", err); return null; });
 const keyOf = (basis: Basis, question: string, eins: string[]) => `${basis}|${question.toLowerCase().replace(/\s+/g, " ").trim()}|${eins.join(",")}`;
 

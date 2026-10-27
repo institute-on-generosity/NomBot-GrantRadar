@@ -6,7 +6,7 @@ import type { OverviewFacts } from "@/lib/overviewFacts";
 import { Icon, type IconName } from "./Icons";
 
 // One icon per Key facts metric
-const tileIcon = (l: string): IconName => /shown|organization/.test(l) ? "building" : /income/.test(l) ? "money" : /spent more/.test(l) ? "trendDown" : /foundation/.test(l) ? "gift" : /tax-exempt|yrs/.test(l) ? "calendar" : "info";
+const tileIcon = (l: string): IconName => /shown|organization/.test(l) ? "building" : /income/.test(l) ? "money" : /overspent|spent more/.test(l) ? "trendDown" : /foundation/.test(l) ? "gift" : /tax-exempt|yrs/.test(l) ? "calendar" : "info";
 
 // The Overview tab as a knowledge panel of soft grey section cards:
 //   Key facts    label → value rows, no Claude: the search summary's set ("of the N shown", lib/summaryFacts

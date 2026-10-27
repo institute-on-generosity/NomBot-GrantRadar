@@ -275,13 +275,18 @@
 .ins-toggle:not(:checked) + .serp .serp-rail .ls-view:not(#kp-view-overview),
 .ins-toggle:not(:checked) + .serp #kp-view-overview > :not([aria-label="Key facts"]):not(.ins-more) { display: none; }
 .ins-toggle:not(:checked) + .serp #kp-view-overview { display: block !important; }
-.ins-more { display: inline-flex; margin-top: var(--s-2); font-size: var(--t-meta); color: var(--g-dark); cursor: pointer; }
-.ins-toggle:checked + .serp .ins-more { display: none; }
-.ins-toggle:checked + .serp .serp-main .ins-open, .ins-open:hover { color: var(--ink); background: var(--fill); }
-.ins-toggle:focus-visible + .serp .ins-open { outline: 3px solid var(--g-line); }
+.ins-more { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: var(--s-2); padding: 10px var(--s-4); border-radius: 12px; font-size: var(--t-small); color: var(--ink-2); cursor: pointer; }
+.ins-more:hover { background: var(--fill); }
+.ins-more .kp-chev { color: var(--faint); transition: transform .15s; }
+.ins-more-off { display: none; }
+.ins-toggle:checked + .serp .ins-more-on { display: none; }
+.ins-toggle:checked + .serp .ins-more-off { display: inline; }
+.ins-toggle:checked + .serp .ins-more .kp-chev { transform: rotate(-90deg); }
+/* Key facts: one line per label, the base once in the footer */
+.kp-dt { white-space: nowrap; }
+.ins-toggle:focus-visible + .serp .ins-more { outline: 3px solid var(--g-line); }
 .results > .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
 .list-tools { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-.ins-open { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 8px; font-size: var(--t-meta); color: var(--mute); cursor: pointer; }
 .sum-card { margin: var(--s-2) 0 var(--s-5); padding: 0; background: none; box-shadow: none; }
 .sum-text { display: flex; align-items: baseline; gap: 6px; margin: var(--s-2) 0 0; color: var(--ink-2); }
 .sum-ai { color: var(--faint); cursor: help; align-self: center; display: inline-flex; }

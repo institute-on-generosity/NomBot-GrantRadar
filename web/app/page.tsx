@@ -168,7 +168,6 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   );
   const listTools = (
     <span className="list-tools">
-      <label htmlFor="insights" className="ins-open" title="Insights: key facts, breakdown, map, funders"><Icon name="info" size={16} />Insights</label>
       {exportMenu}
     </span>
   );  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0, tiers, county, widened: res.widened, tools: card ? undefined : listTools };
@@ -182,9 +181,12 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   const more = (
     <div className="more">
       {res.total > n && <NavLink href={url(p, { n: String(n + 10) })} label="Loading more…">Show more</NavLink>}
+      {/* Export lives once, in the list header's icon menu; mixed questions (no list header menu) keep the links here */}
+      {card && <>
       <PrintButton label="Print summary" />
-      <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
-      <a href={`/report?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`} target="_blank" rel="noreferrer">Download report</a>
+        <a href={`/export?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>Download as spreadsheet (CSV)</a>
+        <a href={`/report?${new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][])}`} target="_blank" rel="noreferrer">Download report</a>
+      </>}
       <NavLink href={url(p, { all: includeInactive ? "" : "1", n: "" })}>{includeInactive ? "Hide tiny & inactive orgs" : "Include tiny & inactive orgs"}</NavLink>
     </div>
   );
