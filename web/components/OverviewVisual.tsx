@@ -1,18 +1,14 @@
 "use client";
 import { useEffect, useSyncExternalStore } from "react";
-import { InsightChart } from "./InsightChart";
 import { NavLink } from "./NavLink";
 import { SlideButton } from "./SlideButton";
 import type { OverviewFacts } from "@/lib/overviewFacts";
 
-// The Overview tab as a knowledge panel: soft grey section cards, diagram first.
-//   Overview     headline (computed from the landscape, replaced by the AI one when it arrives) and the
-//                one chart that tells this result set's story
-//   Key facts    label → value rows (lib/overviewFacts tiles)
-//   AI overview  the AI bullets passed in as children (components/AiOverview)
-// The facts and chart need no Claude, so they show before the AI text streams in. AiOverview publishes
-// its headline, bullets and related searches here; the "⋯" menu (OverviewMenu) puts them on the slide,
-// and Related lists the searches at the bottom of the panel.
+// The Overview tab as a knowledge panel of soft grey section cards:
+//   Key facts    label → value rows (lib/overviewFacts tiles), no Claude
+// The headline fact and its chart moved to "Did you know" under the search summary (components/DidYouKnow), and
+// the AI text to the search summary (components/SearchSummary), Oct 26. The summary publishes its sentences and
+// related searches here; the "⋯" menu (OverviewMenu) puts them on the slide, and Related lists the searches.
 
 type Ai = { key: string; headline: string; bullets: string[]; explore: string[] };
 let ai: Ai | null = null;
@@ -33,41 +29,21 @@ export const Chevron = ({ right = false }: { right?: boolean }) => <svg classNam
 // "from foundations, 2023–2025" → "From foundations 2023–2025"
 const label = (t: string) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`.replace(/,\s+/g, " ");
 
-export function OverviewVisual({ facts, question, children }: { facts: OverviewFacts; question: string; children?: React.ReactNode }) {
-  const now = useOverviewAi(question);
-  const headline = now?.headline || facts.headline;
-  // Diagram first, like Google's image strip: the headline and the one chart lead, then the facts, then the
-  // AI bullets.
+export function OverviewVisual({ facts }: { facts: OverviewFacts }) {
+  if (!facts.tiles.length) return null;
   return (
-    <>
-      <section className="kp-card kp-hero" aria-label="Overview">
-        <p className={`ovv-head${now ? " ai" : ""}`}>{headline}</p>
-        {facts.chart && (
-          <figure className="kp-hero-chart">
-            <figcaption className="kp-h">{facts.chart.title}<span>{facts.chart.sub}</span></figcaption>
-            <InsightChart spec={facts.chart.spec} label={`${facts.chart.title}: ${facts.chart.takeaway}`} />
-          </figure>
-        )}
-      </section>
-      {facts.tiles.length > 0 && (
-        <section className="kp-card" aria-label="Key facts">
-          <h3 className="kp-h">Key facts</h3>
-          <dl className="kp-facts">
-            {facts.tiles.map((t) => (
-              <div key={t.label}>
-                <dt>{label(t.label)}{t.note && <small>{t.note}</small>}</dt>
-                <dd>{t.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="kp-foot">{facts.basis}</p>
-        </section>
-      )}
-      <section className="kp-card" aria-label="AI overview">
-        <h3 className="kp-h"><Spark />AI overview</h3>
-        {children}
-      </section>
-    </>
+    <section className="kp-card" aria-label="Key facts">
+      <h3 className="kp-h">Key facts</h3>
+      <dl className="kp-facts">
+        {facts.tiles.map((t) => (
+          <div key={t.label}>
+            <dt>{label(t.label)}{t.note && <small>{t.note}</small>}</dt>
+            <dd>{t.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="kp-foot">{facts.basis}</p>
+    </section>
   );
 }
 

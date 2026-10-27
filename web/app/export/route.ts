@@ -2,11 +2,13 @@
 // GET /export?question=...&all=1 (+ the filter edits: st, city, county, max, min, cause, label, tier, drop). Same order and
 // scores as the page. A place search (a city or county) lists every tier with its evidence. Rows outside the scored
 // pool say "unscored" in relevance_status. &unscored=1 skips relevance scoring (no Claude calls): every row unscored.
+// Scored exports start with the page's search summary (lib/searchSummary), one "summary" row per line, then a blank row.
 import type { NextRequest } from "next/server";
 import { applyOverrides, OVERRIDE_KEYS } from "@/lib/filters";
 import { parseQuestion } from "@/lib/parse";
 import { fundingOf } from "@/lib/placeReport";
 import { rankedSearch, searchCandidates, type Relevance } from "@/lib/rerank";
+import { summaryFor, summaryLines } from "@/lib/searchSummary";
 
 const cell = (v: unknown) => {
   const s = v == null ? "" : String(v);
@@ -26,7 +28,11 @@ export async function GET(request: NextRequest) {
   const overrides = Object.fromEntries(OVERRIDE_KEYS.map((k) => [k, p.get(k) ?? undefined]));
   const filters = applyOverrides(await parseQuestion(question), overrides);
   const opts = { includeInactive: p.get("all") === "1", limit: 500 };
-  const res = p.get("unscored") === "1" ? await searchCandidates(filters, opts) : await rankedSearch(question, filters, opts);
+  const unscored = p.get("unscored") === "1";
+  const [res, summary] = await Promise.all([
+    unscored ? searchCandidates(filters, opts) : rankedSearch(question, filters, opts),
+    unscored ? null : summaryFor(question, filters, opts.includeInactive).then(summaryLines).catch(() => null),
+  ]);
   const rows = res.results.map((r) => ({ ...r, relevance: "relevance" in r ? (r.relevance as Relevance | null) : null }));
   const funding = await fundingOf(rows.map((r) => r.ein));
   const origin = request.nextUrl.origin;
@@ -45,7 +51,8 @@ export async function GET(request: NextRequest) {
   });
 
   const name = question.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
-  return new Response([HEADER.join(","), ...lines].join("\n"), {
+  const top = summary?.length ? [...summary.map((l) => ["summary", l].map(cell).join(",")), ""] : [];
+  return new Response([...top, HEADER.join(","), ...lines].join("\n"), {
     headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="nombot-${name}.csv"` },
   });
 }

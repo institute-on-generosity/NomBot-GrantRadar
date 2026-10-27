@@ -22,7 +22,8 @@
     "test:iog": "tsx eval/iog.mts",
     "test:people": "tsx eval/people.mts",
     "test:place": "tsx eval/place.mts",
-    "test:browse": "tsx eval/browse.mts"
+    "test:browse": "tsx eval/browse.mts",
+    "test:summary": "tsx eval/summary.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

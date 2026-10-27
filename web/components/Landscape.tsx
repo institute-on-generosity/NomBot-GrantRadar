@@ -19,20 +19,19 @@ import { themes } from "@/lib/themes";
 
 // Zoom out: what the field looks like, where it is, the kinds of work in it, and who funds it
 // (plus strong matches no foundation funds yet). Finances: growing, shrinking, deficits, thin reserves.
-// Overview tab, a knowledge panel of section cards: AI overview (headline + the AI bullets from
-// overview(), told it sits with the visual and given the chart's takeaway as its story), Key facts and
-// one chart from the landscape (no Claude, so they show first), Track record, then related searches.
+// Overview tab, a knowledge panel of section cards: Key facts (no Claude), Track record, then related searches
+// (from the search summary). The AI text and the headline chart sit in the main column since Oct 26
+// (components/SearchSummary, components/DidYouKnow).
 // Export slide sits in the panel header's "⋯" menu. total: every organization the search matched.
-export async function Landscape({ question, filters, includeInactive, total, map, overview, gems, matched }: {
+export async function Landscape({ question, filters, includeInactive, total, map, gems, matched }: {
   question: string; filters: Filters; includeInactive: boolean; total: number; gems?: React.ReactNode;
   matched?: Promise<import("@/lib/search").Result[]>; // place tiers: describe these (the relevance-checked matches) only
-  overview: (o: { visual: boolean; story?: string }) => React.ReactNode;
   map: (m: MapData) => React.ReactNode;
 }) {
   const m = matched ? await matched : undefined;
   const l = await landscape(filters, includeInactive, m);
   if (m) total = m.length;
-  const first = { key: "overview", label: "Overview", title: "AI overview", node: overview({ visual: false }) };
+  const first = { key: "overview", label: "Overview", title: "Overview", node: <Related question={question} /> };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const facts = overviewFacts(l, total);
   const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
@@ -41,7 +40,7 @@ export async function Landscape({ question, filters, includeInactive, total, map
     <LandscapeTabs views={[
       { ...first, menu: <OverviewMenu facts={facts} question={question} />, node: (
         <>
-          <OverviewVisual facts={facts} question={question}>{overview({ visual: true, story: facts.chart?.takeaway })}</OverviewVisual>
+          <OverviewVisual facts={facts} />
           {track}
           <Related question={question} />
         </>

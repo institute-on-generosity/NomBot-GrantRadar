@@ -1,0 +1,216 @@
+// The search summary's computed part (no Claude, no database): the facts object, the count line, the caveat line,
+// and the post-check that keeps Claude's description to the names and numbers it was given (lib/searchSummary.ts).
+// Pure functions, unit-tested in eval/summary.mts.
+
+export type SummaryOrg = {
+  name: string;                 // as shown in the list (title case)
+  tier: string | null;          // place tier key ("in", "serves", "nearby", "county", "wider"), null without a place
+  cause: string | null;         // IRS cause (NTEE) label
+  label: "primary" | "partial" | null; // the cause label filter's tier for this org
+  revenue: number | null;       // latest yearly income
+  grants: number;               // foundation grants (990-PF), GRANT_YEARS
+  hasText: boolean;             // has 990 mission or program text (false: known by name and cause code only)
+  prefers: string[];            // soft preferences its filings mention
+};
+
+export type SummaryFacts = {
+  strong: number;               // strong matches: what the list shows first
+  weaker: number;               // scored under 50, folded under "Show weaker matches" (place tiers) or below the strong ones
+  related: number;              // every organization the search matched
+  scored: boolean;              // false: relevance scoring failed or is off, every row counts
+  noun: string;                 // "youth sports programs", or "strong matches"
+  tiers: { key: string; label: string; count: number }[] | null; // place searches: strong matches per tier, list order
+  split: { label: string; count: number }[];                       // no place: main vs partial focus, or the top causes
+  revenue: { reported: number; median: number; min: number; max: number; under250k: number; over1m: number } | null;
+  funded: number;               // strong matches with foundation grants
+  grantsTotal: number;
+  grantYears: [number, number];
+  nameOnly: number;             // no 990 text
+  prefers: { label: string; count: number }[];
+  largest: { name: string; revenue: number }[];
+};
+
+export const money = (n: number) => {
+  const a = Math.abs(n);
+  if (a >= 999.5e6) return `$${(a / 1e9).toFixed(1)}B`;
+  if (a >= 1e6) return `$${(a / 1e6).toFixed(1)}M`;
+  return a >= 1e3 ? `$${Math.round(a / 1e3)}K` : `$${Math.round(a)}`;
+};
+const num = (n: number) => n.toLocaleString("en-US");
+const pct = (n: number, of: number) => `${Math.round((100 * n) / Math.max(1, of))}%`;
+const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+// "youth sports programs" reads as a count noun; "climate" or "health" doesn't, so those say "strong matches".
+export function countNoun(topic: string | undefined, scored: boolean) {
+  const t = (topic ?? "").trim().toLowerCase();
+  if (scored && t && t.split(/\s+/).length <= 5 && /[a-z]{2}s$/.test(t) && !/(ss|ics|ous|us|is)$/.test(t)) return t;
+  return scored ? "strong matches" : "results";
+}
+
+export function summaryFacts(orgs: SummaryOrg[], o: {
+  weaker: number; related: number; scored: boolean; topic?: string; grantYears: [number, number];
+  tiers?: { key: string; label: string }[]; labelFilter?: boolean;
+}): SummaryFacts {
+  const revs = orgs.map((r) => r.revenue).filter((x): x is number => x != null && x > 0);
+  const causes = new Map<string, number>();
+  for (const r of orgs) if (r.cause) causes.set(r.cause, (causes.get(r.cause) ?? 0) + 1);
+  let split: { label: string; count: number }[] = [];
+  if (!o.tiers && o.labelFilter) {
+    const main = orgs.filter((r) => r.label === "primary").length, part = orgs.filter((r) => r.label === "partial").length;
+    split = [{ label: "main focus", count: main }, { label: "partial focus", count: part }].filter((s) => s.count > 0);
+  } else if (!o.tiers) {
+    const top = [...causes].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 2);
+    split = top.map(([label, count]) => ({ label, count }));
+    const rest = orgs.length - top.reduce((a, [, n]) => a + n, 0);
+    if (top.length && rest > 0) split.push({ label: rest === 1 ? "other cause" : "other causes", count: rest });
+  }
+  const prefLabels = [...new Set(orgs.flatMap((r) => r.prefers))];
+  return {
+    strong: orgs.length, weaker: o.weaker, related: o.related, scored: o.scored, noun: countNoun(o.topic, o.scored),
+    tiers: o.tiers ? o.tiers.map((t) => ({ ...t, count: orgs.filter((r) => r.tier === t.key).length })) : null,
+    split,
+    revenue: revs.length ? { reported: revs.length, median: median(revs), min: Math.min(...revs), max: Math.max(...revs),
+      under250k: revs.filter((x) => x < 250_000).length, over1m: revs.filter((x) => x >= 1_000_000).length } : null,
+    funded: orgs.filter((r) => r.grants > 0).length, grantsTotal: orgs.reduce((a, r) => a + r.grants, 0), grantYears: o.grantYears,
+    nameOnly: orgs.filter((r) => !r.hasText).length,
+    prefers: prefLabels.map((label) => ({ label, count: orgs.filter((r) => r.prefers.includes(label)).length })),
+    largest: orgs.filter((r) => r.revenue != null && r.revenue > 0).sort((a, b) => b.revenue! - a.revenue!).slice(0, 2).map((r) => ({ name: r.name, revenue: r.revenue! })),
+  };
+}
+
+// Line 1 of the summary, the same counts as the list: "23 youth sports programs · 8 in Inglewood · 4 serving Inglewood · 11 nearby".
+export function countLine(f: SummaryFacts): { main: string; parts: string[]; more: string | null } {
+  // Unscored plain search: the list says "N results" for everything the search matched.
+  const main = !f.scored && !f.tiers ? `${num(f.related)} ${f.related === 1 ? "result" : "results"}`
+    : `${num(f.strong)} ${f.strong === 1 ? (f.noun === "results" ? "result" : "strong match") : f.noun}`;
+  const parts = f.tiers ? f.tiers.filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`)
+    : f.split.map((s) => `${num(s.count)} ${s.label}`);
+  const more = !f.scored ? null
+    : f.tiers ? (f.weaker > 0 ? `${num(f.weaker)} weaker ${f.weaker === 1 ? "match" : "matches"} folded in the list` : null)
+    : f.related > f.strong ? `${num(f.related)} related in all` : null;
+  return { main, parts, more };
+}
+
+// One short caveat, only when it matters: a preference no match confirms, or many matches known only by name.
+export function caveatLine(f: SummaryFacts, o: { prefer?: string[]; must?: string; noMention?: boolean } = {}): string | null {
+  const out: string[] = [];
+  if (o.noMention && o.must) out.push(`No organization's filings mention ${o.must}.`);
+  for (const p of o.prefer ?? []) if (f.strong > 0 && !f.prefers.some((x) => x.label === p && x.count > 0)) out.push(`No match's filings mention ${p}.`);
+  if (f.nameOnly >= 3 && f.nameOnly / Math.max(1, f.strong) >= 0.2)
+    out.push(`${num(f.nameOnly)} ${f.nameOnly === 1 ? "is" : "are"} known by name only (no IRS program details).`);
+  return out.length ? out.slice(0, 2).join(" ") : null;
+}
+
+// The figures Claude may quote, as plain lines. Every number in the description must come from these or the org list.
+export function factsText(f: SummaryFacts): string {
+  const [g0, g1] = f.grantYears;
+  return [
+    `Strong matches (the list): ${f.strong}`,
+    f.tiers ? `By place: ${f.tiers.map((t) => `${t.count} ${t.label}`).join(", ")}` : null,
+    f.split.length ? `By ${f.split.some((s) => s.label.includes("focus")) ? "focus" : "cause"}: ${f.split.map((s) => `${s.count} ${s.label}`).join(", ")}` : null,
+    f.scored && f.weaker ? `Weaker matches (folded, don't describe them): ${f.weaker}` : null,
+    f.revenue ? `Yearly income (${f.revenue.reported} report it): median ${money(f.revenue.median)}, smallest ${money(f.revenue.min)}, largest ${money(f.revenue.max)}, under $250K: ${f.revenue.under250k}, $1M or more: ${f.revenue.over1m}` : "Yearly income: none reported",
+    `Foundation grants ${g0} to ${g1}: ${f.funded} of ${f.strong} got any (${pct(f.funded, f.strong)}), ${money(f.grantsTotal)} in all`,
+    `Known by name only (no 990 program text): ${f.nameOnly} of ${f.strong}`,
+    ...f.prefers.map((p) => `Filings mention "${p.label}": ${p.count} of ${f.strong}`),
+    f.largest.length ? `Largest by income: ${f.largest.map((l) => `${l.name} ${money(l.revenue)}`).join(", ")}` : null,
+  ].filter(Boolean).join("\n");
+}
+
+// ---------- Post-check ----------
+
+// UI copy: no semicolons or em dashes (or spaced en dashes) as punctuation. Ranges like "$100K–$1M" keep their en dash.
+export const tidy = (t: string) => t.replace(/\s+[—–]\s+|\s*—\s*/g, ", ").replace(/\s*;\s*/g, ". ").replace(/\.\s+([a-z])/g, (_, c: string) => `. ${c.toUpperCase()}`).replace(/\s+/g, " ").trim();
+
+const WORDS: Record<string, number> = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, hundred: 100, dozen: 12 };
+// Every number in a text, as values: "$1.4M" → 1400000, "44%" → 44, "1,234" → 1234, "eight" → 8. "one" is skipped ("one of the largest").
+export function numbersIn(t: string): { raw: string; value: number }[] {
+  const out: { raw: string; value: number }[] = [];
+  const re = /(\$?)(\d[\d,]*(?:\.\d+)?)\s*(K\b|M\b|B\b|thousand\b|million\b|billion\b|%|percent\b)?/gi;
+  for (const m of t.matchAll(re)) {
+    let v = Number(m[2].replace(/,/g, ""));
+    const u = (m[3] ?? "").toLowerCase();
+    if (u === "k" || u === "thousand") v *= 1e3; else if (u === "m" || u === "million") v *= 1e6; else if (u === "b" || u === "billion") v *= 1e9;
+    out.push({ raw: m[0].trim(), value: v });
+  }
+  for (const m of t.matchAll(/\b([A-Za-z]+)\b/g)) {
+    const w = m[1].toLowerCase();
+    if (w in WORDS && w !== "one" && w !== "hundred") out.push({ raw: m[1], value: WORDS[w] });
+  }
+  return out;
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[’']s\b/g, "").replace(/[^a-z0-9& ]+/g, " ").replace(/\s+/g, " ").trim();
+// Words that can start a sentence or sit capitalized without naming anything.
+const COMMON = new Set(["the", "a", "an", "most", "many", "several", "only", "about", "these", "they", "their", "its", "it", "this", "that", "some", "all", "nearly", "half",
+  "in", "of", "with", "among", "few", "no", "none", "both", "each", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "more", "fewer", "less",
+  "just", "around", "almost", "over", "under", "together", "across", "while", "but", "and", "for", "at", "by", "on", "as", "smaller", "larger", "big", "small", "largest",
+  "irs", "form", "990", "990-pf", "ntee", "us", "u.s.", "most", "groups", "programs", "organizations", "nonprofits", "foundation", "foundations", "every", "half", "roughly", "funding", "income"]);
+const JOIN = new Set(["of", "the", "and", "for", "&", "de", "la", "at", "in"]);
+
+export type Allowed = { names: string[]; numbers: number[] };
+// Builds the allowed sets from what Claude was given: every name and place string, and every number in the inputs.
+export function allowedFrom(texts: string[], names: string[]): Allowed {
+  return { names: names.map(norm).filter(Boolean), numbers: texts.flatMap((t) => numbersIn(t).map((n) => n.value)) };
+}
+
+// Capitalized runs ("Girl Scouts Of Greater Los Angeles", "Laxpoint") that might name an organization or place.
+// first: the run starts the sentence, so its first word may just be capitalized ("Typical", "Small groups").
+function nameRuns(sentence: string): { run: string; first: boolean }[] {
+  const toks = sentence.match(/[A-Za-z0-9][A-Za-z0-9.&'’-]*|[,:()"“”]/g) ?? [];
+  const runs: { run: string; first: boolean }[] = [];
+  let cur: string[] = [], start = true, runStart = false;
+  const flush = () => {
+    while (cur.length && JOIN.has(cur[cur.length - 1].toLowerCase())) cur.pop();
+    if (cur.length) runs.push({ run: cur.join(" "), first: runStart });
+    cur = [];
+  };
+  for (const w of toks) {
+    if (/^[,:()"“”]$/.test(w)) { flush(); start = false; continue; }
+    const cap = /^[A-Z]/.test(w);
+    if (cap) { if (!cur.length) runStart = start; cur.push(w); }
+    else if (cur.length && JOIN.has(w.toLowerCase())) cur.push(w);
+    else flush();
+    start = false;
+  }
+  flush();
+  return runs;
+}
+
+// A run passes as it stands, or (at the start of a sentence) without its first word.
+const runOk = ({ run, first }: { run: string; first: boolean }, a: Allowed) => {
+  if (nameOk(run, a)) return true;
+  if (!first) return false;
+  const rest = run.split(" ").slice(1);
+  while (rest.length && JOIN.has(rest[0].toLowerCase())) rest.shift();
+  return !rest.length || nameOk(rest.join(" "), a);
+};
+
+function nameOk(run: string, a: Allowed): boolean {
+  const r = norm(run);
+  // "Inglewood Little League and Inglewood Sc": two names joined by "and" pass when each does.
+  if (!nameOne(r, a) && / (and|&) /.test(r)) return r.split(/ (?:and|&) /).every((p) => nameOne(p, a));
+  return nameOne(r, a);
+}
+function nameOne(r: string, a: Allowed) {
+  if (!r) return true;
+  const words = r.split(" ").filter((w) => !COMMON.has(w));
+  if (!words.length) return true;
+  return a.names.some((n) => ` ${n} `.includes(` ${r} `)) || (words.length === 1 && a.names.some((n) => ` ${n} `.includes(` ${words[0]} `)));
+}
+const numOk = (v: number, a: Allowed) => a.numbers.some((x) => x === v || (x > 0 && Math.abs(x - v) / x < 0.051));
+
+// Keeps the sentences whose names and numbers all come from the inputs; drops the rest (logged by the caller).
+export function checkSummary(text: string, a: Allowed): { text: string; dropped: { sentence: string; why: string }[] } {
+  // Sentence ends: a stop then a space and a capital, so "$1.4M" and "U.S. groups" stay whole.
+  const merged = tidy(text).split(/(?<=[.!?])\s+(?=[A-Z0-9"“$])/).map((s) => s.trim()).filter(Boolean);
+  const kept: string[] = [], dropped: { sentence: string; why: string }[] = [];
+  for (const s of merged) {
+    const badName = nameRuns(s).find((r) => !runOk(r, a))?.run;
+    const badNum = numbersIn(s).find((n) => !numOk(n.value, a));
+    if (badName || badNum) dropped.push({ sentence: s, why: badName ? `name "${badName}"` : `number "${badNum!.raw}"` });
+    else kept.push(s);
+  }
+  return { text: kept.join(" "), dropped };
+}

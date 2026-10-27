@@ -6,8 +6,10 @@ import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
 import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
-import { AiOverview, AiOverviewSkeleton } from "@/components/AiOverview";
-import { overview } from "@/lib/overview";
+import { SearchSummary, SummaryPending } from "@/components/SearchSummary";
+import { searchSummary } from "@/lib/searchSummary";
+import { DidYouKnow } from "@/components/DidYouKnow";
+import { didYouKnow } from "@/lib/overviewFacts";
 import { Gems, Landscape } from "@/components/Landscape";
 import { landscape } from "@/lib/landscape";
 import { LandscapeTabs } from "@/components/LandscapeTabs";
@@ -166,6 +168,20 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
     </div>
   );
 
+  // Summary under the search bar (no summary on mixed questions: their answer card is the summary). Same rank()
+  // promises as the list, so the counts match it.
+  const summary = card ? null : searchSummary(question, filters, res, ranking, rankingAll).catch((err) => { console.error("search summary failed", err); return null; });
+  const top = summary && (
+    <>
+      <Suspense key={`summary:${url(p, {})}`} fallback={<SummaryPending total={res.total} />}>
+        <SearchSummary summary={summary} question={question} />
+      </Suspense>
+      <Suspense key={`dyk:${url(p, { n: "" })}`} fallback={null}>
+        <DidYouKnowPanel filters={filters} includeInactive={includeInactive} matched={matched} />
+      </Suspense>
+    </>
+  );
+
   return (
     <>
       {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
@@ -194,14 +210,14 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       /* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */
       <div className="serp">
       <aside className="serp-rail" aria-label="Analysis">
-        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "AI overview", node: <AiOverviewSkeleton /> }]} />}>
+        <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "Overview", node: <RailSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive} total={res.total} matched={matched}
-            overview={(v) => <Suspense fallback={<AiOverviewSkeleton compact={v.visual} />}><OverviewPanel question={question} candidates={matched ?? res.results} filters={filters} includeInactive={includeInactive} {...v} /></Suspense>}
             gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
             map={(m) => <LandscapeMap {...m} />} />
         </Suspense>
       </aside>
       <div className="serp-main">
+      {top}
       {orgList}
       {more}
       <Footer />
@@ -213,15 +229,15 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   );
 }
 
-// The AI overview reads the closest candidates in search order, so it runs alongside relevance scoring
-// instead of after it (~3-5s sooner). Its citations point into its own list (o.orgs), not the scored order.
-async function OverviewPanel({ question, candidates: given, filters, includeInactive, visual, story }: { question: string; candidates: Result[] | Promise<Result[]>; filters: Filters; includeInactive: boolean; visual: boolean; story?: string }) {
-  const candidates = await given;
-  // County need for the AI overview: high-poverty counties with none of the 200 closest organizations.
-  const l = await landscape(filters, includeInactive, given instanceof Promise ? candidates : undefined);
-  const need = l.highNeed ? `Need (Census SAIPE 2023 poverty): ${l.highNeed} counties in the area have ${l.povertyCut}%+ poverty (the poorest quarter, up to 20%); ${l.underserved.length} of them have none of the 200 closest organizations (worst: ${l.underserved.slice(0, 3).map((c) => `${c.name}, ${c.state} ${c.poverty}%`).join("; ") || "none"})` : undefined;
-  const o = await overview(question, candidates, need, story);
-  return o ? <AiOverview o={o} question={question} visual={visual} /> : visual ? null : <p className="ls-note">No overview for these results.</p>;
+// "Did you know" under the summary: 1-3 facts from the same landscape as the panel (cached, computed once).
+async function DidYouKnowPanel({ filters, includeInactive, matched }: { filters: Filters; includeInactive: boolean; matched?: Promise<Result[]> }) {
+  const l = await landscape(filters, includeInactive, matched ? await matched : undefined);
+  if (l.size < 5) return null;
+  return <DidYouKnow facts={didYouKnow(l)} />;
+}
+
+function RailSkeleton() {
+  return <section className="kp-card"><div className="ov-lines" aria-hidden><i /><i className="short" /><i /></div></section>;
 }
 
 type TierHead = { tier: string; title: string; note: string; total: number };

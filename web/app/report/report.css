@@ -41,3 +41,5 @@
   .report h2 + .report-table, .report-note + .report-table { break-before: avoid; }
 }
 @page { margin: 14mm 12mm; }
+.report-summary p { margin: 0 0 6px; max-width: 75ch; line-height: 1.5; }
+.report-summary .report-count { font-weight: 600; }

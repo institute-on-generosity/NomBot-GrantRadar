@@ -8,6 +8,7 @@ import { fundersOf, fundingOf, GRANT_YEARS, labelsOf, placeCoverage } from "@/li
 import { parseQuestion } from "@/lib/parse";
 import { labelPhrase } from "@/lib/labels";
 import { isStrong, rankedSearch, STRONG, type Ranked } from "@/lib/rerank";
+import { summaryFor, summaryLines } from "@/lib/searchSummary";
 import "./report.css";
 
 export const metadata = { title: "Search report · NomBot" };
@@ -36,7 +37,10 @@ async function Report({ searchParams }: { searchParams: SP }) {
   await connection();
   const overrides = Object.fromEntries(OVERRIDE_KEYS.map((k) => [k, one(sp[k])])) as Overrides;
   const filters = applyOverrides(await parseQuestion(question), overrides);
-  const res = await rankedSearch(question, filters, { includeInactive: one(sp.all) === "1", limit: 25 });
+  const [res, summary] = await Promise.all([
+    rankedSearch(question, filters, { includeInactive: one(sp.all) === "1", limit: 25 }),
+    summaryFor(question, filters, one(sp.all) === "1").then(summaryLines).catch(() => [] as string[]),
+  ]);
   const rows = res.results as Ranked[];
   const strong = rows.filter((r) => r.relevance ? isStrong(r) : true);
   const leads = rows.filter((r) => !r.filing && (r.relevance ? r.relevance.score >= 40 : true));
@@ -58,6 +62,13 @@ async function Report({ searchParams }: { searchParams: SP }) {
         <h1>{question}</h1>
         <div className="report-tools"><PrintButton label="Save as PDF" /></div>
       </header>
+
+      {summary.length > 0 && (
+        <section className="report-summary">
+          <h2>Summary</h2>
+          {summary.map((l, i) => <p key={i} className={i === 0 ? "report-count" : undefined}>{l}</p>)}
+        </section>
+      )}
 
       <section>
         <h2>Method</h2>

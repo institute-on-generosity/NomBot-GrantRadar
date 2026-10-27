@@ -70,6 +70,40 @@ function pickChart(l: Landscape): OverviewChart | null {
   };
 }
 
+// "Did you know" (the card under the search summary): 1-3 facts from the same landscape, each with its small chart.
+// The first is the overview's story chart (pickChart); then finances, income change, foundation funding and size,
+// whichever have enough organizations reporting and aren't already shown.
+export type Fact = OverviewChart & { key: string };
+export function didYouKnow(l: Landscape): Fact[] {
+  const of = (n: number) => n === l.size ? `the ${num(l.size)} closest` : `${num(n)} of the ${num(l.size)} closest report`;
+  const cap = (t: string) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
+  const out: Fact[] = [];
+  const story = pickChart(l);
+  const keyOf = (c: OverviewChart) => c.title === "Last year's finances" ? "finances" : c.title.startsWith("Income change") ? "growth" : "size";
+  if (story) out.push({ ...story, key: keyOf(story), takeaway: cap(story.takeaway) });
+  const has = (k: string) => out.some((f) => f.key === k);
+  const def = l.health.signals.find((s) => s.key === "deficit");
+  if (!has("finances") && def && def.of >= 10) {
+    const total = l.health.margin.reduce((a, b) => a + b.count, 0);
+    out.push({ key: "finances", title: "Last year's finances", sub: of(total), takeaway: `${pct(def.orgs.length, def.of)} spent more than they took in last year`,
+      spec: bars(l.health.margin.map((b) => ({ label: b.label === "Deficit" ? "Spent more than took in" : b.label, count: b.count, color: b.label === "Deficit" ? BAD : REST }))) });
+  }
+  const grow = l.health.signals.find((s) => s.key === "growing"), shrink = l.health.signals.find((s) => s.key === "shrinking");
+  if (!has("growth") && grow && shrink && l.health.trendReported >= 10) {
+    out.push({ key: "growth", title: "Income change since the prior filing", sub: `${num(l.health.trendReported)} of the ${num(l.size)} closest, two filings`,
+      takeaway: `${pct(grow.orgs.length, grow.of)} grew their income by 10% or more since the prior filing, and ${pct(shrink.orgs.length, shrink.of)} shrank`,
+      spec: bars(l.health.trend.map((t) => ({ label: t.label, count: t.count, color: t.label.startsWith("Growing") ? HI : t.label.startsWith("Shrinking") ? BAD : REST }))) });
+  }
+  const funded = l.orgs.filter((o) => o.grants > 0).length, grants = l.orgs.reduce((a, o) => a + o.grants, 0);
+  if (l.orgs.length >= 5 && grants > 0) {
+    const yrs = `${l.grantYears[0]}–${l.grantYears[1]}`;
+    out.push({ key: "funding", title: `Foundation grants, ${yrs}`, sub: `the ${num(l.orgs.length)} closest`,
+      takeaway: `${funded} of the ${num(l.orgs.length)} closest got foundation grants in ${yrs}, ${money(grants)} in all${l.funders[0] ? `. The top funder is ${l.funders[0].name}` : ""}`,
+      spec: bars([{ label: "Got foundation grants", count: funded, color: HI }, { label: "None found", count: l.orgs.length - funded, color: REST }]) });
+  }
+  return out.slice(0, 3);
+}
+
 // total: every organization the search matched (the results count); the tiles describe the closest l.size.
 export function overviewFacts(l: Landscape, total: number): OverviewFacts {
   const chart = pickChart(l);
