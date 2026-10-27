@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, use, useEffect, useState } from "react";
 import { PublishSummary } from "./PublishSummary";
+import { Icon } from "./Icons";
 import type { SummaryText } from "@/lib/searchSummary";
 
 // The summary's AI text. Shows the first description (closest matches) at once; if relevance scoring later finds
@@ -11,8 +12,10 @@ export function SummaryBody({ first, later, question }: { first: SummaryText | n
     <>
       {t && (
         <>
-          <p className="sum-text" data-basis={t.basis}>{t.text}</p>
-          <p className="sum-foot">AI summary of the {t.basis === "closest" ? "closest" : "strong"} matches&apos; IRS filings · verify details</p>
+          <p className="sum-text" data-basis={t.basis}>
+            <span className="sum-ai" title={`Written by AI from the ${t.basis === "closest" ? "closest" : "strong"} matches' IRS filings. Check details.`} aria-label="AI-written"><Icon name="sparkle" size={13} /></span>
+            {short(t.text)}
+          </p>
           <PublishSummary question={question} text={t.text} explore={t.explore} />
         </>
       )}
@@ -26,3 +29,6 @@ function Swap({ later, onSwap }: { later: Promise<SummaryText | null>; onSwap: (
   useEffect(() => { if (t) onSwap(t); }, [t, onSwap]);
   return null;
 }
+
+// One line: at most 15 words (the prompt asks for 15; a longer one is cut at a word).
+const short = (t: string) => { const w = t.split(/\s+/); return w.length <= 16 ? t : `${w.slice(0, 15).join(" ").replace(/[,.;:]$/, "")}…`; };

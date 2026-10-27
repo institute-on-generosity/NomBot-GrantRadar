@@ -10,7 +10,7 @@ export type OverviewChart = { title: string; sub: string; takeaway: string; spec
 export type OverviewFacts = { headline: string; tiles: Tile[]; chart: OverviewChart | null; basis: string };
 
 // Fixed colors read on light and dark backgrounds (and on the light slide).
-const HI = "#248a3d", BAD = "#e34948", REST = "#a1a1a6";
+const HI = "#248a3d", BAD = "#b5533f", REST = "#b4b4b0"; // muted brick for the alert bars, neutral rest (eye comfort, Oct 27)
 const pct = (n: number, of: number) => `${Math.round((100 * n) / Math.max(1, of))}%`;
 const num = (n: number) => n.toLocaleString("en-US");
 
@@ -33,7 +33,7 @@ function bars(rows: { label: string; count: number; color: string }[]): Record<s
 }
 
 function pickChart(l: Landscape): OverviewChart | null {
-  const of = (n: number) => n === l.size ? `the ${num(l.size)} closest` : `${num(n)} of the ${num(l.size)} closest report`;
+  const of = (n: number) => n === l.size ? `the ${num(l.size)} shown` : `${num(n)} of the ${num(l.size)} shown report`;
   const sig = (k: string) => l.health.signals.find((s) => s.key === k);
   const def = sig("deficit"), grow = sig("growing"), shrink = sig("shrinking");
   const defShare = def && def.of ? def.orgs.length / def.of : 0;
@@ -41,8 +41,8 @@ function pickChart(l: Landscape): OverviewChart | null {
   if (def && def.of >= 20 && defShare >= 0.4) {
     const total = l.health.margin.reduce((a, b) => a + b.count, 0);
     return {
-      title: "Last year's finances", sub: of(total), takeaway: `${pct(def.orgs.length, def.of)} spent more than they took in last year`,
-      spec: bars(l.health.margin.map((b) => ({ label: b.label === "Deficit" ? "Spent more than took in" : b.label, count: b.count, color: b.label === "Deficit" ? BAD : REST }))),
+      title: "Last year's finances", sub: of(total), takeaway: `${pct(def.orgs.length, def.of)} overspent last year`,
+      spec: bars(l.health.margin.map((b) => ({ label: b.label === "Deficit" ? "Overspent" : b.label.replace(/\s*\(.*\)$/, ""), count: b.count, color: b.label === "Deficit" ? BAD : REST }))),
     };
   }
   // 2. A clear tilt toward growing or shrinking income.
@@ -50,9 +50,9 @@ function pickChart(l: Landscape): OverviewChart | null {
     const up = grow.orgs.length > shrink.orgs.length;
     const [a, b] = up ? [grow, shrink] : [shrink, grow];
     return {
-      title: "Income change since the prior filing", sub: `${num(l.health.trendReported)} of the ${num(l.size)} closest, two filings`,
+      title: "Income change", sub: `${num(l.health.trendReported)} of the ${num(l.size)} shown, two filings`,
       takeaway: `${pct(a.orgs.length, a.of)} ${up ? "grew" : "shrank"} their income by 10% or more, ${pct(b.orgs.length, b.of)} ${up ? "shrank" : "grew"}`,
-      spec: bars(l.health.trend.map((t) => ({ label: t.label, count: t.count, color: t.label.startsWith("Growing") ? HI : t.label.startsWith("Shrinking") ? BAD : REST }))),
+      spec: bars(l.health.trend.map((t) => ({ label: t.label.replace(/^Steady.*/, "Steady"), count: t.count, color: t.label.startsWith("Growing") ? HI : t.label.startsWith("Shrinking") ? BAD : REST }))),
     };
   }
   // 3. Otherwise: how big they are.
@@ -75,7 +75,7 @@ function pickChart(l: Landscape): OverviewChart | null {
 // whichever have enough organizations reporting and aren't already shown.
 export type Fact = OverviewChart & { key: string };
 export function didYouKnow(l: Landscape): Fact[] {
-  const of = (n: number) => n === l.size ? `the ${num(l.size)} closest` : `${num(n)} of the ${num(l.size)} closest report`;
+  const of = (n: number) => n === l.size ? `the ${num(l.size)} shown` : `${num(n)} of the ${num(l.size)} shown report`;
   const cap = (t: string) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`;
   const out: Fact[] = [];
   const story = pickChart(l);
@@ -85,22 +85,16 @@ export function didYouKnow(l: Landscape): Fact[] {
   const def = l.health.signals.find((s) => s.key === "deficit");
   if (!has("finances") && def && def.of >= 10) {
     const total = l.health.margin.reduce((a, b) => a + b.count, 0);
-    out.push({ key: "finances", title: "Last year's finances", sub: of(total), takeaway: `${pct(def.orgs.length, def.of)} spent more than they took in last year`,
-      spec: bars(l.health.margin.map((b) => ({ label: b.label === "Deficit" ? "Spent more than took in" : b.label, count: b.count, color: b.label === "Deficit" ? BAD : REST }))) });
+    out.push({ key: "finances", title: "Last year's finances", sub: of(total), takeaway: `${pct(def.orgs.length, def.of)} overspent last year`,
+      spec: bars(l.health.margin.map((b) => ({ label: b.label === "Deficit" ? "Overspent" : b.label.replace(/\s*\(.*\)$/, ""), count: b.count, color: b.label === "Deficit" ? BAD : REST }))) });
   }
   const grow = l.health.signals.find((s) => s.key === "growing"), shrink = l.health.signals.find((s) => s.key === "shrinking");
   if (!has("growth") && grow && shrink && l.health.trendReported >= 10) {
-    out.push({ key: "growth", title: "Income change since the prior filing", sub: `${num(l.health.trendReported)} of the ${num(l.size)} closest, two filings`,
-      takeaway: `${pct(grow.orgs.length, grow.of)} grew their income by 10% or more since the prior filing, and ${pct(shrink.orgs.length, shrink.of)} shrank`,
-      spec: bars(l.health.trend.map((t) => ({ label: t.label, count: t.count, color: t.label.startsWith("Growing") ? HI : t.label.startsWith("Shrinking") ? BAD : REST }))) });
+    out.push({ key: "growth", title: "Income change", sub: `${num(l.health.trendReported)} of the ${num(l.size)} shown, two filings`,
+      takeaway: `${pct(grow.orgs.length, grow.of)} grew income, ${pct(shrink.orgs.length, shrink.of)} shrank`,
+      spec: bars(l.health.trend.map((t) => ({ label: t.label.replace(/^Steady.*/, "Steady"), count: t.count, color: t.label.startsWith("Growing") ? HI : t.label.startsWith("Shrinking") ? BAD : REST }))) });
   }
-  const funded = l.orgs.filter((o) => o.grants > 0).length, grants = l.orgs.reduce((a, o) => a + o.grants, 0);
-  if (l.orgs.length >= 5 && grants > 0) {
-    const yrs = `${l.grantYears[0]}–${l.grantYears[1]}`;
-    out.push({ key: "funding", title: `Foundation grants, ${yrs}`, sub: `the ${num(l.orgs.length)} closest`,
-      takeaway: `${funded} of the ${num(l.orgs.length)} closest got foundation grants in ${yrs}, ${money(grants)} in all${l.funders[0] ? `. The top funder is ${l.funders[0].name}` : ""}`,
-      spec: bars([{ label: "Got foundation grants", count: funded, color: HI }, { label: "None found", count: l.orgs.length - funded, color: REST }]) });
-  }
+  // No foundation-grant fact: Key facts give the grant figures (same set, grant_clean, GRANT_YEARS).
   return out.slice(0, 3);
 }
 
@@ -118,6 +112,6 @@ export function overviewFacts(l: Landscape, total: number): OverviewFacts {
     headline: chart ? `${chart.takeaway.charAt(0).toUpperCase()}${chart.takeaway.slice(1)}` : `${num(total)} organizations match this search`,
     tiles: tiles.slice(0, 4),
     chart,
-    basis: `Figures from the ${num(l.size)} closest organizations' IRS filings`,
+    basis: `Figures from the ${num(l.size)} organizations shown`,
   };
 }

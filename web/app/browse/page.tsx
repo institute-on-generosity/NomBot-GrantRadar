@@ -15,7 +15,7 @@ export default function BrowsePage() {
   return (
     <main className="br-page">
       <h1 className="pagetitle">Browse by cause</h1>
-      <p className="hint">Causes organized by the 17 UN Sustainable Development Goals. Each goal opens into subcategories with foundation money, growth, top funders and states, and links to ask about any of it. Foundation grants from IRS 990-PF filings.</p>
+      <p className="hint">Foundation grants by UN goal, 2022 to 24. Open a goal for its causes, funders and states.</p>
       {PILLARS.map((p) => (
         <section key={p.id} className="br-pillar">
           <h2>{p.name} <span>{p.plain}</span></h2>
@@ -47,7 +47,7 @@ export default function BrowsePage() {
           ))}
         </div>
       </section>
-      <p className="br-foot">Goal figures count one set of orgs per goal, named on each goal&apos;s page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. Goals marked limited are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>).</p>
+      <details className="more-info br-foot"><summary>How we count</summary><p>Goal figures count one set of orgs per goal, named on each goal&apos;s page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. Goals marked limited are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>). Foundation grants from IRS 990-PF filings.</p></details>
     </main>
   );
 }

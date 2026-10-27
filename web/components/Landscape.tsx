@@ -10,7 +10,8 @@ import { TrackRecord } from "./TrackRecord";
 import { LOADED_STATES, money } from "@/lib/filters";
 import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
-import { overviewFacts } from "@/lib/overviewFacts";
+import { didYouKnow, overviewFacts } from "@/lib/overviewFacts";
+import { DidYouKnow } from "./DidYouKnow";
 import type { KeyFacts as KeyFactsT } from "@/lib/searchSummary";
 import { isStrong, type rank } from "@/lib/rerank";
 import { titleCase } from "./text";
@@ -45,11 +46,12 @@ export async function Landscape({ question, filters, includeInactive, total, map
       { ...first, menu: withKey ? <Suspense fallback={null}><KeyMenu facts={withKey} question={question} /></Suspense> : <OverviewMenu facts={facts} question={question} />, node: (
         <>
           {withKey ? <Suspense fallback={<KeyFactsWait />}><KeyFacts facts={withKey} /></Suspense> : <OverviewVisual facts={facts} />}
+          <DidYouKnow facts={didYouKnow(l)} />
           {track}
           <Related question={question} />
         </>
       ) },
-      { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} closest organizations`, node: (
+      { key: "breakdown", label: "Breakdown", title: "Breakdown", sub: `${l.size} organizations shown`, node: (
         <div className="ls-grid">
           <Bars title="Size" bars={l.sizes} orgs={l.orgs} />
           <Bars title="Places" bars={l.cities} orgs={l.orgs} />
@@ -61,7 +63,7 @@ export async function Landscape({ question, filters, includeInactive, total, map
       { key: "finances", label: "Finances", title: "Finances", sub: `${l.health.reported} report finances`, node: (
         <FinanceView signals={l.health.signals} orgs={Object.fromEntries(l.orgs.map((o, i) => [o.ein.replace("-", ""), { ein: o.ein, name: o.name, place: [o.city, o.state].filter(Boolean).join(", "), rank: i }]))} />
       ) },
-      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} closest, by county`, node: map({ counts: l.counties, countyOrgs: l.countyOrgs, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed, usPoverty: l.usPoverty, povertyCut: l.povertyCut }) },
+      { key: "map", label: "Map", title: "Where they are", sub: `${l.size} shown, by county`, node: map({ counts: l.counties, countyOrgs: l.countyOrgs, appalachia: l.appalachia, states: filters.states.length ? filters.states : l.mapStates, need: l.need, underserved: l.underserved, highNeed: l.highNeed, usPoverty: l.usPoverty, povertyCut: l.povertyCut }) },
       { key: "themes", label: "Themes", title: "Kinds of work", sub: `Grouped by Claude · grants ${l.grantYears[0]}–${l.grantYears[1]}`, node: <Suspense fallback={<p className="ls-wait"><span className="spinner" />Grouping by kind of work…</p>}><Themes question={question} l={l} states={filters.states} /></Suspense> },
       { key: "funders", label: "Funders", title: "Who funds them", sub: `${l.funded} of ${l.size} funded`, node: (
         l.funders.length ? (

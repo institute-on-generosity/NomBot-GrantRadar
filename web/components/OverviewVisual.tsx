@@ -3,6 +3,10 @@ import { useEffect, useSyncExternalStore } from "react";
 import { NavLink } from "./NavLink";
 import { SlideButton } from "./SlideButton";
 import type { OverviewFacts } from "@/lib/overviewFacts";
+import { Icon, type IconName } from "./Icons";
+
+// One icon per Key facts metric
+const tileIcon = (l: string): IconName => /shown|organization/.test(l) ? "building" : /income/.test(l) ? "money" : /spent more/.test(l) ? "trendDown" : /foundation/.test(l) ? "gift" : /tax-exempt|yrs/.test(l) ? "calendar" : "info";
 
 // The Overview tab as a knowledge panel of soft grey section cards:
 //   Key facts    label → value rows, no Claude: the search summary's set ("of the N shown", lib/summaryFacts
@@ -39,7 +43,7 @@ export function OverviewVisual({ facts, shown }: { facts: OverviewFacts; shown?:
       <dl className="kp-facts">
         {facts.tiles.map((t) => (
           <div key={t.label}>
-            <dt>{label(t.label)}{t.note && <small>{t.note}</small>}</dt>
+            <dt><span className="kp-dt"><Icon name={tileIcon(t.label)} />{label(t.label)}</span>{t.note && <small>{t.note}</small>}</dt>
             <dd>{t.value}</dd>
           </div>
         ))}

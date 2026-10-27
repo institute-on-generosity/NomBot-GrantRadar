@@ -41,10 +41,12 @@ const pct = (n: number, of: number) => `${Math.round((100 * n) / Math.max(1, of)
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 // "youth sports programs" reads as a count noun; "climate" or "health" doesn't, so those say "strong matches".
+// Only a real group noun counts ("programs", "food banks"); a bare cause word ("arts", "climate") says "organizations".
+const GROUP = /(programs|groups|organizations|nonprofits|charities|banks|pantries|shelters|clubs|centers|centres|foundations|leagues|clinics|schools|museums|theaters|theatres|orchestras|libraries|camps|teams|hospitals|ministries|councils|associations|societies|funds|trusts|coalitions|networks|agencies|academies|homes|initiatives|projects|services)$/;
 export function countNoun(topic: string | undefined, scored: boolean) {
   const t = (topic ?? "").trim().toLowerCase();
-  if (scored && t && t.split(/\s+/).length <= 5 && /[a-z]{2}s$/.test(t) && !/(ss|ics|ous|us|is)$/.test(t)) return t;
-  return scored ? "strong matches" : "results";
+  if (scored && t && t.split(/\s+/).length <= 5 && GROUP.test(t)) return t;
+  return scored ? "organizations" : "results";
 }
 
 export function summaryFacts(orgs: SummaryOrg[], o: {
@@ -82,12 +84,12 @@ export function summaryFacts(orgs: SummaryOrg[], o: {
 export function countLine(f: SummaryFacts): { main: string; parts: string[]; more: string | null } {
   // Unscored plain search: the list says "N results" for everything the search matched.
   const main = !f.scored && !f.tiers ? `${num(f.related)} ${f.related === 1 ? "result" : "results"}`
-    : `${num(f.strong)} ${f.strong === 1 ? (f.noun === "results" ? "result" : "strong match") : f.noun}`;
-  const parts = f.tiers ? f.tiers.filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`)
-    : f.split.map((s) => `${num(s.count)} ${s.label}`);
+    : `${num(f.strong)} ${f.strong === 1 ? (f.noun === "results" ? "result" : "organization") : f.noun}`;
+  // Chips only for place searches (the tiers); a cause or focus split stays in the panel's Breakdown.
+  const parts = f.tiers ? f.tiers.filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`) : [];
   const more = !f.scored ? null
-    : f.tiers ? (f.weaker > 0 ? `${num(f.weaker)} weaker ${f.weaker === 1 ? "match" : "matches"} folded in the list` : null)
-    : f.related > f.strong ? `${num(f.related)} related in all` : null;
+    : f.tiers ? null // weaker matches: the list folds them per tier ("Show N weaker matches"), the summary doesn't repeat it
+    : null; // "N related" lives once, in the list header
   return { main, parts, more };
 }
 
@@ -104,7 +106,8 @@ export function caveatLine(f: SummaryFacts, o: { prefer?: string[]; must?: strin
 // While relevance scores are still coming in: what the search found, by place tier when there are tiers
 // (the same totals as the list's tier headings). Replaced by countLine once the list is scored.
 export function pendingLine(total: number, tiers?: { label: string; count: number }[]): { main: string; parts: string[]; more: string } {
-  return { main: `${num(total)} ${total === 1 ? "result" : "results"}`, parts: (tiers ?? []).filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`), more: "checking relevance…" };
+  // Labelled as provisional (UX audit S3): candidates, not matches, until scoring decides.
+  return { main: `${num(total)} ${total === 1 ? "candidate" : "candidates"}`, parts: (tiers ?? []).filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`), more: "ranking by relevance…" };
 }
 
 // Share of the organizations the first description read (the closest matches) that the list now counts as strong.
@@ -121,11 +124,23 @@ export type KeyTile = { value: string; label: string; note?: string };
 export function keyFactTiles(f: SummaryFacts, deficit: { count: number; of: number } | null): { tiles: KeyTile[]; basis: string; shown: number } {
   const n = f.strong, of = `of the ${num(n)} shown`;
   const [g0, g1] = f.grantYears;
-  const tiles: KeyTile[] = [{ value: num(n), label: n === 1 ? "organization shown" : "organizations shown", note: f.scored ? "strong matches in the list" : undefined }];
+  // At most 3 tiles; the count itself is the summary's big number, so it isn't repeated here.
+  const tiles: KeyTile[] = [];
   if (f.revenue) tiles.push({ value: money(f.revenue.median), label: "median yearly income", note: f.revenue.reported === n ? of : `${num(f.revenue.reported)} ${of} report it` });
-  if (deficit && deficit.of >= 5) tiles.push({ value: pct(deficit.count, deficit.of), label: "spent more than they took in", note: `${num(deficit.of)} ${of} report` });
+  if (deficit && deficit.of >= 5) tiles.push({ value: pct(deficit.count, deficit.of), label: "overspent last year", note: `${num(deficit.of)} ${of} report` });
   if (f.grantsTotal > 0) tiles.push({ value: money(f.grantsTotal), label: `from foundations, ${g0}–${g1}`, note: `${num(f.funded)} ${of} got grants` });
-  return { tiles, basis: `Figures from the ${num(n)} ${n === 1 ? "organization" : "organizations"} shown in the list · foundation grants ${g0}–${g1}`, shown: n };
+  return { tiles: tiles.slice(0, 3), basis: `${num(n)} shown · grants ${g0}–${g1}`, shown: n };
+}
+
+// The computed points under the summary's lead sentence (the scored set): typical size, foundation grants, and the
+// largest strong matches by income (relevance-checked, so never an off-topic org).
+export function summaryPoints(f: SummaryFacts, largest: { name: string; revenue: number }[]): { key: string; text: string }[] {
+  const [g0, g1] = f.grantYears;
+  const out: { key: string; text: string }[] = [];
+  if (f.revenue) out.push({ key: "size", text: `${money(f.revenue.median)} median yearly income` });
+  if (f.strong > 0) out.push({ key: "grants", text: `${num(f.funded)} of ${num(f.strong)} got foundation grants, ${g0}–${String(g1).slice(2)}` });
+  if (largest.length) out.push({ key: "largest", text: `Largest: ${largest.map((l) => `${l.name} ${money(l.revenue)}`).join(", ")}` });
+  return out;
 }
 
 // The figures Claude may quote, as plain lines. Every number in the description must come from these or the org list.

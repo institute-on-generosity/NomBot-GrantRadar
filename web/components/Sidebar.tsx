@@ -57,12 +57,12 @@ export function Sidebar() {
           <Link href="/" className="brand"><span className="logo">N</span><span className="side-label">NomBot</span></Link>
           <button className="iconbtn side-toggle" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}><PanelIcon /></button>
         </div>
-        <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">New search</span></NavLink>
+        <NavLink href="/" className={`side-new${here.path === "/" && !here.question ? " on" : ""}`} title="New search" current={here.path === "/" && !here.question}><PlusIcon /><span className="side-label">Search</span></NavLink>
         <NavLink href="/research" className={`side-new${here.path.startsWith("/research") ? " on" : ""}`} title="Research" current={here.path === "/research"} label="Loading research…"><ChartIcon /><span className="side-label">Research</span></NavLink>
-        <NavLink href="/browse" className={`side-new${here.path.startsWith("/browse") ? " on" : ""}`} title="Browse by cause" current={here.path === "/browse"} label="Loading causes…"><GridIcon /><span className="side-label">Browse by cause</span></NavLink>
+        <NavLink href="/browse" className={`side-new${here.path.startsWith("/browse") ? " on" : ""}`} title="Browse by cause" current={here.path === "/browse"} label="Loading causes…"><GridIcon /><span className="side-label">Browse</span></NavLink>
 
         <nav className="side-scroll">
-          <Section title="Starred" all="/saved" active={here.path === "/saved"}
+          <Section title="Saved" all="/saved" active={here.path === "/saved"}
             empty="Tap ☆ on any organization to keep it here.">
             {[
               ...folders.map((f) => (
@@ -95,7 +95,7 @@ function Section({ title, all, active, empty, children }: { title: string; all: 
         <span>{title}</span>
         <Link href={all} className={active ? "on" : ""} aria-current={active ? "page" : undefined}>See all</Link>
       </div>
-      {children.length ? children : <p className="side-empty">{empty}</p>}
+      {children.length ? children : <p className="side-empty" hidden>{empty}</p>}
     </section>
   );
 }

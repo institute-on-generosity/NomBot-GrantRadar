@@ -8,14 +8,15 @@ import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchSummary } from "@/components/SearchSummary";
 import { searchSummary } from "@/lib/searchSummary";
-import { DidYouKnow } from "@/components/DidYouKnow";
-import { didYouKnow } from "@/lib/overviewFacts";
 import { Gems, Landscape } from "@/components/Landscape";
 import { landscape } from "@/lib/landscape";
 import { LandscapeTabs } from "@/components/LandscapeTabs";
 import { LandscapeMap } from "@/components/LandscapeMap";
 import { titleCase } from "@/components/text";
 import { SearchBox } from "@/components/SearchBox";
+import { Icon, type IconName } from "@/components/Icons";
+// Place tiers get one icon each: in the city = pin, serving it = arrow in, nearby = radius, county or wider = globe.
+const TIER_ICON: Record<string, IconName | undefined> = { in: "pin", serves: "arrowIn", nearby: "radius", county: "globe", wider: "globe" };
 import { parseQuestion } from "@/lib/parse";
 import { PROMPT_SETS } from "@/lib/examples";
 import { HeroFlip } from "@/components/HeroFlip";
@@ -142,7 +143,10 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   const ranking = rank(question, res, n);
   const rankingAll = n >= POOL ? ranking : rank(question, res, POOL); // the overview reads every scored candidate (same cached scores)
   // Place tiers: the panel and AI overview describe the matches (strong, across tiers), not every org in the city.
-  const matched = res.tiers ? rankingAll.then(({ results }) => results.filter((r) => !r.relevance || isStrong(r))) : undefined;
+  // The panel (Key facts, Did you know, Breakdown, Map, Themes, Funders) describes ONE set: the strong matches the
+  // summary counts (lib/searchSummary listStrong), so every number on the page agrees (UX audit S1, Oct 27).
+  // Mixed questions (card) have no panel; their list keeps the old place-tier set.
+  const strongOf = res.tiers ? rankingAll.then(({ results }) => results.filter((r) => !r.relevance || isStrong(r))) : undefined;
   const patterns = filters.requirements.map((r) => r.pattern);
   const back = encodeURIComponent(url(p, {}));
   const focus = p.focus ?? "";
@@ -150,7 +154,23 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   // Tiered place search (lib/tiers.ts): sections per tier, and the county one click away when nothing matches.
   const tiers = res.tiers?.map((t) => ({ tier: t.tier, title: t.title, note: t.note, total: t.total }));
   const county = res.scope?.kind === "city" && res.scope.county ? { name: res.scope.county.name, href: url(p, { county: res.scope.county.name, city: "", n: "" }) } : undefined;
-  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0, tiers, county, widened: res.widened };
+  // Export: one quiet icon menu in the list header (UX audit S6, Oct 27)
+  const qs = new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][]);
+  const exportMenu = (
+    <details className="export-menu">
+      <summary title="Export" aria-label="Export"><Icon name="download" size={17} /></summary>
+      <div role="menu">
+        <a role="menuitem" href={`/export?${qs}`}><Icon name="table" /> Spreadsheet (CSV)</a>
+        <a role="menuitem" href={`/report?${qs}`} target="_blank" rel="noreferrer"><Icon name="printer" /> Report (print or PDF)</a>
+      </div>
+    </details>
+  );
+  const listTools = (
+    <span className="list-tools">
+      <label htmlFor="insights" className="ins-open" title="Insights: key facts, breakdown, map, funders"><Icon name="info" size={16} />Insights</label>
+      {exportMenu}
+    </span>
+  );  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0, tiers, county, widened: res.widened, tools: card ? undefined : listTools };
   // Keyed by the search: a new filter gets a fresh boundary, so its unscored results show at once
   // instead of React keeping the old list on screen until the new scores arrive.
   const orgList = (
@@ -168,15 +188,14 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
     </div>
   );
 
+
   // Summary under the search bar (no summary on mixed questions: their answer card is the summary). Its description
   // starts from the closest matches alongside scoring; its count line uses the same rank() promises as the list.
   const summary = card ? null : searchSummary(question, filters, res, ranking, rankingAll);
+  const matched = summary ? summary.head.then((h) => h.shown) : strongOf;
   const top = summary && (
     <>
       <SearchSummary key={`summary:${url(p, {})}`} summary={summary} question={question} />
-      <Suspense key={`dyk:${url(p, { n: "" })}`} fallback={null}>
-        <DidYouKnowPanel filters={filters} includeInactive={includeInactive} matched={matched} />
-      </Suspense>
     </>
   );
 
@@ -205,7 +224,10 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
           </div>
         </div>
       ) : (
-      /* Results on the left; on the right one sticky panel: AI overview + landscape views as tabs. */
+      /* Results first; the analysis panel (Key facts, Did you know, Breakdown, Map, Themes, Funders) opens from the
+         "Insights" toggle in the list header (CSS only: the checkbox before .serp), so above the fold is the search box,
+         the count, one line and the list (Oct 27). */
+      <><input type="checkbox" id="insights" className="ins-toggle" aria-label="Show insights" />
       <div className="serp">
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "Overview", node: <RailSkeleton /> }]} />}>
@@ -221,26 +243,26 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       {more}
       <Footer />
       </div>
-      </div>
+      </div></>
       )}
       <PrintStamp />
     </>
   );
 }
 
-// "Did you know" under the summary: 1-3 facts from the same landscape as the panel (cached, computed once).
-async function DidYouKnowPanel({ filters, includeInactive, matched }: { filters: Filters; includeInactive: boolean; matched?: Promise<Result[]> }) {
-  const l = await landscape(filters, includeInactive, matched ? await matched : undefined);
-  if (l.size < 5) return null;
-  return <DidYouKnow facts={didYouKnow(l)} />;
-}
 
 function RailSkeleton() {
   return <section className="kp-card"><div className="ov-lines" aria-hidden><i /><i className="short" /><i /></div></section>;
 }
 
 type TierHead = { tier: string; title: string; note: string; total: number };
-type RowProps = { patterns: string[]; back: string; focus: string; must: string; noMention: boolean; tiers?: TierHead[]; county?: { name: string; href: string }; widened?: string };
+type RowProps = { patterns: string[]; back: string; focus: string; must: string; noMention: boolean; tiers?: TierHead[]; county?: { name: string; href: string }; widened?: string; tools?: React.ReactNode };
+
+// Facts every row shares (one cause, one state) are shown once, not on each row (duplication sweep, Oct 27).
+function shared(rows: (Result | Ranked)[]) {
+  const one = (xs: (string | null | undefined)[]) => xs.length > 2 && xs.every((x) => x && x === xs[0]);
+  return { cause: one(rows.map((r) => r.ntee?.label)), state: one(rows.map((r) => r.state)) };
+}
 
 async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ranking: ReturnType<typeof rank>; rankingAll: ReturnType<typeof rank>; total: number }) {
   const [{ results, scored }, all] = await Promise.all([ranking, rankingAll]);
@@ -252,18 +274,20 @@ async function RankedList({ ranking, rankingAll, total, ...p }: RowProps & { ran
 // Scored lists show strong matches (relevance ≥ 50) and fold near-misses under "Show weaker matches".
 function ResultList(props: RowProps & { rows: (Result | Ranked)[]; total: number; pending?: boolean; scored?: boolean; strongTotal?: number }) {
   if (props.tiers) return <TieredList {...props} tiers={props.tiers} />;
-  const { rows, total, pending = false, scored = false, strongTotal, patterns, back, focus, must, noMention } = props;
+  const { rows, total, pending = false, scored = false, strongTotal, patterns, back, focus, must, noMention, tools } = props;
+  const hide = shared(rows);
   const strong = rows.filter((r) => !("relevance" in r) || isStrong(r));
   const weak = rows.filter((r) => "relevance" in r && !isStrong(r));
   const row = (r: Result | Ranked, i: number) => (
     <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-      relevance={"relevance" in r ? r.relevance : null} />
+      relevance={"relevance" in r ? r.relevance : null} hide={hide} />
   );
   return (
     <div className={`results${pending ? " ranking" : ""}`}>
       <div className="bar">
         <span>{scored ? `${strongTotal ?? strong.length} strong ${(strongTotal ?? strong.length) === 1 ? "match" : "matches"} · ${total.toLocaleString("en-US")} related` : `${total.toLocaleString("en-US")} results`}</span>
-        {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first</span>}
+        {pending && <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span>}
+        {tools}
       </div>
       {/* One notice: what's missing (the must-mention phrase, strong matches, or both) */}
       {(noMention || (strong.length === 0 && weak.length > 0)) && (
@@ -277,7 +301,7 @@ function ResultList(props: RowProps & { rows: (Result | Ranked)[]; total: number
       {strong.map(row)}
       {strong.length > 0 && weak.length > 0 && (
         <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
-          <summary>Show {weak.length} weaker {weak.length === 1 ? "match" : "matches"} <span>relevance under 50</span></summary>
+          <summary>Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</summary>
           {weak.map((r, i) => row(r, strong.length + i))}
         </details>
       )}
@@ -288,17 +312,20 @@ function ResultList(props: RowProps & { rows: (Result | Ranked)[]; total: number
 
 // Tiered place results: one section per tier (in the city, serving it from elsewhere, nearby), each ordered by
 // relevance with its weaker matches folded. One notice up top when the must-mention phrase matched nothing.
-function TieredList({ rows, pending = false, scored = false, patterns, back, focus, must, noMention, tiers, county }: RowProps & { tiers: TierHead[]; rows: (Result | Ranked)[]; pending?: boolean; scored?: boolean; strongTotal?: number; total: number }) {
+function TieredList({ rows, pending = false, scored = false, patterns, back, focus, must, noMention, tiers, county, tools }: RowProps & { tiers: TierHead[]; rows: (Result | Ranked)[]; pending?: boolean; scored?: boolean; strongTotal?: number; total: number }) {
   const row = (r: Result | Ranked, i: number) => (
     <ResultRow key={r.ein} r={r} index={i} patterns={patterns} href={`/org/${r.ein}?back=${back}`} focused={r.ein === focus}
-      relevance={"relevance" in r ? r.relevance : null} />
+      relevance={"relevance" in r ? r.relevance : null} hide={hide} />
   );
   const strongAll = rows.filter((r) => !("relevance" in r) || isStrong(r)).length;
+  const hide = shared(rows);
   return (
     <div className={`results${pending ? " ranking" : ""}`}>
       <div className="bar">
-        <span>{scored ? `${strongAll} strong ${strongAll === 1 ? "match" : "matches"} in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}` : `${rows.length} results in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}`}</span>
-        {pending ? <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span> : scored && <span>Most relevant first in each group</span>}
+        {/* The count is the summary's big number; here it stays for screen readers only */}
+        <span className="sr-only">{scored ? `${strongAll} strong ${strongAll === 1 ? "match" : "matches"} in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}` : `${rows.length} results in ${tiers.length} ${tiers.length === 1 ? "group" : "groups"}`}</span>
+        {pending && <span className="ranking-note"><span className="spinner" />Ranking by relevance…</span>}
+        {tools}
       </div>
       {noMention && (
         <p className="notice">
@@ -312,13 +339,13 @@ function TieredList({ rows, pending = false, scored = false, patterns, back, foc
         const weak = own.filter((r) => "relevance" in r && !isStrong(r));
         return (
           <section key={t.tier} className="tier" aria-label={t.title}>
-            <h2>{t.title}</h2>
-            <p>{t.note}</p>
+            <h2 title={t.note}>{TIER_ICON[t.tier] && <Icon name={TIER_ICON[t.tier]!} size={17} />}{t.title}</h2>
+            <p className="sr-only">{t.note}</p>
             {strong.length === 0 && <p className="tier-empty">{own.length ? "No strong matches here." : "No matches here."}</p>}
             {strong.map(row)}
             {weak.length > 0 && (
               <details className="weaker" open={Boolean(focus && weak.some((r) => r.ein === focus))}>
-                <summary>Show {weak.length} weaker {weak.length === 1 ? "match" : "matches"} <span>relevance under 50</span></summary>
+                <summary>Show {weak.length} looser {weak.length === 1 ? "match" : "matches"}</summary>
                 {weak.map((r, i) => row(r, strong.length + i))}
               </details>
             )}
@@ -423,5 +450,5 @@ function Hero({ insights }: { insights: boolean }) {
 }
 
 function Footer() {
-  return <p className="note">Test version · covers every US state · All figures come from public IRS filings; each result links to its sources.</p>;
+  return <p className="note">Test version · every US state · All figures come from public IRS filings. Each result links to its sources.</p>;
 }

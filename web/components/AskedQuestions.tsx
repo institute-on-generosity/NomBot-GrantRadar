@@ -21,9 +21,9 @@ export function AskedQuestions() {
       <h3>{title}</h3>
       <ul>
         {qs.map((q) => (
-          <li key={q.question}>
+          <li key={q.question} title={q.headline}>
             <NavLink href={href(q.question)} label="Opening the answer…">{q.question}</NavLink>
-            <span>{q.headline}{count ? ` · asked ${q.asked_count} times` : ""}</span>
+            {count && <span>asked {q.asked_count} times</span>}
           </li>
         ))}
       </ul>

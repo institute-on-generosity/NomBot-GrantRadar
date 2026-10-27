@@ -22,7 +22,7 @@
 .serp-main .sub .fin { margin: 0 0 0 10px; padding: 0; border-radius: 0; background: none; font-size: inherit; font-weight: 400; color: var(--mute); gap: 5px; }
 .serp-main .sub .fin::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
 .serp-main .sub .fin.up::before, .serp-main .sub .fin.ok::before { background: var(--g); }
-.serp-main .sub .fin.down::before, .serp-main .sub .fin.bad::before { background: #e34948; }
+.serp-main .sub .fin.down::before, .serp-main .sub .fin.bad::before { background: var(--bad); }
 .serp-main .sub .fin.watch::before { background: #f5a524; }
 .serp-main .sub .fin:focus-visible { outline: 2px solid var(--g-line); outline-offset: 2px; border-radius: 4px; }
 .serp-main .fin-tip { font-size: 12.5px; }
@@ -30,10 +30,10 @@
 /* Quiet tools: Save, Compare, Why this result, sources. Shown on hover or focus; a saved or picked
    control stays visible; always shown on touch screens. */
 .row-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; min-height: 22px; margin-top: 2px; font-size: 12.5px; color: var(--mute); }
-.row-tools > * { opacity: 0; transition: opacity .15s; }
-.row:hover .row-tools > *, .row:focus-within .row-tools > *, .row-tools > .star.on, .row-tools > [aria-pressed="true"] { opacity: 1; }
-@media (hover: none) { .row-tools > * { opacity: 1; } }
-.row-tools button { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12.5px; font-weight: 400; line-height: 20px; color: var(--mute); background: none; border: 0; box-shadow: none; padding: 0; border-radius: 4px; cursor: pointer; }
+/* Always visible (UX audit S5): muted until hover, with a taller hit area */
+.row-tools > * { opacity: .85; transition: opacity .15s; }
+.row:hover .row-tools > *, .row:focus-within .row-tools > * { opacity: 1; }
+.row-tools button { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12.5px; font-weight: 400; line-height: 20px; color: var(--mute); background: none; border: 0; box-shadow: none; padding: 6px 0; border-radius: 4px; cursor: pointer; }
 .row-tools button:hover:not(:disabled) { color: var(--g); background: none; transform: none; }
 .row-tools button[aria-pressed="true"] { color: var(--g); background: none; box-shadow: none; }
 .row-tools .star { animation: none; }
@@ -139,7 +139,7 @@
 /* Place tiers (lib/tiers.ts): one section per tier, each with its own strong and weaker matches. */
 .tier { margin: 22px 0 6px; }
 .tier:first-of-type { margin-top: 4px; }
-.tier h2 { font-size: 17px; font-weight: 600; margin: 0; color: var(--ink); }
+.tier h2 { font-size: var(--t-card-lg); font-weight: 600; margin: 0; color: var(--ink); }
 .tier p { font-size: 12.5px; color: var(--mute); margin: 2px 0 0; }
 .tier-empty { font-size: 14px; color: var(--ink-2); margin: 6px 0 10px; }
 .place-why { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 0; }
@@ -148,42 +148,141 @@
 .prefer-hit { font-size: 12.5px; color: var(--g, var(--ink-2)); margin: 2px 0 0; }
 
 /* ---------- Search summary and "Did you know" (components/SearchSummary, components/DidYouKnow), above the results ---------- */
-.sum-card { margin: 0 0 12px; padding: 14px 18px 12px; border-radius: 18px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
-.sum-h { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--g-dark); margin: 0 0 6px; }
-.sum-count { font-size: 14px; line-height: 1.45; color: var(--ink-2); margin: 0 0 8px; }
-.sum-count b { font-size: 16px; font-weight: 650; letter-spacing: -.015em; color: var(--ink); }
-.sum-count i { font-style: normal; color: var(--faint); }
-.sum-count .sum-more { color: var(--mute); }
-.sum-count.pending { display: flex; align-items: center; gap: 8px; color: var(--mute); }
-.sum-text { font-size: 15px; line-height: 1.55; color: var(--ink); margin: 0; text-wrap: pretty; animation: step-in .3s var(--spring) both; }
-.sum-wait { padding: 2px 0; }
-.sum-caveat { margin: 8px 0 0; padding: 7px 11px; border-radius: 10px; background: var(--fill); font-size: 13px; line-height: 1.45; color: var(--ink-2); }
-.sum-foot { margin: 6px 0 0; font-size: 11.5px; color: var(--faint); }
-.dyk { margin: 0 0 16px; padding: 10px 14px 8px; border-radius: 14px; background: var(--fill); }
-.dyk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
-.dyk-head h2 { font-size: 12px; font-weight: 600; color: var(--mute); margin: 0; }
-.dyk-nav { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
-.dyk-nav button { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; color: var(--ink-2); cursor: pointer; }
-.dyk-nav button:hover:not(:disabled) { background: var(--fill-2); }
+/* Summary = the primary card and the screen's focal point (the big count). Did you know = secondary: no fill, smaller type. */
+.sum-card { margin: 0 0 var(--s-3); padding: var(--s-4) var(--s-5); }
+.sum-head { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; line-height: 1.1; }
+.sum-n { font-size: var(--t-focal); font-weight: 700; letter-spacing: -.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sum-head span { font-size: var(--t-card-lg); font-weight: 600; letter-spacing: -.015em; color: var(--ink); }
+.sum-parts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--mute); }
+.sum-chip { padding: 2px 9px; border-radius: 999px; background: var(--fill); color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sum-more { display: inline-flex; align-items: center; gap: 6px; color: var(--faint); white-space: nowrap; }
+.sum-more .spinner { width: 11px; height: 11px; }
+.sum-text { font-size: var(--t-body); line-height: 1.5; color: var(--ink-2); margin: var(--s-3) 0 0; text-wrap: pretty; animation: step-in .3s var(--spring) both; }
+.sum-wait { padding: var(--s-3) 0 0; }
+.sum-points { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 18px; margin: var(--s-3) 0 0; padding: 0; font-size: var(--t-small); color: var(--mute); }
+.sum-points b { font-size: var(--t-body); font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sum-points a { color: var(--ink); font-weight: 600; text-decoration: none; }
+.sum-points a:hover { color: var(--g); text-decoration: underline; }
+.sum-caveat { margin: var(--s-3) 0 0; font-size: var(--t-meta); line-height: 1.45; color: var(--mute); }
+.sum-foot { margin: var(--s-1) 0 0; font-size: 11px; color: var(--faint); }
+.dyk { margin: 0 0 var(--s-6); padding: var(--s-2) var(--s-4) var(--s-2); border-radius: 14px; background: none; box-shadow: inset 0 0 0 1px var(--line); }
+.dyk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0; }
+.dyk-head h2 { font-size: var(--t-meta); font-weight: 600; color: var(--mute); margin: 0; }
+.dyk-nav { display: inline-flex; align-items: center; gap: 0; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.dyk-nav button { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: var(--mute); cursor: pointer; }
+.dyk-nav button:hover:not(:disabled) { background: var(--fill); }
 .dyk-nav button:disabled { color: var(--faint); opacity: .5; cursor: default; }
-.dyk-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.dyk-track { display: flex; align-items: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; transition: height .25s var(--spring); }
 .dyk-track::-webkit-scrollbar { display: none; }
 .dyk-slide { flex: 0 0 100%; min-width: 0; margin: 0; scroll-snap-align: start; }
-.dyk-fact { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--ink); margin: 2px 0 6px; text-wrap: balance; }
-.dyk-slide figcaption { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+.dyk-fact { font-size: var(--t-small); font-weight: 600; line-height: 1.4; color: var(--ink-2); margin: 0 0 4px; text-wrap: balance; }
+.dyk-slide figcaption { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 11px; font-weight: 500; color: var(--mute); }
 .dyk-slide figcaption span { font-weight: 400; color: var(--faint); }
 .dyk-slide .ins-chart { min-height: 60px; }
-@media (max-width: 640px) { .sum-card { padding: 12px 14px 10px; } .sum-text { font-size: 14.5px; } }
+@media (max-width: 640px) { .sum-card { padding: var(--s-3) var(--s-4); } }
 @media print { .dyk-nav { display: none; } .dyk-track { display: block; overflow: visible; } .dyk-slide { margin-bottom: 10px; } .sum-card { box-shadow: none; padding: 0 0 8px; } }
 /* The carousel track never widens the column (its slides are 100% wide each). */
 .dyk { min-width: 0; }
 .dyk-track { contain: inline-size; }
-/* Phones and narrow windows: the summary and "Did you know" come first, right under the search bar, then the
-   analysis panel, then the list. serp-main's children join the page grid so they can be ordered around the panel. */
+/* Phones and narrow windows: the summary comes first, right under the search bar, then the list, then the
+   analysis panel (with Did you know). serp-main's children join the page grid so they can be ordered around the panel. */
 @media (max-width: 900px) {
   .serp { grid-template-areas: none; }
-  .serp-rail { grid-area: auto; order: 1; }
+  .serp-rail { grid-area: auto; order: 3; } /* insights after the list on phones (UX audit S4) */
   .serp-main { display: contents; }
   .serp-main > * { order: 2; min-width: 0; }
   .serp-main > .sum-card, .serp-main > .dyk { order: 0; }
 }
+/* Narrow screens: Key facts repeat the summary's points (same set and years), so the panel starts at Track record */
+@media (max-width: 900px) { .serp-rail .kp-card[aria-label="Key facts"] { display: none; } }
+
+.serp-rail .dyk { margin: 0 0 var(--s-3); }
+
+/* Export menu in the summary card's corner */
+.sum-card { position: relative; }
+.sum-actions { position: absolute; top: var(--s-3); right: var(--s-4); z-index: 5; }
+.export-menu > summary { list-style: none; cursor: pointer; font-size: var(--t-meta); font-weight: 600; color: var(--g-dark); padding: 5px 11px; border-radius: 999px; background: var(--g-tint); }
+.export-menu > summary::-webkit-details-marker { display: none; }
+.export-menu > summary:hover { background: var(--g-line); }
+.export-menu > div { position: absolute; right: 0; top: calc(100% + 6px); display: grid; min-width: 190px; padding: 6px; border-radius: 14px; background: var(--card); box-shadow: 0 0 0 1px var(--line), var(--shadow); }
+.export-menu a { padding: 8px 10px; border-radius: 9px; font-size: var(--t-small); color: var(--ink); text-decoration: none; }
+.export-menu a:hover { background: var(--fill); }
+@media print { .sum-actions { display: none; } }
+.sum-head { padding-right: 84px; }
+/* Icons (components/Icons): muted, beside the words they stand for */
+.sum-chip { display: inline-flex; align-items: center; gap: 4px; }
+.sum-chip .ico, .sum-points .ico, .kp-dt .ico, .tier h2 .ico { color: var(--mute); }
+.sum-points li { display: inline-flex; align-items: baseline; gap: 6px; }
+.sum-points .ico { align-self: center; }
+.sum-foot { display: inline-flex; align-items: center; gap: 4px; }
+.export-menu > summary { display: inline-flex; align-items: center; gap: 5px; }
+.export-menu a { display: flex; align-items: center; gap: 8px; }
+.kp-dt { display: inline-flex; align-items: center; gap: 7px; }
+.tier h2 { display: flex; align-items: center; gap: 7px; }
+.serp-rail .dyk-head { flex-direction: row; align-items: center; margin-bottom: var(--s-1); }
+.sum-points li.sum-largest { display: block; }
+.sum-points li.sum-largest .ico { vertical-align: -3px; margin-right: 6px; }
+/* Result rows, word cut (Oct 27): iconed facts on one line, a one-line mission, quiet tools */
+.serp-main .row .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+.serp-main .row .fact { display: inline-flex; align-items: center; gap: 4px; }
+.serp-main .row .fact .ico { color: var(--faint); }
+.serp-main .row .place-why { margin: 0; cursor: help; }
+.serp-main .row .place-why.flag::before { content: none; }
+.serp-main .row .place-why.flag .ico { color: var(--warn); }
+.serp-main .preview-line { -webkit-line-clamp: 1; line-clamp: 1; }
+.row-tools .why-btn, .row-tools .src > summary { display: inline-flex; align-items: center; gap: 4px; }
+.row-tools .src { position: relative; }
+.row-tools .src > summary { list-style: none; cursor: pointer; color: var(--mute); padding: 6px 0; }
+.row-tools .src > summary::-webkit-details-marker { display: none; }
+.row-tools .src-list { position: absolute; z-index: 6; left: 0; top: 100%; display: grid; gap: 4px; min-width: 200px; padding: 8px 10px; border-radius: 12px; background: var(--card); box-shadow: 0 0 0 1px var(--line), var(--shadow); white-space: nowrap; }
+/* Summary word cut (Oct 27): stat tiles, AI mark and lead on one quiet line */
+.sum-points { gap: var(--s-2) var(--s-5); align-items: stretch; }
+.sum-points li { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.sum-points li span { color: var(--mute); }
+.sum-top { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mute) !important; font-weight: 400 !important; }
+.sum-warn { cursor: help; color: var(--warn); }
+.sum-warn .ico { color: var(--warn) !important; }
+.sum-text { display: inline; }
+.sum-foot { margin: 0 0 0 6px; vertical-align: 1px; }
+.sum-card [aria-live] { margin-top: var(--s-3); }
+/* Subtraction (Oct 27): the list header keeps the count and "N related" (once on the page); "Most relevant first" goes */
+.serp-main .results > .bar > span + span:not(.ranking-note):not(.list-tools) { display: none; }
+@media (max-width: 900px) { .serp-rail .dyk { display: none; } }
+/* Summary card, Hunter's pass 2 (Oct 27): equal stat tiles, a plain largest list, a quiet export icon */
+.sum-points { display: none; }
+.sum-tiles { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); margin: var(--s-4) 0 0; padding: 0; }
+.sum-tiles li { display: grid; gap: 2px; min-width: 0; }
+.sum-tiles b { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-num-sm); font-weight: 600; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sum-tiles b .ico { color: var(--faint); }
+.sum-tiles span { font-size: var(--t-meta); color: var(--mute); }
+.sum-largest { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: 2px; font-size: var(--t-small); }
+.sum-largest li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sum-largest .ico { color: var(--faint); flex: none; }
+.sum-largest a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); text-decoration: none; }
+.sum-largest a:hover { color: var(--g); text-decoration: underline; }
+.sum-largest span { flex: none; color: var(--mute); font-variant-numeric: tabular-nums; }
+.sum-warn { display: inline-flex; align-items: center; gap: 4px; margin: var(--s-2) 0 0; font-size: var(--t-meta); cursor: help; color: var(--warn); }
+.sum-more-btn { margin-left: 6px; font: inherit; font-size: var(--t-meta); color: var(--g-dark); background: none; border: 0; cursor: pointer; padding: 0; }
+.export-menu > summary { background: none !important; color: var(--mute); padding: 6px; border-radius: 8px; }
+.export-menu > summary:hover { background: var(--fill) !important; color: var(--ink); }
+.sum-head { padding-right: 40px; }
+@media (max-width: 640px) { .sum-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Insights toggle (Oct 27): the analysis panel is hidden until asked for; the list takes the full width */
+.ins-toggle { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+.ins-toggle:not(:checked) + .serp { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main"; }
+.ins-toggle:not(:checked) + .serp .serp-rail { display: none; }
+.ins-toggle:checked + .serp .serp-main .ins-open, .ins-open:hover { color: var(--ink); background: var(--fill); }
+.ins-toggle:focus-visible + .serp .ins-open { outline: 3px solid var(--g-line); }
+.serp-main { max-width: 820px; }
+.ins-toggle:checked + .serp .serp-main { max-width: none; }
+.results > .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.list-tools { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.ins-open { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 8px; font-size: var(--t-meta); color: var(--mute); cursor: pointer; }
+.sum-card { margin: var(--s-2) 0 var(--s-5); padding: 0; background: none; box-shadow: none; }
+.sum-text { display: flex; align-items: baseline; gap: 6px; margin: var(--s-2) 0 0; color: var(--ink-2); }
+.sum-ai { color: var(--faint); cursor: help; align-self: center; display: inline-flex; }
+.sum-card [aria-live] { margin-top: 0; }
+.sum-warn { margin: var(--s-1) 0 0; }
+@media (max-width: 900px) { .ins-toggle:not(:checked) + .serp .serp-rail { display: none; } }
+/* Removal round: row sources live on the org page; rows keep Save, Compare and Why */
+.row-tools .src { display: none; }

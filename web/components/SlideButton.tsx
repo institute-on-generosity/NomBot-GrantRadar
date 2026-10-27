@@ -41,6 +41,7 @@ export function SlideButton({ data, quiet = false, more = false, icon = false, l
       ) : icon ? (
         <button type="button" className={`chat-act${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" aria-label={label} title={label} onClick={() => setOpen(!open)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4.5" width="18" height="12" rx="2" /><path d="M12 16.5V20M8.5 20h7" /></svg>
+          <span className="chat-act-l">Slide</span>
         </button>
       ) : (
         <button type="button" className={quiet ? "ins-link" : `ins-btn${open ? " on" : ""}`} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}

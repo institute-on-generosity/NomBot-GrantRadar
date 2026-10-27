@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { SearchBox } from "@/components/SearchBox";
 import { inkOn } from "@/lib/sdg";
@@ -14,15 +14,15 @@ export type PromptSet = { word: string; placeholder: string; prompts: string[]; 
 // ?tab=research opens on the research prompts (research questions go on to /research/ask).
 export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: number }) {
   const [i, setI] = useState(start);
+  // Example prompts show once a tab is picked (or ?tab= asks for one): above the fold is the box, one line, the tabs.
+  const [shown, setShown] = useState(start !== 0);
   const [paused, setPaused] = useState(start !== 0);
   // Set once a prompt or search starts: the loading veil moves the pointer off the chips (un-pausing), and a
   // flip would remount the clicked chip and drop its loading state while the search still runs.
   const [chosen, setChosen] = useState(false);
-  useEffect(() => {
-    if (paused || chosen) return;
-    const t = setInterval(() => setI((x) => (x + 1) % sets.length), 3600);
-    return () => clearInterval(t);
-  }, [paused, chosen, sets.length]);
+  // No auto-rotation (UX audit H1, Oct 27): the set changes only when a tab is clicked, so the search box stays
+  // the focal point. paused and chosen are kept for the loading state.
+  void paused; void chosen;
   const set = sets[i];
   const [open, setOpen] = useState<string | null>(null); // the research block whose questions show
   const chip = (e: string) => (
@@ -34,7 +34,6 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
   return (
     <>
       <h1 className="greet">
-        <span className="logo">N</span>
         <span className="flip-line">
           Look up{" "}
           <span className="flip" aria-live="polite">
@@ -46,12 +45,12 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
       <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={set.placeholder} big /></div>
       <div className="flip-tabs" role="tablist" aria-label="Example searches" {...hold}>
         {sets.map((s, k) => (
-          <button key={s.word} type="button" role="tab" aria-selected={k === i} className={k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); }}>
+          <button key={s.word} type="button" role="tab" aria-selected={shown && k === i} className={shown && k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); setShown(true); }}>
             {s.word[0].toUpperCase() + s.word.slice(1)}
           </button>
         ))}
       </div>
-      {set.groups ? (
+      {!shown ? null : set.groups ? (
         // Grouped sets (research): progressive disclosure. The 17 SDG blocks (number, short name, prompt count), then
         // groups that cut across causes. One block's prompts on tap, by subcategory, with a link to its Browse page.
         <div key={set.word} className="prompt-groups flip-chips" {...hold}>

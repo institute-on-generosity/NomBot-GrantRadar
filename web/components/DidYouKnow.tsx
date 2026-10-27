@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InsightChart } from "./InsightChart";
 import type { Fact } from "@/lib/overviewFacts";
 
@@ -8,6 +8,16 @@ import type { Fact } from "@/lib/overviewFacts";
 export function DidYouKnow({ facts }: { facts: Fact[] }) {
   const track = useRef<HTMLDivElement>(null);
   const [i, setI] = useState(0);
+  // The track takes the current slide's height, so a short fact leaves no empty space under it.
+  useEffect(() => {
+    const el = track.current, slide = el?.children[i] as HTMLElement | undefined;
+    if (!el || !slide) return;
+    const fit = () => { el.style.height = `${slide.offsetHeight}px`; };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(slide);
+    return () => ro.disconnect();
+  }, [i, facts.length]);
   if (!facts.length) return null;
   const go = (k: number) => {
     const el = track.current;
@@ -40,7 +50,7 @@ export function DidYouKnow({ facts }: { facts: Fact[] }) {
         {facts.map((f, k) => (
           <figure key={f.key} className="dyk-slide" aria-roledescription="slide" aria-label={`${k + 1} of ${facts.length}`}>
             <p className="dyk-fact">{f.takeaway}</p>
-            <figcaption>{f.title}<span>{f.sub}</span></figcaption>
+            <figcaption title={f.sub}>{f.title}</figcaption>
             <InsightChart spec={{ ...f.spec, height: Math.round(Number(f.spec.height ?? 90) * 0.72) }} label={`${f.title}: ${f.takeaway}`} />
           </figure>
         ))}

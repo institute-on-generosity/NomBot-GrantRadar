@@ -7,7 +7,7 @@
 // (each page costs Claude calls unless the server has it cached).
 //   npm run test:summary
 //   npm run test:summary -- --base=http://localhost:4000
-const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount } = await import("../lib/summaryFacts");
+const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount, summaryPoints } = await import("../lib/summaryFacts");
 type Org = import("../lib/summaryFacts").SummaryOrg;
 
 let fail = 0, pass = 0;
@@ -36,36 +36,42 @@ check("name only", f.nameOnly === 3);
 check("largest two", f.largest.map((l) => l.name).join("|") === "The Los Angeles Dodgers Foundation|Second To None Youth Sports Inc");
 const flat = summaryFacts(orgs.map((o) => ({ ...o, tier: null })), { weaker: 3, related: 2345, scored: true, topic: "climate", grantYears: [2022, 2024] });
 check("no place: cause split", JSON.stringify(flat.split) === JSON.stringify([{ label: "Recreation & Sports", count: 6 }, { label: "Human Services", count: 1 }]), JSON.stringify(flat.split));
+check("count line: no chips without place tiers", countLine(flat).parts.length === 0);
 const lab = summaryFacts([org("A", { label: "primary" }), org("B", { label: "primary" }), org("C", { label: "partial" })], { weaker: 0, related: 3, scored: true, topic: "girls coding programs", grantYears: [2022, 2024], labelFilter: true });
 check("label filter: main vs partial", JSON.stringify(lab.split.map((s) => [s.label, s.count])) === '[["main focus",2],["partial focus",1]]');
-check("count noun", countNoun("youth sports programs", true) === "youth sports programs" && countNoun("climate", true) === "strong matches" && countNoun("health", true) === "strong matches" && countNoun("food banks", false) === "results");
+check("count noun: group nouns only", countNoun("youth sports programs", true) === "youth sports programs" && countNoun("food banks", true) === "food banks" && countNoun("climate", true) === "organizations" && countNoun("arts", true) === "organizations" && countNoun("food banks", false) === "results");
 
 // 2. Count line and caveat
 const line = countLine(f);
 check("count line", `${line.main} · ${line.parts.join(" · ")}` === "7 youth sports programs · 4 in Inglewood · 2 serving Inglewood · 1 nearby", `${line.main} · ${line.parts.join(" · ")}`);
-check("count line: weaker folded", line.more === "9 weaker matches folded in the list");
+check("count line: weaker matches left to the list", line.more === null);
 check("count line: tiers sum to the strong count", f.tiers!.reduce((a, t) => a + t.count, 0) === f.strong);
 const fl = countLine(flat);
-check("flat count line", fl.main === "7 strong matches" && fl.more === "2,345 related in all", JSON.stringify(fl));
+check("flat count line: organizations, related count left to the list", fl.main === "7 organizations" && fl.more === null, JSON.stringify(fl));
 check("unscored flat says results", countLine(summaryFacts(orgs, { weaker: 0, related: 115, scored: false, grantYears: [2022, 2024] })).main === "115 results");
-check("one strong match", countLine(summaryFacts([orgs[0]], { weaker: 0, related: 1, scored: true, topic: "youth sports programs", grantYears: [2022, 2024] })).main === "1 strong match");
+check("one strong match", countLine(summaryFacts([orgs[0]], { weaker: 0, related: 1, scored: true, topic: "youth sports programs", grantYears: [2022, 2024] })).main === "1 organization");
 check("caveat: name only", caveatLine(f) === "3 are known by name only (no IRS program details).", String(caveatLine(f)));
 check("caveat: unconfirmed preference", (caveatLine(f, { prefer: ["mobile dental care"] }) ?? "").startsWith("No match's filings mention mobile dental care."));
 check("no caveat when it doesn't matter", caveatLine(summaryFacts(orgs.slice(0, 2), { weaker: 0, related: 2, scored: true, grantYears: [2022, 2024] })) === null);
 check("facts text has the median", factsText(f).includes("median $132K"));
 check("facts text: closest basis says so", factsText(f, "closest").startsWith("Closest matches read (by meaning, not yet checked one by one): 7") && factsText(f).startsWith("Strong matches read: 7"));
 const pl = pendingLine(115, [{ label: "in Inglewood", count: 40 }, { label: "serving Inglewood", count: 0 }, { label: "nearby", count: 75 }]);
-check("pending line: total and tier totals, empty tiers dropped", `${pl.main} · ${pl.parts.join(" · ")}` === "115 results · 40 in Inglewood · 75 nearby" && pl.more === "checking relevance…", JSON.stringify(pl));
-check("pending line: one result, no tiers", pendingLine(1).main === "1 result" && pendingLine(1).parts.length === 0);
+check("pending line: total and tier totals, empty tiers dropped", `${pl.main} · ${pl.parts.join(" · ")}` === "115 candidates · 40 in Inglewood · 75 nearby" && pl.more === "ranking by relevance…", JSON.stringify(pl));
+check("pending line: one candidate, no tiers", pendingLine(1).main === "1 candidate" && pendingLine(1).parts.length === 0);
 
 // 2b. Key facts: the summary's set ("of the N shown") and its grant years
 const kf = keyFactTiles(f, { count: 3, of: 6 });
-check("key facts: count tile is the summary's strong count", kf.shown === f.strong && kf.tiles[0].value === "7" && kf.tiles[0].label === "organizations shown");
+check("key facts: at most 3 tiles, the count left to the summary", kf.shown === f.strong && kf.tiles.length <= 3 && !kf.tiles.some((t) => t.label.includes("shown")));
 check("key facts: median income of the N shown", kf.tiles.some((t) => t.label === "median yearly income" && t.value === "$132K" && t.note === "5 of the 7 shown report it"), JSON.stringify(kf.tiles));
 check("key facts: grants use the summary's years", kf.tiles.some((t) => t.label === "from foundations, 2022–2024" && t.value === "$1.2M" && t.note === "2 of the 7 shown got grants"), JSON.stringify(kf.tiles));
 check("key facts: deficit share of the N shown", kf.tiles.some((t) => t.value === "50%" && t.note === "6 of the 7 shown report"));
-check("key facts: basis names the set and years", kf.basis === "Figures from the 7 organizations shown in the list · foundation grants 2022–2024", kf.basis);
+check("key facts: basis names the set and years", kf.basis === "7 shown · grants 2022–2024", kf.basis);
 check("key facts: small deficit samples skipped", !keyFactTiles(f, { count: 1, of: 2 }).tiles.some((t) => t.label.includes("spent more")));
+
+// 2b'. Points under the lead sentence: computed from the scored set
+const pts = summaryPoints(f, [{ name: "The Los Angeles Dodgers Foundation", revenue: 12_900_000 }, { name: "Second To None Youth Sports Inc", revenue: 135_000 }]);
+check("points: size, grants, largest", JSON.stringify(pts.map((p) => p.text)) === JSON.stringify(["$132K median yearly income", "2 of 7 got foundation grants, 2022–24", "Largest: The Los Angeles Dodgers Foundation $12.9M, Second To None Youth Sports Inc $135K"]), JSON.stringify(pts));
+check("points: no semicolons or em dashes", pts.every((p) => !/[;—]/.test(p.text)));
 
 // 2c. Background rewrite rule: only when under 60% of what the first description read is a strong match
 check("overlap: share of the read set that is strong", overlap(["a", "b", "c", "d", "e"], ["a", "b", "c", "x"]) === 0.6 && REGEN_OVERLAP === 0.6);
@@ -107,15 +113,15 @@ if (base) {
   for (const q of ["Youth sports programs in Inglewood, CA", "food banks in Ohio"]) {
     const html = await (await fetch(`${base}/?question=${encodeURIComponent(q)}`)).text();
     const sum = /class="sum-count" data-strong="(\d+)"/.exec(html)?.[1];
-    const bar = [...html.matchAll(/<span>([\d,]+) strong match(?:es)?(?: in \d+ groups?| · )/g)].map((m) => m[1].replace(/,/g, "")).pop();
+    const bar = [...html.matchAll(/<span(?: class="sr-only")?>([\d,]+) strong match(?:es)?(?: in \d+ groups?| · )/g)].map((m) => m[1].replace(/,/g, "")).pop();
     const key = /aria-label="Key facts" data-shown="(\d+)"/.exec(html)?.[1];
-    const text = /class="sum-text"[^>]*>([^<]*)/.exec(html)?.[1] ?? "";
+    const text = (/class="sum-text"[^>]*>([\s\S]*?)<\/p>/.exec(html)?.[1] ?? "").replace(/<[^>]+>/g, "").replace(/<!-- -->/g, "").trim();
     const pend = html.indexOf('class="sum-count" aria-busy="true"'), scored = html.indexOf('class="sum-count" data-strong=');
     check(`page: summary count = list count (${q})`, sum != null && sum === bar, `summary ${sum}, list ${bar}`);
     check(`page: Key facts count = summary count (${q})`, key != null && key === sum, `key facts ${key}, summary ${sum}`);
     check(`page: instant count line before the scored one (${q})`, pend >= 0 && scored > pend, `${pend} ${scored}`);
-    check(`page: description present and never states the count (${q})`, text.length > 40 && !statesCount(text), text.slice(0, 120));
-    check(`page: no semicolons or em dashes in the summary (${q})`, !/class="sum-text"[^>]*>[^<]*[;—]/.test(html));
+    check(`page: description present and never states the count (${q})`, text.length > 30 && !statesCount(text), text.slice(0, 120));
+    check(`page: no semicolons or em dashes in the summary (${q})`, !/[;—]/.test(text));
   }
 }
 

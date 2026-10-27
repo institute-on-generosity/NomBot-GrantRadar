@@ -9,19 +9,22 @@
 // A caveat line and the panel's Key facts (same set as the count line, grants GRANT_YEARS) are computed too.
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { readable, titleCase } from "../components/text";
+import { orgName, readable, titleCase } from "../components/text";
+
+// Display names for the largest list: readable casing, no "Inc"-style suffix, IRS run-ons split ("CENTERINC").
+export const displayName = (raw: string) => orgName(raw.replace(/\b(center|centre|foundation|association)inc\b/gi, "$1 Inc"), 60).replace(/[, ]+(inc|incorporated|corp|corporation|co|ltd|llc)\.?$/i, "").trim();
 import { claude, fallback, FAST_MODEL } from "./llm";
-import { memo } from "./memo";
+import { diskMemo } from "./memo";
 import type { Filters } from "./parse";
 import { tierTitle, TIER_ORDER, type Scope } from "./place";
 import { fundingOf, GRANT_YEARS } from "./placeReport";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "./rerank";
 import type { Result } from "./search";
 import { healthOf } from "./landscape";
-import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTiles, money, overlap, pendingLine, REGEN_OVERLAP, summaryFacts, tidy, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
+import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTiles, money, overlap, pendingLine, REGEN_OVERLAP, summaryPoints, summaryFacts, tidy, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
 
 export type KeyFacts = ReturnType<typeof keyFactTiles>;
-export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts };
+export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts; largest: { ein: string; name: string; revenue: number }[]; shown: Result[] }; // shown: the strong set, for the panel (server only)
 export type Basis = "closest" | "strong";
 export type SummaryText = { text: string; explore: string[]; dropped: number; basis: Basis };
 // pending: instant. ai: the first description (closest matches). head: after scoring (count line, caveat, Key facts).
@@ -31,20 +34,17 @@ export type Summary = { pending: ReturnType<typeof pendingLine>; ai: Promise<Sum
 const MAX_ORGS = 30; // strong matches Claude reads (most relevant first per tier)
 const CLOSEST = 20;  // unscored candidates the first description reads (69% relevant in the top 10, eval/bench.mts)
 
-const SYSTEM = `You write the short summary shown under a nonprofit search box, above the list of results.
+const SYSTEM = `You write the one-line lead of the summary shown under a nonprofit search box, above the list of results.
 You get the user's question, figures computed from a set of matching organizations, and those organizations (IRS data, with their place when the question names one).
-Write "summary": 2 or 3 plain sentences that describe these matches, like a researcher's one-paragraph brief:
-- what kinds of organizations or programs these are (name the main kinds of work you see in the missions)
-- how big they typically are and how they are funded (median income, how many get foundation grants)
-- the largest or most notable one or two, by name
+Write "summary": ONE plain sentence of 8 to 12 words (never more than 15), saying what kinds of work most of these matches do (the main kinds of programs you see in the missions), like the lead of a researcher's brief.
+The page shows the count, typical size, foundation funding and the largest organizations under your sentence, computed from the data, so leave all of that out.
 Rules, strictly:
-- Use ONLY numbers that appear in the Figures or the organization lines, written the same way (for example "$195K", "9 of 30", "44%"). Never compute, round or estimate a new number. Words like "most", "a few" and "about half" are fine.
-- Use ONLY organization names from the list, written exactly as given or as a shorter piece of the exact name. Never invent or guess a name.
+- No numbers and no organization names.
 - Name only places that appear in the question or the organization lines (cities, states). No regions or neighborhoods from your own knowledge.
-- Describe them as "the closest matches" or "these matches" ("Most of the closest matches are small youth sports leagues"). Never say how many matches or results there are in all, and never write "N matches" or "N results" (the line above gives the count, and it can change). "9 of the 20" style figures from the Figures are fine.
-- If a few organizations clearly don't fit the question, leave them out of the description.
+- Start with "Most of the closest matches" or "Most of these matches". Never say how many matches or results there are.
+- Describe only the organizations that fit the question. Ignore the ones that clearly don't, and never mention an organization to say it doesn't fit.
 - No semicolons, no dashes as punctuation, no colons, no lists, no citations, no advice, no hype.
-- Plain words for a busy reader: "income" not "revenue", "spent more than it took in" not "deficit".
+- Plain words for a busy reader.
 Also write "explore": 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle (a nearby cause, another place, or a narrower activity). Don't repeat the question.`;
 
 const schema = z.object({ summary: z.string(), explore: z.array(z.string()) });
@@ -104,7 +104,9 @@ export async function summaryHead(question: string, filters: Filters, res: Found
   const must = filters.requirements.map((r) => r.label).join(" + ");
   const caveat = caveatLine(facts, { prefer: filters.prefer?.map((p) => p.label), must, noMention: res.exact_total === 0 && Boolean(must) });
   const def = health.signals.find((s) => s.key === "deficit");
-  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null), orgs, scope: res.scope ?? null };
+  // The largest strong matches by income (relevance-checked, so never an off-topic org), linked from the summary.
+  const largest = orgs.filter((o) => o.revenue != null && o.revenue > 0).sort((a, b) => b.revenue! - a.revenue!).slice(0, 2).map((o) => ({ ein: o.r.ein, name: displayName(o.r.name), revenue: o.revenue! }));
+  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null), largest, shown: strong, orgs, scope: res.scope ?? null };
 }
 
 async function fresh(question: string, input: Input, basis: Basis): Promise<SummaryText | null> {
@@ -138,7 +140,7 @@ async function fresh(question: string, input: Input, basis: Basis): Promise<Summ
   return { text: checked.text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length, basis };
 }
 
-const cached = memo<SummaryText | null>("search-summary:v3", 200, 24 * 3600_000); // bump when the prompt changes (v3: closest matches first, no counts; v2: no outside place names)
+const cached = diskMemo<SummaryText | null>("search-summary:v7", 200, 7 * 24 * 3600_000); // bump when the prompt changes (v7: 8 to 12 words; v6: at most 15 words; v5: at most 18 words; v4: one lead sentence, no names or numbers; v3: closest matches first, no counts; v2: no outside place names)
 const safe = (p: Promise<SummaryText | null>) => p.catch((err) => { console.error("search summary failed", err); return null; });
 const keyOf = (basis: Basis, question: string, eins: string[]) => `${basis}|${question.toLowerCase().replace(/\s+/g, " ").trim()}|${eins.join(",")}`;
 
@@ -158,7 +160,7 @@ export function searchSummary(question: string, filters: Filters, res: Found, ra
     if (t && overlap(input.orgs.map((o) => o.r.ein), strongEins) >= REGEN_OVERLAP) return null;
     return cached(keyOf("strong", question, strongEins), () => fresh(question, h, "strong"));
   }));
-  return { pending, ai, head: head.then(({ facts, line, caveat, keyFacts }) => ({ facts, line, caveat, keyFacts })), later };
+  return { pending, ai, head: head.then(({ facts, line, caveat, keyFacts, largest, shown }) => ({ facts, line, caveat, keyFacts, largest, shown })), later };
 }
 
 // The page's default view (10 rows, no "Show more"), for the CSV export and /report: same scores, same summary cache.
@@ -171,5 +173,6 @@ export async function summaryFor(question: string, filters: Filters, includeInac
 export async function summaryLines(s: Summary): Promise<string[]> {
   const [head, ai, later] = await Promise.all([s.head, s.ai, s.later]);
   const t = later ?? ai;
-  return [[head.line.main, ...head.line.parts].join(" · ") + (head.line.more ? ` (${head.line.more.replace(" folded in the list", "")})` : ""), t?.text ?? "", head.caveat ?? ""].filter(Boolean);
+  return [[head.line.main, ...head.line.parts].join(" · ") + (head.line.more ? ` (${head.line.more})` : ""), t?.text ?? "", ...summaryPoints(head.facts, head.largest).map((p) => p.text), head.caveat ?? ""].filter(Boolean);
 }
+

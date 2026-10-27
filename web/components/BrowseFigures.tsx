@@ -73,12 +73,13 @@ export async function FullFigures({ id, searchName }: { id: string; searchName: 
         </section>
       )}
 
-      <section className="br-meta">
-        <h3>What this counts</h3>
-        <p>{f.causeNote}</p>
+      {/* Method folded under "How we count" (UX audit BG2: no internal table names or timings on the page) */}
+      <details className="more-info br-meta">
+        <summary>How we count</summary>
+        <p>{f.causeNote.replace(/\s*\(org_labels\)/g, "")}</p>
         {f.recency && <p><b>Data years.</b> {f.recency}</p>}
-        <p className="muted">Figures are the research answers for this cause, refreshed daily. Shown in {ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`}.</p>
-      </section>
+        <p className="muted" data-ms={ms}>Figures are the research answers for this cause, refreshed daily.</p>
+      </details>
 
       <section className="br-asks">
         <h3>Ask about it</h3>

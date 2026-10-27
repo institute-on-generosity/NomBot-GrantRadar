@@ -1,8 +1,8 @@
 /* Browse by cause (/browse): goal cards, goal and subcategory pages. Phone first: one column under 560px. */
 .br-page { max-width: 880px; padding-bottom: 48px; }
 .br-page .back { font-size: 14px; text-decoration: none; color: var(--g-dark); }
-.br-pillar, .br-sec { margin-top: 28px; }
-.br-pillar h2, .br-sec h2 { font-size: 18px; font-weight: 600; letter-spacing: -.02em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.br-pillar, .br-sec { margin-top: var(--s-6); }
+.br-pillar h2, .br-sec h2 { font-size: var(--t-section); font-weight: 600; letter-spacing: -.02em; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 10px; }
 .br-pillar h2 span { font-size: 13px; font-weight: 400; color: var(--mute); }
 .br-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
 .br-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 16px; background: var(--fill); color: var(--ink); text-decoration: none; transition: background-color .15s; min-width: 0; }
@@ -10,7 +10,7 @@ a.br-card:hover { background: var(--fill-2); }
 .br-card.off { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 .br-card-h { display: flex; align-items: center; gap: 9px; }
 .br-card-h strong { font-size: 15px; font-weight: 600; line-height: 1.25; }
-.br-card p { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+.br-card p { font-size: var(--t-meta); color: var(--mute); line-height: 1.4; }
 .sdg-n.env { background: var(--g-fill); color: #fff; }
 .sdg-n.big { width: 52px; height: 52px; border-radius: 12px; font-size: 24px; }
 .br-tag { align-self: flex-start; font-size: 11px; font-weight: 500; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 8px; }
@@ -18,8 +18,10 @@ a.br-card:hover { background: var(--fill-2); }
 .br-tag.none { color: var(--mute); background: var(--fill-2); }
 .br-mini { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--mute); margin-top: 2px; }
 .br-mini b { color: var(--ink); font-weight: 600; }
+.br-mini > span:first-child { flex-basis: 100%; }
+.br-mini > span:first-child b { font-size: var(--t-num-sm); font-weight: 650; letter-spacing: -.02em; margin-right: 2px; }
 .br-mini .up b { color: var(--g-dark); }
-.br-mini .down b { color: #c4314b; }
+.br-mini .down b { color: var(--bad); }
 .muted { color: var(--mute); }
 .br-cross { justify-content: flex-start; }
 .br-foot { margin-top: 32px; font-size: 12px; color: var(--mute); line-height: 1.5; }
@@ -27,7 +29,7 @@ a.br-card:hover { background: var(--fill-2); }
 
 .br-head { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
 .br-head .pagetitle { margin-top: 0; }
-.br-kicker { font-size: 12px; font-weight: 500; color: var(--mute); text-transform: uppercase; letter-spacing: .04em; }
+.br-kicker { font-size: 12px; font-weight: 500; color: var(--mute); letter-spacing: .04em; }
 .br-sub { font-size: 15px; color: var(--ink-2); }
 .br-goal { margin-top: 12px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
 .br-goal a { color: var(--g-dark); white-space: nowrap; }
@@ -39,7 +41,7 @@ a.br-card:hover { background: var(--fill-2); }
 .br-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .br-tile { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 14px; background: var(--fill); color: var(--ink); text-decoration: none; min-height: 96px; transition: background-color .15s; }
 .br-tile:hover { background: var(--fill-2); }
-.br-tile b { font-size: 22px; font-weight: 600; letter-spacing: -.02em; }
+.br-tile b { font-size: var(--t-num-sm); font-weight: 600; letter-spacing: -.02em; }
 .br-tile-l { font-size: 12px; color: var(--mute); }
 .br-tile-s { font-size: 12px; color: var(--ink-2); line-height: 1.35; }
 .br-tile.skel { animation: pulse 1.2s ease-in-out infinite alternate; }
@@ -67,7 +69,7 @@ a.br-card:hover { background: var(--fill-2); }
 }
 @media (max-width: 560px) {
   .br-grid { grid-template-columns: 1fr; }
-  .br-tile b { font-size: 19px; }
+  .br-tile b { font-size: var(--t-num-sm); }
   .br-bar { width: 32px; }
   .sdg-n.big { width: 44px; height: 44px; font-size: 20px; }
 }

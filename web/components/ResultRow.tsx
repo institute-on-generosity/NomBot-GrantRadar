@@ -7,6 +7,7 @@ import type { Result } from "@/lib/search";
 import { HealthBadges } from "./HealthBadges";
 import { Preview } from "./Snippet";
 import { titleCase } from "./text";
+import { Icon } from "./Icons";
 
 
 export { money };
@@ -15,15 +16,14 @@ export { money };
 // (place · cause · income · finance status) and a two-line mission snippet. Save, Compare, the
 // relevance reason ("Why this result") and the IRS sources sit in a quiet tools line that shows on
 // hover or focus (always on touch screens). relevance: 0–100 score + reason (lib/rerank).
-export function ResultRow({ r, href, patterns, focused = false, index = 0, relevance }: {
+// hide: facts every row in the list shares (one cause or one state), shown once instead of on each row.
+export function ResultRow({ r, href, patterns, focused = false, index = 0, relevance, hide }: {
   r: Result; href: string; patterns: string[]; focused?: boolean; index?: number;
-  relevance?: Relevance | null;
+  relevance?: Relevance | null; hide?: { cause?: boolean; state?: boolean };
 }) {
-  const facts = [
-    [r.city ? titleCase(r.city) : null, r.state].filter(Boolean).join(", "),
-    r.ntee?.label,
-    r.revenue ? `${money(r.revenue.amount)} income${r.revenue.year ? ` (${r.revenue.year})` : ""}` : null,
-  ].filter(Boolean);
+  // Short, iconed facts (Oct 27 word cut): place, income (year in the tooltip), cause
+  const place = [r.city ? titleCase(r.city) : null, hide?.state && r.city ? null : r.state].filter(Boolean).join(", ");
+  const why = r.place && r.place.basis !== "hq" ? `${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""}` : null;
   return (
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
       <div className="row-main">
@@ -32,15 +32,13 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
           {focused && <span className="lastviewed">last viewed</span>}
         </div>
         <div className="sub">
-          {facts.join(" · ")}
+          {place && <span className="fact"><Icon name="pin" size={14} />{place}</span>}
+          {r.revenue && <span className="fact" title={`Yearly income${r.revenue.year ? `, ${r.revenue.year}` : ""}`}><Icon name="money" size={14} />{money(r.revenue.amount)}</span>}
+          {r.ntee?.label && !hide?.cause && <span className="fact">{r.ntee.label}</span>}
+          {/* Why a place tier lists it (named for the city but mailed from elsewhere, or a filing or grant naming it): one icon, text on hover */}
+          {why && <span className={`fact place-why${r.place!.basis === "name" ? " flag" : ""}`} title={why} aria-label={why} tabIndex={0}><Icon name={r.place!.basis === "name" ? "warn" : "info"} size={14} /></span>}
           <HealthBadges h={r.health} />
         </div>
-        {r.place && r.place.basis !== "hq" && (
-          // Why a place tier lists it: named for the city but mailed from elsewhere, or a filing or grant that names the city.
-          <p className={`place-why${r.place.basis === "name" ? " flag" : ""}`}>
-            {r.place.note}{r.place.quote && <>: <q>{r.place.quote}</q></>}
-          </p>
-        )}
         <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
         {r.prefer && r.prefer.length > 0 && <p className="prefer-hit">Mentions {r.prefer.join(", ")}</p>}
         <div className="row-tools">
@@ -49,7 +47,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
           {relevance && (
             // Hover or focus to see the score and Claude's reason for it.
             <button type="button" className="why-btn" aria-describedby={`why-${r.ein}`}>
-              Why this result
+              <Icon name="sparkle" size={14} />Why
               <span className="tip" role="tooltip" id={`why-${r.ein}`}>
                 <span className="tip-h">Relevance {relevance.score} of 100</span>
                 {relevance.why}
@@ -58,11 +56,14 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
             </button>
           )}
           {r.sources.length > 0 && (
-            <span className="src">
-              {r.sources.map((s, i) => (
-                <span key={s.url}>{i > 0 && " · "}{s.internal ? <NavLink href={s.url} title={s.detail} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a>}</span>
-              ))}
-            </span>
+            <details className="src">
+              <summary><Icon name="info" size={14} />Sources</summary>
+              <span className="src-list">
+                {r.sources.map((s) => (
+                  <span key={s.url}>{s.internal ? <NavLink href={s.url} title={s.detail} label="Opening the IRS file…">{s.label}</NavLink> : <a href={s.url} target="_blank" rel="noreferrer" title={s.detail}>{s.label} ↗</a>}</span>
+                ))}
+              </span>
+            </details>
           )}
         </div>
       </div>

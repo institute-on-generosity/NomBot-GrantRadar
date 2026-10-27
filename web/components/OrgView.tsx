@@ -72,6 +72,8 @@ async function Org({ params, searchParams, modal }: Props) {
         </p>
       )}
       {o.tax?.revocation && (o.tax.status === "revoked" || o.tax.status === "conflict") && <Revoked r={o.tax.revocation} conflict={o.tax.status === "conflict"} onPub78={o.tax.pub78.eligible} />}
+      {/* Focal number: the latest yearly income, big, with staff, volunteers and age beside it */}
+      {o.years[0]?.revenue != null && <p className="org-key"><b>{money(o.years[0].revenue)}</b> yearly income ({o.years[0].year})</p>}
       {(o.team || o.age != null) && <Team team={o.team} age={o.age} since={o.ruling} />}
 
       <section>
@@ -82,7 +84,7 @@ async function Org({ params, searchParams, modal }: Props) {
       {o.programs && (
         <section>
           <h2>Programs</h2>
-          <p>{readable(o.programs)}</p>
+          <Clamp text={readable(o.programs)} />
         </section>
       )}
 
@@ -179,6 +181,19 @@ function Revoked({ r, conflict, onPub78 }: { r: NonNullable<TaxStatus["revocatio
       <b>Tax-exempt status revoked by the IRS on {r.revocation_date}</b> (posted {r.posting_date}) for not filing a Form 990 for 3 years in a row, with no reinstatement on the IRS list of {r.file_date}. Gifts to this EIN are not tax-deductible.
       {funded}{g.count > 0 && " Check for a fiscal sponsor or a new EIN."}{check}
     </p>
+  );
+}
+
+// Long program text: the first few sentences, the rest one click away.
+function Clamp({ text, at = 320 }: { text: string; at?: number }) {
+  if (text.length <= at + 80) return <p>{text}</p>;
+  const cut = text.slice(0, at).search(/[.!?|]\s[^.!?|]*$/);
+  const i = cut > 120 ? cut + 1 : at;
+  return (
+    <>
+      <p>{text.slice(0, i).trim()}</p>
+      <details className="more-info"><summary>Read all</summary><p>{text.slice(i).trim()}</p></details>
+    </>
   );
 }
 
@@ -282,7 +297,7 @@ function Leadership({ d, ein }: { d: Diligence; ein: string }) {
       <h2>Leadership and governance</h2>
       {paid.length > 0 && (
         <ul className="people">
-          {paid.map((p) => <li key={p.name + p.title}><NavLink href={personHref(p.name, ein)} label="Opening the person…" className="person-link"><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></NavLink><span>{money(p.pay + p.other)}</span></li>)}
+          {paid.map((p) => <li key={p.name + p.title}><NavLink href={personHref(p.name, ein)} label="Opening the person…" className="person-link"><b>{titleCase(p.name)}</b><small>{prettyTitle(p.title)}</small></NavLink><span>Pay {money(p.pay + p.other)}</span></li>)}
         </ul>
       )}
       <p className="board-line">

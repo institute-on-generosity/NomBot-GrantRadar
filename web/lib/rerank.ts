@@ -6,7 +6,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { readable } from "../components/text";
 import { claude, fallback, SCORE_MODEL } from "./llm";
-import { memo } from "./memo";
+import { diskMemo, memo } from "./memo";
 import type { Filters } from "./parse";
 import { search, type Result } from "./search";
 import { placeScope, tieredSearch, type TierBlock } from "./tiers";
@@ -85,7 +85,8 @@ async function scoreBatch(question: string, results: Result[], placed = false, n
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = memo<Map<string, Relevance>>("rerank:v6", 300, 24 * 3600_000); // v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
+const cached = diskMemo<Map<string, Relevance>>("rerank:v6", 300, 7 * 24 * 3600_000, { // on disk too: stable across restarts
+  toJSON: (m) => [...m], fromJSON: (j) => new Map(j as [string, Relevance][]), keep: (m) => m.size > 0 }); // v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
 function score(question: string, results: Result[], placed = false, note = "") {
   const key = `${placed ? "placed|" : ""}${note ? "soft|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
   return cached(key, () => scoreFresh(question, results, placed, note).catch((err) => {

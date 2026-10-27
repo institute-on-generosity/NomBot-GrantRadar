@@ -66,19 +66,22 @@ async function Report({ searchParams }: { searchParams: SP }) {
       {summary.length > 0 && (
         <section className="report-summary">
           <h2>Summary</h2>
-          {summary.map((l, i) => <p key={i} className={i === 0 ? "report-count" : undefined}>{l}</p>)}
+          {summary.map((l, i) => i === 0
+            ? <p key={i} className="report-count"><b>{l.split(" ")[0]}</b> {l.split(" ").slice(1).join(" ")}</p>
+            : <p key={i}>{l}</p>)}
         </section>
       )}
 
-      <section>
-        <h2>Method</h2>
+      {/* Method folded on screen (one click), always printed in full */}
+      <details className="report-method">
+        <summary><h2>Method</h2></summary>
         <ul>
           {scope ? <li><b>Place.</b> {placeText(scope)}</li> : <li><b>Place.</b> {filters.placeLabel ?? (filters.states.join(", ") || "Anywhere in the US")}, by HQ address.</li>}
           <li><b>Topic.</b> {filters.topic || "Any"}{filters.prefer?.length ? `. Preference (ranks higher, never required): ${filters.prefer.map((p) => p.label).join(" and ")}` : ""}{filters.preferLabel && filters.preferLabel !== filters.label ? `. Organizations graded ${labelPhrase(filters.preferLabel)} rank higher, and others that fit still show` : ""}{filters.boostLabels?.length ? `. Organizations graded ${filters.boostLabels.map(labelPhrase).join(" or ")} rank a little higher (graded labels miss some orgs, so they never filter here)` : ""}{filters.requirements.length ? `. Must mention ${filters.requirements.map((r) => r.label).join(" and ")} in the 990 text` : ""}.</li>
           <li><b>Finding matches.</b> Meaning and keyword search over 990 mission and program text, plus the name and IRS cause code (NTEE) for organizations with no 990 text. Claude scored the closest {res.tiers ? "candidates in each group" : "40 candidates"} from 0 to 100 against the question. Strong matches score {STRONG} or more.</li>
           <li><b>Sources and years.</b> IRS exempt organization master file (names, addresses, cause codes, revenue), Form 990 and 990-EZ e-files for tax years 2021 to 2025 (mission, programs, finances), 990-PF foundation grants {g0} to {g1}, Schedule I grant purposes from 2021, Census 2024 ZIP code points.</li>
         </ul>
-      </section>
+      </details>
 
       {tiers.map((t) => {
         const block = t ? res.tiers!.find((b) => b.tier === t)! : null;
@@ -110,11 +113,11 @@ async function Report({ searchParams }: { searchParams: SP }) {
           <li>Grants are placed where the recipient is headquartered, not where the work happens. A group serving {scope?.kind === "city" ? titleCase(scope.city) : "the place"} from an office elsewhere shows only when a filing or grant names the place.</li>
           <li>Returns arrive 1 to 2 years late, so {g1 + 1} and later years are still incomplete.</li>
           <li>Relevance scores and reasons are written by AI from the filings. Check an organization before you rely on it.</li>
-          {scope?.kind === "city" && <li>Nearby means an HQ ZIP whose center is within {NEAR_MILES} miles of the center of a {titleCase(scope.city)} ZIP. City ZIPs are the ZIPs where most organizations give {titleCase(scope.city)} as their mailing city.</li>}
+          {scope?.kind === "city" && <li>Nearby means an HQ ZIP whose center is within {NEAR_MILES} miles of the center of {/^[AEIOU]/i.test(scope.city) ? "an" : "a"} {titleCase(scope.city)} ZIP. City ZIPs are the ZIPs where most organizations give {titleCase(scope.city)} as their mailing city.</li>}
         </ul>
       </section>
 
-      <section>
+      {leads.length > 0 && <section>
         <h2>Leads to verify</h2>
         <p className="report-note">Organizations with no 990 text that the name or cause code suggests may fit. Look up their website or call before relying on them.</p>
         {leads.length ? (
@@ -122,8 +125,8 @@ async function Report({ searchParams }: { searchParams: SP }) {
             <thead><tr><th>Organization</th><th>EIN</th><th>Address</th><th>Cause code</th><th>Why listed</th></tr></thead>
             <tbody>{leads.map((r) => <tr key={r.ein}><td>{titleCase(r.name)}</td><td className="nowrap">{r.ein}</td><td>{address(r)}</td><td>{r.ntee ? `${r.ntee.code} ${r.ntee.label ?? ""}` : "None"}</td><td>{r.relevance?.why ?? r.place?.note ?? ""}</td></tr>)}</tbody>
           </table>
-        ) : <p className="report-note">None.</p>}
-      </section>
+        ) : null}
+      </section>}
       <p className="report-foot">NomBot, from public IRS filings. Institute on Generosity.</p>
     </>
   );
