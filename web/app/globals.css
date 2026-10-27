@@ -1727,3 +1727,21 @@ main.chat { max-width: 780px; display: flex; flex-direction: column; min-height:
 .na { color: var(--faint); font-size: var(--t-meta); }
 .chat-nums.more span:first-child { flex-basis: auto; font-size: inherit; }
 .chat-nums.more span:first-child b { font-size: var(--t-num-sm); margin-right: 0; }
+/* Home research tab (Oct 27): a compact goal grid (one word each, SDG color as a small dot) that swaps in place
+   for the picked goal's prompts, so nothing opens below the fold */
+.prompt-blocks.sdg, .prompt-blocks { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.prompt-blocks button, .prompt-blocks.sdg button { justify-content: flex-start; gap: 7px; padding: 8px 10px; font-size: var(--t-meta); border-radius: 10px; white-space: nowrap; }
+.prompt-blocks button em, .prompt-blocks.sdg button em { font-style: normal; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.sdg-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.prompt-blocks-h { display: flex; align-items: center; gap: 4px; }
+.prompt-help { display: inline-flex; color: var(--faint); cursor: help; }
+.prompt-list-head { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: var(--s-3); }
+.prompt-back { font: inherit; font-size: var(--t-meta); color: var(--g-dark); background: none; border: 0; cursor: pointer; padding: 6px 0; }
+.prompt-on { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-small); font-weight: 600; color: var(--ink); padding: 4px 10px; border-radius: 999px; background: var(--g-tint); }
+@media (max-width: 640px) { .prompt-blocks.sdg, .prompt-blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.prompt-blocks:not(.sdg) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 640px) { .prompt-blocks:not(.sdg) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.prompt-groups { max-width: 760px; }
+.t-short { display: none; }
+@media (max-width: 640px) { .flip-tabs .t-long { display: none; } .flip-tabs .t-short { display: inline; } }
+@media (max-width: 640px) { .prompt-blocks.sdg button { padding: 8px 7px; gap: 5px; letter-spacing: -.01em; } }
