@@ -1,53 +1,56 @@
 import { Suspense } from "react";
-import { PublishSummary } from "./PublishSummary";
-import type { Summary, SummaryText as Text } from "@/lib/searchSummary";
+import { SummaryBody } from "./SummaryBody";
+import type { Summary, SummaryHead } from "@/lib/searchSummary";
 
-// The summary under the search bar (lib/searchSummary): the computed count line (same counts as the list), the
-// AI description (2-3 sentences, checked against the results) in a live region with a skeleton until it arrives,
-// and one computed caveat when it matters.
-export async function SearchSummary({ summary, question }: { summary: Promise<Summary | null>; question: string }) {
-  const s = await summary;
-  if (!s) return null;
-  const { line } = s;
+// The summary under the search bar (lib/searchSummary). The count line shows at once (what the search found) and is
+// replaced by the scored one (same counts as the list) when relevance scoring finishes. The AI description (2-3
+// sentences about the closest matches, checked against its inputs) streams in alongside scoring, in a live region
+// with a skeleton until it arrives; SummaryBody swaps in a rewrite if scoring changes the set a lot. One computed
+// caveat when it matters.
+export function SearchSummary({ summary, question }: { summary: Summary; question: string }) {
+  const p = summary.pending;
   return (
     <section className="sum-card" aria-labelledby="sum-h">
       <h2 id="sum-h" className="sum-h">Summary</h2>
-      <p className="sum-count" data-strong={s.facts.strong} data-weaker={s.facts.weaker}>
-        <b>{line.main}</b>
-        {line.parts.map((p) => <span key={p}><i aria-hidden> · </i>{p}</span>)}
-        {line.more && <span className="sum-more"><i aria-hidden> · </i>{line.more}</span>}
-      </p>
+      <Suspense fallback={
+        <p className="sum-count" aria-busy="true">
+          <b>{p.main}</b>
+          {p.parts.map((x) => <span key={x}><i aria-hidden> · </i>{x}</span>)}
+          <span className="sum-more"><i aria-hidden> · </i><span className="spinner" />{p.more}</span>
+        </p>
+      }>
+        <ScoredCount head={summary.head} />
+      </Suspense>
       <div aria-live="polite">
-        <Suspense fallback={<SummarySkeleton />}><SummaryText ai={s.ai} question={question} /></Suspense>
+        <Suspense fallback={<SummarySkeleton />}><SummaryText summary={summary} question={question} /></Suspense>
       </div>
-      {s.caveat && <p className="sum-caveat">{s.caveat}</p>}
+      <Suspense fallback={null}><Caveat head={summary.head} /></Suspense>
     </section>
   );
 }
 
-async function SummaryText({ ai, question }: { ai: Promise<Text | null>; question: string }) {
-  const t = await ai;
-  if (!t) return null;
+async function ScoredCount({ head }: { head: Promise<SummaryHead> }) {
+  const { line, facts } = await head;
   return (
-    <>
-      <p className="sum-text">{t.text}</p>
-      <p className="sum-foot">AI summary of the strong matches&apos; IRS filings · verify details</p>
-      <PublishSummary question={question} text={t.text} explore={t.explore} />
-    </>
+    <p className="sum-count" data-strong={facts.strong} data-weaker={facts.weaker}>
+      <b>{line.main}</b>
+      {line.parts.map((p) => <span key={p}><i aria-hidden> · </i>{p}</span>)}
+      {line.more && <span className="sum-more"><i aria-hidden> · </i>{line.more}</span>}
+    </p>
   );
+}
+
+async function Caveat({ head }: { head: Promise<SummaryHead> }) {
+  const { caveat } = await head;
+  return caveat ? <p className="sum-caveat">{caveat}</p> : null;
+}
+
+async function SummaryText({ summary, question }: { summary: Summary; question: string }) {
+  const first = await summary.ai;
+  // later: a promise handed to the client component, so a rewrite can stream in without holding up the first text.
+  return <SummaryBody first={first} later={summary.later} question={question} />;
 }
 
 function SummarySkeleton() {
   return <div className="sum-wait" aria-label="Writing the summary"><div className="ov-lines" aria-hidden><i /><i /><i className="short" /></div></div>;
-}
-
-// While relevance scores are still coming in: the heading and a pending count, so the card doesn't jump in later.
-export function SummaryPending({ total }: { total: number }) {
-  return (
-    <section className="sum-card" aria-labelledby="sum-h" aria-busy="true">
-      <h2 id="sum-h" className="sum-h">Summary</h2>
-      <p className="sum-count pending"><span className="spinner" />Checking {total.toLocaleString("en-US")} {total === 1 ? "result" : "results"} for strong matches…</p>
-      <SummarySkeleton />
-    </section>
-  );
 }

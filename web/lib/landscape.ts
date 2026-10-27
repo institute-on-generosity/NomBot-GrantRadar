@@ -7,6 +7,7 @@ import { titleCase } from "../components/text";
 import { db } from "./db";
 import { LOADED_STATES } from "./filters";
 import { memo } from "./memo";
+import { GRANT_YEARS } from "./placeReport";
 import { nteeLabel } from "./ntee";
 import type { Filters } from "./parse";
 import { searchCandidates } from "./rerank";
@@ -28,7 +29,7 @@ export type Landscape = {
   ages: Bar[];       // years since the IRS ruling: under 5, 5-15, 15-30, 30+
   medianAge: number | null; // median years tax-exempt, for the Overview tab
   medianIncome: number | null; incomeReported: number; // newest yearly income (revenue), for the Overview tiles
-  grantYears: [number, number]; // tax years summed in orgs[].grants (the newest three loaded)
+  grantYears: [number, number]; // tax years summed in orgs[].grants (GRANT_YEARS)
   counties: Record<string, number>;
   countyOrgs: Record<string, { ein: string; name: string; city: string | null }[]>; // per county, closest matches first
   appalachia: string[];
@@ -67,12 +68,9 @@ const tally = <T,>(xs: T[], key: (x: T) => string | null) => {
   return [...m].sort((a, b) => b[1] - a[1]);
 };
 
-// The newest three tax years of 990-PF grants loaded (the newest is partial while the IRS releases it).
-const newestYear = memo<number>("grant-year", 1, 24 * 3600_000);
-const grantYears = async (): Promise<[number, number]> => {
-  const to = await newestYear("", async () => Number((await db.query(`SELECT max(tax_year) AS y FROM funders`)).rows[0]?.y ?? new Date().getFullYear() - 1));
-  return [to - 2, to];
-};
+// Foundation-grant years: the newest full years (GRANT_YEARS, 2022-24), the same as the search summary, Key facts and
+// the CSV (data-years rule: 2025 returns are still arriving). Was the newest three loaded (2023-25) until Oct 27.
+const grantYears = async (): Promise<[number, number]> => [GRANT_YEARS[0], GRANT_YEARS[1]];
 
 // matched: the organizations to describe instead of the search's closest candidates. A city search passes its
 // relevance-checked matches across place tiers, so the panel describes the matches, not every org in the city.
@@ -222,7 +220,7 @@ function health(orgs: { ein: string; h: OrgHealth | null; gifts: number | null }
   };
 }
 
-const cached = memo<Landscape>("landscape:v25", 200, 3600_000); // v25: matched orgs only for place tiers; v24: median income; v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
+const cached = memo<Landscape>("landscape:v26", 200, 3600_000); // v26: grant years GRANT_YEARS (2022-24); v25: matched orgs only for place tiers; v24: median income; v23: ruling year per org; v22: themes ranked by median grants; v21: median age; v20: org ages (track record) and recent grants per org (funding by theme)
 export function landscape(filters: Filters, includeInactive = false, matched?: Result[]) {
   return cached(JSON.stringify([filters, includeInactive, matched?.map((r) => r.ein) ?? null]), () => build(filters, includeInactive, matched));
 }

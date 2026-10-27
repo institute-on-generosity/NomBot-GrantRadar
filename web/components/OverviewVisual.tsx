@@ -5,7 +5,8 @@ import { SlideButton } from "./SlideButton";
 import type { OverviewFacts } from "@/lib/overviewFacts";
 
 // The Overview tab as a knowledge panel of soft grey section cards:
-//   Key facts    label → value rows (lib/overviewFacts tiles), no Claude
+//   Key facts    label → value rows, no Claude: the search summary's set ("of the N shown", lib/summaryFacts
+//                keyFactTiles) once scores are in, else lib/overviewFacts tiles
 // The headline fact and its chart moved to "Did you know" under the search summary (components/DidYouKnow), and
 // the AI text to the search summary (components/SearchSummary), Oct 26. The summary publishes its sentences and
 // related searches here; the "⋯" menu (OverviewMenu) puts them on the slide, and Related lists the searches.
@@ -29,10 +30,11 @@ export const Chevron = ({ right = false }: { right?: boolean }) => <svg classNam
 // "from foundations, 2023–2025" → "From foundations 2023–2025"
 const label = (t: string) => `${t.charAt(0).toUpperCase()}${t.slice(1)}`.replace(/,\s+/g, " ");
 
-export function OverviewVisual({ facts }: { facts: OverviewFacts }) {
+// shown: the number of organizations the tiles describe (the summary's set), for the live eval.
+export function OverviewVisual({ facts, shown }: { facts: OverviewFacts; shown?: number }) {
   if (!facts.tiles.length) return null;
   return (
-    <section className="kp-card" aria-label="Key facts">
+    <section className="kp-card" aria-label="Key facts" data-shown={shown}>
       <h3 className="kp-h">Key facts</h3>
       <dl className="kp-facts">
         {facts.tiles.map((t) => (

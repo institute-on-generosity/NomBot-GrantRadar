@@ -1,10 +1,13 @@
-// Search summary checks (Oct 26): the computed facts object, the count line and caveat, and the post-check that drops
-// any sentence with an organization name or number Claude wasn't given (lib/summaryFacts.ts). No Claude calls.
-// With --base, also loads search pages from a running server and checks the summary's count equals the list's count
+// Search summary checks (Oct 26, Oct 27): the computed facts object, the pending and scored count lines, the caveat,
+// the panel's Key facts (same set and grant years as the summary), the background-rewrite overlap rule, and the
+// post-check that drops any sentence with an organization name or number Claude wasn't given, or that states the
+// count (lib/summaryFacts.ts). No Claude calls.
+// With --base, also loads search pages from a running server: the instant count line streams before the scored one,
+// the summary's count equals the list's and the Key facts' count, and the description never states the count
 // (each page costs Claude calls unless the server has it cached).
 //   npm run test:summary
 //   npm run test:summary -- --base=http://localhost:4000
-const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun } = await import("../lib/summaryFacts");
+const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount } = await import("../lib/summaryFacts");
 type Org = import("../lib/summaryFacts").SummaryOrg;
 
 let fail = 0, pass = 0;
@@ -50,6 +53,24 @@ check("caveat: name only", caveatLine(f) === "3 are known by name only (no IRS p
 check("caveat: unconfirmed preference", (caveatLine(f, { prefer: ["mobile dental care"] }) ?? "").startsWith("No match's filings mention mobile dental care."));
 check("no caveat when it doesn't matter", caveatLine(summaryFacts(orgs.slice(0, 2), { weaker: 0, related: 2, scored: true, grantYears: [2022, 2024] })) === null);
 check("facts text has the median", factsText(f).includes("median $132K"));
+check("facts text: closest basis says so", factsText(f, "closest").startsWith("Closest matches read (by meaning, not yet checked one by one): 7") && factsText(f).startsWith("Strong matches read: 7"));
+const pl = pendingLine(115, [{ label: "in Inglewood", count: 40 }, { label: "serving Inglewood", count: 0 }, { label: "nearby", count: 75 }]);
+check("pending line: total and tier totals, empty tiers dropped", `${pl.main} · ${pl.parts.join(" · ")}` === "115 results · 40 in Inglewood · 75 nearby" && pl.more === "checking relevance…", JSON.stringify(pl));
+check("pending line: one result, no tiers", pendingLine(1).main === "1 result" && pendingLine(1).parts.length === 0);
+
+// 2b. Key facts: the summary's set ("of the N shown") and its grant years
+const kf = keyFactTiles(f, { count: 3, of: 6 });
+check("key facts: count tile is the summary's strong count", kf.shown === f.strong && kf.tiles[0].value === "7" && kf.tiles[0].label === "organizations shown");
+check("key facts: median income of the N shown", kf.tiles.some((t) => t.label === "median yearly income" && t.value === "$132K" && t.note === "5 of the 7 shown report it"), JSON.stringify(kf.tiles));
+check("key facts: grants use the summary's years", kf.tiles.some((t) => t.label === "from foundations, 2022–2024" && t.value === "$1.2M" && t.note === "2 of the 7 shown got grants"), JSON.stringify(kf.tiles));
+check("key facts: deficit share of the N shown", kf.tiles.some((t) => t.value === "50%" && t.note === "6 of the 7 shown report"));
+check("key facts: basis names the set and years", kf.basis === "Figures from the 7 organizations shown in the list · foundation grants 2022–2024", kf.basis);
+check("key facts: small deficit samples skipped", !keyFactTiles(f, { count: 1, of: 2 }).tiles.some((t) => t.label.includes("spent more")));
+
+// 2c. Background rewrite rule: only when under 60% of what the first description read is a strong match
+check("overlap: share of the read set that is strong", overlap(["a", "b", "c", "d", "e"], ["a", "b", "c", "x"]) === 0.6 && REGEN_OVERLAP === 0.6);
+check("overlap: 3 of 5 keeps the first text, 2 of 5 rewrites", overlap(["a", "b", "c", "d", "e"], ["a", "b", "c"]) >= REGEN_OVERLAP && overlap(["a", "b", "c", "d", "e"], ["a", "b"]) < REGEN_OVERLAP);
+check("overlap: nothing read never rewrites", overlap([], ["a"]) === 1);
 
 // 3. Post-check
 const figures = factsText(f);
@@ -71,20 +92,30 @@ check("amount with a decimal stays one sentence", checkSummary("The largest take
 check("sentence-initial word passes", checkSummary("Typical income is $132K.", a).dropped.length === 0);
 check("sentence-initial word plus a known name passes", checkSummary("Small Inglewood groups dominate.", a).dropped.length === 0);
 check("outside place name rejected", checkSummary("Most sit along the Front Range.", a).dropped.length === 1);
+check("count statement rejected", checkSummary("There are 7 strong matches. Most are small.", a).text === "Most are small.");
+check("N results / N closest matches rejected", statesCount("These 7 results are mostly leagues.") && statesCount("The 7 closest matches run leagues.") && statesCount("Seven matches are local."));
+check("\"of the N\" and plain shares pass", !statesCount("2 of the 7 closest matches get grants.") && !statesCount("Most of the closest matches are small leagues.") && !statesCount("Only 2 of 7 get foundation grants."));
 check("numbersIn reads units", JSON.stringify(numbersIn("$1.4M, 44%, 1,234 and eight").map((n) => n.value)) === "[1400000,44,1234,8]");
 const t = tidy("Small groups; mostly local — and young");
 check("no semicolons or em dashes", !/[;—]/.test(t), t);
 check("ranges keep their en dash", tidy("$100K–$1M") === "$100K–$1M");
 
-// 4. Live page: the summary's count equals the list's count.
+// 4. Live page: the instant count line streams first; the scored one equals the list's count and the Key facts';
+// the description never states the count.
 const base = process.argv.find((x) => x.startsWith("--base="))?.slice(7).replace(/\/$/, "");
 if (base) {
   for (const q of ["Youth sports programs in Inglewood, CA", "food banks in Ohio"]) {
     const html = await (await fetch(`${base}/?question=${encodeURIComponent(q)}`)).text();
     const sum = /class="sum-count" data-strong="(\d+)"/.exec(html)?.[1];
     const bar = [...html.matchAll(/<span>([\d,]+) strong match(?:es)?(?: in \d+ groups?| · )/g)].map((m) => m[1].replace(/,/g, "")).pop();
+    const key = /aria-label="Key facts" data-shown="(\d+)"/.exec(html)?.[1];
+    const text = /class="sum-text"[^>]*>([^<]*)/.exec(html)?.[1] ?? "";
+    const pend = html.indexOf('class="sum-count" aria-busy="true"'), scored = html.indexOf('class="sum-count" data-strong=');
     check(`page: summary count = list count (${q})`, sum != null && sum === bar, `summary ${sum}, list ${bar}`);
-    check(`page: no semicolons or em dashes in the summary (${q})`, !/class="sum-text">[^<]*[;—]/.test(html));
+    check(`page: Key facts count = summary count (${q})`, key != null && key === sum, `key facts ${key}, summary ${sum}`);
+    check(`page: instant count line before the scored one (${q})`, pend >= 0 && scored > pend, `${pend} ${scored}`);
+    check(`page: description present and never states the count (${q})`, text.length > 40 && !statesCount(text), text.slice(0, 120));
+    check(`page: no semicolons or em dashes in the summary (${q})`, !/class="sum-text"[^>]*>[^<]*[;—]/.test(html));
   }
 }
 

@@ -6,7 +6,7 @@ import { ScrollToResult } from "@/components/ScrollToResult";
 import { NavLink } from "@/components/NavLink";
 import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
-import { SearchSummary, SummaryPending } from "@/components/SearchSummary";
+import { SearchSummary } from "@/components/SearchSummary";
 import { searchSummary } from "@/lib/searchSummary";
 import { DidYouKnow } from "@/components/DidYouKnow";
 import { didYouKnow } from "@/lib/overviewFacts";
@@ -168,14 +168,12 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
     </div>
   );
 
-  // Summary under the search bar (no summary on mixed questions: their answer card is the summary). Same rank()
-  // promises as the list, so the counts match it.
-  const summary = card ? null : searchSummary(question, filters, res, ranking, rankingAll).catch((err) => { console.error("search summary failed", err); return null; });
+  // Summary under the search bar (no summary on mixed questions: their answer card is the summary). Its description
+  // starts from the closest matches alongside scoring; its count line uses the same rank() promises as the list.
+  const summary = card ? null : searchSummary(question, filters, res, ranking, rankingAll);
   const top = summary && (
     <>
-      <Suspense key={`summary:${url(p, {})}`} fallback={<SummaryPending total={res.total} />}>
-        <SearchSummary summary={summary} question={question} />
-      </Suspense>
+      <SearchSummary key={`summary:${url(p, {})}`} summary={summary} question={question} />
       <Suspense key={`dyk:${url(p, { n: "" })}`} fallback={null}>
         <DidYouKnowPanel filters={filters} includeInactive={includeInactive} matched={matched} />
       </Suspense>
@@ -212,6 +210,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       <aside className="serp-rail" aria-label="Analysis">
         <Suspense key={`landscape:${url(p, { n: "" })}`} fallback={<LandscapeTabs views={[{ key: "overview", label: "Overview", title: "Overview", node: <RailSkeleton /> }]} />}>
           <Landscape question={question} filters={filters} includeInactive={includeInactive} total={res.total} matched={matched}
+            keyFacts={summary?.head.then((h) => h.keyFacts)}
             gems={<Suspense fallback={null}><Gems ranking={rankingAll} /></Suspense>}
             map={(m) => <LandscapeMap {...m} />} />
         </Suspense>

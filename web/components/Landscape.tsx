@@ -11,6 +11,7 @@ import { LOADED_STATES, money } from "@/lib/filters";
 import { db } from "@/lib/db";
 import { landscape, type Bar } from "@/lib/landscape";
 import { overviewFacts } from "@/lib/overviewFacts";
+import type { KeyFacts as KeyFactsT } from "@/lib/searchSummary";
 import { isStrong, type rank } from "@/lib/rerank";
 import { titleCase } from "./text";
 import type { Filters } from "@/lib/parse";
@@ -23,8 +24,9 @@ import { themes } from "@/lib/themes";
 // (from the search summary). The AI text and the headline chart sit in the main column since Oct 26
 // (components/SearchSummary, components/DidYouKnow).
 // Export slide sits in the panel header's "⋯" menu. total: every organization the search matched.
-export async function Landscape({ question, filters, includeInactive, total, map, gems, matched }: {
+export async function Landscape({ question, filters, includeInactive, total, map, gems, matched, keyFacts }: {
   question: string; filters: Filters; includeInactive: boolean; total: number; gems?: React.ReactNode;
+  keyFacts?: Promise<KeyFactsT>; // the search summary's set (the N shown in the list) and grant years: Key facts and the slide use these
   matched?: Promise<import("@/lib/search").Result[]>; // place tiers: describe these (the relevance-checked matches) only
   map: (m: MapData) => React.ReactNode;
 }) {
@@ -34,13 +36,15 @@ export async function Landscape({ question, filters, includeInactive, total, map
   const first = { key: "overview", label: "Overview", title: "Overview", node: <Related question={question} /> };
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const facts = overviewFacts(l, total);
+  // Key facts wait for relevance scores (the summary's head), so they count the same organizations as the count line.
+  const withKey = keyFacts?.then((k) => ({ ...facts, tiles: k.tiles, basis: k.basis, shown: k.shown }));
   const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
   const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
     <LandscapeTabs views={[
-      { ...first, menu: <OverviewMenu facts={facts} question={question} />, node: (
+      { ...first, menu: withKey ? <Suspense fallback={null}><KeyMenu facts={withKey} question={question} /></Suspense> : <OverviewMenu facts={facts} question={question} />, node: (
         <>
-          <OverviewVisual facts={facts} />
+          {withKey ? <Suspense fallback={<KeyFactsWait />}><KeyFacts facts={withKey} /></Suspense> : <OverviewVisual facts={facts} />}
           {track}
           <Related question={question} />
         </>
@@ -85,6 +89,18 @@ export async function Landscape({ question, filters, includeInactive, total, map
       ) },
     ]} />
   );
+}
+
+type WithKey = ReturnType<typeof overviewFacts> & { shown: number };
+async function KeyFacts({ facts }: { facts: Promise<WithKey> }) {
+  const f = await facts;
+  return <OverviewVisual facts={f} shown={f.shown} />;
+}
+async function KeyMenu({ facts, question }: { facts: Promise<WithKey>; question: string }) {
+  return <OverviewMenu facts={await facts} question={question} />;
+}
+function KeyFactsWait() {
+  return <section className="kp-card" aria-label="Key facts" aria-busy="true"><h3 className="kp-h">Key facts</h3><div className="ov-lines" aria-hidden><i /><i className="short" /><i /></div></section>;
 }
 
 // Each bar opens to the organizations behind it, closest first (same list as Themes).

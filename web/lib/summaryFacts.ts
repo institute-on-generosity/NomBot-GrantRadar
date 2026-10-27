@@ -101,11 +101,39 @@ export function caveatLine(f: SummaryFacts, o: { prefer?: string[]; must?: strin
   return out.length ? out.slice(0, 2).join(" ") : null;
 }
 
+// While relevance scores are still coming in: what the search found, by place tier when there are tiers
+// (the same totals as the list's tier headings). Replaced by countLine once the list is scored.
+export function pendingLine(total: number, tiers?: { label: string; count: number }[]): { main: string; parts: string[]; more: string } {
+  return { main: `${num(total)} ${total === 1 ? "result" : "results"}`, parts: (tiers ?? []).filter((t) => t.count > 0).map((t) => `${num(t.count)} ${t.label}`), more: "checking relevance…" };
+}
+
+// Share of the organizations the first description read (the closest matches) that the list now counts as strong.
+// Under REGEN_OVERLAP, the description is rewritten from the strong matches in the background.
+export const REGEN_OVERLAP = 0.6;
+export function overlap(read: string[], strong: string[]): number {
+  if (!read.length) return 1;
+  const s = new Set(strong);
+  return read.filter((e) => s.has(e)).length / read.length;
+}
+
+// Key facts in the analysis panel: the same set as the summary (the N shown in the list) and the same grant years.
+export type KeyTile = { value: string; label: string; note?: string };
+export function keyFactTiles(f: SummaryFacts, deficit: { count: number; of: number } | null): { tiles: KeyTile[]; basis: string; shown: number } {
+  const n = f.strong, of = `of the ${num(n)} shown`;
+  const [g0, g1] = f.grantYears;
+  const tiles: KeyTile[] = [{ value: num(n), label: n === 1 ? "organization shown" : "organizations shown", note: f.scored ? "strong matches in the list" : undefined }];
+  if (f.revenue) tiles.push({ value: money(f.revenue.median), label: "median yearly income", note: f.revenue.reported === n ? of : `${num(f.revenue.reported)} ${of} report it` });
+  if (deficit && deficit.of >= 5) tiles.push({ value: pct(deficit.count, deficit.of), label: "spent more than they took in", note: `${num(deficit.of)} ${of} report` });
+  if (f.grantsTotal > 0) tiles.push({ value: money(f.grantsTotal), label: `from foundations, ${g0}–${g1}`, note: `${num(f.funded)} ${of} got grants` });
+  return { tiles, basis: `Figures from the ${num(n)} ${n === 1 ? "organization" : "organizations"} shown in the list · foundation grants ${g0}–${g1}`, shown: n };
+}
+
 // The figures Claude may quote, as plain lines. Every number in the description must come from these or the org list.
-export function factsText(f: SummaryFacts): string {
+// basis "closest": the first description, written from the closest matches while relevance scoring runs.
+export function factsText(f: SummaryFacts, basis: "closest" | "strong" = "strong"): string {
   const [g0, g1] = f.grantYears;
   return [
-    `Strong matches (the list): ${f.strong}`,
+    basis === "closest" ? `Closest matches read (by meaning, not yet checked one by one): ${f.strong}` : `Strong matches read: ${f.strong}`,
     f.tiers ? `By place: ${f.tiers.map((t) => `${t.count} ${t.label}`).join(", ")}` : null,
     f.split.length ? `By ${f.split.some((s) => s.label.includes("focus")) ? "focus" : "cause"}: ${f.split.map((s) => `${s.count} ${s.label}`).join(", ")}` : null,
     f.scored && f.weaker ? `Weaker matches (folded, don't describe them): ${f.weaker}` : null,
@@ -201,6 +229,13 @@ function nameOne(r: string, a: Allowed) {
 }
 const numOk = (v: number, a: Allowed) => a.numbers.some((x) => x === v || (x > 0 && Math.abs(x - v) / x < 0.051));
 
+// A sentence that states how many matches or results there are ("There are 23 strong matches", "42 results").
+// The count line says that and changes once scoring finishes, so the description must not. "9 of the 20" is fine.
+const NUMWORD = Object.keys(WORDS).join("|");
+export const statesCount = (s: string) =>
+  new RegExp(`(?<!\\bof\\s(?:the\\s|these\\s)?)\\b(?:\\d[\\d,]*|${NUMWORD})\\s+(?:(?:strong|closest|relevant|top)\\s+)?(?:matches|results)\\b`, "i").test(s)
+  || /\bthere (?:are|were) (?:\d|about \d)/i.test(s);
+
 // Keeps the sentences whose names and numbers all come from the inputs; drops the rest (logged by the caller).
 export function checkSummary(text: string, a: Allowed): { text: string; dropped: { sentence: string; why: string }[] } {
   // Sentence ends: a stop then a space and a capital, so "$1.4M" and "U.S. groups" stay whole.
@@ -209,7 +244,8 @@ export function checkSummary(text: string, a: Allowed): { text: string; dropped:
   for (const s of merged) {
     const badName = nameRuns(s).find((r) => !runOk(r, a))?.run;
     const badNum = numbersIn(s).find((n) => !numOk(n.value, a));
-    if (badName || badNum) dropped.push({ sentence: s, why: badName ? `name "${badName}"` : `number "${badNum!.raw}"` });
+    const count = statesCount(s);
+    if (badName || badNum || count) dropped.push({ sentence: s, why: badName ? `name "${badName}"` : badNum ? `number "${badNum.raw}"` : "states the count" });
     else kept.push(s);
   }
   return { text: kept.join(" "), dropped };

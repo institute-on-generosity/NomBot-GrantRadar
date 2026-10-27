@@ -1,8 +1,12 @@
-// Search summary: the card under the search bar. Line 1 is computed (lib/summaryFacts countLine): how many strong
-// matches the list shows, by place tier or by focus/cause. Then 2-3 sentences Claude writes ONLY from the strong
-// matches (names, missions, income, grants, tiers) and a computed facts object, checked afterwards: a sentence with
-// an organization name or number not in the inputs is dropped (checkSummary). A caveat line is computed too.
-// It replaces the AI overview (lib/overview, removed Oct 26): one AI blurb per search. Cached per query + matches.
+// Search summary: the card under the search bar. Line 1 is computed (lib/summaryFacts): right away, what the search
+// found (pendingLine); once relevance scoring finishes, how many strong matches the list shows, by place tier or by
+// focus/cause (countLine). Then 2-3 sentences Claude writes from the CLOSEST unscored matches (names, missions,
+// income, grants) and a facts object computed from that same set, so the text lands with or before the old overview
+// instead of waiting 9-14 s for scoring (Oct 27, Hunter: prefer speed). The text describes "the closest matches" and
+// never states the count (statesCount), so it can't contradict the line above. Checked afterwards: a sentence with an
+// organization name or number not in the inputs is dropped (checkSummary). When scoring shows that under 60% of the
+// orgs it read are strong matches, it is rewritten from the strong matches in the background and swapped in.
+// A caveat line and the panel's Key facts (same set as the count line, grants GRANT_YEARS) are computed too.
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { readable, titleCase } from "../components/text";
@@ -13,17 +17,23 @@ import { tierTitle, TIER_ORDER, type Scope } from "./place";
 import { fundingOf, GRANT_YEARS } from "./placeReport";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "./rerank";
 import type { Result } from "./search";
-import { allowedFrom, caveatLine, checkSummary, countLine, factsText, money, summaryFacts, tidy, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
+import { healthOf } from "./landscape";
+import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTiles, money, overlap, pendingLine, REGEN_OVERLAP, summaryFacts, tidy, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
 
-export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null };
-export type SummaryText = { text: string; explore: string[]; dropped: number };
-export type Summary = SummaryHead & { ai: Promise<SummaryText | null> };
+export type KeyFacts = ReturnType<typeof keyFactTiles>;
+export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts };
+export type Basis = "closest" | "strong";
+export type SummaryText = { text: string; explore: string[]; dropped: number; basis: Basis };
+// pending: instant. ai: the first description (closest matches). head: after scoring (count line, caveat, Key facts).
+// later: the description rewritten from the strong matches when they differ a lot from what ai read, else null.
+export type Summary = { pending: ReturnType<typeof pendingLine>; ai: Promise<SummaryText | null>; head: Promise<SummaryHead>; later: Promise<SummaryText | null> };
 
 const MAX_ORGS = 30; // strong matches Claude reads (most relevant first per tier)
+const CLOSEST = 20;  // unscored candidates the first description reads (69% relevant in the top 10, eval/bench.mts)
 
 const SYSTEM = `You write the short summary shown under a nonprofit search box, above the list of results.
-You get the user's question, figures computed from the strong matches, and the strong matches themselves (IRS data, grouped by place when the question names one).
-Write "summary": 2 or 3 plain sentences that describe the whole set, like a researcher's one-paragraph brief:
+You get the user's question, figures computed from a set of matching organizations, and those organizations (IRS data, with their place when the question names one).
+Write "summary": 2 or 3 plain sentences that describe these matches, like a researcher's one-paragraph brief:
 - what kinds of organizations or programs these are (name the main kinds of work you see in the missions)
 - how big they typically are and how they are funded (median income, how many get foundation grants)
 - the largest or most notable one or two, by name
@@ -31,10 +41,10 @@ Rules, strictly:
 - Use ONLY numbers that appear in the Figures or the organization lines, written the same way (for example "$195K", "9 of 30", "44%"). Never compute, round or estimate a new number. Words like "most", "a few" and "about half" are fine.
 - Use ONLY organization names from the list, written exactly as given or as a shorter piece of the exact name. Never invent or guess a name.
 - Name only places that appear in the question or the organization lines (cities, states). No regions or neighborhoods from your own knowledge.
-- Describe the strong matches only, not the weaker ones.
+- Describe them as "the closest matches" or "these matches" ("Most of the closest matches are small youth sports leagues"). Never say how many matches or results there are in all, and never write "N matches" or "N results" (the line above gives the count, and it can change). "9 of the 20" style figures from the Figures are fine.
+- If a few organizations clearly don't fit the question, leave them out of the description.
 - No semicolons, no dashes as punctuation, no colons, no lists, no citations, no advice, no hype.
 - Plain words for a busy reader: "income" not "revenue", "spent more than it took in" not "deficit".
-- Do not start with the count of results (the line above already says it).
 Also write "explore": 3 related searches the user might run next, phrased like their question (at most 9 words each), each a different angle (a nearby cause, another place, or a narrower activity). Don't repeat the question.`;
 
 const schema = z.object({ summary: z.string(), explore: z.array(z.string()) });
@@ -44,7 +54,7 @@ const shortTier = (t: string, s: Scope) => {
   return t === "in" ? `in ${city}` : t === "serves" ? `serving ${city}` : t === "nearby" ? "nearby" : t === "county" ? `in ${s.label}` : t === "wider" ? tierTitle("wider", s).toLowerCase() : t;
 };
 
-type Found = { total: number; tiers?: { tier: string }[]; scope?: Scope | null; exact_total: number | null; softPrefs?: string[] };
+type Found = { total: number; results: Result[]; tiers?: { tier: string; total: number; results: Result[] }[]; scope?: Scope | null; exact_total: number | null; softPrefs?: string[] };
 
 type Ranking = { results: Ranked[]; scored: boolean };
 // The strong matches exactly as the page's list counts them (app/page.tsx): a place search counts the rows it shows
@@ -56,25 +66,50 @@ export function listStrong(res: { tiers?: unknown[] }, shown: Ranking, all: Rank
   return { strong: all.results.filter((r) => r.relevance && isStrong(r)), weaker: all.results.filter((r) => r.relevance && !isStrong(r)).length, scored: true };
 }
 
-export async function summaryHead(question: string, filters: Filters, res: Found, shown: Ranking, all: Ranking) {
-  const { strong, weaker, scored } = listStrong(res, shown, all);
-  const funding = await fundingOf(strong.map((r) => r.ein));
-  const orgs: (SummaryOrg & { r: Result })[] = strong.map((r) => ({
+// The closest unscored candidates, before relevance scoring: the search's top CLOSEST, or with place tiers the top
+// of each tier in turn (in the city, serving it, nearby, ...) so every tier the list shows is represented.
+export function closestOf(res: Found): Result[] {
+  if (!res.tiers) return res.results.slice(0, CLOSEST);
+  const tiers = TIER_ORDER.flatMap((t) => res.tiers!.filter((b) => b.tier === t)).map((b) => b.results);
+  const out: Result[] = [];
+  for (let k = 0; out.length < CLOSEST && tiers.some((t) => t.length > k); k++) for (const t of tiers) if (t[k] && out.length < CLOSEST) out.push(t[k]);
+  return out;
+}
+
+const tiersOf = (res: Found) => res.tiers && res.scope ? TIER_ORDER.filter((t) => res.tiers!.some((b) => b.tier === t)).map((t) => ({ key: t, label: shortTier(t, res.scope!) })) : undefined;
+
+// A set of organizations as the summary reads them (funding from grant_clean, GRANT_YEARS).
+async function orgsOf(rs: Result[]): Promise<(SummaryOrg & { r: Result })[]> {
+  const funding = await fundingOf(rs.map((r) => r.ein));
+  return rs.map((r) => ({
     r, name: titleCase(r.name), tier: r.place?.tier ?? null, cause: r.ntee?.label ?? null, label: r.label?.tier ?? null,
     revenue: r.revenue?.amount ?? null, grants: funding.get(r.ein.replace("-", ""))?.total ?? 0,
     hasText: Boolean(r.mission || r.programs), prefers: r.prefer ?? [],
   }));
-  const scope = res.scope ?? null;
-  const tiers = res.tiers && scope ? TIER_ORDER.filter((t) => res.tiers!.some((b) => b.tier === t)).map((t) => ({ key: t, label: shortTier(t, scope) })) : undefined;
-  const facts = summaryFacts(orgs, { weaker, related: res.total, scored, topic: filters.topic, grantYears: [GRANT_YEARS[0], GRANT_YEARS[1]], tiers, labelFilter: Boolean(filters.label) });
-  const must = filters.requirements.map((r) => r.label).join(" + ");
-  const caveat = caveatLine(facts, { prefer: filters.prefer?.map((p) => p.label), must, noMention: res.exact_total === 0 && Boolean(must) });
-  return { facts, line: countLine(facts), caveat, orgs, scope };
+}
+type Input = { facts: SummaryFacts; orgs: (SummaryOrg & { r: Result })[]; scope: Scope | null };
+
+// The first description's input: the closest matches and a facts object from that same set (no place-tier counts,
+// which would be counts of this sample, not of the list).
+async function closestInput(filters: Filters, res: Found): Promise<Input> {
+  const orgs = await orgsOf(closestOf(res));
+  const facts = summaryFacts(orgs, { weaker: 0, related: res.total, scored: false, topic: filters.topic, grantYears: [GRANT_YEARS[0], GRANT_YEARS[1]], labelFilter: Boolean(filters.label) });
+  return { facts, orgs, scope: res.scope ?? null };
 }
 
-async function fresh(question: string, head: Awaited<ReturnType<typeof summaryHead>>): Promise<SummaryText | null> {
+export async function summaryHead(question: string, filters: Filters, res: Found, shown: Ranking, all: Ranking): Promise<SummaryHead & Input> {
+  const { strong, weaker, scored } = listStrong(res, shown, all);
+  const [orgs, health] = await Promise.all([orgsOf(strong), healthOf(strong.map((r) => r.ein.replace("-", "")))]);
+  const facts = summaryFacts(orgs, { weaker, related: res.total, scored, topic: filters.topic, grantYears: [GRANT_YEARS[0], GRANT_YEARS[1]], tiers: tiersOf(res), labelFilter: Boolean(filters.label) });
+  const must = filters.requirements.map((r) => r.label).join(" + ");
+  const caveat = caveatLine(facts, { prefer: filters.prefer?.map((p) => p.label), must, noMention: res.exact_total === 0 && Boolean(must) });
+  const def = health.signals.find((s) => s.key === "deficit");
+  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null), orgs, scope: res.scope ?? null };
+}
+
+async function fresh(question: string, input: Input, basis: Basis): Promise<SummaryText | null> {
   const client = claude("search-summary");
-  const { facts, orgs, scope } = head;
+  const { facts, orgs, scope } = input;
   if (!client || orgs.length < 2) return null;
   const read = orgs.slice(0, MAX_ORGS);
   const lines = read.map(({ r, ...o }) => [
@@ -82,35 +117,48 @@ async function fresh(question: string, head: Awaited<ReturnType<typeof summaryHe
     o.revenue ? `income ${money(o.revenue)}` : "income not reported", o.grants ? `foundation grants ${money(o.grants)}` : null,
     o.hasText ? readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 220) : "known by name only, no 990 program text",
   ].filter(Boolean).join(" · "));
-  const figures = factsText(facts);
+  const figures = factsText(facts, basis);
   const places = [...new Set(read.flatMap(({ r }) => [r.city && titleCase(r.city), r.state]).filter(Boolean) as string[])];
   const names = [...read.map((o) => o.name), ...places, ...(scope ? [scope.label, scope.kind === "city" ? titleCase(scope.city) : scope.name, scope.kind === "city" ? scope.county?.name ?? "" : ""] : []),
     ...read.map((o) => o.cause ?? ""), ...(facts.tiers ?? []).map((t) => t.label), question, figures];
+  const head = basis === "closest" ? "The closest matches (by meaning, not yet checked one by one: a few may not fit)" : `The strong matches${orgs.length > read.length ? ` (the ${read.length} most relevant)` : ""}`;
   const res = await client.beta.messages.parse({
     model: FAST_MODEL,
     max_tokens: 1500,
     ...fallback(FAST_MODEL),
     output_config: { effort: "low", format: betaZodOutputFormat(schema) },
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: `Question: ${question}\n\nFigures:\n${figures}\n\nStrong matches${orgs.length > read.length ? ` (the ${read.length} most relevant of ${orgs.length})` : ""}:\n${lines.join("\n")}` }],
+    messages: [{ role: "user", content: `Question: ${question}\n\nFigures:\n${figures}\n\n${head}:\n${lines.join("\n")}` }],
   });
   const o = res.parsed_output;
   if (res.stop_reason === "refusal" || !o) return null;
   const checked = checkSummary(o.summary, allowedFrom([figures, ...lines, question], names));
   if (checked.dropped.length) console.warn("search summary: dropped", JSON.stringify(checked.dropped));
   if (!checked.text) return null;
-  return { text: checked.text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length };
+  return { text: checked.text, explore: o.explore.slice(0, 3).map(tidy), dropped: checked.dropped.length, basis };
 }
 
-const cached = memo<SummaryText | null>("search-summary:v2", 200, 24 * 3600_000); // bump when the prompt changes (v2: no outside place names)
-// The whole summary for a search: the head (computed) right away, the AI text as a promise.
+const cached = memo<SummaryText | null>("search-summary:v3", 200, 24 * 3600_000); // bump when the prompt changes (v3: closest matches first, no counts; v2: no outside place names)
+const safe = (p: Promise<SummaryText | null>) => p.catch((err) => { console.error("search summary failed", err); return null; });
+const keyOf = (basis: Basis, question: string, eins: string[]) => `${basis}|${question.toLowerCase().replace(/\s+/g, " ").trim()}|${eins.join(",")}`;
+
+// The whole summary for a search, without waiting for relevance scores: the pending line now, the description from
+// the closest matches in parallel with scoring, then the scored count line (and, rarely, a rewritten description).
 // ranking / rankingAll: the page's own rank() promises (the list's rows and every scored candidate).
-export async function searchSummary(question: string, filters: Filters, res: Found, ranking: Promise<Ranking>, rankingAll: Promise<Ranking>): Promise<Summary> {
-  const [shown, all] = await Promise.all([ranking, rankingAll]);
-  const head = await summaryHead(question, filters, res, shown, all);
-  const key = `${question.toLowerCase().replace(/\s+/g, " ").trim()}|${head.orgs.map((o) => o.r.ein).join(",")}`;
-  const ai = cached(key, () => fresh(question, head).catch((err) => { console.error("search summary failed", err); return null; }));
-  return { facts: head.facts, line: head.line, caveat: head.caveat, ai };
+export function searchSummary(question: string, filters: Filters, res: Found, ranking: Promise<Ranking>, rankingAll: Promise<Ranking>): Summary {
+  const tiers = tiersOf(res);
+  const pending = pendingLine(res.total, tiers && res.tiers ? tiers.map((t) => ({ label: t.label, count: res.tiers!.find((b) => b.tier === t.key)?.total ?? 0 })) : undefined);
+  const first = closestInput(filters, res);
+  const ai = safe(first.then((input) => cached(keyOf("closest", question, input.orgs.map((o) => o.r.ein)), () => fresh(question, input, "closest"))));
+  const head = Promise.all([ranking, rankingAll]).then(([shown, all]) => summaryHead(question, filters, res, shown, all));
+  // Background rewrite: only when scoring finds that most of what the first description read isn't a strong match.
+  const later = safe(Promise.all([first, head, ai]).then(([input, h, t]) => {
+    const strongEins = h.orgs.map((o) => o.r.ein);
+    if (!h.facts.scored || strongEins.length < 2) return null;
+    if (t && overlap(input.orgs.map((o) => o.r.ein), strongEins) >= REGEN_OVERLAP) return null;
+    return cached(keyOf("strong", question, strongEins), () => fresh(question, h, "strong"));
+  }));
+  return { pending, ai, head: head.then(({ facts, line, caveat, keyFacts }) => ({ facts, line, caveat, keyFacts })), later };
 }
 
 // The page's default view (10 rows, no "Show more"), for the CSV export and /report: same scores, same summary cache.
@@ -119,8 +167,9 @@ export async function summaryFor(question: string, filters: Filters, includeInac
   return searchSummary(question, filters, res, rank(question, res, 10), rank(question, res, POOL));
 }
 
-// For exports (CSV, /report): the summary as plain text lines.
+// For exports (CSV, /report): the summary as plain text lines (the scored count line, the newest description).
 export async function summaryLines(s: Summary): Promise<string[]> {
-  const ai = await s.ai;
-  return [[s.line.main, ...s.line.parts].join(" · ") + (s.line.more ? ` (${s.line.more.replace(" folded in the list", "")})` : ""), ai?.text ?? "", s.caveat ?? ""].filter(Boolean);
+  const [head, ai, later] = await Promise.all([s.head, s.ai, s.later]);
+  const t = later ?? ai;
+  return [[head.line.main, ...head.line.parts].join(" · ") + (head.line.more ? ` (${head.line.more.replace(" folded in the list", "")})` : ""), t?.text ?? "", head.caveat ?? ""].filter(Boolean);
 }
