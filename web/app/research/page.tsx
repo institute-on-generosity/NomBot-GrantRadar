@@ -1,4 +1,5 @@
-import { InsightsFeed } from "@/components/InsightsFeed";
+import { AskedQuestions } from "@/components/AskedQuestions";
+import { ResearchTabs } from "@/components/ResearchTabs";
 import { ResearchAsk } from "@/components/ResearchAsk";
 import { PROMPT_SETS } from "@/lib/examples";
 
@@ -9,9 +10,10 @@ export default function ResearchPage() {
   return (
     <main className="ins-page">
       <h1 className="pagetitle sr-only">Research</h1>
-      {/* Focal point: the ask box, then the goal grid with its question panel (components/GoalGrid) */}
+      <ResearchTabs on="ask" />
+      {/* Ask: the ask box, then the goal grid with its question popover (components/GoalGrid). Reports live on /research/reports */}
       <ResearchAsk groups={research.groups ?? []} placeholder={research.placeholder} />
-      <InsightsFeed />
+      <AskedQuestions />
     </main>
   );
 }

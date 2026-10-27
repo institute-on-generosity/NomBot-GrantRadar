@@ -61,6 +61,7 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
         // Grouped sets (research): the goal grid with its attached prompt panel (components/GoalGrid)
         <div key={set.word} className="flip-chips" {...hold} onClickCapture={(e) => { if ((e.target as HTMLElement).closest(".gp-chip")) setChosen(true); }}>
           <GoalGrid groups={set.groups} onPick={setOpenGroup} />
+          <NavLink href="/research/reports" className="read-reports" label="Loading reports…">Read reports →</NavLink>
         </div>
       ) : (
         <div key={set.word} className="chips suggest flip-chips" {...hold} onClickCapture={() => setChosen(true)}>

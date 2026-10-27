@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Safe deploys: build into another folder (NEXT_DIST_DIR=.next-build), then swap it in only after a clean build,
+  // so the live server never serves a half-written .next (Oct 27).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
   partialPrefetching: true,
   // Public origin for links printed on exported slides (lib/slide); empty → the browser's origin.

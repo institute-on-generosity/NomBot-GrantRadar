@@ -147,3 +147,8 @@ export function download(name: string, body: string | Blob, type = "text/plain")
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
+
+// Reports (article view): the one-line dek (the summary's first sentence) and an estimated read time.
+export const dek = (i: Pick<Insight, "summary">) => (i.summary.match(/^.+?[.!?](\s|$)/)?.[0] ?? i.summary).trim();
+export const readTime = (i: Pick<Insight, "summary" | "points" | "method" | "caveats">) =>
+  Math.max(1, Math.round([i.summary, ...(i.points ?? []), i.method ?? "", i.caveats ?? ""].join(" ").split(/\s+/).length / 200));

@@ -9,7 +9,10 @@ import { money } from "@/components/money";
 import { titleCase } from "@/components/text";
 import { AskFinding, DataTable, FindingActions, FindingChart } from "@/components/ResearchFinding";
 import { getInsight, orgsByEin, relatedInsights } from "@/lib/insights";
-import { exploreHref, findingEins, researchHref, sectionLabel, updated, type Insight } from "@/lib/insightMeta";
+import { dek, exploreHref, findingEins, readTime, researchHref, sectionLabel, updated, type Insight } from "@/lib/insightMeta";
+import { reportImage } from "@/lib/reportImages";
+import { ReportImage } from "@/components/ReportImage";
+import { ShareTools } from "@/components/ShareTools";
 import { LOADED_STATES } from "@/lib/filters";
 import { nteeLabel } from "@/lib/ntee";
 
@@ -25,7 +28,7 @@ export async function generateMetadata(props: PageProps<"/research/[slug]">): Pr
 export default function FindingPage(props: PageProps<"/research/[slug]">) {
   return (
     <main className="rd-page">
-      <Link href="/research" className="back rd-back">← Research</Link>
+      <Link href="/research/reports" className="back rd-back">← Reports</Link>
       <Suspense fallback={<FindingSkeleton />}>
         <Finding params={props.params} />
       </Suspense>
@@ -40,43 +43,39 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
   const place = i.state ? LOADED_STATES.find(([c]) => c === i.state)?.[1] ?? i.state : null;
   const explore = exploreHref(i);
   const eins = findingEins(i);
+  const img = reportImage(i);
+  // The summary after its first sentence (the dek), as short paragraphs of two sentences each.
+  const rest = i.summary.slice(dek(i).length).trim();
+  const sentences = rest.match(/[^.!?]+[.!?]+(\s|$)/g) ?? (rest ? [rest] : []);
+  const paras = sentences.reduce<string[]>((out, x, k) => { if (k % 2) out[out.length - 1] += x; else out.push(x); return out; }, []);
+  const stat = i.stats?.[0];
   return (
-    <article className="rd" data-section={i.section}>
-      <header className="rd-head">
-        <p className="ins-kicker">
-          <span className="ins-sec">{sectionLabel(i.section)}</span>
-          {place && <span className="ins-place">{place}</span>}
-        </p>
+    // Article layout (Oct 27): photo with credit, headline, dek, byline, a pull stat, short paragraphs, the chart with
+    // its caption, "What this means", then organizations, a follow-up, and Method and sources folded at the end.
+    <article className="rd ra" data-section={i.section}>
+      <ReportImage img={img} section={i.section} size="hero" priority />
+      <header className="ra-head">
+        <p className="rp-cat">{sectionLabel(i.section)}{place ? ` · ${place}` : ""}</p>
         <h1>{i.headline}</h1>
-        <div className="rd-meta">
-          {date && <span>Updated {date}</span>}
-          <FindingActions i={i} />
-        </div>
+        <p className="ra-dek">{dek(i)}</p>
+        <p className="ra-byline">Institute on Generosity · NomBot research{date ? ` · ${date}` : ""} · {readTime(i)} min read</p>
+        <div className="ra-tools"><ShareTools /><FindingActions i={i} /></div>
       </header>
-
-      {i.stats && i.stats.length > 0 && (
-        <section className="rd-stats" aria-label="Key numbers">
-          {i.stats.slice(0, 4).map((s) => (
-            <div key={s.label} className="rd-stat"><b>{s.value}</b><span>{s.label}</span></div>
-          ))}
-        </section>
-      )}
-
+      {stat && <p className="ra-pull"><b>{stat.value}</b><span>{stat.label}</span></p>}
+      {paras.map((p) => <p key={p} className="ra-p">{p.trim()}</p>)}
       {i.chart && <FindingChart i={i} />}
-
-      <section className="rd-sec">
-        <h2>What it means</h2>
+      <section className="ra-sec">
+        <h2>What this means</h2>
         <InsightPoints i={i} className="rd-points" />
       </section>
-
       {i.data?.length > 0 && (
-        <section className="rd-sec">
+        <details className="more-info ra-data">
+          <summary><span className="when-closed">The data ({i.data.length} rows)</span><span className="when-open">Hide the data</span></summary>
           <DataTable rows={i.data} slug={i.slug} />
-        </section>
+        </details>
       )}
-
       {(eins.length > 0 || explore) && (
-        <section className="rd-sec">
+        <section className="ra-sec">
           <div className="rd-sec-head">
             <h2>Organizations involved</h2>
             {i.explore_query && explore && <NavLink href={explore} className="ins-link" label="Searching…" search>Search similar →</NavLink>}
@@ -86,25 +85,24 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
             : <p className="rd-note">This finding covers whole groups, not a list of organizations.</p>}
         </section>
       )}
-
       <AskFinding slug={i.slug} section={i.section} />
 
-      <section className="rd-sec rd-method">
-        <h2>Method and sources</h2>
+      <details className="more-info ra-method">
+        <summary><span className="when-closed">Method and sources</span><span className="when-open">Hide method and sources</span></summary>
         {i.method && <p>{i.method}</p>}
         {i.caveats && <p className="rd-caveat"><b>Caveats</b> {i.caveats}</p>}
+        {i.sources?.length > 0 && (
+          <ul className="rd-sources">
+            {i.sources.map((s) => <li key={s.url + s.label}><a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a></li>)}
+          </ul>
+        )}
         {i.query && (
           <details className="rd-sql">
             <summary>SQL</summary>
             <pre><code>{i.query.trim()}</code></pre>
           </details>
         )}
-        {i.sources?.length > 0 && (
-          <ul className="rd-sources">
-            {i.sources.map((s) => <li key={s.url + s.label}><a href={s.url} target="_blank" rel="noreferrer">{s.label} ↗</a></li>)}
-          </ul>
-        )}
-      </section>
+      </details>
 
       <Suspense fallback={null}><Related i={i} /></Suspense>
     </article>

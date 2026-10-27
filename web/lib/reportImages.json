@@ -1,0 +1,233 @@
+{
+ "appalachia": {
+  "file": "/reports/appalachia-1600.webp",
+  "small": "/reports/appalachia-800.webp",
+  "alt": "Rainy Blue Ridge mountains",
+  "title": "File:Rainy Blue Ridge-27527.jpg",
+  "author": "Ken Thomas",
+  "license": "Public domain",
+  "license_url": "",
+  "source": "https://commons.wikimedia.org/wiki/File:Rainy_Blue_Ridge-27527.jpg",
+  "credit": "Photo: Ken Thomas, Public domain, via Wikimedia Commons",
+  "findings": [
+   "gap-poverty-federal-vs-foundation",
+   "gap-county-poverty",
+   "gap-appalachia-map",
+   "gap-county-size"
+  ]
+ },
+ "boardroom": {
+  "file": "/reports/boardroom-1600.webp",
+  "small": "/reports/boardroom-800.webp",
+  "alt": "An empty meeting room with a long table",
+  "title": "File:Minimalist meeting room (Unsplash).jpg",
+  "author": "Breather breather",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "source": "https://commons.wikimedia.org/wiki/File:Minimalist_meeting_room_(Unsplash).jpg",
+  "credit": "Photo: Breather breather, CC0, via Wikimedia Commons",
+  "findings": [
+   "aff-board-linked-giving",
+   "track-invite-only",
+   "aff-insider-transactions",
+   "aff-board-network-density"
+  ]
+ },
+ "childcare": {
+  "file": "/reports/childcare-1600.webp",
+  "small": "/reports/childcare-800.webp",
+  "alt": "A pile of wooden alphabet blocks",
+  "title": "File:A pile of alphabet wooden blocks.jpg",
+  "author": "Bobjgalindo",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:A_pile_of_alphabet_wooden_blocks.jpg",
+  "credit": "Photo: Bobjgalindo, CC BY 4.0, via Wikimedia Commons",
+  "findings": [
+   "gap-subcause-reach"
+  ]
+ },
+ "civilrights": {
+  "file": "/reports/civilrights-1600.webp",
+  "small": "/reports/civilrights-800.webp",
+  "alt": "The Edmund Pettus Bridge in Selma, Alabama",
+  "title": "File:Edmund Pettus Bridge, Selma, Alabama.jpg",
+  "author": "Clément Bardot",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Edmund_Pettus_Bridge,_Selma,_Alabama.jpg",
+  "credit": "Photo: Clément Bardot, CC BY-SA 4.0, via Wikimedia Commons",
+  "findings": [
+   "rise-cause-dollars"
+  ]
+ },
+ "climate": {
+  "file": "/reports/climate-1600.webp",
+  "small": "/reports/climate-800.webp",
+  "alt": "Wind turbines beyond a green field",
+  "title": "File:Field by the wind turbines - geograph.org.uk - 7315642.jpg",
+  "author": "Philip Jeffrey",
+  "license": "CC BY-SA 2.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Field_by_the_wind_turbines_-_geograph.org.uk_-_7315642.jpg",
+  "credit": "Photo: Philip Jeffrey, CC BY-SA 2.0, via Wikimedia Commons",
+  "findings": [
+   "flow-climate-share"
+  ]
+ },
+ "disaster": {
+  "file": "/reports/disaster-1600.webp",
+  "small": "/reports/disaster-800.webp",
+  "alt": "Sandbags on a city street",
+  "title": "File:Exploded sandbag in Foggy Bottom.jpg",
+  "author": "Ser Amantio di Nicolao",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Exploded_sandbag_in_Foggy_Bottom.jpg",
+  "credit": "Photo: Ser Amantio di Nicolao, CC BY-SA 4.0, via Wikimedia Commons",
+  "findings": [
+   "stress-single-funder",
+   "rise-disaster-charities"
+  ]
+ },
+ "globe": {
+  "file": "/reports/globe-1600.webp",
+  "small": "/reports/globe-800.webp",
+  "alt": "An old flat map of the world in two hemispheres",
+  "title": "File:Flat-globe map of the world.jpg",
+  "author": "H. Wise & Co.",
+  "license": "Public domain",
+  "license_url": "",
+  "source": "https://commons.wikimedia.org/wiki/File:Flat-globe_map_of_the_world.jpg",
+  "credit": "Photo: H. Wise & Co., Public domain, via Wikimedia Commons",
+  "findings": [
+   "aff-family-ties-by-cause"
+  ]
+ },
+ "health": {
+  "file": "/reports/health-1600.webp",
+  "small": "/reports/health-800.webp",
+  "alt": "Glass test tubes in a rack",
+  "title": "File:Test tubes in rack.jpg",
+  "author": "J.N. Eskra",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Test_tubes_in_rack.jpg",
+  "credit": "Photo: J.N. Eskra, CC BY-SA 4.0, via Wikimedia Commons",
+  "findings": [
+   "rise-new-charities-by-cause"
+  ]
+ },
+ "library": {
+  "file": "/reports/library-1600.webp",
+  "small": "/reports/library-800.webp",
+  "alt": "A university reading room with long wooden tables",
+  "title": "File:Suzzallo Reading Room University of Washington restoration Seattle Washington 2026.jpg",
+  "author": "Guywelch2000",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Suzzallo_Reading_Room_University_of_Washington_restoration_Seattle_Washington_2026.jpg",
+  "credit": "Photo: Guywelch2000, CC BY 4.0, via Wikimedia Commons",
+  "findings": [
+   "flow-concentration"
+  ]
+ },
+ "seedlings": {
+  "file": "/reports/seedlings-1600.webp",
+  "small": "/reports/seedlings-800.webp",
+  "alt": "A seedling emerging from soil",
+  "title": "File:Young seedling of tomato emerging from soil - India.jpg",
+  "author": "Ksheera Piraati",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Young_seedling_of_tomato_emerging_from_soil_-_India.jpg",
+  "credit": "Photo: Ksheera Piraati, CC BY 4.0, via Wikimedia Commons",
+  "findings": [
+   "rise-new-charities"
+  ]
+ },
+ "shelter": {
+  "file": "/reports/shelter-1600.webp",
+  "small": "/reports/shelter-800.webp",
+  "alt": "A house lit up at night",
+  "title": "File:Illuminated Residence at Night.jpg",
+  "author": "QueenCityCebu",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Illuminated_Residence_at_Night.jpg",
+  "credit": "Photo: QueenCityCebu, CC BY-SA 4.0, via Wikimedia Commons",
+  "findings": [
+   "stress-government-thin-cash"
+  ]
+ },
+ "capitol": {
+  "file": "/reports/capitol-1600.webp",
+  "small": "/reports/capitol-800.webp",
+  "alt": "A state capitol dome against a blue sky",
+  "title": "File:California State Capitol (top), NW view up.jpg",
+  "author": "Radomianin",
+  "license": "Public domain",
+  "license_url": "",
+  "source": "https://commons.wikimedia.org/wiki/File:California_State_Capitol_(top),_NW_view_up.jpg",
+  "credit": "Photo: Radomianin, Public domain, via Wikimedia Commons",
+  "findings": [
+   "flow-community-vs-private",
+   "gap-federal-per-resident",
+   "flow-out-of-state",
+   "stress-federal-vs-990-government",
+   "gap-state-per-capita",
+   "stress-government-dependence-map",
+   "flow-net-exporters"
+  ]
+ },
+ "classroom": {
+  "file": "/reports/classroom-1600.webp",
+  "small": "/reports/classroom-800.webp",
+  "alt": "An empty lecture hall with wooden desks",
+  "title": "File:Grande salle ENC n1.jpg",
+  "author": "Marie-Lan Nguyen",
+  "license": "CC BY 2.5",
+  "license_url": "https://creativecommons.org/licenses/by/2.5",
+  "source": "https://commons.wikimedia.org/wiki/File:Grande_salle_ENC_n1.jpg",
+  "credit": "Photo: Marie-Lan Nguyen, CC BY 2.5, via Wikimedia Commons",
+  "findings": [
+   "flow-women-girls-share"
+  ]
+ },
+ "ledger": {
+  "file": "/reports/ledger-1600.webp",
+  "small": "/reports/ledger-800.webp",
+  "alt": "Calculator keys",
+  "title": "File:Aurora electronic calculator DT210 05.jpg",
+  "author": "Coyau",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Aurora_electronic_calculator_DT210_05.jpg",
+  "credit": "Photo: Coyau, CC BY-SA 3.0, via Wikimedia Commons",
+  "findings": [
+   "flow-daf-sponsor-causes",
+   "flow-foundation-to-foundation",
+   "track-general-support",
+   "track-one-grantee",
+   "track-payout",
+   "track-audit-gap",
+   "stress-deficits-by-size",
+   "track-renewal"
+  ]
+ },
+ "medicine": {
+  "file": "/reports/medicine-1600.webp",
+  "small": "/reports/medicine-800.webp",
+  "alt": "Pills and a thermometer",
+  "title": "File:Thermometer01.jpg",
+  "author": "Steve Buissinne (stevepb)",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "source": "https://commons.wikimedia.org/wiki/File:Thermometer01.jpg",
+  "credit": "Photo: Steve Buissinne (stevepb), CC0, via Wikimedia Commons",
+  "findings": [
+   "flow-pharma-patient-assistance",
+   "aff-board-linked-causes"
+  ]
+ }
+}
