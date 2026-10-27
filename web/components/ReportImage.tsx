@@ -1,8 +1,16 @@
 import type { ReportImage as Img } from "@/lib/reportImages";
 
 // A report's photo with its credit line (lib/reportImages), or a soft tinted pattern when there is none.
-export function ReportImage({ img, section, size = "card", priority = false }: { img: Img | null; section: string; size?: "card" | "hero"; priority?: boolean }) {
-  if (!img) return <div className={`rp-img rp-${size} rp-pattern`} data-section={section} aria-hidden />;
+// No relevant photo: a generated cover from the report itself (its key number large over a quiet pattern in the
+// section's colour), the same design for every such report.
+export function ReportImage({ img, section, size = "card", priority = false, cover }: { img: Img | null; section: string; size?: "card" | "hero"; priority?: boolean; cover?: { value: string; label?: string } | null }) {
+  if (!img) return (
+    <div className={`rp-img rp-${size} rp-cover`} data-section={section} role="img" aria-label={cover ? `${cover.value}${cover.label ? `, ${cover.label}` : ""}` : "Report cover"}>
+      <svg className="rp-cover-bars" viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden>{[12, 22, 16, 30, 24, 36, 28].map((h, k) => <rect key={k} x={k * 17} y={40 - h} width="11" height={h} rx="2" />)}</svg>
+      {cover && <span className="rp-cover-n">{cover.value}</span>}
+      {cover?.label && size === "hero" && <span className="rp-cover-l">{cover.label}</span>}
+    </div>
+  );
   return (
     <figure className={`rp-fig rp-${size}`}>
       <img className="rp-img" src={size === "hero" ? img.file : img.small} srcSet={`${img.small} 800w, ${img.file} 1600w`}

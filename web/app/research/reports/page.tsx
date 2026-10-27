@@ -5,7 +5,7 @@ import { ReportImage } from "@/components/ReportImage";
 import { ResearchTabs } from "@/components/ResearchTabs";
 import { listInsights } from "@/lib/insights";
 import { dek, readTime, researchHref, sectionLabel, SECTIONS, updated, type Insight } from "@/lib/insightMeta";
-import { reportImage } from "@/lib/reportImages";
+import { coverNumber, reportImage } from "@/lib/reportImages";
 
 export const metadata = { title: "Reports · Research · NomBot" };
 
@@ -37,7 +37,7 @@ async function Reports({ searchParams }: { searchParams: Promise<{ s?: string }>
       </nav>
       {top && (
         <Link href={researchHref(top.slug)} className="rp-feature">
-          <ReportImage img={reportImage(top)} section={top.section} size="card" priority />
+          <ReportImage img={reportImage(top)} section={top.section} size="card" priority cover={coverNumber(top)} />
           <div>
             <p className="rp-cat">{sectionLabel(top.section)}</p>
             <h2>{top.headline}</h2>
@@ -49,7 +49,7 @@ async function Reports({ searchParams }: { searchParams: Promise<{ s?: string }>
       <div className="rp-grid">
         {rest.map((i) => (
           <Link key={i.slug} href={researchHref(i.slug)} className="rp-card">
-            <ReportImage img={reportImage(i)} section={i.section} />
+            <ReportImage img={reportImage(i)} section={i.section} cover={coverNumber(i)} />
             <p className="rp-cat">{sectionLabel(i.section)}</p>
             <h3>{i.headline}</h3>
             <p className="rp-dek">{dek(i)}</p>

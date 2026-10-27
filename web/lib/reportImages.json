@@ -1,221 +1,380 @@
 {
- "appalachia": {
-  "file": "/reports/appalachia-1600.webp",
-  "small": "/reports/appalachia-800.webp",
-  "alt": "Rainy Blue Ridge mountains",
-  "title": "File:Rainy Blue Ridge-27527.jpg",
-  "author": "Ken Thomas",
-  "license": "Public domain",
-  "license_url": "",
-  "source": "https://commons.wikimedia.org/wiki/File:Rainy_Blue_Ridge-27527.jpg",
-  "credit": "Photo: Ken Thomas, Public domain, via Wikimedia Commons",
-  "findings": [
-   "gap-poverty-federal-vs-foundation",
-   "gap-county-poverty",
-   "gap-appalachia-map",
-   "gap-county-size"
-  ]
+ "flow-climate-share": {
+  "type": "photo",
+  "file": "/reports/r-flow-climate-share-1600.webp",
+  "small": "/reports/r-flow-climate-share-800.webp",
+  "alt": "Offshore wind turbines in a row at sea",
+  "title": "File:Middelgrunden wind farm 2009-07-01 edit filtered.jpg",
+  "author": "Photo by Kim Hansen. Postprocessing (crop, rotation, color adjustment, dust spot",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Middelgrunden_wind_farm_2009-07-01_edit_filtered.jpg",
+  "credit": "Photo: Photo by Kim Hansen. Postprocessing (crop, rotation, color adjustment, dust spot, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "wind farm turbines",
+   "solar panel array field"
+  ],
+  "reason": "Wind power, the clearest picture of climate work"
  },
- "boardroom": {
-  "file": "/reports/boardroom-1600.webp",
-  "small": "/reports/boardroom-800.webp",
-  "alt": "An empty meeting room with a long table",
-  "title": "File:Minimalist meeting room (Unsplash).jpg",
+ "aff-board-linked-giving": {
+  "type": "photo",
+  "file": "/reports/r-aff-board-linked-giving-1600.webp",
+  "small": "/reports/r-aff-board-linked-giving-800.webp",
+  "alt": "An empty boardroom with a long table",
+  "title": "File:Conference room table (Unsplash).jpg",
   "author": "Breather breather",
   "license": "CC0",
   "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
-  "source": "https://commons.wikimedia.org/wiki/File:Minimalist_meeting_room_(Unsplash).jpg",
+  "source": "https://commons.wikimedia.org/wiki/File:Conference_room_table_(Unsplash).jpg",
   "credit": "Photo: Breather breather, CC0, via Wikimedia Commons",
-  "findings": [
-   "aff-board-linked-giving",
-   "track-invite-only",
-   "aff-insider-transactions",
-   "aff-board-network-density"
-  ]
+  "queries": [
+   "empty boardroom table chairs",
+   "conference room table"
+  ],
+  "reason": "Boards are the subject"
  },
- "childcare": {
-  "file": "/reports/childcare-1600.webp",
-  "small": "/reports/childcare-800.webp",
-  "alt": "A pile of wooden alphabet blocks",
-  "title": "File:A pile of alphabet wooden blocks.jpg",
-  "author": "Bobjgalindo",
-  "license": "CC BY 4.0",
-  "license_url": "https://creativecommons.org/licenses/by/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:A_pile_of_alphabet_wooden_blocks.jpg",
-  "credit": "Photo: Bobjgalindo, CC BY 4.0, via Wikimedia Commons",
-  "findings": [
-   "gap-subcause-reach"
-  ]
- },
- "civilrights": {
-  "file": "/reports/civilrights-1600.webp",
-  "small": "/reports/civilrights-800.webp",
+ "rise-cause-dollars": {
+  "type": "photo",
+  "file": "/reports/r-rise-cause-dollars-1600.webp",
+  "small": "/reports/r-rise-cause-dollars-800.webp",
   "alt": "The Edmund Pettus Bridge in Selma, Alabama",
   "title": "File:Edmund Pettus Bridge, Selma, Alabama.jpg",
-  "author": "Clément Bardot",
+  "author": "Cl\u00e9ment Bardot",
   "license": "CC BY-SA 4.0",
   "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
   "source": "https://commons.wikimedia.org/wiki/File:Edmund_Pettus_Bridge,_Selma,_Alabama.jpg",
-  "credit": "Photo: Clément Bardot, CC BY-SA 4.0, via Wikimedia Commons",
-  "findings": [
-   "rise-cause-dollars"
-  ]
+  "credit": "Photo: Cl\u00e9ment Bardot, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "Edmund Pettus Bridge",
+   "Civil Rights Memorial Montgomery"
+  ],
+  "reason": "A landmark of the civil rights movement"
  },
- "climate": {
-  "file": "/reports/climate-1600.webp",
-  "small": "/reports/climate-800.webp",
-  "alt": "Wind turbines beyond a green field",
-  "title": "File:Field by the wind turbines - geograph.org.uk - 7315642.jpg",
-  "author": "Philip Jeffrey",
-  "license": "CC BY-SA 2.0",
-  "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Field_by_the_wind_turbines_-_geograph.org.uk_-_7315642.jpg",
-  "credit": "Photo: Philip Jeffrey, CC BY-SA 2.0, via Wikimedia Commons",
-  "findings": [
-   "flow-climate-share"
-  ]
+ "gap-federal-per-resident": {
+  "type": "photo",
+  "file": "/reports/r-gap-federal-per-resident-1600.webp",
+  "small": "/reports/r-gap-federal-per-resident-800.webp",
+  "alt": "The Massachusetts State House",
+  "title": "File:Boston State House of Massachusetts.JPG",
+  "author": "Stefan Schulze (Audience)",
+  "license": "CC BY-SA 3.0",
+  "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "source": "https://commons.wikimedia.org/wiki/File:Boston_State_House_of_Massachusetts.JPG",
+  "credit": "Photo: Stefan Schulze (Audience), CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "Massachusetts State House",
+   "Nevada desert highway"
+  ],
+  "reason": "Massachusetts leads the comparison"
  },
- "disaster": {
-  "file": "/reports/disaster-1600.webp",
-  "small": "/reports/disaster-800.webp",
-  "alt": "Sandbags on a city street",
-  "title": "File:Exploded sandbag in Foggy Bottom.jpg",
-  "author": "Ser Amantio di Nicolao",
-  "license": "CC BY-SA 4.0",
-  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Exploded_sandbag_in_Foggy_Bottom.jpg",
-  "credit": "Photo: Ser Amantio di Nicolao, CC BY-SA 4.0, via Wikimedia Commons",
-  "findings": [
-   "stress-single-funder",
-   "rise-disaster-charities"
-  ]
- },
- "globe": {
-  "file": "/reports/globe-1600.webp",
-  "small": "/reports/globe-800.webp",
-  "alt": "An old flat map of the world in two hemispheres",
-  "title": "File:Flat-globe map of the world.jpg",
-  "author": "H. Wise & Co.",
-  "license": "Public domain",
-  "license_url": "",
-  "source": "https://commons.wikimedia.org/wiki/File:Flat-globe_map_of_the_world.jpg",
-  "credit": "Photo: H. Wise & Co., Public domain, via Wikimedia Commons",
-  "findings": [
-   "aff-family-ties-by-cause"
-  ]
- },
- "health": {
-  "file": "/reports/health-1600.webp",
-  "small": "/reports/health-800.webp",
-  "alt": "Glass test tubes in a rack",
-  "title": "File:Test tubes in rack.jpg",
-  "author": "J.N. Eskra",
-  "license": "CC BY-SA 4.0",
-  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Test_tubes_in_rack.jpg",
-  "credit": "Photo: J.N. Eskra, CC BY-SA 4.0, via Wikimedia Commons",
-  "findings": [
-   "rise-new-charities-by-cause"
-  ]
- },
- "library": {
-  "file": "/reports/library-1600.webp",
-  "small": "/reports/library-800.webp",
-  "alt": "A university reading room with long wooden tables",
-  "title": "File:Suzzallo Reading Room University of Washington restoration Seattle Washington 2026.jpg",
-  "author": "Guywelch2000",
-  "license": "CC BY 4.0",
-  "license_url": "https://creativecommons.org/licenses/by/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Suzzallo_Reading_Room_University_of_Washington_restoration_Seattle_Washington_2026.jpg",
-  "credit": "Photo: Guywelch2000, CC BY 4.0, via Wikimedia Commons",
-  "findings": [
-   "flow-concentration"
-  ]
- },
- "seedlings": {
-  "file": "/reports/seedlings-1600.webp",
-  "small": "/reports/seedlings-800.webp",
-  "alt": "A seedling emerging from soil",
-  "title": "File:Young seedling of tomato emerging from soil - India.jpg",
-  "author": "Ksheera Piraati",
-  "license": "CC BY 4.0",
-  "license_url": "https://creativecommons.org/licenses/by/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Young_seedling_of_tomato_emerging_from_soil_-_India.jpg",
-  "credit": "Photo: Ksheera Piraati, CC BY 4.0, via Wikimedia Commons",
-  "findings": [
-   "rise-new-charities"
-  ]
- },
- "shelter": {
-  "file": "/reports/shelter-1600.webp",
-  "small": "/reports/shelter-800.webp",
-  "alt": "A house lit up at night",
-  "title": "File:Illuminated Residence at Night.jpg",
-  "author": "QueenCityCebu",
-  "license": "CC BY-SA 4.0",
-  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Illuminated_Residence_at_Night.jpg",
-  "credit": "Photo: QueenCityCebu, CC BY-SA 4.0, via Wikimedia Commons",
-  "findings": [
-   "stress-government-thin-cash"
-  ]
- },
- "capitol": {
-  "file": "/reports/capitol-1600.webp",
-  "small": "/reports/capitol-800.webp",
-  "alt": "A state capitol dome against a blue sky",
-  "title": "File:California State Capitol (top), NW view up.jpg",
-  "author": "Radomianin",
-  "license": "Public domain",
-  "license_url": "",
-  "source": "https://commons.wikimedia.org/wiki/File:California_State_Capitol_(top),_NW_view_up.jpg",
-  "credit": "Photo: Radomianin, Public domain, via Wikimedia Commons",
-  "findings": [
-   "flow-community-vs-private",
-   "gap-federal-per-resident",
-   "flow-out-of-state",
-   "stress-federal-vs-990-government",
-   "gap-state-per-capita",
-   "stress-government-dependence-map",
-   "flow-net-exporters"
-  ]
- },
- "classroom": {
-  "file": "/reports/classroom-1600.webp",
-  "small": "/reports/classroom-800.webp",
-  "alt": "An empty lecture hall with wooden desks",
-  "title": "File:Grande salle ENC n1.jpg",
-  "author": "Marie-Lan Nguyen",
-  "license": "CC BY 2.5",
-  "license_url": "https://creativecommons.org/licenses/by/2.5",
-  "source": "https://commons.wikimedia.org/wiki/File:Grande_salle_ENC_n1.jpg",
-  "credit": "Photo: Marie-Lan Nguyen, CC BY 2.5, via Wikimedia Commons",
-  "findings": [
-   "flow-women-girls-share"
-  ]
- },
- "ledger": {
-  "file": "/reports/ledger-1600.webp",
-  "small": "/reports/ledger-800.webp",
-  "alt": "Calculator keys",
-  "title": "File:Aurora electronic calculator DT210 05.jpg",
-  "author": "Coyau",
+ "flow-out-of-state": {
+  "type": "photo",
+  "file": "/reports/r-flow-out-of-state-1600.webp",
+  "small": "/reports/r-flow-out-of-state-800.webp",
+  "alt": "A Vermont village church and schoolhouse",
+  "title": "File:Union Village Vermont Church and School.jpg",
+  "author": "EdwardEMeyer",
   "license": "CC BY-SA 3.0",
   "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
-  "source": "https://commons.wikimedia.org/wiki/File:Aurora_electronic_calculator_DT210_05.jpg",
-  "credit": "Photo: Coyau, CC BY-SA 3.0, via Wikimedia Commons",
-  "findings": [
-   "flow-daf-sponsor-causes",
-   "flow-foundation-to-foundation",
-   "track-general-support",
-   "track-one-grantee",
-   "track-payout",
-   "track-audit-gap",
-   "stress-deficits-by-size",
-   "track-renewal"
-  ]
+  "source": "https://commons.wikimedia.org/wiki/File:Union_Village_Vermont_Church_and_School.jpg",
+  "credit": "Photo: EdwardEMeyer, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "Vermont village church",
+   "New Hampshire covered bridge"
+  ],
+  "reason": "Small New England states are the subject"
  },
- "medicine": {
+ "gap-county-poverty": {
+  "type": "photo",
+  "file": "/reports/r-gap-county-poverty-1600.webp",
+  "small": "/reports/r-gap-county-poverty-800.webp",
+  "alt": "A weathered farmhouse in a rural county",
+  "title": "File:Abandoned Virginia farmhouse in Creeds LR.jpg",
+  "author": "PumpkinSky",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Abandoned_Virginia_farmhouse_in_Creeds_LR.jpg",
+  "credit": "Photo: PumpkinSky, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "rural county road farmland",
+   "abandoned farmhouse"
+  ],
+  "reason": "Rural, lower-income counties"
+ },
+ "stress-federal-vs-990-government": {
+  "type": "photo",
+  "file": "/reports/r-stress-federal-vs-990-government-1600.webp",
+  "small": "/reports/r-stress-federal-vs-990-government-800.webp",
+  "alt": "The United States Capitol",
+  "title": "File:US Capitol west side.JPG",
+  "author": "Martin Falbisoner",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:US_Capitol_west_side.JPG",
+  "credit": "Photo: Martin Falbisoner, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "federal building Washington DC",
+   "United States Capitol"
+  ],
+  "reason": "Federal grants"
+ },
+ "flow-concentration": {
+  "type": "photo",
+  "file": "/reports/r-flow-concentration-1600.webp",
+  "small": "/reports/r-flow-concentration-800.webp",
+  "alt": "A university library reading room",
+  "title": "File:Graz University-Library reading-room.jpg",
+  "author": "Dr. Marcus Gossler",
+  "license": "CC BY-SA 3.0",
+  "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "source": "https://commons.wikimedia.org/wiki/File:Graz_University-Library_reading-room.jpg",
+  "credit": "Photo: Dr. Marcus Gossler, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "Harvard Yard",
+   "university library reading room"
+  ],
+  "reason": "Education grantees, mostly universities (no single campus shown)"
+ },
+ "gap-state-per-capita": {
+  "type": "photo",
+  "file": "/reports/r-gap-state-per-capita-1600.webp",
+  "small": "/reports/r-gap-state-per-capita-800.webp",
+  "alt": "Boston skyline across the Charles River",
+  "title": "File:Boston skyline from Longfellow Bridge September 2017 panorama 2.jpg",
+  "author": "King of Hearts",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Boston_skyline_from_Longfellow_Bridge_September_2017_panorama_2.jpg",
+  "credit": "Photo: King of Hearts, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "Mississippi Delta cotton field",
+   "Boston skyline"
+  ],
+  "reason": "Massachusetts gets the most per resident"
+ },
+ "stress-thin-cash-by-cause": {
+  "type": "photo",
+  "file": "/reports/r-stress-thin-cash-by-cause-1600.webp",
+  "small": "/reports/r-stress-thin-cash-by-cause-800.webp",
+  "alt": "A long, low residential care building",
+  "title": "File:62 Matejki Street building, 1st Nursing Home, in Zabrze, Silesian Voivodeship, Poland, March 2023.jpg",
+  "author": "MichalPL",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:62_Matejki_Street_building,_1st_Nursing_Home,_in_Zabrze,_Silesian_Voivodeship,_Poland,_March_2023.jpg",
+  "credit": "Photo: MichalPL, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "nursing home building",
+   "nursing home hallway"
+  ],
+  "reason": "Nursing facilities"
+ },
+ "gap-appalachia-map": {
+  "type": "photo",
+  "file": "/reports/r-gap-appalachia-map-1600.webp",
+  "small": "/reports/r-gap-appalachia-map-800.webp",
+  "alt": "Appalachian ridges in West Virginia",
+  "title": "File:Appalachian Mountains along Blue Ridge Parkway, North Carolina.JPG",
+  "author": "MusikAnimal",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Appalachian_Mountains_along_Blue_Ridge_Parkway,_North_Carolina.JPG",
+  "credit": "Photo: MusikAnimal, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "Appalachian Mountains Blue Ridge",
+   "Appalachia hollow town"
+  ],
+  "reason": "Appalachia is the subject"
+ },
+ "stress-government-dependence-map": {
+  "type": "photo",
+  "file": "/reports/r-stress-government-dependence-map-1600.webp",
+  "small": "/reports/r-stress-government-dependence-map-800.webp",
+  "alt": "The West Virginia State Capitol",
+  "title": "File:The West Virginia State Capitol building - Image03.jpg",
+  "author": "Daniel G Rego",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:The_West_Virginia_State_Capitol_building_-_Image03.jpg",
+  "credit": "Photo: Daniel G Rego, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "West Virginia State Capitol",
+   "West Virginia small town"
+  ],
+  "reason": "West Virginia is the subject"
+ },
+ "aff-board-linked-causes": {
+  "type": "photo",
+  "file": "/reports/r-aff-board-linked-causes-1600.webp",
+  "small": "/reports/r-aff-board-linked-causes-800.webp",
+  "alt": "Laboratory pipettes",
+  "title": "File:Pipette de laboratoire sur fond blanc au B\u00e9nin 04.jpg",
+  "author": "Adoscam",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pipette_de_laboratoire_sur_fond_blanc_au_B%C3%A9nin_04.jpg",
+  "credit": "Photo: Adoscam, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "medical research laboratory",
+   "laboratory pipettes"
+  ],
+  "reason": "Medical research"
+ },
+ "gap-county-size": {
+  "type": "photo",
+  "file": "/reports/r-gap-county-size-1600.webp",
+  "small": "/reports/r-gap-county-size-800.webp",
+  "alt": "A small-town water tower",
+  "title": "File:Cameron North Carolina Water Tower.jpg",
+  "author": "DrStew82",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cameron_North_Carolina_Water_Tower.jpg",
+  "credit": "Photo: DrStew82, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "small town water tower",
+   "city skyline aerial"
+  ],
+  "reason": "Small counties against big ones"
+ },
+ "rise-new-charities": {
+  "type": "photo",
+  "file": "/reports/r-rise-new-charities-1600.webp",
+  "small": "/reports/r-rise-new-charities-800.webp",
+  "alt": "Seedlings in a pot",
+  "title": "File:Sprouting basil.jpg",
+  "author": "Pat Jedruszek",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Sprouting_basil.jpg",
+  "credit": "Photo: Pat Jedruszek, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "seedlings sprouting",
+   "new shoots plants"
+  ],
+  "reason": "New charities, growth"
+ },
+ "stress-single-funder": {
+  "type": "photo",
+  "file": "/reports/r-stress-single-funder-1600.webp",
+  "small": "/reports/r-stress-single-funder-800.webp",
+  "alt": "A fire station with red doors",
+  "title": "File:Engine Co 15 Fire Station Hartford CT.JPG",
+  "author": "\u2013Grondemar",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Engine_Co_15_Fire_Station_Hartford_CT.JPG",
+  "credit": "Photo: \u2013Grondemar, CC BY-SA 3.0, via Wikimedia Commons",
+  "queries": [
+   "fire station engine",
+   "disaster relief supplies"
+  ],
+  "reason": "Public safety charities"
+ },
+ "rise-disaster-charities": {
+  "type": "photo",
+  "file": "/reports/r-rise-disaster-charities-1600.webp",
+  "small": "/reports/r-rise-disaster-charities-800.webp",
+  "alt": "Houses standing in floodwater",
+  "title": "File:September 1988 Flood, Damaged House on Cowper Street, Greymouth. CC413.jpg",
+  "author": "John Charlton",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:September_1988_Flood,_Damaged_House_on_Cowper_Street,_Greymouth._CC413.jpg",
+  "credit": "Photo: John Charlton, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "flood damaged houses",
+   "hurricane damage houses"
+  ],
+  "reason": "Disaster relief"
+ },
+ "aff-family-ties-by-cause": {
+  "type": "photo",
+  "file": "/reports/r-aff-family-ties-by-cause-1600.webp",
+  "small": "/reports/r-aff-family-ties-by-cause-800.webp",
+  "alt": "A desk globe",
+  "title": "File:Globe with yellow background 1.jpg",
+  "author": "Wendy Cope",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Globe_with_yellow_background_1.jpg",
+  "credit": "Photo: Wendy Cope, CC BY 2.0, via Wikimedia Commons",
+  "queries": [
+   "world map antique",
+   "globe"
+  ],
+  "reason": "International affairs charities"
+ },
+ "track-audit-gap": {
+  "type": "photo",
+  "file": "/reports/r-track-audit-gap-1600.webp",
+  "small": "/reports/r-track-audit-gap-800.webp",
+  "alt": "An old ledger book open on a table",
+  "title": "File:Ledger.png",
+  "author": "RaphaelQS",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "source": "https://commons.wikimedia.org/wiki/File:Ledger.png",
+  "credit": "Photo: RaphaelQS, CC0, via Wikimedia Commons",
+  "queries": [
+   "accounting ledger",
+   "financial statements documents"
+  ],
+  "reason": "Audits and financial records"
+ },
+ "stress-negative-net-assets": {
+  "type": "photo",
+  "file": "/reports/r-stress-negative-net-assets-1600.webp",
+  "small": "/reports/r-stress-negative-net-assets-800.webp",
+  "alt": "A modern senior housing building",
+  "title": "File:Morris Heights Senior Housing jeh.jpg",
+  "author": "Jim.henderson",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Morris_Heights_Senior_Housing_jeh.jpg",
+  "credit": "Photo: Jim.henderson, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "retirement community apartments",
+   "senior housing building"
+  ],
+  "reason": "Senior housing and retirement communities"
+ },
+ "flow-net-exporters": {
+  "type": "photo",
+  "file": "/reports/r-flow-net-exporters-1600.webp",
+  "small": "/reports/r-flow-net-exporters-800.webp",
+  "alt": "The Washington State Capitol in Olympia",
+  "title": "File:Washington State Capitol aerial view in summer.jpg",
+  "author": "Nils Huenerfuerst",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Washington_State_Capitol_aerial_view_in_summer.jpg",
+  "credit": "Photo: Nils Huenerfuerst, CC BY 4.0, via Wikimedia Commons",
+  "queries": [
+   "Washington state Capitol Olympia",
+   "District of Columbia aerial"
+  ],
+  "reason": "Washington exports the most foundation money"
+ },
+ "aff-board-network-density": {
+  "type": "photo",
+  "file": "/reports/r-aff-board-network-density-1600.webp",
+  "small": "/reports/r-aff-board-network-density-800.webp",
+  "alt": "The Rhode Island State House",
+  "title": "File:Rhode Island State House (2026)-L1001135.jpg",
+  "author": "Frank Schulenburg",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Rhode_Island_State_House_(2026)-L1001135.jpg",
+  "credit": "Photo: Frank Schulenburg, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "Rhode Island State House",
+   "Providence Rhode Island skyline"
+  ],
+  "reason": "Rhode Island has the most linked boards"
+ },
+ "flow-pharma-patient-assistance": {
+  "type": "photo",
   "file": "/reports/medicine-1600.webp",
   "small": "/reports/medicine-800.webp",
   "alt": "Pills and a thermometer",
@@ -225,9 +384,117 @@
   "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
   "source": "https://commons.wikimedia.org/wiki/File:Thermometer01.jpg",
   "credit": "Photo: Steve Buissinne (stevepb), CC0, via Wikimedia Commons",
-  "findings": [
-   "flow-pharma-patient-assistance",
-   "aff-board-linked-causes"
-  ]
+  "queries": [
+   "pharmacy shelves prescription drugs",
+   "medicine boxes pharmacy"
+  ],
+  "reason": "Medicine, the patient aid itself (no better new candidate)"
+ },
+ "gap-subcause-reach": {
+  "type": "photo",
+  "file": "/reports/childcare-1600.webp",
+  "small": "/reports/childcare-800.webp",
+  "alt": "A pile of wooden alphabet blocks",
+  "title": "File:A pile of alphabet wooden blocks.jpg",
+  "author": "Bobjgalindo",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:A_pile_of_alphabet_wooden_blocks.jpg",
+  "credit": "Photo: Bobjgalindo, CC BY 4.0, via Wikimedia Commons",
+  "queries": [
+   "daycare toys play room",
+   "kindergarten classroom toys"
+  ],
+  "reason": "Child care (no better new candidate)"
+ },
+ "stress-government-thin-cash": {
+  "type": "cover",
+  "queries": [
+   "women's shelter house",
+   "emergency shelter building"
+  ],
+  "reason": "No open photo of a shelter without identifying it"
+ },
+ "flow-women-girls-share": {
+  "type": "cover",
+  "queries": [
+   "girls school classroom empty",
+   "schoolgirls desks books"
+  ],
+  "reason": "No relevant photo without identifiable girls"
+ },
+ "gap-poverty-federal-vs-foundation": {
+  "type": "cover",
+  "queries": [
+   "rural poverty house United States",
+   "dilapidated house rural"
+  ],
+  "reason": "Candidates were unrelated"
+ },
+ "flow-community-vs-private": {
+  "type": "cover",
+  "queries": [
+   "small town main street United States",
+   "town hall New England"
+  ],
+  "reason": "Candidates were not clearly community foundations"
+ },
+ "rise-new-charities-by-cause": {
+  "type": "cover",
+  "queries": [
+   "public health laboratory",
+   "health clinic building"
+  ],
+  "reason": "No clear public health photo"
+ },
+ "flow-daf-sponsor-causes": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract money flow: the number says it best"
+ },
+ "flow-foundation-to-foundation": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract money flow"
+ },
+ "track-general-support": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract grant terms"
+ },
+ "rise-grantmaker-intermediaries": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract money flow"
+ },
+ "track-invite-only": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract policy"
+ },
+ "track-one-grantee": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract concentration"
+ },
+ "aff-insider-transactions": {
+  "type": "cover",
+  "queries": [],
+  "reason": "No photo without implying a specific org"
+ },
+ "track-payout": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract payout rates"
+ },
+ "stress-deficits-by-size": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract finances"
+ },
+ "track-renewal": {
+  "type": "cover",
+  "queries": [],
+  "reason": "Abstract grant renewals"
  }
 }

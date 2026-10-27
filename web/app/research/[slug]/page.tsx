@@ -10,7 +10,7 @@ import { titleCase } from "@/components/text";
 import { AskFinding, DataTable, FindingActions, FindingChart } from "@/components/ResearchFinding";
 import { getInsight, orgsByEin, relatedInsights } from "@/lib/insights";
 import { dek, exploreHref, findingEins, readTime, researchHref, sectionLabel, updated, type Insight } from "@/lib/insightMeta";
-import { reportImage } from "@/lib/reportImages";
+import { coverNumber, reportImage } from "@/lib/reportImages";
 import { ReportImage } from "@/components/ReportImage";
 import { ShareTools } from "@/components/ShareTools";
 import { LOADED_STATES } from "@/lib/filters";
@@ -53,7 +53,7 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
     // Article layout (Oct 27): photo with credit, headline, dek, byline, a pull stat, short paragraphs, the chart with
     // its caption, "What this means", then organizations, a follow-up, and Method and sources folded at the end.
     <article className="rd ra" data-section={i.section}>
-      <ReportImage img={img} section={i.section} size="hero" priority />
+      <ReportImage img={img} section={i.section} size="hero" priority cover={coverNumber(i)} />
       <header className="ra-head">
         <p className="rp-cat">{sectionLabel(i.section)}{place ? ` · ${place}` : ""}</p>
         <h1>{i.headline}</h1>
@@ -61,7 +61,8 @@ async function Finding({ params }: { params: Promise<{ slug: string }> }) {
         <p className="ra-byline">Institute on Generosity · NomBot research{date ? ` · ${date}` : ""} · {readTime(i)} min read</p>
         <div className="ra-tools"><ShareTools /><FindingActions i={i} /></div>
       </header>
-      {stat && <p className="ra-pull"><b>{stat.value}</b><span>{stat.label}</span></p>}
+      {/* The pull stat, unless the generated cover above already shows the same number */}
+      {stat && img && <p className="ra-pull"><b>{stat.value}</b><span>{stat.label}</span></p>}
       {paras.map((p) => <p key={p} className="ra-p">{p.trim()}</p>)}
       {i.chart && <FindingChart i={i} />}
       <section className="ra-sec">
