@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Below, Focal } from "@/components/BrowseFigures";
-import { SdgIcon, SdgNote } from "@/components/SdgIcon";
+import { CauseIcon } from "@/components/CauseIcon";
 import { covered, ENVIRONMENT, findSub, sdgSlug } from "@/lib/sdg";
 import "../../browse.css";
 
@@ -31,10 +31,9 @@ export default async function SubPage(props: PageProps<"/browse/[goal]/[sub]">) 
     <main className="br-page">
       <Link href={`/browse/${sdgSlug(s.n)}`} className="back" title={`Goal ${s.n}: ${s.name}`}>← {s.name}</Link>
       <h1 className="pagetitle br-title" title={[sub.plain, sub.targets?.length ? `Serves UN targets ${sub.targets.join(", ")}` : "", sub.note].filter(Boolean).join(". ")}>
-        <SdgIcon n={s.n} name={s.name} size={48} />{sub.name}
+        <CauseIcon n={s.n} color={s.color} size={48} />{sub.name}
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={sub.id} chart /></Suspense>
-      <SdgNote />
       <section className="br-sec">
         <Suspense fallback={null}><Below id={sub.id} searchName={sub.name.toLowerCase()} /></Suspense>
       </section>

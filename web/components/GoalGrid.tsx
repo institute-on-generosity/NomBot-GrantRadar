@@ -5,7 +5,7 @@ import { NavLink } from "./NavLink";
 import { Icon } from "./Icons";
 import type { PromptGroup } from "./HeroFlip";
 import { SDG_SHORT as SHORT } from "@/lib/sdg";
-import { SdgIcon, SdgNote } from "./SdgIcon";
+import { CauseIcon } from "./CauseIcon";
 
 // The research goal grid (home Research tab, /research): 17 goals as one-word tiles (SDG color as a dot, the full name
 // as the tooltip), then groups across causes. Picking a tile opens a popover anchored to it (Oct 27, Hunter): it floats
@@ -118,7 +118,7 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
       <div className="pp-head">
         {step2 && group.table
           ? <button type="button" className="pp-back" onClick={() => setTopic(null)}>‹ Back</button>
-          : <b className="pp-title">{group.sdg && <SdgIcon n={group.sdg.n} name={group.sdg.name} size={30} />}{title}</b>}
+          : <b className="pp-title"><CauseIcon n={group.sdg?.n} label={group.sdg ? undefined : group.label} color={group.sdg?.color} size={30} />{title}</b>}
         {group.sdg && <NavLink href={group.sdg.href} className="pp-browse" label="Loading the cause…">Browse figures →</NavLink>}
         <button type="button" className="pp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
       </div>
@@ -154,7 +154,7 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
           <button key={g.label} ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
             aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
             onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
-            {g.sdg && <SdgIcon n={g.sdg.n} name={g.sdg.name} size={30} />}
+            <CauseIcon n={g.sdg?.n} label={g.sdg ? undefined : g.label} color={g.sdg?.color} size={32} />
             <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
           </button>
         ))}
@@ -166,7 +166,6 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
     <div className="prompt-groups gg-root">
       {sdg.length > 0 && grid("sdg", sdg, <>By cause <a className="prompt-help" href="https://sdgs.un.org/goals" target="_blank" rel="noreferrer" title="Causes follow the 17 UN Sustainable Development Goals" aria-label="About the 17 UN Sustainable Development Goals"><Icon name="info" size={13} /></a></>)}
       {cross.length > 0 && grid("cross", cross, "Across causes")}
-      {sdg.length > 0 && <SdgNote />}
       {group && typeof document !== "undefined" && createPortal(<>{sheet && <div className="pp-scrim" onClick={close} aria-hidden />}{popover}</>, document.body)}
     </div>
   );

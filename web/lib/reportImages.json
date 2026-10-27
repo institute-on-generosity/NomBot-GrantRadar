@@ -14,7 +14,8 @@
    "wind farm turbines",
    "solar panel array field"
   ],
-  "reason": "Wind power, the clearest picture of climate work"
+  "reason": "Wind power, the clearest picture of climate work",
+  "match": "exact"
  },
  "aff-board-linked-giving": {
   "type": "photo",
@@ -31,7 +32,8 @@
    "empty boardroom table chairs",
    "conference room table"
   ],
-  "reason": "Boards are the subject"
+  "reason": "Boards are the subject",
+  "match": "exact"
  },
  "rise-cause-dollars": {
   "type": "photo",
@@ -48,7 +50,8 @@
    "Edmund Pettus Bridge",
    "Civil Rights Memorial Montgomery"
   ],
-  "reason": "A landmark of the civil rights movement"
+  "reason": "A landmark of the civil rights movement",
+  "match": "exact"
  },
  "gap-federal-per-resident": {
   "type": "photo",
@@ -65,7 +68,8 @@
    "Massachusetts State House",
    "Nevada desert highway"
   ],
-  "reason": "Massachusetts leads the comparison"
+  "reason": "Massachusetts leads the comparison",
+  "match": "exact"
  },
  "flow-out-of-state": {
   "type": "photo",
@@ -82,7 +86,8 @@
    "Vermont village church",
    "New Hampshire covered bridge"
   ],
-  "reason": "Small New England states are the subject"
+  "reason": "Small New England states are the subject",
+  "match": "exact"
  },
  "gap-county-poverty": {
   "type": "photo",
@@ -99,7 +104,8 @@
    "rural county road farmland",
    "abandoned farmhouse"
   ],
-  "reason": "Rural, lower-income counties"
+  "reason": "Rural, lower-income counties",
+  "match": "closest"
  },
  "stress-federal-vs-990-government": {
   "type": "photo",
@@ -116,7 +122,8 @@
    "federal building Washington DC",
    "United States Capitol"
   ],
-  "reason": "Federal grants"
+  "reason": "Federal grants",
+  "match": "exact"
  },
  "flow-concentration": {
   "type": "photo",
@@ -133,7 +140,8 @@
    "Harvard Yard",
    "university library reading room"
   ],
-  "reason": "Education grantees, mostly universities (no single campus shown)"
+  "reason": "Education grantees, mostly universities (no single campus shown)",
+  "match": "closest"
  },
  "gap-state-per-capita": {
   "type": "photo",
@@ -150,7 +158,8 @@
    "Mississippi Delta cotton field",
    "Boston skyline"
   ],
-  "reason": "Massachusetts gets the most per resident"
+  "reason": "Massachusetts gets the most per resident",
+  "match": "exact"
  },
  "stress-thin-cash-by-cause": {
   "type": "photo",
@@ -167,7 +176,8 @@
    "nursing home building",
    "nursing home hallway"
   ],
-  "reason": "Nursing facilities"
+  "reason": "Nursing facilities",
+  "match": "exact"
  },
  "gap-appalachia-map": {
   "type": "photo",
@@ -184,7 +194,8 @@
    "Appalachian Mountains Blue Ridge",
    "Appalachia hollow town"
   ],
-  "reason": "Appalachia is the subject"
+  "reason": "Appalachia is the subject",
+  "match": "exact"
  },
  "stress-government-dependence-map": {
   "type": "photo",
@@ -201,7 +212,8 @@
    "West Virginia State Capitol",
    "West Virginia small town"
   ],
-  "reason": "West Virginia is the subject"
+  "reason": "West Virginia is the subject",
+  "match": "exact"
  },
  "aff-board-linked-causes": {
   "type": "photo",
@@ -218,7 +230,8 @@
    "medical research laboratory",
    "laboratory pipettes"
   ],
-  "reason": "Medical research"
+  "reason": "Medical research",
+  "match": "exact"
  },
  "gap-county-size": {
   "type": "photo",
@@ -235,7 +248,8 @@
    "small town water tower",
    "city skyline aerial"
   ],
-  "reason": "Small counties against big ones"
+  "reason": "Small counties against big ones",
+  "match": "closest"
  },
  "rise-new-charities": {
   "type": "photo",
@@ -252,7 +266,8 @@
    "seedlings sprouting",
    "new shoots plants"
   ],
-  "reason": "New charities, growth"
+  "reason": "New charities, growth",
+  "match": "closest"
  },
  "stress-single-funder": {
   "type": "photo",
@@ -269,7 +284,8 @@
    "fire station engine",
    "disaster relief supplies"
   ],
-  "reason": "Public safety charities"
+  "reason": "Public safety charities",
+  "match": "exact"
  },
  "rise-disaster-charities": {
   "type": "photo",
@@ -286,7 +302,8 @@
    "flood damaged houses",
    "hurricane damage houses"
   ],
-  "reason": "Disaster relief"
+  "reason": "Disaster relief",
+  "match": "exact"
  },
  "aff-family-ties-by-cause": {
   "type": "photo",
@@ -303,7 +320,8 @@
    "world map antique",
    "globe"
   ],
-  "reason": "International affairs charities"
+  "reason": "International affairs charities",
+  "match": "closest"
  },
  "track-audit-gap": {
   "type": "photo",
@@ -320,7 +338,8 @@
    "accounting ledger",
    "financial statements documents"
   ],
-  "reason": "Audits and financial records"
+  "reason": "Audits and financial records",
+  "match": "exact"
  },
  "stress-negative-net-assets": {
   "type": "photo",
@@ -337,7 +356,8 @@
    "retirement community apartments",
    "senior housing building"
   ],
-  "reason": "Senior housing and retirement communities"
+  "reason": "Senior housing and retirement communities",
+  "match": "exact"
  },
  "flow-net-exporters": {
   "type": "photo",
@@ -354,7 +374,8 @@
    "Washington state Capitol Olympia",
    "District of Columbia aerial"
   ],
-  "reason": "Washington exports the most foundation money"
+  "reason": "Washington exports the most foundation money",
+  "match": "exact"
  },
  "aff-board-network-density": {
   "type": "photo",
@@ -371,7 +392,8 @@
    "Rhode Island State House",
    "Providence Rhode Island skyline"
   ],
-  "reason": "Rhode Island has the most linked boards"
+  "reason": "Rhode Island has the most linked boards",
+  "match": "exact"
  },
  "flow-pharma-patient-assistance": {
   "type": "photo",
@@ -388,7 +410,8 @@
    "pharmacy shelves prescription drugs",
    "medicine boxes pharmacy"
   ],
-  "reason": "Medicine, the patient aid itself (no better new candidate)"
+  "reason": "Medicine, the patient aid itself (no better new candidate)",
+  "match": "exact"
  },
  "gap-subcause-reach": {
   "type": "photo",
@@ -405,96 +428,293 @@
    "daycare toys play room",
    "kindergarten classroom toys"
   ],
-  "reason": "Child care (no better new candidate)"
+  "reason": "Child care (no better new candidate)",
+  "match": "closest"
  },
  "stress-government-thin-cash": {
-  "type": "cover",
+  "type": "photo",
+  "match": "exact",
+  "file": "/reports/r-stress-government-thin-cash-1600.webp",
+  "small": "/reports/r-stress-government-thin-cash-800.webp",
+  "alt": "Bunk beds in an empty shelter room",
+  "title": "File:Fallout shelter interior Haegendorf.jpg",
+  "author": "NAC",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fallout_shelter_interior_Haegendorf.jpg",
+  "credit": "Photo: NAC, CC BY-SA 4.0, via Wikimedia Commons",
   "queries": [
-   "women's shelter house",
-   "emergency shelter building"
+   "emergency shelter beds",
+   "shelter bunk beds room",
+   "purple ribbon awareness"
   ],
-  "reason": "No open photo of a shelter without identifying it"
+  "reason": "Shelter beds, the setting of the finding"
  },
  "flow-women-girls-share": {
-  "type": "cover",
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-flow-women-girls-share-1600.webp",
+  "small": "/reports/r-flow-women-girls-share-800.webp",
+  "alt": "An empty school classroom",
+  "title": "File:Chokai JHS 2B classroom 2.jpg",
+  "author": "Douglas P Perkins",
+  "license": "CC BY 3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Chokai_JHS_2B_classroom_2.jpg",
+  "credit": "Photo: Douglas P Perkins, CC BY 3.0, via Wikimedia Commons",
   "queries": [
-   "girls school classroom empty",
-   "schoolgirls desks books"
+   "school library books shelves",
+   "classroom chalkboard school",
+   "girls school building"
   ],
-  "reason": "No relevant photo without identifiable girls"
+  "reason": "A school setting; no photo without identifiable girls"
  },
  "gap-poverty-federal-vs-foundation": {
-  "type": "cover",
+  "type": "photo",
+  "file": "/reports/r-gap-county-poverty-1600.webp",
+  "small": "/reports/r-gap-county-poverty-800.webp",
+  "alt": "A weathered farmhouse in a rural county",
+  "title": "File:Abandoned Virginia farmhouse in Creeds LR.jpg",
+  "author": "PumpkinSky",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Abandoned_Virginia_farmhouse_in_Creeds_LR.jpg",
+  "credit": "Photo: PumpkinSky, CC BY-SA 3.0, via Wikimedia Commons",
   "queries": [
-   "rural poverty house United States",
-   "dilapidated house rural"
+   "food pantry shelves",
+   "food bank warehouse",
+   "low income housing"
   ],
-  "reason": "Candidates were unrelated"
+  "reason": "High-poverty rural setting (no clear photo of the federal or foundation side)",
+  "match": "closest"
  },
  "flow-community-vs-private": {
-  "type": "cover",
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-flow-community-vs-private-1600.webp",
+  "small": "/reports/r-flow-community-vs-private-800.webp",
+  "alt": "A town green gazebo in autumn",
+  "title": "File:Canfield Southern Green - Gazebo.jpg",
+  "author": "Jack Pearce from Boardman, OH, USA",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Canfield_Southern_Green_-_Gazebo.jpg",
+  "credit": "Photo: Jack Pearce from Boardman, OH, USA, CC BY 2.0, via Wikimedia Commons",
   "queries": [
-   "small town main street United States",
-   "town hall New England"
+   "town green gazebo",
+   "community center building",
+   "small town main street"
   ],
-  "reason": "Candidates were not clearly community foundations"
+  "reason": "A community setting for community foundations"
  },
  "rise-new-charities-by-cause": {
-  "type": "cover",
+  "type": "photo",
+  "match": "exact",
+  "file": "/reports/r-rise-new-charities-by-cause-1600.webp",
+  "small": "/reports/r-rise-new-charities-by-cause-800.webp",
+  "alt": "Vaccine vials on a table",
+  "title": "File:AstraZeneca COVID-19 vaccine vials (4ml).jpg",
+  "author": "Whispyhistory",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:AstraZeneca_COVID-19_vaccine_vials_(4ml).jpg",
+  "credit": "Photo: Whispyhistory, CC BY-SA 4.0, via Wikimedia Commons",
   "queries": [
-   "public health laboratory",
-   "health clinic building"
+   "community health clinic exterior",
+   "vaccine vials",
+   "public health laboratory CDC"
   ],
-  "reason": "No clear public health photo"
+  "reason": "Public health work"
  },
  "flow-daf-sponsor-causes": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract money flow: the number says it best"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-flow-daf-sponsor-causes-1600.webp",
+  "small": "/reports/r-flow-daf-sponsor-causes-800.webp",
+  "alt": "Stacks of pennies",
+  "title": "File:Stack of coins 0214.jpg",
+  "author": "Dori",
+  "license": "Public domain",
+  "license_url": "",
+  "source": "https://commons.wikimedia.org/wiki/File:Stack_of_coins_0214.jpg",
+  "credit": "Photo: Dori, Public domain, via Wikimedia Commons",
+  "queries": [
+   "donation jar coins",
+   "charity donation box",
+   "piggy bank coins",
+   "coins stacks"
+  ],
+  "reason": "Donated money moving between funds"
  },
  "flow-foundation-to-foundation": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract money flow"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-flow-foundation-to-foundation-1600.webp",
+  "small": "/reports/r-flow-foundation-to-foundation-800.webp",
+  "alt": "An ornate office building facade",
+  "title": "File:Hamilton Chambers, Wellington, New Zealand (50).JPG",
+  "author": "Michal Klajban",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Hamilton_Chambers,_Wellington,_New_Zealand_(50).JPG",
+  "credit": "Photo: Michal Klajban, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "foundation headquarters building",
+   "historic office building facade",
+   "office building lobby"
+  ],
+  "reason": "Foundation offices, money between institutions"
  },
  "track-general-support": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract grant terms"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-track-general-support-1600.webp",
+  "small": "/reports/r-track-general-support-800.webp",
+  "alt": "An empty office with long tables",
+  "title": "File:Cowork Videmonte.jpg",
+  "author": "Hipersyl",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cowork_Videmonte.jpg",
+  "credit": "Photo: Hipersyl, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "nonprofit office desk",
+   "office paperwork desk",
+   "open office workspace"
+  ],
+  "reason": "Day-to-day nonprofit operations that general support pays for"
  },
  "rise-grantmaker-intermediaries": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract money flow"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-rise-grantmaker-intermediaries-1600.webp",
+  "small": "/reports/r-rise-grantmaker-intermediaries-800.webp",
+  "alt": "A brick civic building",
+  "title": "File:Pretoria , Afrique du Sud.- autour de l'H\u00f4tel de ville (7).jpg",
+  "author": "Pierre Andr\u00e9 Leclercq",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Pretoria_,_Afrique_du_Sud.-_autour_de_l%27H%C3%B4tel_de_ville_(7).jpg",
+  "credit": "Photo: Pierre Andr\u00e9 Leclercq, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "envelopes mail sorting",
+   "bank check writing",
+   "money transfer"
+  ],
+  "reason": "Grantmaking institutions"
  },
  "track-invite-only": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract policy"
+  "type": "photo",
+  "match": "exact",
+  "file": "/reports/r-track-invite-only-1600.webp",
+  "small": "/reports/r-track-invite-only-800.webp",
+  "alt": "A closed blue door in a stone wall",
+  "title": "File:Dorfkirche Sanitz (main door), 2025-04-20.jpg",
+  "author": "Radomianin",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Dorfkirche_Sanitz_(main_door),_2025-04-20.jpg",
+  "credit": "Photo: Radomianin, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "closed door",
+   "locked gate",
+   "door with lock"
+  ],
+  "reason": "Foundations closed to unsolicited applications"
  },
  "track-one-grantee": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract concentration"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-track-one-grantee-1600.webp",
+  "small": "/reports/r-track-one-grantee-800.webp",
+  "alt": "A lone tree in a field",
+  "title": "File:Lone Tree in field - geograph.org.uk - 6153245.jpg",
+  "author": "Brian Deegan",
+  "license": "CC BY-SA 2.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Lone_Tree_in_field_-_geograph.org.uk_-_6153245.jpg",
+  "credit": "Photo: Brian Deegan, CC BY-SA 2.0, via Wikimedia Commons",
+  "queries": [
+   "lone tree field",
+   "single tree hill",
+   "one path road"
+  ],
+  "reason": "Giving concentrated on one grantee"
  },
  "aff-insider-transactions": {
-  "type": "cover",
-  "queries": [],
-  "reason": "No photo without implying a specific org"
+  "type": "photo",
+  "match": "exact",
+  "file": "/reports/r-aff-insider-transactions-1600.webp",
+  "small": "/reports/r-aff-insider-transactions-800.webp",
+  "alt": "A pen resting on a contract",
+  "title": "File:Legal Contract & Signature - Warm Tones.jpg",
+  "author": "Blogtrepreneur",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Legal_Contract_%26_Signature_-_Warm_Tones.jpg",
+  "credit": "Photo: Blogtrepreneur, CC BY 2.0, via Wikimedia Commons",
+  "queries": [
+   "contract signing pen",
+   "signing documents pen",
+   "fountain pen signature"
+  ],
+  "reason": "Business deals with insiders"
  },
  "track-payout": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract payout rates"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-track-payout-1600.webp",
+  "small": "/reports/r-track-payout-800.webp",
+  "alt": "Three stacks of coins",
+  "title": "File:Stacks of Canadian Coins (16269886909).jpg",
+  "author": "KMR Photography from Toronto, Canada",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Stacks_of_Canadian_Coins_(16269886909).jpg",
+  "credit": "Photo: KMR Photography from Toronto, Canada, CC BY 2.0, via Wikimedia Commons",
+  "queries": [
+   "writing a check",
+   "bank check",
+   "coins stacks"
+  ],
+  "reason": "How much foundations pay out"
  },
  "stress-deficits-by-size": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract finances"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-stress-deficits-by-size-1600.webp",
+  "small": "/reports/r-stress-deficits-by-size-800.webp",
+  "alt": "A calculator on a printed budget",
+  "title": "File:A White Worksheet and a Pink Calculator (31960961123).jpg",
+  "author": "Bill Smith",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:A_White_Worksheet_and_a_Pink_Calculator_(31960961123).jpg",
+  "credit": "Photo: Bill Smith, CC BY 2.0, via Wikimedia Commons",
+  "queries": [
+   "calculator bills",
+   "bills invoices pile",
+   "empty wallet"
+  ],
+  "reason": "Charities spending more than they take in"
  },
  "track-renewal": {
-  "type": "cover",
-  "queries": [],
-  "reason": "Abstract grant renewals"
+  "type": "photo",
+  "match": "closest",
+  "file": "/reports/r-track-renewal-1600.webp",
+  "small": "/reports/r-track-renewal-800.webp",
+  "alt": "New spring leaves on a branch",
+  "title": "File:New leaves on a maple sapling in Tuntorp.jpg",
+  "author": "W.carter",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:New_leaves_on_a_maple_sapling_in_Tuntorp.jpg",
+  "credit": "Photo: W.carter, CC BY-SA 4.0, via Wikimedia Commons",
+  "queries": [
+   "calendar pages",
+   "wall calendar",
+   "tree new leaves spring"
+  ],
+  "reason": "Grants renewed year to year"
  }
 }

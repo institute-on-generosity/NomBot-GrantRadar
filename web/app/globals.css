@@ -1988,3 +1988,11 @@ a.prompt-help { color: var(--faint); }
 .rp-hero.rp-cover .rp-cover-n { font-size: clamp(44px, 9vw, 72px); }
 .rp-cover-l { position: relative; font-size: var(--t-small); color: var(--mute); max-width: 32ch; text-align: center; }
 .ra .rp-hero.rp-cover { aspect-ratio: 16 / 7; border-radius: 14px; }
+
+/* Our cause icons (components/CauseIcon, Oct 27): one line family in soft tinted circles; every tint shares one
+   saturation and lightness (only the hue differs), so 17 colours stay calm together */
+.cause-ico { flex: none; display: inline-grid; place-items: center; width: var(--s); height: var(--s); border-radius: 50%; background: hsl(var(--h) 38% 92%); color: hsl(var(--h) 38% 34%); }
+@media screen and (prefers-color-scheme: dark) { .cause-ico { background: hsl(var(--h) 22% 24%); color: hsl(var(--h) 45% 78%); } }
+.gg-tile .cause-ico { --s: 32px; }
+@media (max-width: 640px) { .gg-tile .cause-ico { width: 28px; height: 28px; } }
+@media (max-width: 900px) { .gg:not(.sdg) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
