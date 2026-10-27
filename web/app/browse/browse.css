@@ -135,3 +135,8 @@ a.br-rank-row:hover { background: var(--fill); }
 .br-goals:not(.br-env) .br-goal-tile .br-goal-name { grid-area: name; }
 @media (max-width: 900px) { .br-env { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .br-goals, .br-env { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+/* Browse cause grid: same columns as the home grid, names wrap instead of truncating */
+.br-goals:not(.br-env) { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: stretch; }
+@media (max-width: 1100px) { .br-goals:not(.br-env) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .br-goals:not(.br-env) { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+.br-goal-name, .br-goal-label { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; line-height: 1.25; }
