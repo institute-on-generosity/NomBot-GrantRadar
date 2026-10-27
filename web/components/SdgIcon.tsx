@@ -3,7 +3,12 @@
 // shows the icons links to (SdgNote).
 export function SdgIcon({ n, name, size = 44 }: { n: number; name: string; size?: number }) {
   const nn = String(n).padStart(2, "0");
-  return <img className="sdg-icon" src={`/sdg/goal-${nn}-192.png`} srcSet={`/sdg/goal-${nn}-192.png 1x, /sdg/goal-${nn}-384.png 2x`} width={size} height={size} alt={`Goal ${n}: ${name}`} loading="lazy" decoding="async" />;
+  // A quiet, uniform frame AROUND the full square icon (white, hairline, rounded); the icon itself is never cropped.
+  return (
+    <span className="sdg-frame" style={{ "--sdg": `${size}px` } as React.CSSProperties}>
+      <img className="sdg-icon" src={`/sdg/goal-${nn}-192.png`} srcSet={`/sdg/goal-${nn}-192.png 1x, /sdg/goal-${nn}-384.png 2x`} width={size} height={size} alt={`Goal ${n}: ${name}`} loading="lazy" decoding="async" />
+    </span>
+  );
 }
 
 // The line the UN guidelines call for wherever the icons appear: a link to the guidelines and the disclaimer.

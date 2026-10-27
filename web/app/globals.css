@@ -1954,3 +1954,27 @@ a.prompt-help { color: var(--faint); }
 .gg-tile { height: 100%; white-space: normal; }
 .gg-tile em, .gg.sdg .gg-tile em { overflow: visible; text-overflow: clip; white-space: normal; text-wrap: balance; line-height: 1.25; }
 @media (min-width: 641px) and (max-width: 900px) { .gg.sdg { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Quieter SDG icons (Oct 27, Hunter): small, the same everywhere in a grid, in an identical white frame around the
+   full square (never cropped, never recoloured); calm white tiles, hairline borders, wider gaps; hover and selected
+   change only the border and shadow. The icon is the only colour. */
+.sdg-frame { flex: none; display: inline-grid; place-items: center; padding: 3px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px var(--line); }
+.sdg-frame .sdg-icon { width: var(--sdg); height: var(--sdg); }
+.gg.sdg { gap: 16px; }
+.gg { gap: 12px; }
+.gg-tile, .gg.sdg .gg-tile { background: var(--card); box-shadow: 0 0 0 1px var(--line); padding: 10px 12px; gap: 12px; min-height: 56px; color: var(--ink); font-weight: 400; align-items: center; }
+.gg-tile em { font-size: var(--t-small); color: var(--ink); }
+.gg-tile:hover { background: var(--card); box-shadow: 0 0 0 1px var(--fill-2), 0 2px 8px rgba(0,0,0,.06); color: var(--ink); }
+.gg-tile.on { background: var(--card); color: var(--ink); box-shadow: 0 0 0 1.5px var(--ink-2), 0 2px 8px rgba(0,0,0,.06); }
+.gg-tile.on em { color: var(--ink); }
+@media (max-width: 640px) { .gg-tile .sdg-frame { --sdg: 24px !important; } .gg.sdg { gap: 10px; } .gg-tile, .gg.sdg .gg-tile { padding: 8px 10px; gap: 10px; min-height: 48px; } }
+@media screen and (prefers-color-scheme: dark) { .sdg-frame { background: #fff; box-shadow: none; } }
+.gg-tile em, .gg.sdg .gg-tile em { font-size: 13px; }
+@media (min-width: 641px) and (max-width: 900px) { .gg.sdg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ins-page .ins-ask { max-width: 920px; }
+.ins-page .ins-ask .composer { max-width: 780px; }
+.hero { max-width: 980px; }
+.prompt-groups.gg-root { max-width: 980px; }
+.ins-page:has(.ins-ask) { max-width: 1000px; }
+.ins-page .ins-ask { max-width: 980px; }
+.gg-tile, .gg.sdg .gg-tile { padding: 10px 10px; gap: 10px; }

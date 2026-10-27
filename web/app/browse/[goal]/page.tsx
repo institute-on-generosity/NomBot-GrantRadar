@@ -37,7 +37,7 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
     <main className="br-page">
       <Link href="/browse" className="back">← All causes</Link>
       <h1 className="pagetitle br-title" title={s ? `${s.plain}. UN: “${s.goal}.”` : ENVIRONMENT.plain}>
-        {s ? <SdgIcon n={s.n} name={s.name} size={56} /> : <i className="sdg-dot big env" aria-hidden />}
+        {s ? <SdgIcon n={s.n} name={s.name} size={48} /> : <i className="sdg-dot big env" aria-hidden />}
         {g.title}
         {s?.limited && <span className="br-lim" title={`Limited nonprofit data. ${s.limited}`} aria-label="Limited nonprofit data" tabIndex={0}><Icon name="warn" size={18} /></span>}
       </h1>

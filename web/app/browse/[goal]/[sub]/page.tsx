@@ -31,7 +31,7 @@ export default async function SubPage(props: PageProps<"/browse/[goal]/[sub]">) 
     <main className="br-page">
       <Link href={`/browse/${sdgSlug(s.n)}`} className="back" title={`Goal ${s.n}: ${s.name}`}>← {s.name}</Link>
       <h1 className="pagetitle br-title" title={[sub.plain, sub.targets?.length ? `Serves UN targets ${sub.targets.join(", ")}` : "", sub.note].filter(Boolean).join(". ")}>
-        <SdgIcon n={s.n} name={s.name} size={44} />{sub.name}
+        <SdgIcon n={s.n} name={s.name} size={48} />{sub.name}
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={sub.id} chart /></Suspense>
       <SdgNote />

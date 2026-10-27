@@ -20,7 +20,7 @@ export default function BrowsePage() {
       <div className="br-goals">
         {SDGS.map((g) => (
           <Link key={g.n} href={`/browse/${sdgSlug(g.n)}`} className="br-goal-tile" title={`Goal ${g.n}: ${g.name}. ${g.plain}${g.coverage === "limited" ? ". Limited nonprofit data" : ""}`}>
-            <SdgIcon n={g.n} name={g.name} size={44} />
+            <SdgIcon n={g.n} name={g.name} size={30} />
             <Suspense fallback={<MiniSkeleton />}><MiniFigures id={g.scope.id} /></Suspense>
             <span className="br-goal-name"><span className="br-goal-label">{SDG_SHORT[g.n] ?? g.name}</span>{g.coverage === "limited" && <span className="br-lim" aria-label="Limited nonprofit data"><Icon name="warn" size={12} /></span>}</span>
           </Link>

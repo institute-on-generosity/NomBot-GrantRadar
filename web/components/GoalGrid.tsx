@@ -118,7 +118,7 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
       <div className="pp-head">
         {step2 && group.table
           ? <button type="button" className="pp-back" onClick={() => setTopic(null)}>‹ Back</button>
-          : <b className="pp-title">{group.sdg && <SdgIcon n={group.sdg.n} name={group.sdg.name} size={40} />}{title}</b>}
+          : <b className="pp-title">{group.sdg && <SdgIcon n={group.sdg.n} name={group.sdg.name} size={30} />}{title}</b>}
         {group.sdg && <NavLink href={group.sdg.href} className="pp-browse" label="Loading the cause…">Browse figures →</NavLink>}
         <button type="button" className="pp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
       </div>
@@ -154,7 +154,7 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
           <button key={g.label} ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
             aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
             onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
-            {g.sdg && <SdgIcon n={g.sdg.n} name={g.sdg.name} size={34} />}
+            {g.sdg && <SdgIcon n={g.sdg.n} name={g.sdg.name} size={30} />}
             <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
           </button>
         ))}

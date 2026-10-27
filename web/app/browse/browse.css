@@ -140,3 +140,10 @@ a.br-rank-row:hover { background: var(--fill); }
 @media (max-width: 1100px) { .br-goals:not(.br-env) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .br-goals:not(.br-env) { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
 .br-goal-name, .br-goal-label { white-space: normal; overflow: visible; text-overflow: clip; text-wrap: balance; line-height: 1.25; }
+.br-goals:not(.br-env) { gap: 16px; }
+.br-goal-tile, .br-goal-tile:hover { background: var(--card); }
+.br-goals:not(.br-env) .br-goal-tile { grid-template-columns: auto minmax(0, 1fr); padding: 12px 14px; column-gap: 12px; }
+.br-goal-tile:hover { box-shadow: 0 0 0 1px var(--fill-2), 0 2px 8px rgba(0,0,0,.06); }
+.br-goal-label { color: var(--ink); }
+@media (max-width: 640px) { .br-goals .sdg-frame { --sdg: 24px !important; } .br-goals:not(.br-env) { gap: 10px; } }
+@media (min-width: 641px) and (max-width: 900px) { .br-goals:not(.br-env) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
