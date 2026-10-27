@@ -53,26 +53,30 @@ export function ChatAnswer({ a }: { a: Answer }) {
           <InsightChart spec={a.chart.spec} label={`${a.chart.title}. ${a.headline}`} />
         </figure>
       )}
-      {/* Method notes (match basis, data years, number notes) folded under one quiet line */}
-      {!none && (a.basis || a.recency || a.numbers.length > 1 || a.bullets.length > 0) && (
-        <details className="more-info">
-          <summary>Details</summary>
-          {a.numbers.length > 1 && <p className="chat-nums more">{a.numbers.slice(1).map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {n.label}</span>)}</p>}
-          {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
-          {a.basis && <p className="chat-basis">{a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
-          {a.recency && <p className="chat-basis chat-recency">{a.recency.note}</p>}
-          {a.numbers.filter((n) => n.note).map((n) => <p key={n.label} className="chat-basis">{n.value} {n.label}: {n.note}</p>)}
-        </details>
-      )}
-      {none && a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
+      {/* Org lists and one org's health are the answer itself, so they stay open */}
       {a.orgs && !none && <AnswerOrgs orgs={a.orgs} />}
       {a.health && !none && <AnswerHealth h={a.health} />}
       {a.healthOrgs && !none && <AnswerHealthOrgs orgs={a.healthOrgs} />}
-      {a.who && !none && <AnswerWho who={a.who} />}
-      {a.missing.map((m) => (
-        <p key={m.what} className="chat-missing"><b>{none ? "Why we can't answer this:" : `Not included, ${m.what.toLowerCase()}:`}</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>
+      {none && a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
+      {none && a.missing.map((m) => (
+        <p key={m.what} className="chat-missing"><b>Why we can&apos;t answer this:</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>
       ))}
-      {!none && <AnswerSteps a={a} />}
+      {/* Everything else in one Details: other numbers, bullets, who received it, caveats (⚠), data years, method, steps */}
+      {!none && (
+        <details className="more-info chat-details">
+          <summary><span className="when-closed">Details</span><span className="when-open">Hide details</span></summary>
+          {a.numbers.length > 1 && <p className="chat-nums more">{a.numbers.slice(1).map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {n.label}</span>)}</p>}
+          {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
+          {a.who && <AnswerWho who={a.who} />}
+          {a.missing.map((m) => (
+            <p key={m.what} className="chat-missing chat-warn">⚠ <b>Not included, {m.what.toLowerCase()}:</b> {m.why} {m.url ? <>Try <a href={m.url} target="_blank" rel="noreferrer">{m.source}</a>.</> : null}</p>
+          ))}
+          {a.basis && <p className="chat-basis chat-warn">⚠ {a.basis === "codes" ? "Based on IRS category codes, not a checked label." : "Based on keyword matches, not a checked label."} Treat totals as approximate.</p>}
+          {a.recency && <p className="chat-basis chat-recency">{a.recency.note}</p>}
+          {a.numbers.filter((n) => n.note).map((n) => <p key={n.label} className="chat-basis">{n.value} {n.label}: {n.note}</p>)}
+          <AnswerSteps a={a} />
+        </details>
+      )}
       {!none && (
         <div className="chat-actions" role="toolbar" aria-label="Answer actions">
           <button type="button" className="chat-act" onClick={copy} title={copied ? "Copied" : "Copy answer"} aria-label="Copy answer">

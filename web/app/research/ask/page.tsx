@@ -81,7 +81,10 @@ async function Ask({ searchParams }: { searchParams: SP }) {
               <p>{t.text}</p>
               {i > 0 && t.kind === "answer" && t.standalone !== t.text && <small title="How NomBot read this follow-up">{t.standalone}</small>}
             </div>
-            {t.kind === "answer" && <ChatAnswer a={t.answer} />}
+            {/* Older answers fold to their headline; the latest stays open */}
+            {t.kind === "answer" && (i < turns.length - 1
+              ? <details className="chat-old"><summary>{t.answer.headline}</summary><ChatAnswer a={t.answer} /></details>
+              : <ChatAnswer a={t.answer} />)}
             {t.kind === "text" && <FollowUpText q={q} fs={fs} i={i - 1} />}
             {t.kind === "search" && (
               <div className="chat-answer">

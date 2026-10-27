@@ -44,6 +44,7 @@ export function InsightsFeed() {
   return (
     <section className="ins-feed" aria-label="Research">
       <AskedQuestions />
+      <h2 className="ins-h">Findings</h2>
       <div className="ins-bar">
         <div className="ins-chips" role="toolbar" aria-label="Sections">
           <button type="button" className={section === "all" ? "on" : undefined} aria-pressed={section === "all"} onClick={() => setSection("all")}>All{load.status === "ok" && <span>{total}</span>}</button>
@@ -76,11 +77,35 @@ export function InsightsFeed() {
         <p className="ins-empty">{load.ready ? "No verified findings yet. Check back soon." : "Research findings are being prepared. Check back soon."}</p>
       )}
       {load.status === "ok" && all.length > 0 && !shown.length && <p className="ins-empty">No findings match these filters.</p>}
-      {load.status === "ok" && shown.length > 0 && latest && <p className="ins-meta">{shown.length} {shown.length === 1 ? "finding" : "findings"} · updated {latest}</p>}
+      {load.status === "ok" && shown.length > 0 && latest && <p className="ins-meta">Updated {latest}</p>}
+      {/* One featured finding (full card), the rest as a compact list: the number, then one line (Oct 27) */}
       <div className="ins-list">
-        {shown.map((i, k) => <InsightCard key={i.slug} i={i} saved={saved.has(i.slug)} lead={k === 0 && section === "all" && !state} />)}
+        {shown.slice(0, 1).map((i) => <InsightCard key={i.slug} i={i} saved={saved.has(i.slug)} lead />)}
       </div>
-      {load.status === "ok" && all.length > 0 && <p className="note">Findings computed from public IRS filings and checked before they appear. Each card shows its method, SQL and sources.</p>}
+      {shown.length > 1 && (() => {
+        const row = (i: Insight) => {
+          const num = /\$?\d[\d,.]*\s?(?:%|[KMB]\b|billion|million|x\b)?/.exec(i.headline)?.[0];
+          return (
+            <li key={i.slug}>
+              <NavLink href={researchHref(i.slug)} className="ins-row" label="Opening the finding…" title={i.summary}>
+                <b>{num ?? ""}</b><span>{i.headline}</span>
+              </NavLink>
+            </li>
+          );
+        };
+        const rest = shown.slice(1);
+        return (
+          <>
+            <ol className="ins-compact">{rest.slice(0, 4).map(row)}</ol>
+            {rest.length > 4 && (
+              <details className="more-info ins-more-list">
+                <summary><span className="when-closed">Show {rest.length - 4} more findings</span><span className="when-open">Show fewer findings</span></summary>
+                <ol className="ins-compact">{rest.slice(4).map(row)}</ol>
+              </details>
+            )}
+          </>
+        );
+      })()}
     </section>
   );
 }

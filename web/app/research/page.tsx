@@ -1,16 +1,16 @@
-import Link from "next/link";
 import { InsightsFeed } from "@/components/InsightsFeed";
-import { SearchBox } from "@/components/SearchBox";
+import { ResearchAsk } from "@/components/ResearchAsk";
+import { PROMPT_SETS } from "@/lib/examples";
 
 export const metadata = { title: "Research · NomBot" };
 
 export default function ResearchPage() {
+  const research = PROMPT_SETS.find((x) => x.word === "research")!;
   return (
     <main className="ins-page">
-      <h1 className="pagetitle">Research</h1>
-      <p className="hint">Ask about foundation money and nonprofits, or <Link href="/browse" className="ins-browse">browse by cause</Link>.</p>
-      {/* The page's focal point and primary action: ask a research question (UX audit R1) */}
-      <div className="ins-ask"><SearchBox action="/research/ask" name="q" placeholder="e.g. How much foundation money goes to food banks in Ohio?" /></div>
+      <h1 className="pagetitle sr-only">Research</h1>
+      {/* Focal point: the ask box, then the goal grid with its question panel (components/GoalGrid) */}
+      <ResearchAsk groups={research.groups ?? []} placeholder={research.placeholder} />
       <InsightsFeed />
     </main>
   );

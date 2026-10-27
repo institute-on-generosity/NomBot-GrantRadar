@@ -78,7 +78,8 @@ export const RESEARCH_GROUPS: PromptGroup[] = [
     const table = tableOf(g);
     const asked = new Set(table.flatMap((r) => (r.q ? Object.values(r.q) : [])));
     const more = subs.flatMap((x) => x.prompts).filter((q) => !asked.has(q)).slice(0, 3);
-    return { label: `SDG ${g.n} ${g.name}`, prompts: [...table.flatMap((r) => (r.q ? Object.values(r.q) : [])), ...more], sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}` }, subs, table, more };
+    // prompts: every question the popover can ask (eval/browse checks each one routes to a covered cause)
+    return { label: `SDG ${g.n} ${g.name}`, prompts: [...new Set([...table.flatMap((r) => (r.q ? Object.values(r.q) : [])), ...subs.flatMap((x) => x.prompts)])], sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}` }, subs, table, more };
   }),
   ...CROSS,
 ];

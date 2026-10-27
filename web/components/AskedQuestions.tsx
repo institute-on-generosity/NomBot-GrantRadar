@@ -14,28 +14,17 @@ export function AskedQuestions() {
     fetch("/api/research/questions").then((r) => r.json()).then((j) => live && setData(j)).catch(() => live && setData({ recent: [], top: [] }));
     return () => { live = false; };
   }, []);
-  if (!data || (!data.recent.length && !data.top.length)) return null;
-  const top = data.top.filter((q) => q.asked_count > 1);
-  const list = (title: string, qs: Q[], count = false) => qs.length > 0 && (
-    <div className="aq-col">
-      <h3>{title}</h3>
-      <ul>
-        {qs.map((q) => (
-          <li key={q.question} title={q.headline}>
-            <NavLink href={href(q.question)} label="Opening the answer…">{q.question}</NavLink>
-            {count && <span>asked {q.asked_count} times</span>}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  if (!data || !data.recent.length) return null;
+  // Three recent questions as plain links, sentence case (Oct 27: no columns, no previews)
+  const nice = (q: string) => q.charAt(0).toUpperCase() + q.slice(1);
+  const seen = new Set<string>();
+  const recent = data.recent.filter((q) => { const k = q.question.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 3);
   return (
-    <section className="aq" aria-label="Asked questions">
-      <h2>Asked questions</h2>
-      <div className="aq-cols">
-        {list("Recent", data.recent)}
-        {list("Most asked", top, true)}
-      </div>
-    </section>
+    <details className="aq more-info" aria-label="Recent questions">
+      <summary><span className="when-closed">Recent questions ({recent.length})</span><span className="when-open">Hide recent questions</span></summary>
+      <ul>
+        {recent.map((q) => <li key={q.question} title={q.headline}><NavLink href={href(q.question)} label="Opening the answer…">{nice(q.question)}</NavLink></li>)}
+      </ul>
+    </details>
   );
 }

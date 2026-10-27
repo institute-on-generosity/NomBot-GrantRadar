@@ -1,132 +1,170 @@
 "use client";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { NavLink } from "./NavLink";
 import { Icon } from "./Icons";
 import type { PromptGroup } from "./HeroFlip";
 import { SDG_SHORT as SHORT } from "@/lib/sdg";
 
 // The research goal grid (home Research tab, /research): 17 goals as one-word tiles (SDG color as a dot, the full name
-// as the tooltip), then groups across causes. Picking a tile opens its prompts in a panel attached right under that
-// tile's row, with a notch pointing at it. The grid itself never moves; only the rows below shift down. Another tile
-// moves the panel to its row; the same tile, Esc or ✕ closes it (Oct 27, Hunter).
-// Inside: a table with the whole goal first, then each subcategory, and the same five columns on every row (How much,
-// Growing?, Top funders, Top states, Under-funded orgs); each cell asks the full question (its tooltip). Other curated
-// questions follow as full sentences. Groups across causes list their questions as full sentences. onPick: tell the page which group is open (the ask box placeholder).
-
-
-// The panel's columns, always in this order.
-const COLS = [["total", "How much"], ["trend", "Growing?"], ["top_funders", "Top funders"], ["by_state", "Top states"], ["underfunded", "Under-funded orgs"]] as const;
+// as the tooltip), then groups across causes. Picking a tile opens a popover anchored to it (Oct 27, Hunter): it floats
+// over the page, so nothing moves. Step 1 lists the goal's topics ("All of …" first); step 2 shows one topic's
+// questions as full sentences, each asking it on click, with "‹ Back". Groups across causes go straight to their
+// questions. Outside click, Esc or ✕ closes it and focus returns to the tile; Tab stays inside while it's open.
+// On phones it is a bottom sheet. onPick: tell the page which group is open (the ask box placeholder).
 
 const clean = (q: string) => q.replace(/\s\(SDG \d+\)/, "");
+type Topic = { label: string; prompts: string[] };
+
+// A goal's topics: the whole goal first, then each subcategory with data. Curated prompts for a topic come first,
+// then its Browse questions (how much, growing, top funders, top states, under-funded), 5 at most.
+function topicsOf(g: PromptGroup): Topic[] {
+  if (!g.table) return [{ label: g.label, prompts: g.prompts }];
+  const curated = new Map((g.subs ?? []).map((s) => [s.label, s.prompts]));
+  const used = new Set<string>();
+  const out = g.table.map((r) => {
+    const mine = curated.get(r.label) ?? [];
+    if (mine.length) used.add(r.label);
+    const asks = r.q ? [r.q.total, r.q.trend, r.q.top_funders, r.q.by_state, r.q.underfunded] : [];
+    return { label: r.label, prompts: [...new Set([...mine, ...asks])].slice(0, 5) };
+  });
+  // Curated prompts whose topic isn't a row (e.g. a goal-wide question) join the goal's own row
+  const extra = (g.subs ?? []).filter((s) => !used.has(s.label)).flatMap((s) => s.prompts);
+  if (extra.length && out[0]) out[0].prompts = [...new Set([...extra, ...out[0].prompts])].slice(0, 5);
+  return out.filter((t) => t.prompts.length);
+}
 
 export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (g: PromptGroup | null) => void }) {
   const [open, setOpen] = useState<string | null>(null);
-  const [cols, setCols] = useState<Record<string, number>>({ sdg: 6, cross: 4 });
-  const grids = useRef<Record<string, HTMLDivElement | null>>({});
+  const [topic, setTopic] = useState<string | null>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; notch: number; above: boolean } | null>(null);
   const tiles = useRef<Record<string, HTMLButtonElement | null>>({});
-  const panel = useRef<HTMLDivElement>(null);
-  const [notch, setNotch] = useState(0);
+  const wrap = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   const sdg = groups.filter((g) => g.sdg), cross = groups.filter((g) => !g.sdg);
-
-  // Columns per grid as laid out (6 or 3 for goals, 4 or 2 across causes), so the panel goes after the right tile.
-  useLayoutEffect(() => {
-    const measure = () => setCols(Object.fromEntries(Object.entries(grids.current).map(([k, el]) =>
-      [k, el ? getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length || 1 : 1])));
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+  // Phones: a bottom sheet, rendered on <body> so no ancestor's transform can trap position: fixed
+  const [sheet, setSheet] = useState(false);
+  useEffect(() => {
+    const m = matchMedia("(max-width: 640px)");
+    const on = () => setSheet(m.matches);
+    on(); m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
   }, []);
+  const group = groups.find((g) => g.label === open) ?? null;
+  const topics = group ? topicsOf(group) : [];
+  const step2 = group && (!group.table ? topics[0] : topics.find((t) => t.label === topic));
 
-  // Notch under the picked tile; focus into the panel; scroll just enough to show it.
+  // Place the popover under its tile (or above it when there's no room), inside the wrapper's width.
   useLayoutEffect(() => {
     if (!open) return;
-    const t = tiles.current[open], p = panel.current;
-    if (t && p) setNotch(t.offsetLeft + t.offsetWidth / 2 - p.offsetLeft);
-  }, [open, cols]);
+    const place = () => {
+      const t = tiles.current[open], w = wrap.current, p = pop.current;
+      if (!t || !w || !p) return;
+      if (matchMedia("(max-width: 640px)").matches) { setPos({ left: 0, top: 0, notch: 0, above: false }); return; }
+      const W = w.clientWidth, pw = Math.min(420, W), tl = t.offsetLeft + t.offsetWidth / 2;
+      const left = Math.max(0, Math.min(W - pw, tl - pw / 2));
+      const r = t.getBoundingClientRect(), below = window.innerHeight - r.bottom;
+      const above = below < p.offsetHeight + 24 && r.top > p.offsetHeight + 24;
+      setPos({ left, top: above ? t.offsetTop - p.offsetHeight - 10 : t.offsetTop + t.offsetHeight + 10, notch: tl - left, above });
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [open, topic]);
+
+  // Focus into the popover on open and on each step.
+  useEffect(() => {
+    if (open) pop.current?.querySelector<HTMLElement>(".pp-row, .pp-q, .pp-back, .pp-close")?.focus({ preventScroll: true });
+  }, [open, topic]);
+
+  // Outside click closes.
   useEffect(() => {
     if (!open) return;
-    const p = panel.current;
-    if (!p) return;
-    p.querySelector<HTMLElement>(".gp-chip, .gp-q, .gp-close")?.focus({ preventScroll: true });
-    const r = p.getBoundingClientRect(), over = r.bottom - window.innerHeight + 16;
-    if (over > 0) window.scrollBy({ top: Math.min(over, r.top - 80), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  }, [open]);
+    const away = (e: PointerEvent) => {
+      const n = e.target as Node;
+      if (pop.current?.contains(n) || tiles.current[open]?.contains(n) || (n as HTMLElement).classList?.contains("pp-scrim")) return;
+      close();
+    };
+    document.addEventListener("pointerdown", away, true);
+    return () => document.removeEventListener("pointerdown", away, true);
+  });
 
-  const close = () => {
+  function close() {
     const was = open;
-    setOpen(null); onPick?.(null);
+    setOpen(null); setTopic(null); setPos(null); onPick?.(null);
     if (was) requestAnimationFrame(() => tiles.current[was]?.focus());
-  };
+  }
   const pick = (g: PromptGroup) => {
     if (open === g.label) return close();
-    setOpen(g.label); onPick?.(g);
+    setOpen(g.label); setTopic(null); setPos(null); onPick?.(g);
+  };
+  // Esc closes; Tab cycles inside the popover.
+  const keys = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key !== "Tab" || !pop.current) return;
+    const f = [...pop.current.querySelectorAll<HTMLElement>("a, button")];
+    if (!f.length) return;
+    const i = f.indexOf(document.activeElement as HTMLElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
   };
 
-  const panelFor = (g: PromptGroup) => (
-    <div ref={panel} id="goal-panel" className="gp" role="region" aria-label={`${g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label} questions`}
-      style={{ "--notch": `${notch}px` } as React.CSSProperties} onKeyDown={(e) => { if (e.key === "Escape") close(); }}>
-      <div className="gp-head">
-        <b>{g.sdg ? `${g.sdg.n} · ${g.sdg.name}` : g.label}</b>
-        {g.sdg && <NavLink href={g.sdg.href} className="gp-browse" label="Loading the goal…">Browse figures →</NavLink>}
-        <button type="button" className="gp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
+  const title = group ? (group.sdg ? group.sdg.name : group.label) : "";
+  const popover = group && (
+    <div ref={pop} className={`pp${pos?.above ? " above" : ""}`} role="dialog" aria-modal="false" aria-label={title} onKeyDown={keys}
+      style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? "visible" : "hidden", "--notch": `${pos?.notch ?? 40}px` } as React.CSSProperties}>
+      <div className="pp-head">
+        {step2 && group.table
+          ? <button type="button" className="pp-back" onClick={() => setTopic(null)}>‹ Back</button>
+          : <b>{title}</b>}
+        {group.sdg && <NavLink href={group.sdg.href} className="pp-browse" label="Loading the goal…">Browse figures →</NavLink>}
+        <button type="button" className="pp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
       </div>
-      {g.table ? (
-        // One table: the whole goal, then each subcategory; a column per question, in the same order on every row.
-        <div className="gp-table" role="table" aria-label="Questions by subcategory">
-          <div className="gp-tr gp-th" role="row"><span role="columnheader" />{COLS.map(([, h]) => <span key={h} role="columnheader">{h}</span>)}</div>
-          {g.table.map((r) => (
-            <div key={r.label} className="gp-tr" role="row">
-              <span className="gp-name" role="rowheader">{r.label}</span>
-              {COLS.map(([k, h]) => (
-                <span key={k} role="cell" className="gp-td">
-                  {r.q ? (
-                    <NavLink href={`/?${new URLSearchParams({ question: r.q[k] })}`} className="gp-chip" title={r.q[k]} aria-label={`${h}: ${r.q[k]}`} label="Working out the answer…" search>
-                      <Icon name="arrowUpRight" size={14} /><span className="gp-chip-l">{h}</span>
-                    </NavLink>
-                  ) : <span className="gp-none" title="Not in our data yet">—</span>}
-                </span>
-              ))}
-            </div>
-          ))}
+      {!step2 ? (
+        <div key="topics" className="pp-step">
+          <p className="pp-sub">Pick a topic</p>
+          <ul className="pp-list">
+            {topics.map((t) => (
+              <li key={t.label}><button type="button" className="pp-row" onClick={() => setTopic(t.label)}><span>{t.label}</span><Icon name="chevronRight" size={15} /></button></li>
+            ))}
+          </ul>
         </div>
-      ) : null}
-      {(g.table ? g.more ?? [] : g.prompts).length > 0 && (
-        <div className="gp-more">
-          {g.table && <p className="gp-more-h">More questions</p>}
-          <ul>{(g.table ? g.more ?? [] : g.prompts).map((q) => <li key={q}><NavLink href={`/?${new URLSearchParams({ question: q })}`} className="gp-q" label="Working out the answer…" search>{clean(q)}</NavLink></li>)}</ul>
+      ) : (
+        <div key={step2.label} className="pp-step">
+          {group.table && <p className="pp-sub">{step2.label}</p>}
+          <ul className="pp-list">
+            {step2.prompts.map((q) => (
+              <li key={q}><NavLink href={`/?${new URLSearchParams({ question: q })}`} className="pp-q" label="Working out the answer…" search>
+                <span>{clean(q)}</span><Icon name="arrowUpRight" size={15} />
+              </NavLink></li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
 
-  const grid = (key: string, gs: PromptGroup[], title: React.ReactNode) => {
-    const n = cols[key] ?? 1;
-    const at = gs.findIndex((g) => g.label === open);
-    const after = at < 0 ? -1 : Math.min(gs.length - 1, Math.floor(at / n) * n + n - 1); // last tile of the picked row
-    return (
-      <div className="gg-wrap">
-        <p className="prompt-blocks-h">{title}</p>
-        <div ref={(el) => { grids.current[key] = el; }} className={`gg${key === "sdg" ? " sdg" : ""}`}>
-          {gs.map((g, i) => (
-            <Fragment key={g.label}>
-              <button ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
-                aria-pressed={open === g.label} aria-expanded={open === g.label} aria-controls={open === g.label ? "goal-panel" : undefined}
-                onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
-                {g.sdg && <i className="sdg-dot" style={{ background: g.sdg.color }} aria-hidden />}
-                <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
-              </button>
-              {i === after && panelFor(gs[at])}
-            </Fragment>
-          ))}
-        </div>
+  const grid = (key: string, gs: PromptGroup[], head: React.ReactNode) => (
+    <div className="gg-wrap">
+      <p className="prompt-blocks-h">{head}</p>
+      <div className={`gg${key === "sdg" ? " sdg" : ""}`}>
+        {gs.map((g) => (
+          <button key={g.label} ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
+            aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
+            onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
+            {g.sdg && <i className="sdg-dot" style={{ background: g.sdg.color }} aria-hidden />}
+            <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
+          </button>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
-    <div className="prompt-groups">
+    <div ref={wrap} className="prompt-groups gg-root">
       {sdg.length > 0 && grid("sdg", sdg, <>By goal <span className="prompt-help" tabIndex={0} title="The 17 UN Sustainable Development Goals: a shared list of causes (poverty, health, climate and more) that funders and researchers use to group their work." aria-label="About the goals"><Icon name="info" size={13} /></span></>)}
       {cross.length > 0 && grid("cross", cross, "Across causes")}
+      {sheet && group ? createPortal(<>{<div className="pp-scrim" onClick={close} aria-hidden />}{popover}</>, document.body) : popover}
     </div>
   );
 }
