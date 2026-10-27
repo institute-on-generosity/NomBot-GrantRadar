@@ -5,6 +5,7 @@ import { NavLink } from "./NavLink";
 import { Icon } from "./Icons";
 import type { PromptGroup } from "./HeroFlip";
 import { SDG_SHORT as SHORT } from "@/lib/sdg";
+import { SdgIcon, SdgNote } from "./SdgIcon";
 
 // The research goal grid (home Research tab, /research): 17 goals as one-word tiles (SDG color as a dot, the full name
 // as the tooltip), then groups across causes. Picking a tile opens a popover anchored to it (Oct 27, Hunter): it floats
@@ -39,7 +40,6 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
   const [topic, setTopic] = useState<string | null>(null);
   const [pos, setPos] = useState<{ left: number; top: number; notch: number; above: boolean } | null>(null);
   const tiles = useRef<Record<string, HTMLButtonElement | null>>({});
-  const wrap = useRef<HTMLDivElement>(null);
   const pop = useRef<HTMLDivElement>(null);
   const sdg = groups.filter((g) => g.sdg), cross = groups.filter((g) => !g.sdg);
   // Phones: a bottom sheet, rendered on <body> so no ancestor's transform can trap position: fixed
@@ -54,18 +54,20 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
   const topics = group ? topicsOf(group) : [];
   const step2 = group && (!group.table ? topics[0] : topics.find((t) => t.label === topic));
 
-  // Place the popover under its tile (or above it when there's no room), inside the wrapper's width.
+  // Place the popover under its tile, or above it when there's no room below, in page coordinates (it is rendered on
+  // <body>, above everything: --z-popover). It never covers its own tile and stays inside the viewport's width.
   useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
-      const t = tiles.current[open], w = wrap.current, p = pop.current;
-      if (!t || !w || !p) return;
+      const t = tiles.current[open], p = pop.current;
+      if (!t || !p) return;
       if (matchMedia("(max-width: 640px)").matches) { setPos({ left: 0, top: 0, notch: 0, above: false }); return; }
-      const W = w.clientWidth, pw = Math.min(420, W), tl = t.offsetLeft + t.offsetWidth / 2;
-      const left = Math.max(0, Math.min(W - pw, tl - pw / 2));
-      const r = t.getBoundingClientRect(), below = window.innerHeight - r.bottom;
-      const above = below < p.offsetHeight + 24 && r.top > p.offsetHeight + 24;
-      setPos({ left, top: above ? t.offsetTop - p.offsetHeight - 10 : t.offsetTop + t.offsetHeight + 10, notch: tl - left, above });
+      const r = t.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+      const pw = Math.min(420, vw - 16), center = r.left + r.width / 2;
+      const left = Math.max(8, Math.min(vw - pw - 8, center - pw / 2));
+      const h = p.offsetHeight, below = window.innerHeight - r.bottom;
+      const above = below < h + 24 && r.top > h + 24;
+      setPos({ left: left + window.scrollX, top: (above ? r.top - h - 10 : r.bottom + 10) + window.scrollY, notch: center - left, above });
     };
     place();
     window.addEventListener("resize", place);
@@ -116,8 +118,8 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
       <div className="pp-head">
         {step2 && group.table
           ? <button type="button" className="pp-back" onClick={() => setTopic(null)}>‹ Back</button>
-          : <b>{title}</b>}
-        {group.sdg && <NavLink href={group.sdg.href} className="pp-browse" label="Loading the goal…">Browse figures →</NavLink>}
+          : <b className="pp-title">{group.sdg && <SdgIcon n={group.sdg.n} name={group.sdg.name} size={40} />}{title}</b>}
+        {group.sdg && <NavLink href={group.sdg.href} className="pp-browse" label="Loading the cause…">Browse figures →</NavLink>}
         <button type="button" className="pp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
       </div>
       {!step2 ? (
@@ -152,7 +154,7 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
           <button key={g.label} ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
             aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
             onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
-            {g.sdg && <i className="sdg-dot" style={{ background: g.sdg.color }} aria-hidden />}
+            {g.sdg && <SdgIcon n={g.sdg.n} name={g.sdg.name} size={34} />}
             <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
           </button>
         ))}
@@ -161,10 +163,11 @@ export function GoalGrid({ groups, onPick }: { groups: PromptGroup[]; onPick?: (
   );
 
   return (
-    <div ref={wrap} className="prompt-groups gg-root">
-      {sdg.length > 0 && grid("sdg", sdg, <>By goal <span className="prompt-help" tabIndex={0} title="The 17 UN Sustainable Development Goals: a shared list of causes (poverty, health, climate and more) that funders and researchers use to group their work." aria-label="About the goals"><Icon name="info" size={13} /></span></>)}
+    <div className="prompt-groups gg-root">
+      {sdg.length > 0 && grid("sdg", sdg, <>By cause <a className="prompt-help" href="https://sdgs.un.org/goals" target="_blank" rel="noreferrer" title="Causes follow the 17 UN Sustainable Development Goals" aria-label="About the 17 UN Sustainable Development Goals"><Icon name="info" size={13} /></a></>)}
       {cross.length > 0 && grid("cross", cross, "Across causes")}
-      {sheet && group ? createPortal(<>{<div className="pp-scrim" onClick={close} aria-hidden />}{popover}</>, document.body) : popover}
+      {sdg.length > 0 && <SdgNote />}
+      {group && typeof document !== "undefined" && createPortal(<>{sheet && <div className="pp-scrim" onClick={close} aria-hidden />}{popover}</>, document.body)}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Below, Focal, SubList } from "@/components/BrowseFigures";
 import { Icon } from "@/components/Icons";
+import { SdgIcon, SdgNote } from "@/components/SdgIcon";
 import { ENVIRONMENT, findSub, SDGS, sdgSlug, type Sdg, type Sub } from "@/lib/sdg";
 import "../browse.css";
 
@@ -36,8 +37,8 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
     <main className="br-page">
       <Link href="/browse" className="back">← All causes</Link>
       <h1 className="pagetitle br-title" title={s ? `${s.plain}. UN: “${s.goal}.”` : ENVIRONMENT.plain}>
-        <i className={`sdg-dot big${s ? "" : " env"}`} style={s ? { background: s.color } : undefined} aria-hidden />
-        {s ? `${s.n} · ${g.title}` : g.title}
+        {s ? <SdgIcon n={s.n} name={s.name} size={56} /> : <i className="sdg-dot big env" aria-hidden />}
+        {g.title}
         {s?.limited && <span className="br-lim" title={`Limited nonprofit data. ${s.limited}`} aria-label="Limited nonprofit data" tabIndex={0}><Icon name="warn" size={18} /></span>}
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={g.scope.id} /></Suspense>
@@ -48,6 +49,7 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
           <p className="br-see">Also: {see.map((f, i) => <span key={f!.sub.id}>{i > 0 && ", "}<Link href={`/browse/${f!.sdg ? sdgSlug(f!.sdg.n) : ENVIRONMENT.id}${f!.isScope ? "" : `/${f!.sub.id}`}`}>{f!.sub.name}</Link></span>)}</p>
         )}
       </section>
+      {s && <SdgNote />}
       <section className="br-sec">
         <Suspense fallback={null}><Below id={g.scope.id} searchName={g.scope.name.toLowerCase()} /></Suspense>
       </section>

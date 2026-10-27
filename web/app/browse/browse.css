@@ -123,3 +123,15 @@ a.br-rank-row:hover { background: var(--fill); }
 .br-ask-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; background: var(--g-fill); color: #fff; font-size: var(--t-small); font-weight: 600; text-decoration: none; }
 .br-ask-btn.ghost { background: none; color: var(--g-dark); box-shadow: inset 0 0 0 1px var(--g-line); }
 .br-meta { margin-top: var(--s-5); }
+.br-goal-tile { background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+.br-goal-tile:hover { background: var(--card); box-shadow: 0 0 0 1px var(--g-line); }
+.br-goal-name { gap: 10px; }
+.br-goal-label { overflow: hidden; text-overflow: ellipsis; }
+.br-env { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 8px; }
+.br-title .sdg-icon { margin-right: 4px; }
+.br-goals:not(.br-env) .br-goal-tile { grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "icon num" "name name"; align-items: center; column-gap: 10px; row-gap: 6px; }
+.br-goals:not(.br-env) .br-goal-tile .sdg-icon { grid-area: icon; }
+.br-goals:not(.br-env) .br-goal-tile .br-num { grid-area: num; font-size: 17px; }
+.br-goals:not(.br-env) .br-goal-tile .br-goal-name { grid-area: name; }
+@media (max-width: 900px) { .br-env { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .br-goals, .br-env { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
