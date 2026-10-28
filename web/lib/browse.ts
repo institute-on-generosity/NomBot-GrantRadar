@@ -11,7 +11,7 @@ import { DEFAULT_SPEC, normalizeSpec, type Metric, type Spec } from "./answerSpe
 import { askHref } from "./researchQuestions";
 import { causeOf, causeQuestions, covered, coverageOf, plainCauseText, ENVIRONMENT, findSub, type Coverage, type Sdg, type Sub } from "./sdg";
 
-export const BROWSE_VERSION = "browse:v1";
+export const BROWSE_VERSION = "browse:v2"; // v2: funder EINs (links and hover cards)
 const KEY = `${BROWSE_VERSION}|${ANSWER_VERSION}`;
 const TTL = 24 * 3600_000;
 const FILE = join(process.cwd(), ".next", "cache", "nombot-browse.json");
@@ -26,7 +26,7 @@ export type Figures = {
   parts: Record<Shown, Part | null>;
   years: { year: number; usd: number }[];        // total: each year's dollars (primary for tiered labels)
   usdYear: number;                                // a year, 2022-24 (the total answer's own "a year" figure, unrounded)
-  funders: { name: string; state: string; usd: number }[];
+  funders: { name: string; state: string; usd: number; ein: string | null }[];
   states: { state: string; name: string; usd: number }[];
   filed: number;                                  // orgs that e-file a 990 (count_orgs)
   perOrg: number | null;                          // usdYear / filed
@@ -49,6 +49,19 @@ export function entry(id: string): Entry | null {
   return { ...f, name: c?.name ?? f.sub.name, coverage: coverageOf(f.sub), spec: c ? normalizeSpec({ ...DEFAULT_SPEC, causes: [c] }) : null };
 }
 export const specFor = (e: Entry, metric: Metric): Spec => normalizeSpec({ ...e.spec!, metric });
+
+// The organizations a subcategory's money goes to (round-2 audit V4): its top 10 recipients by foundation dollars, the
+// research answer "Who gets the most foundation money for X?" (same spec, cached by the answer engine).
+export type TopOrg = { ein: string; name: string; state: string; usd: number; partial: boolean };
+export async function topOrgs(id: string): Promise<{ orgs: TopOrg[]; ask: string } | null> {
+  const e = entry(id);
+  if (!e?.spec) return null;
+  const ask = causeQuestions(plainCauseText(e.name)).top_recipients;
+  const a = await answer(ask, specFor(e, "top_recipients"));
+  if (a.status === "unanswerable") return null;
+  const orgs = (a.rows ?? []).filter((r) => r.ein).slice(0, 10).map((r) => ({ ein: String(r.ein), name: String(r.name), state: String(r.state ?? ""), usd: Number(r.usd) || 0, partial: r.tier === "partial" }));
+  return orgs.length ? { orgs, ask } : null;
+}
 
 // ------------------------------------------------------------------ cache
 type Disk = { key: string; figures: Record<string, Figures> };
@@ -116,7 +129,7 @@ async function compute(id: string, e: Entry): Promise<Figures> {
     id, spec: e.spec!, at: Date.now(), ms: Date.now() - t0,
     status: tot && tot.status !== "unanswerable" ? "ok" : "unanswerable",
     parts, years, usdYear,
-    funders: tf.slice(0, 5).map((r) => ({ name: String(r.funder), state: String(r.state ?? ""), usd: num(r.primary_usd ?? r.usd) })),
+    funders: tf.slice(0, 5).map((r) => ({ name: String(r.funder), state: String(r.state ?? ""), usd: num(r.primary_usd ?? r.usd), ein: r.funder_ein ? String(r.funder_ein) : null })),
     states: st.filter((r) => num(r.value) > 0).slice(0, 5).map((r) => ({ state: String(r.state), name: String(r.name), usd: num(r.value) })),
     filed, perOrg: filed > 0 && usdYear > 0 ? usdYear / filed : null,
     basis: e.coverage === "label" ? "label" : e.coverage === "keywords" ? "keywords" : "codes",

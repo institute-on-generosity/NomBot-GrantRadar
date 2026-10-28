@@ -6,12 +6,28 @@ import type { View } from "vega";
 // when the first chart scrolls near the screen, so the home page stays fast. Redraws on a light/dark switch and in light colors for print.
 
 // Categorical hues in fixed order (validated set: dataviz reference palette), stepped per mode.
+// One calm palette for every chart (round-2 audit V10): brand green for the first or focus series, warm neutrals next,
+// a light green and a sand tone only when a chart has more series. Sequential charts ramp in the same green; diverging
+// charts run muted brick, neutral, green (the app's --bad and --g).
+export const CHART = { focus: "#248a3d", rest: "#b4b4b0", bad: "#b5533f" };
 const CATEGORY = {
-  light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"],
-  dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"],
+  light: ["#248a3d", "#8a8a84", "#9ccaa8", "#4f4f4b", "#c8b98f", "#c4c4bf", "#1b5e2e", "#e0ddd3"],
+  dark: ["#3fbf63", "#a3a39e", "#2f6e44", "#dadad4", "#b8a878", "#6f6f6a", "#8fd3a4", "#4a4a46"],
 };
-const RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]; // one hue, light → dark
-const DIVERGING = { light: ["#e34948", "#f0efec", "#2a78d6"], dark: ["#e66767", "#383835", "#3987e5"] };
+const RAMP = ["#e3f1e6", "#c2e1c9", "#97cba3", "#69b17c", "#3f945a", "#2a7442", "#1b542f"]; // one hue (brand green), light → dark
+const DIVERGING = { light: ["#b5533f", "#f0efec", "#248a3d"], dark: ["#d07a66", "#383835", "#3fbf63"] };
+
+// Specs stored with the findings (generosity-data) carry Vega's default blue and orange: map them onto the one palette.
+// A chart with an orange highlight keeps it as the focus (green) and its blue bars become neutral; otherwise blue is green.
+const TABLEAU: Record<string, string> = { "#f58518": "#8a8a84", "#e45756": CHART.bad, "#72b7b2": "#9ccaa8", "#54a24b": CHART.focus, "#eeca3b": "#c8b98f", "#b279a2": "#4f4f4b", "#ff9da6": "#c4c4bf", "#9d755d": "#8a8a84", "#bab0ac": "#c4c4bf", "#30a14e": CHART.focus, "#2563eb": CHART.focus, "#7c3aed": "#4f4f4b", "#dc2626": CHART.bad };
+export function onePalette<T>(spec: T, dark: boolean): T {
+  let t = JSON.stringify(spec);
+  const focus = dark ? "#3fbf63" : CHART.focus;
+  const hasHighlight = /#d97706/i.test(t);
+  t = t.replace(/#d97706/gi, focus).replace(/#4c78a8/gi, hasHighlight ? (dark ? "#6f6f6a" : CHART.rest) : focus);
+  t = t.replace(/#[0-9a-f]{6}/gi, (c) => (TABLEAU[c.toLowerCase()] === CHART.focus ? focus : TABLEAU[c.toLowerCase()] ?? c));
+  return JSON.parse(t) as T;
+}
 
 export type Ink = { ink: string; mute: string; line: string; accent: string; font: string };
 // Light colors for exports that ignore the app theme (the "Export slide" slide).
@@ -107,7 +123,7 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
     vegaEmbed().then(async ({ default: embed }) => {
       if (gone) return;
       // Our vega-lite reads v5 specs; drop the $schema so it doesn't warn about the version.
-      const { $schema: _s, ...rest } = spec; // eslint-disable-line @typescript-eslint/no-unused-vars
+      const { $schema: _s, ...rest } = onePalette(spec, dark); // eslint-disable-line @typescript-eslint/no-unused-vars
       if (tall && typeof rest.height === "number") rest.height = Math.round(rest.height * 1.4);
       // vega-tooltip reuses one tooltip element and only swaps its own theme class, so a dark class
       // left from before a dark to light switch would stick. Clear both before redrawing.

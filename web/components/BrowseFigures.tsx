@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { orgName } from "@/components/text";
-import { askLink, cachedFigures, asks, entry, figures, perOrgHint, type Part } from "@/lib/browse";
+import { askLink, cachedFigures, asks, entry, figures, perOrgHint, topOrgs, type Part } from "@/lib/browse";
 
 const val = (p: Part | null, i = 0) => (p && p.status !== "unanswerable" ? p.numbers[i] ?? null : null);
 
@@ -71,7 +71,7 @@ export async function Below({ id, searchName }: { id: string; searchName: string
   return (
     <>
       <div className="br-two">
-        <section><h3>Top funders</h3>{f.funders.length ? <ol className="br-list">{f.funders.slice(0, 5).map((x) => <li key={x.name}><span title={x.state ?? undefined}>{orgName(x.name)}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
+        <section><h3>Top funders</h3>{f.funders.length ? <ol className="br-list">{f.funders.slice(0, 5).map((x) => <li key={x.name}>{x.ein ? <NavLink href={`/org/${x.ein}`} label="Opening the foundation…">{orgName(x.name)}</NavLink> : <span title={x.state ?? undefined}>{orgName(x.name)}</span>}<b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
         <section><h3>Top states</h3>{f.states.length ? <ol className="br-list">{f.states.slice(0, 5).map((x) => <li key={x.state}><span>{x.name}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
       </div>
       {hint && f.perOrg != null && (
@@ -90,5 +90,29 @@ export async function Below({ id, searchName }: { id: string; searchName: string
         <p className="muted">Every figure is the research answer for this cause, refreshed daily. Click one to see it asked.</p>
       </details>
     </>
+  );
+}
+
+// A subcategory's organizations (round-2 audit V4): the top 10 recipients of its foundation money, each name a link with
+// the site-wide hover card, and the full ranking one click away as a research answer.
+export async function TopOrgs({ id }: { id: string }) {
+  await connection();
+  const t = await topOrgs(id).catch(() => null);
+  if (!t) return null;
+  const max = Math.max(...t.orgs.map((o) => o.usd), 1);
+  return (
+    <section className="br-orgs">
+      <h3>Organizations it funds most</h3>
+      <ol className="br-rank">
+        {t.orgs.map((o) => (
+          <li key={o.ein} className="br-rank-row">
+            <NavLink href={`/org/${o.ein}`} label="Opening the organization…" className="br-rank-n">{orgName(o.name, 200)}{o.partial && <small title="One of its programs, not its main purpose"> · partly</small>}</NavLink>
+            <span className="br-rank-bar"><i style={{ width: `${(100 * o.usd) / max}%` }} /></span>
+            <b>{money(o.usd)}</b>
+          </li>
+        ))}
+      </ol>
+      <NavLink href={askLink(t.ask)} className="br-more" label="Working out the answer…">Full ranking →</NavLink>
+    </section>
   );
 }

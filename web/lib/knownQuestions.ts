@@ -6,7 +6,7 @@ import { causeOf, causeQuestions, covered, displayCause, ENVIRONMENT, findSub, t
 import { BY_SDG } from "./examples";
 
 const norm = (q: string) => q.toLowerCase().replace(/[?.!]+$/, "").replace(/\s+/g, " ").trim();
-export const KNOWN_METRICS = ["total", "trend", "top_funders", "by_state", "concentration", "count_orgs", "underfunded"] as const;
+export const KNOWN_METRICS = ["total", "trend", "top_funders", "top_recipients", "by_state", "concentration", "count_orgs", "underfunded"] as const;
 
 const specOf = (sub: Sub, sdg: Sdg | null, metric: Metric): Spec | null => {
   const c = causeOf(sub, sdg);

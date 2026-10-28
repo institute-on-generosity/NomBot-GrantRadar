@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Below, Focal } from "@/components/BrowseFigures";
+import { Below, Focal, TopOrgs } from "@/components/BrowseFigures";
 import { CauseIcon } from "@/components/CauseIcon";
 import { covered, ENVIRONMENT, findSub, sdgSlug } from "@/lib/sdg";
 import "../../browse.css";
@@ -34,6 +34,7 @@ export default async function SubPage(props: PageProps<"/browse/[goal]/[sub]">) 
         <CauseIcon n={s.n} color={s.color} size={48} />{sub.name}
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={sub.id} chart /></Suspense>
+      <Suspense fallback={<p className="hint">Loading organizations…</p>}><TopOrgs id={sub.id} /></Suspense>
       <section className="br-sec">
         <Suspense fallback={null}><Below id={sub.id} searchName={sub.name.toLowerCase()} /></Suspense>
       </section>

@@ -13,7 +13,7 @@ a.br-card:hover { background: var(--fill-2); }
 .br-card p { font-size: var(--t-meta); color: var(--mute); line-height: 1.4; }
 .sdg-n.env { background: var(--g-fill); color: #fff; }
 .sdg-n.big { width: 52px; height: 52px; border-radius: 12px; font-size: 24px; }
-.br-tag { align-self: flex-start; font-size: 11px; font-weight: 500; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 8px; }
+.br-tag { align-self: flex-start; font-size: 12px; font-weight: 500; color: var(--g-dark); background: var(--g-tint); border-radius: 999px; padding: 2px 8px; }
 .br-tag.limited { color: #9a6700; background: rgba(191,135,0,.12); }
 .br-tag.none { color: var(--mute); background: var(--fill-2); }
 .br-mini { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--mute); margin-top: 2px; }
@@ -47,7 +47,7 @@ a.br-card:hover { background: var(--fill-2); }
 .br-tile.skel { animation: pulse 1.2s ease-in-out infinite alternate; }
 @keyframes pulse { from { opacity: .55; } to { opacity: 1; } }
 .br-years { display: flex; align-items: flex-end; gap: 10px; }
-.br-years > div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--mute); }
+.br-years > div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--mute); }
 .br-years b { color: var(--ink); font-weight: 500; }
 .br-bar { width: 44px; border-radius: 6px 6px 2px 2px; background: var(--g-fill); opacity: .8; }
 .br-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -73,7 +73,7 @@ a.br-card:hover { background: var(--fill-2); }
   .br-bar { width: 32px; }
   .sdg-n.big { width: 44px; height: 44px; font-size: 20px; }
 }
-.br-limited-ico { align-self: flex-start; font-size: 11.5px; color: var(--warn); }
+.br-limited-ico { align-self: flex-start; font-size: 12px; color: var(--warn); }
 
 /* Browse redesign (Oct 27): goal grid as the page, one focal number per goal and subcategory, ranked lists */
 .br-goals { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: var(--s-5); }
@@ -101,7 +101,7 @@ a.br-card:hover { background: var(--fill-2); }
 .br-bars { grid-column: 1 / -1; display: flex; align-items: flex-end; gap: 6px; height: 96px; margin-top: var(--s-4); }
 .br-bars span { display: grid; justify-items: center; gap: 4px; flex: 1; max-width: 40px; }
 .br-bars i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: var(--g); opacity: .85; }
-.br-bars small { font-size: 11px; color: var(--faint); }
+.br-bars small { font-size: 12px; color: var(--faint); }
 .br-sec h2 { font-size: var(--t-card-lg); }
 .br-rank { list-style: none; margin: 0; padding: 0; display: grid; }
 .br-rank-row { display: grid; grid-template-columns: minmax(0, 14em) minmax(0, 1fr) auto; align-items: center; gap: var(--s-3); min-height: 44px; padding: 0 4px; color: var(--ink); text-decoration: none; border-radius: 8px; }
@@ -147,3 +147,14 @@ a.br-rank-row:hover { background: var(--fill); }
 .br-goal-label { color: var(--ink); }
 @media (max-width: 640px) { .br-goals .sdg-frame { --sdg: 24px !important; } .br-goals:not(.br-env) { gap: 10px; } }
 @media (min-width: 641px) and (max-width: 900px) { .br-goals:not(.br-env) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Subcategory: the organizations it funds most (round-2 audit V4) */
+.br-orgs { margin: var(--s-6) 0 0; }
+.br-orgs h3 { margin: 0 0 var(--s-2); font-size: var(--t-small); font-weight: 600; color: var(--mute); }
+.br-orgs .br-rank-n { color: var(--ink); text-decoration: none; padding: 6px 0; white-space: normal; overflow: visible; }
+.br-orgs .br-rank-row { grid-template-columns: minmax(0, 22em) minmax(0, 1fr) auto; }
+.br-orgs .br-rank-n:hover { color: var(--g); text-decoration: underline; }
+.br-orgs .br-rank-n small { color: var(--faint); }
+.br-more { display: inline-block; margin-top: var(--s-2); font-size: var(--t-small); color: var(--g); text-decoration: none; }
+.br-list a { color: inherit; text-decoration: none; }
+.br-list a:hover { color: var(--g); text-decoration: underline; }
+@media (max-width: 640px) { .br-orgs .br-rank-row { grid-template-columns: minmax(0, 1fr) auto; } .br-orgs .br-rank-bar { display: none; } }

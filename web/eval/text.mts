@@ -15,5 +15,7 @@ eq(readable("the los angeles dodgers foundation (ladf) is the official team char
 eq(readable("TO ASSIST THIRTEEN AND FOURTEEN YEAR OLDS IN CALIFORNIA. WE SERVE K-12 YOUTH"), "To assist thirteen and fourteen year olds in California. We serve K-12 youth");
 eq(readable("We help everyone.In 2025 we grew"), "We help everyone. In 2025 we grew");
 eq(readable("Mixed Case stays As Filed"), "Mixed Case stays As Filed");
+eq(orgTitle("GIRLS INC"), "Girls Inc");
+eq(orgTitle("WALTON FAMILY FOUNDATION INC"), "Walton Family Foundation");
 console.log(fails ? `${fails} failed` : "all passed");
 process.exit(fails ? 1 : 0);

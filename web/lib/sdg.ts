@@ -324,6 +324,7 @@ export function causeQuestions(name: string) {
     total: `How much foundation money goes to ${name}?`,
     trend: `Is foundation money for ${name} growing?`,
     top_funders: `Who are the biggest foundation funders of ${name}?`,
+    top_recipients: `Who gets the most foundation money for ${name}?`,
     by_state: `Which states get the most foundation money for ${name}?`,
     concentration: `How concentrated is foundation money for ${name}?`,
     count_orgs: `How many nonprofits work on ${name}?`,

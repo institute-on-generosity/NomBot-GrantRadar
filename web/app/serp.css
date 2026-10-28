@@ -4,17 +4,17 @@
    Whitespace over borders: no row dividers, thin lines only between list rows inside a card. */
 
 /* ---------- Results column (components/ResultRow) ---------- */
-.serp-main .bar { font-size: 12.5px; color: var(--mute); margin: 0 0 6px; }
+.serp-main .bar { font-size: 13px; color: var(--mute); margin: 0 0 6px; }
 .serp-main .notice { font-size: 14px; }
 .serp-main .row { display: block; padding: 12px 0 6px; margin: 0; border-radius: 0; background: none; }
 .serp-main .row + .row::before { display: none; }
 .serp-main .row:hover { background: none; }
 .serp-main .row.focused { margin: 0 -12px; padding: 12px 12px 6px; border-radius: 12px; background: var(--g-tint); }
 .serp-main .name-line { gap: 10px; align-items: baseline; }
-.serp-main .name { font-size: 19px; font-weight: 400; line-height: 1.3; letter-spacing: -.01em; color: var(--g); text-decoration: none; }
+.serp-main .name { font-size: 20px; font-weight: 400; line-height: 1.3; letter-spacing: -.01em; color: var(--g); text-decoration: none; }
 .serp-main .name:hover { color: var(--g); text-decoration: underline; text-underline-offset: 2px; }
-.serp-main .lastviewed { font-size: 12.5px; font-weight: 400; color: var(--g-dark); background: none; padding: 0; }
-.serp-main .row .sub { font-size: 12.5px; line-height: 1.45; color: var(--mute); margin-top: 3px; }
+.serp-main .lastviewed { font-size: 13px; font-weight: 400; color: var(--g-dark); background: none; padding: 0; }
+.serp-main .row .sub { font-size: 13px; line-height: 1.45; color: var(--mute); margin-top: 3px; }
 .serp-main .preview-line { margin-top: 4px; max-width: 68ch; font-size: 14px; line-height: 1.5; color: var(--ink-2); white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .serp-main .preview-line mark { background: none; color: var(--g-dark); font-weight: 400; padding: 0; }
 
@@ -25,31 +25,31 @@
 .serp-main .sub .fin.down::before, .serp-main .sub .fin.bad::before { background: var(--bad); }
 .serp-main .sub .fin.watch::before { background: #f5a524; }
 .serp-main .sub .fin:focus-visible { outline: 2px solid var(--g-line); outline-offset: 2px; border-radius: 4px; }
-.serp-main .fin-tip { font-size: 12.5px; }
+.serp-main .fin-tip { font-size: 13px; }
 
 /* Quiet tools: Save, Compare, Why this result, sources. Shown on hover or focus; a saved or picked
    control stays visible; always shown on touch screens. */
-.row-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; min-height: 22px; margin-top: 2px; font-size: 12.5px; color: var(--mute); }
+.row-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; min-height: 22px; margin-top: 2px; font-size: 13px; color: var(--mute); }
 /* Always visible (UX audit S5): muted until hover, with a taller hit area */
 .row-tools > * { opacity: .85; transition: opacity .15s; }
 .row:hover .row-tools > *, .row:focus-within .row-tools > * { opacity: 1; }
-.row-tools button { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12.5px; font-weight: 400; line-height: 20px; color: var(--mute); background: none; border: 0; box-shadow: none; padding: 6px 0; border-radius: 4px; cursor: pointer; }
+.row-tools button { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 13px; font-weight: 400; line-height: 20px; color: var(--mute); background: none; border: 0; box-shadow: none; padding: 6px 0; border-radius: 4px; cursor: pointer; }
 .row-tools button:hover:not(:disabled) { color: var(--g); background: none; transform: none; }
 .row-tools button[aria-pressed="true"] { color: var(--g); background: none; box-shadow: none; }
 .row-tools .star { animation: none; }
-.row-tools .star span { font-size: 12.5px; font-weight: 400; margin-left: 0; }
-.row-tools .src { margin: 0; font-size: 12.5px; color: var(--faint); }
+.row-tools .star span { font-size: 13px; font-weight: 400; margin-left: 0; }
+.row-tools .src { margin: 0; font-size: 13px; color: var(--faint); }
 .row-tools .src a { color: var(--mute); text-decoration: none; }
 .row-tools .src a:hover { color: var(--g); text-decoration: underline; }
 /* "Why this result": the relevance score and Claude's reason, on hover or keyboard focus */
 .why-btn { position: relative; cursor: help !important; }
 .why-btn .tip { display: none; top: calc(100% + 6px); left: 0; right: auto; width: 280px; max-width: calc(100vw - 48px); font-size: 14px; color: var(--ink); cursor: default; }
-.why-btn .tip-f { font-size: 12.5px; }
+.why-btn .tip-f { font-size: 13px; }
 .why-btn:hover .tip, .why-btn:focus-visible .tip { display: flex; opacity: 1; visibility: visible; transform: none; transition-delay: .12s, .12s, 0s; }
 .row:has(.why-btn:hover, .why-btn:focus-visible) { z-index: 20; }
 
 .serp-main .weaker summary { font-size: 14px; font-weight: 400; }
-.serp-main .weaker summary span { font-size: 12.5px; }
+.serp-main .weaker summary span { font-size: 13px; }
 .serp-main .more { font-size: 14px; font-weight: 400; }
 
 /* ---------- Analysis panel as a knowledge panel (LandscapeTabs, OverviewVisual, TrackRecord) ---------- */
@@ -64,21 +64,21 @@
 .kp-tabs button.on { color: var(--ink); }
 .kp-tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--g); }
 .kp-tabs button:focus-visible { outline-offset: -2px; }
-@media (min-width: 901px) and (max-width: 1300px), (max-width: 480px) { .kp-tabs { gap: 10px; } .kp-tabs button { font-size: 12.5px; } }
+@media (min-width: 901px) and (max-width: 1300px), (max-width: 480px) { .kp-tabs { gap: 10px; } .kp-tabs button { font-size: 13px; } }
 
 .more-btn { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 4px; border: 0; border-radius: 50%; background: none; color: var(--mute); cursor: pointer; transition: background-color .15s, color .15s; }
 .more-btn:hover, .more-btn.on { background: var(--fill); color: var(--ink); }
 .kp-head .slide-x { flex: none; }
 .kp-head .slide-menu { min-width: 280px; }
 .kp-head .slide-menu button { font-size: 14px; }
-.kp-head .slide-menu button small { font-size: 12.5px; }
+.kp-head .slide-menu button small { font-size: 13px; }
 .kp-head .slide-menu button > svg { color: var(--mute); }
 
 .kp-stack { display: grid; gap: 12px; }
 .kp-stack[hidden] { display: none; }
 .kp-card { min-width: 0; padding: 14px 16px; border-radius: 16px; background: var(--fill); }
-.landscape .kp-h { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 8px; padding: 0; font-size: 12.5px; font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--mute); white-space: normal; animation: none; }
-.landscape .kp-h > span { margin-left: 2px; font-size: 12.5px; font-weight: 400; color: var(--faint); }
+.landscape .kp-h { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--mute); white-space: normal; animation: none; }
+.landscape .kp-h > span { margin-left: 2px; font-size: 13px; font-weight: 400; color: var(--faint); }
 .landscape .kp-h > span.kp-val { color: var(--ink-2); }
 .landscape .kp-h > svg:first-child { flex: none; margin: 0; color: var(--g); translate: 0 0; }
 
@@ -91,7 +91,7 @@
 .kp-card .overview { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; animation: none; }
 .kp-card .overview .buddy-answer { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
 .kp-card .overview .buddy-answer ul { padding-left: 18px; display: grid; gap: 6px; }
-.kp-card .overview-foot { margin-top: 10px; font-size: 12.5px; color: var(--faint); }
+.kp-card .overview-foot { margin-top: 10px; font-size: 13px; color: var(--faint); }
 .kp-card .ov-wait { font-size: 14px; }
 .kp-more { display: block; margin-top: 6px; padding: 0; font: inherit; font-size: 14px; color: var(--g); background: none; border: 0; cursor: pointer; }
 .kp-more:hover { text-decoration: underline; }
@@ -101,9 +101,9 @@
 .kp-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 8px 0; border-top: 1px solid var(--line); }
 .kp-facts > div:first-child { padding-top: 0; border-top: 0; }
 .kp-facts dt { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); }
-.kp-facts dt small { display: block; font-size: 12.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-facts dt small { display: block; font-size: 13px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kp-facts dd { flex: none; font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.kp-foot { margin-top: 8px; font-size: 12.5px; color: var(--faint); }
+.kp-foot { margin-top: 8px; font-size: 13px; color: var(--faint); }
 
 /* Collapsible cards (chart, track record): the title row is the toggle */
 .kp-fold > summary { list-style: none; cursor: pointer; margin-bottom: 0; }
@@ -140,12 +140,12 @@
 .tier { margin: 22px 0 6px; }
 .tier:first-of-type { margin-top: 4px; }
 .tier h2 { font-size: var(--t-card-lg); font-weight: 600; margin: 0; color: var(--ink); }
-.tier p { font-size: 12.5px; color: var(--mute); margin: 2px 0 0; }
+.tier p { font-size: 13px; color: var(--mute); margin: 2px 0 0; }
 .tier-empty { font-size: 14px; color: var(--ink-2); margin: 6px 0 10px; }
-.place-why { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 0; }
+.place-why { font-size: 13px; color: var(--ink-2); margin: 2px 0 0; }
 .place-why q { color: var(--mute); }
 .place-why.flag::before { content: "Mailed from elsewhere · "; font-weight: 600; color: var(--ink); }
-.prefer-hit { font-size: 12.5px; color: var(--g, var(--ink-2)); margin: 2px 0 0; }
+.prefer-hit { font-size: 13px; color: var(--g, var(--ink-2)); margin: 2px 0 0; }
 
 /* ---------- Search summary and "Did you know" (components/SearchSummary, components/DidYouKnow), above the results ---------- */
 /* Summary = the primary card and the screen's focal point (the big count). Did you know = secondary: no fill, smaller type. */
@@ -164,11 +164,11 @@
 .sum-points a { color: var(--ink); font-weight: 600; text-decoration: none; }
 .sum-points a:hover { color: var(--g); text-decoration: underline; }
 .sum-caveat { margin: var(--s-3) 0 0; font-size: var(--t-meta); line-height: 1.45; color: var(--mute); }
-.sum-foot { margin: var(--s-1) 0 0; font-size: 11px; color: var(--faint); }
+.sum-foot { margin: var(--s-1) 0 0; font-size: 12px; color: var(--faint); }
 .dyk { margin: 0 0 var(--s-6); padding: var(--s-2) var(--s-4) var(--s-2); border-radius: 14px; background: none; box-shadow: inset 0 0 0 1px var(--line); }
 .dyk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0; }
 .dyk-head h2 { font-size: var(--t-meta); font-weight: 600; color: var(--mute); margin: 0; }
-.dyk-nav { display: inline-flex; align-items: center; gap: 0; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.dyk-nav { display: inline-flex; align-items: center; gap: 0; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .dyk-nav button { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: var(--mute); cursor: pointer; }
 .dyk-nav button:hover:not(:disabled) { background: var(--fill); }
 .dyk-nav button:disabled { color: var(--faint); opacity: .5; cursor: default; }
@@ -176,7 +176,7 @@
 .dyk-track::-webkit-scrollbar { display: none; }
 .dyk-slide { flex: 0 0 100%; min-width: 0; margin: 0; scroll-snap-align: start; }
 .dyk-fact { font-size: var(--t-small); font-weight: 600; line-height: 1.4; color: var(--ink-2); margin: 0 0 4px; text-wrap: balance; }
-.dyk-slide figcaption { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 11px; font-weight: 500; color: var(--mute); }
+.dyk-slide figcaption { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 12px; font-weight: 500; color: var(--mute); }
 .dyk-slide figcaption span { font-weight: 400; color: var(--faint); }
 .dyk-slide .ins-chart { min-height: 60px; }
 @media (max-width: 640px) { .sum-card { padding: var(--s-3) var(--s-4); } }
