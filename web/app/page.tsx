@@ -159,7 +159,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   const qs = new URLSearchParams(Object.entries({ question, all: includeInactive ? "1" : "", ...overrides }).filter(([, v]) => v) as [string, string][]);
   const exportMenu = (
     <details className="export-menu">
-      <summary title="Export" aria-label="Export"><Icon name="download" size={17} /></summary>
+      <summary><Icon name="download" size={16} /><span>Export</span></summary>
       <div role="menu">
         <a role="menuitem" href={`/export?${qs}`}><Icon name="table" /> Spreadsheet (CSV)</a>
         <a role="menuitem" href={`/report?${qs}`} target="_blank" rel="noreferrer"><Icon name="printer" /> Report (print or PDF)</a>
@@ -198,6 +198,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   const matched = summary ? summary.head.then((h) => h.shown) : strongOf;
   const top = summary && (
     <>
+      <h1 className="sr-only">{question}</h1>
       <SearchSummary key={`summary:${url(p, {})}`} summary={summary} question={question} />
     </>
   );
@@ -452,5 +453,5 @@ function Hero({ insights }: { insights: boolean }) {
 }
 
 function Footer() {
-  return <p className="note">Test version · every US state · All figures come from public IRS filings. Each result links to its sources.</p>;
+  return <p className="note">Test version · every result links to its IRS sources</p>;
 }

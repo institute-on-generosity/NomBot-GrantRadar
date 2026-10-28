@@ -6,7 +6,7 @@ import { connection } from "next/server";
 import { InsightPoints } from "@/components/InsightPoints";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 import { AskFinding, DataTable, FindingActions, FindingChart } from "@/components/ResearchFinding";
 import { getInsight, orgsByEin, relatedInsights } from "@/lib/insights";
 import { dek, exploreHref, findingEins, readTime, researchHref, sectionLabel, updated, type Insight } from "@/lib/insightMeta";
@@ -118,7 +118,7 @@ async function Orgs({ eins }: { eins: string[] }) {
   if (!orgs.length) return <p className="rd-note">None of these organizations are in NomBot yet.</p>;
   const row = (o: (typeof orgs)[number]) => (
     <li key={o.ein}>
-      <Link href={`/preview/org/${o.ein}`} scroll={false}>{titleCase(o.name)}</Link>
+      <Link href={`/preview/org/${o.ein}`} scroll={false}>{orgTitle(o.name)}</Link>
       <span>{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}{o.ntee_cd && nteeLabel(o.ntee_cd) ? ` · ${nteeLabel(o.ntee_cd)}` : ""}</span>
       <span className="rd-rev">{o.revenue_amt ? money(Number(o.revenue_amt)) : ""}{o.revenue_amt && o.tax_year ? <small> {o.tax_year}</small> : null}</span>
     </li>

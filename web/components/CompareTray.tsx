@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { NavLink } from "./NavLink";
-import { titleCase } from "./text";
+import { titleCase, orgTitle } from "./text";
 import { clearCompare, compareHref, CompareIcon, removeCompare, useCompareList, XIcon } from "./CompareButton";
 import styles from "./Compare.module.css";
 
@@ -21,9 +21,9 @@ function Tray() {
     <div className={styles.tray} role="region" aria-label="Compare">
       <ul className={styles.chips}>
         {list.map((o) => (
-          <li key={o.ein} className={styles.chip} title={[titleCase(o.name), [o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}>
-            <span>{titleCase(o.name)}</span>
-            <button type="button" onClick={() => removeCompare(o.ein)} aria-label={`Remove ${titleCase(o.name)}`}><XIcon size={10} /></button>
+          <li key={o.ein} className={styles.chip} title={[orgTitle(o.name), [o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}>
+            <span>{orgTitle(o.name)}</span>
+            <button type="button" onClick={() => removeCompare(o.ein)} aria-label={`Remove ${orgTitle(o.name)}`}><XIcon size={10} /></button>
           </li>
         ))}
       </ul>

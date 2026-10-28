@@ -3,16 +3,18 @@
 import { orgName } from "../components/text";
 import { db } from "./db";
 import { memo } from "./memo";
-import { nteeLabel } from "./ntee";
+import { nteeLabel, nteeShort } from "./ntee";
 import { GRANT_YEARS } from "./placeReport";
 
 export type OrgPreview = {
   ein: string; name: string; place: string | null; type: "Private foundation" | "Public charity" | "Organization";
-  mission: string | null; latestYear: number | null; href: string;
+  mission: string | null; computed?: boolean; latestYear: number | null; href: string;
   stats: { label: string; value: number; kind: "money" | "count" }[];
   causes: string[]; // top causes it funds (foundations) or its own cause (charities)
 };
 
+// 50 states and DC (grant_clean also holds territories, military and foreign codes)
+const US_STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
 const clip = (t: string, n = 140) => (t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`);
 const sentence = (t: string) => { const s = t.replace(/\s+/g, " ").trim(); return /[A-Z]/.test(s) && s === s.toUpperCase() ? s[0] + s.slice(1).toLowerCase() : s.charAt(0).toUpperCase() + s.slice(1); };
 
@@ -26,15 +28,20 @@ async function build(ein: string): Promise<OrgPreview | null> {
   const isPf = Boolean(f);
   const stats: OrgPreview["stats"] = [];
   let causes: string[] = [];
+  let computed: string | null = null;
   if (isPf) {
     const [{ rows: [g] }, { rows: top }] = await Promise.all([
-      db.query(`SELECT coalesce(sum(amount), 0)::float8 AS usd, count(DISTINCT recipient_ein)::int AS grantees FROM grant_clean WHERE funder_ein = $1 AND tax_year BETWEEN $2 AND $3`, [ein, ...GRANT_YEARS]),
-      db.query(`SELECT left(recipient_ntee, 1) AS k, sum(amount)::float8 AS usd FROM grant_clean WHERE funder_ein = $1 AND tax_year BETWEEN $2 AND $3 AND recipient_ntee IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 3`, [ein, ...GRANT_YEARS]),
+      db.query(`SELECT coalesce(sum(amount), 0)::float8 AS usd, count(DISTINCT recipient_ein)::int AS grantees, count(DISTINCT recipient_state) FILTER (WHERE recipient_state = ANY($4))::int AS states FROM grant_clean WHERE funder_ein = $1 AND tax_year BETWEEN $2 AND $3`, [ein, ...GRANT_YEARS, US_STATES]),
+      db.query(`SELECT left(recipient_ntee, 1) AS k, sum(amount)::float8 AS usd FROM grant_clean WHERE funder_ein = $1 AND tax_year BETWEEN $2 AND $3 AND recipient_ntee IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 4`, [ein, ...GRANT_YEARS]),
     ]);
     if (g?.usd > 0) stats.push({ label: `given ${GRANT_YEARS[0]}–${String(GRANT_YEARS[1]).slice(2)}`, value: Number(g.usd), kind: "money" });
     if (f.assets != null) stats.push({ label: "assets", value: Number(f.assets), kind: "money" });
     if (g?.grantees > 0) stats.push({ label: "grantees", value: g.grantees, kind: "count" });
-    causes = top.map((r) => nteeLabel(r.k) ?? r.k).filter(Boolean);
+    causes = top.slice(0, 3).map((r) => nteeLabel(r.k) ?? r.k).filter(Boolean);
+    // No mission on a 990-PF (most foundations): a line computed from its grants, no AI. "Funds mostly education and
+    // health, in 42 states, 2022–24". Grantee count is already a stat.
+    const shorts = top.filter((r) => !/[TYZ]/.test(r.k)).slice(0, 2).map((r) => nteeShort(r.k)).filter((x): x is string => !!x);
+    if (g?.usd > 0 && shorts.length) computed = `Funds mostly ${shorts.join(" and ")}${g.states > 1 ? `, in ${g.states >= 50 ? "every state" : `${g.states} states`}` : g.states === 1 ? ", in one state" : ""}, ${GRANT_YEARS[0]}–${String(GRANT_YEARS[1]).slice(2)}`;
   } else if (o) {
     if (o.revenue_amt != null) stats.push({ label: "yearly income", value: Number(o.revenue_amt), kind: "money" });
     if (o.asset_amt != null && Number(o.asset_amt) > 0) stats.push({ label: "assets", value: Number(o.asset_amt), kind: "money" });
@@ -47,13 +54,14 @@ async function build(ein: string): Promise<OrgPreview | null> {
   return {
     ein, name, place: [city && orgName(city, 40), state].filter(Boolean).join(", ") || null,
     type: isPf ? "Private foundation" : o ? "Public charity" : "Organization",
-    mission: raw ? clip(sentence(raw)) : null,
+    mission: raw ? clip(sentence(raw)) : computed,
+    computed: !raw && !!computed,
     latestYear: Number(t?.tax_year ?? f?.tax_year ?? o?.yr) || null,
-    href: `/org/${ein}`, stats: stats.slice(0, 3), causes,
+    href: `/org/${ein}`, stats: stats.slice(0, 3), causes: !raw && computed ? [] : causes, // the computed line already names the causes
   };
 }
 
-const cached = memo<OrgPreview | null>("org-preview:v1", 2000, 3600_000);
+const cached = memo<OrgPreview | null>("org-preview:v2", 2000, 3600_000);
 export function orgPreview(ein: string) {
   const e = ein.replace(/\D/g, "");
   if (!/^\d{9}$/.test(e)) return Promise.resolve(null);

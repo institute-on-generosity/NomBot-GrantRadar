@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { BackLink } from "@/components/BackLink";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { readable, titleCase } from "@/components/text";
+import { readable, titleCase, orgTitle } from "@/components/text";
 import { CompareIcon, RemoveColumn } from "@/components/CompareButton";
 import { loadCompare, parseEins, type Compared } from "@/lib/compare";
 import styles from "@/components/Compare.module.css";
@@ -112,8 +112,8 @@ async function Table({ searchParams }: Props) {
               {orgs.map((o) => (
                 <th key={o.ein} scope="col">
                   <div className={styles.head}>
-                    <NavLink href={`/org/${digits(o.ein)}`} label="Opening…">{titleCase(o.name)}</NavLink>
-                    <RemoveColumn ein={o.ein} name={titleCase(o.name)} eins={shown} />
+                    <NavLink href={`/org/${digits(o.ein)}`} label="Opening…">{orgTitle(o.name)}</NavLink>
+                    <RemoveColumn ein={o.ein} name={orgTitle(o.name)} eins={shown} />
                   </div>
                   <span className={styles.ein}>EIN {o.ein}</span>
                 </th>
@@ -170,12 +170,12 @@ async function Table({ searchParams }: Props) {
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Mission</th>
-              {orgs.map((o) => <td key={o.ein}><Clamp id={`mission-${digits(o.ein)}`} text={o.mission} /></td>)}
+              {orgs.map((o) => <td key={o.ein}><Clamp id={`mission-${digits(o.ein)}`} text={o.mission && readable(o.mission, [o.name])} /></td>)}
               <Slots n={slots} />
             </tr>
             <tr>
               <th scope="row" className={styles.rowLabel}>Programs</th>
-              {orgs.map((o) => <td key={o.ein}><Clamp id={`programs-${digits(o.ein)}`} text={o.programs} /></td>)}
+              {orgs.map((o) => <td key={o.ein}><Clamp id={`programs-${digits(o.ein)}`} text={o.programs && readable(o.programs, [o.name])} /></td>)}
               <Slots n={slots} />
             </tr>
             <tr>

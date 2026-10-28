@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { BackLink } from "@/components/BackLink";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 import { nteeLabel } from "@/lib/ntee";
 import { orgsByEin } from "@/lib/insights";
 
@@ -35,7 +35,7 @@ async function List({ searchParams }: Props) {
       <ul className="ins-orgs">
         {orgs.map((o) => (
           <li key={o.ein}>
-            <NavLink href={`/org/${o.ein}`} label="Opening…">{titleCase(o.name)}</NavLink>
+            <NavLink href={`/org/${o.ein}`} label="Opening…">{orgTitle(o.name)}</NavLink>
             <span>{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}{o.ntee_cd && nteeLabel(o.ntee_cd) ? ` · ${nteeLabel(o.ntee_cd)}` : ""}{o.revenue_amt ? ` · ${money(Number(o.revenue_amt))} revenue` : ""}</span>
           </li>
         ))}

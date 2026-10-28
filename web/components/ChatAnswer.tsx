@@ -82,18 +82,18 @@ export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: bool
       )}
       {!none && (
         <div className="chat-actions" role="toolbar" aria-label="Answer actions">
-          <button type="button" className="chat-act" onClick={copy} title={copied ? "Copied" : "Copy answer"} aria-label="Copy answer">
+          <button type="button" className="chat-act" onClick={copy} aria-label={copied ? "Copied" : "Copy answer"}>
             {copied ? <Icon d={<path d="M5 12.5l4.5 4.5L19 7.5" />} /> : <Icon d={<><rect x="8.5" y="8.5" width="11" height="11" rx="2.2" /><path d="M15.5 8.5V6.7a2.2 2.2 0 0 0-2.2-2.2H6.7a2.2 2.2 0 0 0-2.2 2.2v6.6a2.2 2.2 0 0 0 2.2 2.2h1.8" /></>} />}
             <span className="chat-act-l">{copied ? "Copied" : "Copy"}</span>
           </button>
           {a.rows.length > 0 && (
-            <button type="button" className="chat-act" onClick={csv} title="Download data (CSV)" aria-label="Download data as CSV">
+            <button type="button" className="chat-act" onClick={csv} aria-label="Download data (CSV)">
               <Icon d={<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 19.5h14" /></>} />
               <span className="chat-act-l">CSV</span>
             </button>
           )}
           <SlideButton icon data={slide} label="Export slide" />
-          <button type="button" className={`chat-act${method ? " on" : ""}`} onClick={() => setMethod(!method)} title="How we got this" aria-label="How we got this" aria-expanded={method}>
+          <button type="button" className={`chat-act${method ? " on" : ""}`} onClick={() => setMethod(!method)} aria-label="How we got this" aria-expanded={method}>
             <Icon d={<><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><circle cx="12" cy="7.9" r=".6" fill="currentColor" /></>} />
             <span className="chat-act-l">Sources</span>
           </button>

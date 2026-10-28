@@ -11,7 +11,7 @@ import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
-import { readable, titleCase } from "@/components/text";
+import { readable, titleCase, orgTitle } from "@/components/text";
 import { getOrg, formName, LATEST_RETURN_NOTE, type Income } from "@/lib/org";
 import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
@@ -61,7 +61,7 @@ async function Org({ params, searchParams, modal }: Props) {
         : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
         : <BackLink fallback="/">← Back</BackLink>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
-      <div className="title-line"><h1>{titleCase(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} />{!modal && <PrintButton />}</div>
+      <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} />{!modal && <PrintButton />}</div>
       {/* Top: name, place (website as an icon), then 3 icon stats. Cause, EIN and the latest 990 live in Details. */}
       <p className="sub org-place">
         <Icon name="pin" size={15} />{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
@@ -76,13 +76,13 @@ async function Org({ params, searchParams, modal }: Props) {
 
       <section>
         <h2>Mission</h2>
-        <p>{o.mission ? readable(o.mission) : "This organization hasn't e-filed a mission statement we've loaded yet."}</p>
+        <p>{o.mission ? readable(o.mission, [o.name]) : "This organization hasn't e-filed a mission statement we've loaded yet."}</p>
       </section>
 
       {o.programs && (
         <section>
           <h2>Programs</h2>
-          <Clamp text={readable(o.programs)} />
+          <Clamp text={readable(o.programs, [o.name])} />
         </section>
       )}
 
@@ -194,10 +194,11 @@ function Revoked({ r, conflict, onPub78 }: { r: NonNullable<TaxStatus["revocatio
 function Clamp({ text, at = 180 }: { text: string; at?: number }) {
   if (text.length <= at + 80) return <p>{text}</p>;
   const cut = text.slice(0, at).search(/[.!?|]\s[^.!?|]*$/);
-  const i = cut > 120 ? cut + 1 : at;
+  // No sentence end near the cut: cut at a word and show an ellipsis (never "improve e", round-2 audit Q3)
+  const i = cut > 120 ? cut + 1 : text.slice(0, at).replace(/\s+\S*$/, "").length;
   return (
     <>
-      <p>{text.slice(0, i).trim()}</p>
+      <p>{text.slice(0, i).trim()}{cut > 120 ? "" : "…"}</p>
       <details className="more-info"><summary><span className="when-closed">Read all</span><span className="when-open">Show less</span></summary><p>{text.slice(i).trim()}</p></details>
     </>
   );
@@ -310,7 +311,7 @@ function BoardConnections({ links, ein }: { links: BoardLink[]; ein: string }) {
         {links.map((p) => (
           <li key={p.name}>
             <NavLink href={personHref(p.name, ein)} label="Opening the person…" className="link-person"><b>{titleCase(p.name)}</b>{p.title && <small>{prettyTitle(p.title)}</small>}</NavLink>
-            <span>Also on {p.others.map((x, i) => <span key={x.ein}>{i > 0 && ", "}<NavLink href={`/org/${x.ein}`} label="Opening the organization…">{titleCase(x.org)}</NavLink>{x.foundation && <i className="person-tag">Foundation</i>}</span>)}</span>
+            <span>Also on {p.others.map((x, i) => <span key={x.ein}>{i > 0 && ", "}<NavLink href={`/org/${x.ein}`} label="Opening the organization…">{orgTitle(x.org)}</NavLink>{x.foundation && <i className="person-tag">Foundation</i>}</span>)}</span>
           </li>
         ))}
       </ul>

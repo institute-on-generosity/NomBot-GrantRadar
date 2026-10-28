@@ -1,6 +1,6 @@
 /* Apple-style tokens: neutral grays, one green accent, system font. Dark mode mirrors them (screen only: paper always gets the light set). */
 :root {
-  --g: #248a3d; --g-dark: #1b6e30; --g-fill: #248a3d; --g-fill-hover: #1b6e30; --g-tint: rgba(36,138,61,.09); --g-line: rgba(36,138,61,.28);
+  --g: #1e7d36; /* 4.97:1 on --bg (was #248a3d, 4.21:1, round-2 audit Q1) */ --g-dark: #1b6e30; --g-fill: #248a3d; --g-fill-hover: #1b6e30; --g-tint: rgba(36,138,61,.09); --g-line: rgba(36,138,61,.28);
   /* Eye comfort (Oct 27): no pure black on pure white. Off-white page, white cards, soft ink. faint ≥4.5:1 on page,
      card and fill (UX audit G2). --bad: a muted brick instead of bright red. */
   --ink: #2b2b2e; --ink-2: #45454a; --mute: #5c5c61; --faint: #6c6c71;
@@ -2040,6 +2040,7 @@ a.prompt-help { color: var(--faint); }
 .opv-meta, .opv-causes { margin: 2px 0 0; font-size: var(--t-meta); color: var(--mute); }
 .opv-mission { margin: var(--s-2) 0 0; color: var(--ink-2); }
 .opv-none, .opv-wait { color: var(--faint); }
+.opv-mission.computed { color: var(--mute); }
 .opv-stats { list-style: none; display: flex; flex-wrap: wrap; gap: 2px 14px; margin: var(--s-2) 0 0; padding: 0; font-size: var(--t-meta); color: var(--mute); }
 .opv-stats b { font-size: var(--t-small); color: var(--ink); }
 .opv-foot { display: flex; justify-content: space-between; align-items: center; margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--faint); }
@@ -2047,3 +2048,8 @@ a.prompt-help { color: var(--faint); }
 /* First load of /research/ask: the question (Suspense fallback), then the live steps beside it (PendingSteps) */
 .chat-thread.chat-echo { flex: 0 0 auto; padding-bottom: 0; }
 .chat-thread.chat-pending-first { padding-top: var(--s-6); }
+/* Home: one line on what NomBot is (round-2 audit V9) */
+.greet-sub { margin: -16px auto 26px; max-width: 34em; text-align: center; text-wrap: balance; color: var(--mute); font-size: var(--t-body); line-height: 1.45; }
+/* Answer actions: icon buttons name themselves at once on hover or focus (round-2 audit V8) */
+.chat-act { position: relative; }
+.chat-act[aria-label]:hover::after, .chat-act[aria-label]:focus-visible::after { content: attr(aria-label); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: var(--z-popover); white-space: nowrap; padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 500; pointer-events: none; }

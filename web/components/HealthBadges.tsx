@@ -12,7 +12,8 @@ export function HealthBadges({ h }: { h: Health | null }) {
   const reserves = h.reserveMonths == null ? "" : ` · ${h.reserveBasis === "cash" ? "cash covers" : "reserves"} ${h.reserveMonths >= 12 ? `${(h.reserveMonths / 12).toFixed(1)} years` : `${Math.max(0, Math.round(h.reserveMonths))} months`} of spending`;
   return (
     <>
-      {t && Math.abs(t.change) >= 0.1 && (
+      {/* No trend from or to $0: a blank year, not a collapse (round-2 audit V6) */}
+      {t && t.from.amount > 0 && t.to.amount > 0 && Math.abs(t.change) >= 0.1 && (
         <span className={`fin ${t.change > 0 ? "up" : "down"}`} tabIndex={0}>
           {t.change > 0 ? "Growing" : "Shrinking"} {pct(t.change)}
           <span className="fin-tip" role="tooltip">Revenue {money(t.from.amount)} ({t.from.year}) → {money(t.to.amount)} ({t.to.year})</span>

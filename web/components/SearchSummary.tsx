@@ -28,7 +28,8 @@ export function SearchSummary({ summary, question }: { summary: Summary; questio
   );
 }
 
-// The focal number big with a short noun ("42 programs"), the place tiers as icon chips (the words in the tooltip).
+// The focal number big with a short noun ("42 programs"), the place tiers as small chips with their words ("9 in
+// Inglewood"): icon-only counts were unreadable to testers (round-2 audit V5).
 function Count({ main, parts, more, busy, strong, weaker }: { main: string; parts: string[]; more: string | null; busy?: boolean; strong?: number; weaker?: number }) {
   const [n, ...rest] = main.split(" ");
   const noun = rest.join(" ");
@@ -40,7 +41,7 @@ function Count({ main, parts, more, busy, strong, weaker }: { main: string; part
           {parts.map((x) => {
             const ic = chipIcon(x);
             return ic
-              ? <span key={x} className="sum-chip" title={x} aria-label={x}><Icon name={ic} size={13} />{x.split(" ")[0]}</span>
+              ? <span key={x} className="sum-chip"><Icon name={ic} size={13} />{x}</span>
               : <span key={x} className="sum-chip">{x}</span>;
           })}
           {more && <span className="sum-more">{busy && <span className="spinner" />}{busy ? "ranking…" : more}</span>}

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { BackLink } from "@/components/BackLink";
 import { NavLink } from "@/components/NavLink";
-import { titleCase } from "@/components/text";
+import { orgTitle } from "@/components/text";
 import { dollars, getSoi, readValue, section, SOI_DICTIONARY, soiViewerUrl, soiZipUrl, USED } from "@/lib/soi";
 
 type Props = { params: Promise<{ ein: string }>; searchParams: Promise<{ year?: string; form?: string }>; compact?: boolean };
@@ -35,7 +35,7 @@ async function Viewer({ params, searchParams, compact }: Props) {
     return (
       <article className={compact ? "viewer compact" : "org viewer"}>
         {!compact && <BackLink fallback={`/org/${ein}`}>← Back</BackLink>}
-        <p className="notice">{titleCase(soi.org.name)} has no record in the SOI extract. Small organizations that file Form 990-N aren&apos;t included.</p>
+        <p className="notice">{orgTitle(soi.org.name)} has no record in the SOI extract. Small organizations that file Form 990-N aren&apos;t included.</p>
       </article>
     );
   }
@@ -101,7 +101,7 @@ async function Viewer({ params, searchParams, compact }: Props) {
   return (
     <article className="org viewer">
       <BackLink fallback={`/org/${ein}`}>← Back</BackLink>
-      <h1>IRS financial extract · {titleCase(soi.org.name)}</h1>
+      <h1>IRS financial extract · {orgTitle(soi.org.name)}</h1>
       <p className="sub">
         Statistics of Income (SOI) annual extract · Form {formName(rec.form)} · tax year {rec.year} · EIN {ein} · <code>{zip.split("/").pop()}</code>
       </p>

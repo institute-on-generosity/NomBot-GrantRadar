@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getInsight, orgsByEin } from "@/lib/insights";
 import { findingEins, toCsv } from "@/lib/insightMeta";
 import { claude, FAST_MODEL } from "@/lib/llm";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 
 const body = z.object({
   ask: z.string().trim().min(1).max(1000),
@@ -48,7 +48,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ slug: stri
     i.caveats ? `Caveats: ${i.caveats}` : null,
     i.sources?.length ? `Sources: ${i.sources.map((s) => s.label).join(" | ")}` : null,
     `Data (${i.data?.length ?? 0} rows, CSV):\n${table}`,
-    orgs.length ? `Organizations behind this finding (largest first):\n${orgs.map((o) => `- ${titleCase(o.name)}, ${[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}${o.revenue_amt ? `, revenue $${Number(o.revenue_amt).toLocaleString("en-US")}` : ""}`).join("\n")}` : null,
+    orgs.length ? `Organizations behind this finding (largest first):\n${orgs.map((o) => `- ${orgTitle(o.name)}, ${[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}${o.revenue_amt ? `, revenue $${Number(o.revenue_amt).toLocaleString("en-US")}` : ""}`).join("\n")}` : null,
   ].filter(Boolean).join("\n\n");
 
   const encoder = new TextEncoder();

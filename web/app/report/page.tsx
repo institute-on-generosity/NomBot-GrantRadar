@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { PrintButton } from "@/components/PrintButton";
-import { titleCase } from "@/components/text";
+import { readable, titleCase, orgTitle } from "@/components/text";
 import { applyOverrides, money, OVERRIDE_KEYS, type Overrides } from "@/lib/filters";
 import { NEAR_MILES, TIER_ORDER, tierNote, tierTitle, type Scope } from "@/lib/place";
 import { fundersOf, fundingOf, GRANT_YEARS, labelsOf, placeCoverage } from "@/lib/placeReport";
@@ -101,7 +101,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         {funders.length ? (
           <table className="report-table compact">
             <thead><tr><th>Foundation</th><th>Based in</th><th>Organizations funded</th><th>Grants {g0} to {g1}</th></tr></thead>
-            <tbody>{funders.map((f) => <tr key={f.ein}><td>{titleCase(f.name)}</td><td>{[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")}</td><td>{f.orgs}</td><td>{money(f.usd)}</td></tr>)}</tbody>
+            <tbody>{funders.map((f) => <tr key={f.ein}><td>{orgTitle(f.name)}</td><td>{[f.city && titleCase(f.city), f.state].filter(Boolean).join(", ")}</td><td>{f.orgs}</td><td>{money(f.usd)}</td></tr>)}</tbody>
           </table>
         ) : <p className="report-note">No foundation grants to these organizations in {g0} to {g1}.</p>}
       </section>
@@ -123,7 +123,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         {leads.length ? (
           <table className="report-table compact">
             <thead><tr><th>Organization</th><th>EIN</th><th>Address</th><th>Cause code</th><th>Why listed</th></tr></thead>
-            <tbody>{leads.map((r) => <tr key={r.ein}><td>{titleCase(r.name)}</td><td className="nowrap">{r.ein}</td><td>{address(r)}</td><td>{r.ntee ? `${r.ntee.code} ${r.ntee.label ?? ""}` : "None"}</td><td>{r.relevance?.why ?? r.place?.note ?? ""}</td></tr>)}</tbody>
+            <tbody>{leads.map((r) => <tr key={r.ein}><td>{orgTitle(r.name)}</td><td className="nowrap">{r.ein}</td><td>{address(r)}</td><td>{r.ntee ? (r.ntee.label ?? r.ntee.code) : "None"}</td><td>{r.relevance?.why ?? r.place?.note ?? ""}</td></tr>)}</tbody>
           </table>
         ) : null}
       </section>}
@@ -152,12 +152,12 @@ function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<
           return (
             <tr key={r.ein}>
               <td>
-                <b>{titleCase(r.name)}</b>
+                <b>{orgTitle(r.name)}</b>
                 <span>EIN {r.ein}</span>
                 <span>{address(r)}</span>
-                <span>{r.ntee ? `${r.ntee.code} ${r.ntee.label ?? ""}` : "No cause code"}</span>
+                <span title={r.ntee?.code ?? undefined}>{r.ntee ? (r.ntee.label ?? r.ntee.code) : "No cause code"}</span>
                 {(labels.get(r.ein.replace("-", "")) ?? []).length > 0 && <span>{labels.get(r.ein.replace("-", ""))!.join(", ")}</span>}
-                {r.mission && <span className="mission">{clip(r.mission, 220)}</span>}
+                {r.mission && <span className="mission">{clip(readable(r.mission, [r.name]), 220)}</span>}
               </td>
               <td>
                 <span>{r.revenue ? `${money(r.revenue.amount)} revenue (${r.revenue.year ?? "year not given"})` : "No revenue reported"}</span>
@@ -166,7 +166,7 @@ function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<
               </td>
               <td>
                 <span>{f ? `${money(f.total)} in ${f.grants} ${f.grants === 1 ? "grant" : "grants"}` : "No foundation grants"}</span>
-                {f?.top && <span>Top funder: {titleCase(f.top.name)} ({money(f.top.amount)})</span>}
+                {f?.top && <span>Top funder: {orgTitle(f.top.name)} ({money(f.top.amount)})</span>}
               </td>
               <td>
                 <span>{r.relevance ? `${r.relevance.score} of 100. ${r.relevance.why}` : "Not scored"}</span>

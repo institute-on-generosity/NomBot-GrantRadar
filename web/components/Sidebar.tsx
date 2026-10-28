@@ -6,7 +6,7 @@ import { HISTORY_KEY, historyKey, type HistoryEntry } from "@/lib/history";
 import { FOLDERS_KEY, SAVED_KEY, type SavedOrg } from "@/lib/saved";
 import { historyTarget } from "./HistoryList";
 import { NavLink } from "./NavLink";
-import { titleCase } from "./text";
+import { orgTitle } from "./text";
 import { useStoredList } from "./useStored";
 
 // Line icons in the spirit of SF Symbols.
@@ -71,8 +71,8 @@ export function Sidebar() {
                 </NavLink>
               )),
               ...saved.filter((o) => !o.folder).slice(0, SHOWN).map((o) => (
-              <NavLink key={o.ein} href={`/org/${o.ein}?back=%2Fsaved`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={titleCase(o.name)}>
-                <span className="side-star">★</span>{titleCase(o.name)}
+              <NavLink key={o.ein} href={`/org/${o.ein}?back=%2Fsaved`} className={item(here.path === `/org/${o.ein}`)} current={here.path === `/org/${o.ein}`} title={orgTitle(o.name)}>
+                <span className="side-star">★</span>{orgTitle(o.name)}
               </NavLink>
             ))]}
           </Section>

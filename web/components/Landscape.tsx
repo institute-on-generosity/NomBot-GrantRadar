@@ -14,7 +14,7 @@ import { didYouKnow, overviewFacts } from "@/lib/overviewFacts";
 import { DidYouKnow } from "./DidYouKnow";
 import type { KeyFacts as KeyFactsT } from "@/lib/searchSummary";
 import { isStrong, type rank } from "@/lib/rerank";
-import { titleCase } from "./text";
+import { orgTitle } from "./text";
 import type { Filters } from "@/lib/parse";
 import { themes } from "@/lib/themes";
 
@@ -186,7 +186,7 @@ export async function Gems({ ranking }: { ranking: ReturnType<typeof rank> }) {
   return (
     <div className="unfunded">
       <h3>Not yet funded<small>{gems.length} of {strong.length} strong matches</small></h3>
-      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" label="Opening the organization…"><b>{titleCase(o.name)}</b><span>{o.state}</span></NavLink></li>)}</ul>
+      <ul>{gems.slice(0, 8).map((o) => <li key={o.ein}><NavLink href={`/org/${o.ein}`} className="ls-org" label="Opening the organization…"><b>{orgTitle(o.name)}</b><span>{o.state}</span></NavLink></li>)}</ul>
     </div>
   );
 }

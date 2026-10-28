@@ -114,7 +114,7 @@ export function OrgPreviewLayer() {
         <>
           <p className="opv-name">{d.name}</p>
           <p className="opv-meta">{[d.type, d.place].filter(Boolean).join(" · ")}</p>
-          <p className="opv-mission">{d.mission ?? <span className="opv-none">No mission on file</span>}</p>
+          <p className={`opv-mission${d.computed ? " computed" : ""}`} title={d.computed ? "From its grants, not its own words" : undefined}>{d.mission ?? <span className="opv-none">No mission on file</span>}</p>
           {d.stats.length > 0 && <ul className="opv-stats">{d.stats.map((s) => <li key={s.label}><b>{s.kind === "money" ? money(s.value) : s.value.toLocaleString("en-US")}</b> {s.label}</li>)}</ul>}
           {d.causes.length > 0 && <p className="opv-causes">{d.type === "Private foundation" ? "Funds" : "Cause"}: {d.causes.join(", ")}</p>}
           <p className="opv-foot">{d.latestYear && <span>Latest filing {d.latestYear}</span>}<a href={d.href}>Open profile →</a></p>

@@ -435,7 +435,8 @@ try {
     const pv = async (ein: string) => { const t = performance.now(); const r = await fetch(`${BASE}/api/org-preview/${ein}`); return { status: r.status, body: await r.json().catch(() => ({})) as J, ms: Math.round(performance.now() - t) }; };
     const ford = await pv("131684331");
     check(ford.status === 200 && ford.body.name === "Ford Foundation" && ford.body.type === "Private foundation" && ford.body.href === "/org/131684331", "org-preview: Ford Foundation is a private foundation with a profile link");
-    check(ford.body.stats?.length >= 2 && ford.body.stats.length <= 3 && ford.body.causes?.length >= 1 && ford.body.causes.length <= 3, "org-preview: 2-3 stats and 1-3 causes for a foundation");
+    check(/^Funds mostly [a-z ]+( and [a-z ]+)?, in (every state|\d+ states?|one state), \d{4}–\d{2}$/.test(ford.body.mission ?? "") && ford.body.computed === true && ford.body.causes.length === 0, `org-preview: a foundation with no mission gets a computed line (${ford.body.mission})`);
+    check(ford.body.stats?.length >= 2 && ford.body.stats.length <= 3 && ford.body.causes?.length <= 3, "org-preview: 2-3 stats for a foundation");
     const { rows: [fs] } = await db.query(`SELECT assets::float8 AS a FROM funders WHERE ein = '131684331'`);
     check(ford.body.stats?.some((s: J) => s.label === "assets" && s.value === fs.a), "org-preview: Ford assets vs SQL");
     const warm = await pv("131684331");

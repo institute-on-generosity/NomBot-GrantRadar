@@ -1,7 +1,7 @@
 "use client";
 import { HISTORY_KEY, type HistoryEntry, clearHistory, removeEntry } from "@/lib/history";
 import { NavLink } from "./NavLink";
-import { titleCase } from "./text";
+import { orgTitle } from "./text";
 import { useStoredList } from "./useStored";
 
 export function ago(t: number) {
@@ -26,7 +26,7 @@ export function HistoryList() {
             <NavLink href={historyTarget(e)} className="h-q" label="Opening your results…" search>{e.question}</NavLink>
             <div className="h-meta">
               {e.total} results · {ago(e.at)}
-              {e.viewed && <> · last viewed <b>{titleCase(e.viewed.name)}</b></>}
+              {e.viewed && <> · last viewed <b>{orgTitle(e.viewed.name)}</b></>}
             </div>
             <button className="h-x" onClick={() => removeEntry(e.key)} aria-label={`Remove ${e.question}`}>Remove</button>
           </li>

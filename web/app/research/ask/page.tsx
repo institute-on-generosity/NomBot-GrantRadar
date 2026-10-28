@@ -88,6 +88,7 @@ async function Ask({ searchParams }: { searchParams: SP }) {
   return (
     <>
       <RecordSearch question={q} href={threadHref(q, [])} total={first.answer.orgCount ?? 0} />
+      <h1 className="sr-only">{plainCauseText(q)}</h1>
       <Chat q={q} fs={fs} max={MAX_FOLLOW_UPS}>
         {turns.map((t, i) => (
           <section key={`${i}:${t.text}`} className="chat-turn" id={`turn-${i}`}>

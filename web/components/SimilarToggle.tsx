@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 import type { SimilarOrg } from "@/lib/similar";
 
 // The list part of components/OrgSimilar.tsx: all similar orgs, or only the less-funded ones.
@@ -23,7 +23,7 @@ export function SimilarToggle({ all, less }: { all: SimilarOrg[]; less: SimilarO
           {list.map((s) => (
             <li key={s.ein}>
               <span>
-                <NavLink href={`/org/${s.ein}`} label="Opening the organization…" className="person-link"><b>{titleCase(s.name)}</b></NavLink>
+                <NavLink href={`/org/${s.ein}`} label="Opening the organization…" className="person-link"><b>{orgTitle(s.name)}</b></NavLink>
                 <small>{[[s.city && titleCase(s.city), s.state].filter(Boolean).join(", "), s.ntee?.label,
                   s.revenue != null && `${money(s.revenue)} revenue`,
                   onlyLess && (s.foundation_grants_2022_2024 > 0 ? `${money(s.foundation_grants_2022_2024)} foundation grants 2022-24` : "no foundation grants found 2022-24")]

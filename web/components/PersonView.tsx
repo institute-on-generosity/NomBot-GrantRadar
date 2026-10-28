@@ -1,6 +1,6 @@
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 import { prettyTitle } from "@/lib/flag";
 import { STATE_NAMES } from "@/lib/bmf";
 import type { Profile, Seat } from "@/lib/people";
@@ -40,7 +40,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
         <span className="person-kicker">Philanthropic leader</span>
         <h1>{shown}</h1>
         <p className="person-lede">
-          {main.title ? prettyTitle(main.title) : "Board member"}, <NavLink href={`/org/${main.ein}`} label="Opening the organization…">{titleCase(main.org)}</NavLink>
+          {main.title ? prettyTitle(main.title) : "Board member"}, <NavLink href={`/org/${main.ein}`} label="Opening the organization…">{orgTitle(main.org)}</NavLink>
           {main.city && <span className="person-place"> · {titleCase(main.city)}, {main.state}</span>}
         </p>
         {(byState.size > 1 || topicHref) && (
@@ -78,7 +78,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
               {list.map((s) => (
                 <li key={s.ein}>
                   <div className="seat-org">
-                    <NavLink href={`/org/${s.ein}`} label="Opening the organization…"><b>{titleCase(s.org)}</b></NavLink>
+                    <NavLink href={`/org/${s.ein}`} label="Opening the organization…"><b>{orgTitle(s.org)}</b></NavLink>
                     {s.foundation && <i className="person-tag">Foundation</i>}
                     <small>{[s.city && `${titleCase(s.city)}, ${s.state}`, s.cause, size(s)].filter(Boolean).join(" · ")}</small>
                   </div>
@@ -101,7 +101,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
             return (
               <div key={g.ein} className="give">
                 <div className="give-head">
-                  <NavLink href={`/org/${g.ein}`} label="Opening the organization…"><b>{titleCase(g.org)}</b></NavLink>
+                  <NavLink href={`/org/${g.ein}`} label="Opening the organization…"><b>{orgTitle(g.org)}</b></NavLink>
                   <span className="give-total">{money(g.total)}</span>
                   <small>{g.grants.toLocaleString()} {g.grants === 1 ? "grant" : "grants"}, {years(g.years)}{g.grants > 1 && " · largest grantees"}</small>
                 </div>
@@ -110,8 +110,8 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
                     <li key={k} style={{ "--w": `${Math.round((100 * (t.amount ?? 0)) / top)}%` } as React.CSSProperties}>
                       {/* Grants carry no EIN: unmatched recipients open a search for the name and place instead */}
                       {t.ein
-                        ? <NavLink href={`/org/${t.ein}`} label="Opening the organization…">{titleCase(t.name)}</NavLink>
-                        : <NavLink href={`/?${new URLSearchParams({ question: [t.name, t.city, t.state].filter(Boolean).join(" "), as: "topic" })}`} label="Searching…" title="Not matched to an IRS record yet: search for it"><span className="unmatched">{titleCase(t.name)}</span></NavLink>}
+                        ? <NavLink href={`/org/${t.ein}`} label="Opening the organization…">{orgTitle(t.name)}</NavLink>
+                        : <NavLink href={`/?${new URLSearchParams({ question: [t.name, t.city, t.state].filter(Boolean).join(" "), as: "topic" })}`} label="Searching…" title="Not matched to an IRS record yet: search for it"><span className="unmatched">{orgTitle(t.name)}</span></NavLink>}
                       <span className="give-amt">{money(t.amount ?? 0)}{t.grants > 1 && <small> · {t.grants} grants</small>}</span>
                     </li>
                   ))}
@@ -129,7 +129,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
           <ul className="flows">
             {between.map((b) => (
               <li key={b.from + b.to}>
-                <span><NavLink href={`/org/${b.from}`}>{titleCase(b.fromOrg)}</NavLink><i aria-hidden="true">→</i><NavLink href={`/org/${b.to}`}>{titleCase(b.toOrg)}</NavLink></span>
+                <span><NavLink href={`/org/${b.from}`}>{orgTitle(b.fromOrg)}</NavLink><i aria-hidden="true">→</i><NavLink href={`/org/${b.to}`}>{orgTitle(b.toOrg)}</NavLink></span>
                 <b>{money(b.amount)}</b>
               </li>
             ))}
@@ -145,7 +145,7 @@ export function PersonView({ name, profile, topicHref }: { name: string; profile
               <li key={p.name}>
                 <NavLink href={`/person?${new URLSearchParams({ name: p.name, ein: p.ein })}`} label="Opening the person…"><b>{titleCase(p.name)}</b></NavLink>
                 <span className="count">{p.shared.length} boards together</span>
-                <small>{p.shared.map((x) => titleCase(x.org)).join(", ")}</small>
+                <small>{p.shared.map((x) => orgTitle(x.org)).join(", ")}</small>
               </li>
             ))}
           </ul>

@@ -86,7 +86,7 @@ export const RESEARCH_GROUPS: PromptGroup[] = [
 // Home page prompts by kind, shown under the flipping "Look up …" heading. People are board members
 // named in IRS filings whose name maps to one clear person in the loaded data (common names left out).
 export const PROMPT_SETS: PromptSet[] = [
-  { word: "nonprofits", placeholder: "e.g. food banks in rural Appalachia that do workforce training, under $500K", prompts: EXAMPLES.slice(0, 5) },
+  { word: "nonprofits", placeholder: "e.g. food banks in rural Appalachia", prompts: EXAMPLES.slice(0, 5) },
   { word: "philanthropic leaders", placeholder: "e.g. Darren Walker: every board a person sits on", prompts: ["Laura Arrillaga-Andreessen", "Darren Walker", "Laurene Powell Jobs", "Ai-jen Poo", "Ursula Burns", "La June Montgomery Tabron"] },
   { word: "foundations", placeholder: "e.g. health foundations in Kentucky", prompts: ["community foundations in Ohio", "health foundations in Kentucky", "foundations that fund the arts in New York", "family foundations in Texas that fund literacy"] },
   // Research questions get an answer card on /research/ask instead of a list (lib/answerSpec.ts)

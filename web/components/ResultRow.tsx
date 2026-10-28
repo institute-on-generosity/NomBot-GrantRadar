@@ -6,7 +6,7 @@ import type { Relevance } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
 import { HealthBadges } from "./HealthBadges";
 import { Preview } from "./Snippet";
-import { titleCase } from "./text";
+import { titleCase, orgTitle } from "./text";
 import { Icon } from "./Icons";
 
 
@@ -28,12 +28,14 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
     <div className={`row${focused ? " focused" : ""}`} id={`org-${r.ein}`} style={{ "--i": Math.min(index, 12) } as React.CSSProperties}>
       <div className="row-main">
         <div className="name-line">
-          <NavLink href={href} className="name" title={r.ntee?.label ?? undefined}>{titleCase(r.name)}</NavLink>
+          <NavLink href={href} className="name" title={r.ntee?.label ?? undefined}>{orgTitle(r.name)}</NavLink>
           {focused && <span className="lastviewed">last viewed</span>}
         </div>
         <div className="sub">
           {place && <span className="fact"><Icon name="pin" size={14} />{place}</span>}
-          {r.revenue && <span className="fact" title={`Yearly income${r.revenue.year ? `, ${r.revenue.year}` : ""}`}><Icon name="money" size={14} />{money(r.revenue.amount)}</span>}
+          {r.revenue && (r.revenue.amount > 0
+            ? <span className="fact" title={`Yearly income${r.revenue.year ? `, ${r.revenue.year}` : ""}`}><Icon name="money" size={14} />{money(r.revenue.amount)}</span>
+            : <span className="fact none" title={`Its ${r.revenue.year ?? "latest"} filing reports no income`}>No income reported</span>)}
           {/* Cause: in the name's tooltip, not on the row (word cut, Oct 27) */}
           {/* Why a place tier lists it (named for the city but mailed from elsewhere, or a filing or grant naming it): one icon, text on hover */}
           {why && <span className={`fact place-why${r.place!.basis === "name" ? " flag" : ""}`} title={why} aria-label={why} tabIndex={0}><Icon name={r.place!.basis === "name" ? "warn" : "info"} size={14} /></span>}

@@ -7,7 +7,7 @@ import { FolderPicker } from "./FolderPicker";
 import { NavLink } from "./NavLink";
 import { money } from "./money";
 import { StarButton } from "./StarButton";
-import { titleCase } from "./text";
+import { titleCase, orgTitle } from "./text";
 import { useStoredList } from "./useStored";
 
 // Starred organizations, with folder tabs (?folder=<name>, or ?folder= for unfiled).
@@ -60,7 +60,7 @@ function List() {
       {shown.map((o) => (
         <div className="row" key={o.ein}>
           <div className="row-main">
-            <div className="name-line"><StarButton org={o} /><NavLink href={`/org/${o.ein}?back=${back}`} className="name">{titleCase(o.name)}</NavLink></div>
+            <div className="name-line"><StarButton org={o} /><NavLink href={`/org/${o.ein}?back=${back}`} className="name">{orgTitle(o.name)}</NavLink></div>
             <div className="sub">{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}{o.cause && <> · {o.cause}</>}</div>
             <FolderPicker ein={o.ein} />
           </div>

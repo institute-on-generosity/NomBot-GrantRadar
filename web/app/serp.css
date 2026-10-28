@@ -307,3 +307,6 @@ p.sum-tiles > span { display: inline-flex; align-items: center; gap: 6px; }
 p.sum-tiles b { font-size: var(--t-body); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 p.sum-tiles .ico { color: var(--faint); }
 p.sum-tiles .sum-warn { margin: 0; color: var(--warn); cursor: help; }
+.serp-main .row .fact.none { color: var(--faint); font-style: italic; }
+/* Export says so (round-2 audit V8): icon + word */
+.export-menu > summary { display: inline-flex !important; align-items: center; gap: 5px; width: auto !important; }

@@ -1,6 +1,6 @@
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
-import { titleCase } from "@/components/text";
+import { titleCase, orgTitle } from "@/components/text";
 import { orgFunding, FUNDING_NOTES, FUNDER_CLASS, type Funder, type GivenType, type Recipient, type Transfer, type YearTotal } from "@/lib/orgFunding";
 
 // Grants received (990-PF foundations, Schedule I charities, federal awards) and grants given, for one org page.
@@ -42,7 +42,7 @@ function More<T>({ items, render, noun, extra }: { items: T[]; render: (x: T, i:
 }
 
 function OrgName({ ein, name }: { ein: string | null; name: string }) {
-  return ein ? <NavLink href={`/org/${ein}`} label="Opening the organization…" className="person-link"><b>{titleCase(name)}</b></NavLink> : <b data-org-ein="" data-org-name={titleCase(name)} tabIndex={0}>{titleCase(name)}</b>;
+  return ein ? <NavLink href={`/org/${ein}`} label="Opening the organization…" className="person-link"><b>{orgTitle(name)}</b></NavLink> : <b data-org-ein="" data-org-name={orgTitle(name)} tabIndex={0}>{orgTitle(name)}</b>;
 }
 
 function FunderRow({ x }: { x: Funder }) {
@@ -73,7 +73,7 @@ function Transfers({ items, side }: { items: Transfer[]; side: "from" | "to" }) 
       <ul className="people fund-list">
         {items.map((x) => (
           <li key={x.id}>
-            <span>{x.ein ? <OrgName ein={x.ein} name={x.name} /> : <b>{titleCase(x.name)}</b>}<small>{[x.kind === "error" ? "Likely reporting error" : x.noncash >= x.amount / 2 ? "Mostly non-cash" : "Cash", `tax year ${x.year}`, x.reason].join(" · ")}</small></span>
+            <span>{x.ein ? <OrgName ein={x.ein} name={x.name} /> : <b>{orgTitle(x.name)}</b>}<small>{[x.kind === "error" ? "Likely reporting error" : x.noncash >= x.amount / 2 ? "Mostly non-cash" : "Cash", `tax year ${x.year}`, x.reason].join(" · ")}</small></span>
             <span>{money(x.amount)}</span>
           </li>
         ))}
@@ -167,7 +167,7 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
 // 990-PF grants given by who received them (lib/orgFunding pfGivenTypes): shown when any went to a government,
 // public university, international body or company. Top names for those four types.
 const pctOf = (x: number) => (x >= 0.095 ? `${Math.round(x * 100)}%` : x >= 0.0005 ? `${(x * 100).toFixed(1)}%` : "<0.1%");
-const nameOf = (x: string) => (x === x.toUpperCase() ? titleCase(x) : x);
+const nameOf = (x: string) => (x === x.toUpperCase() ? orgTitle(x) : x);
 function GivenTypes({ types }: { types: GivenType[] }) {
   const non = types.filter((t) => ["government", "public_university", "international", "company"].includes(t.type));
   const share = non.reduce((a, t) => a + t.share, 0);

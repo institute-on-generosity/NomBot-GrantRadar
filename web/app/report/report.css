@@ -53,3 +53,4 @@
 .report-method > summary::after { content: "Show"; font-size: var(--t-meta); color: var(--mute); }
 .report-method[open] > summary::after { content: "Hide"; }
 @media print { .report-method::details-content { content-visibility: visible; display: block; } .report-method > summary::after { content: none; } }
+.report-table th:nth-child(2), .report-table td:nth-child(2) { width: 15%; min-width: 120px; } /* Size and filings: no 7-line cells (round-2 audit Q4) */
