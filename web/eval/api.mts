@@ -430,6 +430,23 @@ try {
   check(m.isError && m.text === "Not found.", "MCP get_finances: unknown EIN is Not found");
   await client.close();
 
+  // Org hover card data (Oct 27): /api/org-preview/[ein]. Facts only, cached, warm under 150 ms, 404 when no IRS record.
+  {
+    const pv = async (ein: string) => { const t = performance.now(); const r = await fetch(`${BASE}/api/org-preview/${ein}`); return { status: r.status, body: await r.json().catch(() => ({})) as J, ms: Math.round(performance.now() - t) }; };
+    const ford = await pv("131684331");
+    check(ford.status === 200 && ford.body.name === "Ford Foundation" && ford.body.type === "Private foundation" && ford.body.href === "/org/131684331", "org-preview: Ford Foundation is a private foundation with a profile link");
+    check(ford.body.stats?.length >= 2 && ford.body.stats.length <= 3 && ford.body.causes?.length >= 1 && ford.body.causes.length <= 3, "org-preview: 2-3 stats and 1-3 causes for a foundation");
+    const { rows: [fs] } = await db.query(`SELECT assets::float8 AS a FROM funders WHERE ein = '131684331'`);
+    check(ford.body.stats?.some((s: J) => s.label === "assets" && s.value === fs.a), "org-preview: Ford assets vs SQL");
+    const warm = await pv("131684331");
+    timings.push(["org-preview: Ford, warm", warm.ms]);
+    check(warm.ms < 150, `org-preview: warm under 150 ms (${warm.ms})`);
+    const rc = await pv("530196605");
+    check(rc.status === 200 && rc.body.type === "Public charity" && !/\bInc\b/.test(rc.body.name) && (rc.body.mission === null || (rc.body.mission.length <= 141 && rc.body.mission !== rc.body.mission.toUpperCase())), "org-preview: Red Cross is a public charity, no Inc, mission clipped and not all caps");
+    check((await pv("000000000")).status === 404, "org-preview: unknown EIN is 404");
+    check((await pv("abc")).status === 404, "org-preview: bad EIN is 404");
+  }
+
   // Search export (Oct 26): place tiers with evidence, NTEE code, foundation grants 2022-24, top funder, latest 990,
   // website, and a relevance status on every row. unscored=1: no relevance calls (one cached question parse).
   {

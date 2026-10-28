@@ -42,7 +42,7 @@ function More<T>({ items, render, noun, extra }: { items: T[]; render: (x: T, i:
 }
 
 function OrgName({ ein, name }: { ein: string | null; name: string }) {
-  return ein ? <NavLink href={`/org/${ein}`} label="Opening the organization…" className="person-link"><b>{titleCase(name)}</b></NavLink> : <b>{titleCase(name)}</b>;
+  return ein ? <NavLink href={`/org/${ein}`} label="Opening the organization…" className="person-link"><b>{titleCase(name)}</b></NavLink> : <b data-org-ein="" data-org-name={titleCase(name)} tabIndex={0}>{titleCase(name)}</b>;
 }
 
 function FunderRow({ x }: { x: Funder }) {

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Disclosures } from "@/components/Disclosures";
+import { OrgPreviewLayer } from "@/components/OrgPreviewLayer";
 import { Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/Sidebar";
 import { CompareTray } from "@/components/CompareTray";
@@ -29,6 +30,7 @@ export default function RootLayout({ children, panel }: LayoutProps<"/">) {
           <Sidebar />
           <div className="content">{children}</div>
           <Disclosures />
+          <OrgPreviewLayer />
           {panel}
           <CompareTray />
         </div>

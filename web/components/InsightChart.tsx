@@ -117,6 +117,7 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
       if (gone) { res.finalize(); return; }
       view = res.view;
       onView?.(view);
+      linkOrgs(el, rest as { data?: { values?: Record<string, unknown>[] }; encoding?: { y?: { field?: string } } });
     }).catch((e) => { console.error("chart failed", e); if (!gone) setError(true); }).finally(settle);
     return () => { gone = true; settle(); view?.finalize(); onView?.(null); };
   }, [draw, dark, paper, spec, onView, tall]);
@@ -126,6 +127,35 @@ export function InsightChart({ spec, label, onView, tall = false }: { spec: Reco
 }
 
 // Export: PNG (2x) or SVG, on the page's background so it reads in slides and documents.
+// Org charts (values carry an ein): each bar and y-axis label becomes a focusable link to the org page, with
+// data-org-ein so the site-wide hover card (OrgPreviewLayer) shows on hover or focus. Bars render in data order.
+function linkOrgs(el: HTMLElement, spec: { data?: { values?: Record<string, unknown>[] }; encoding?: { y?: { field?: string } } }) {
+  const vals = spec.data?.values, y = spec.encoding?.y?.field;
+  if (!vals?.length || !y || !vals.some((v) => v.ein)) return;
+  const mark = (node: Element, v: Record<string, unknown>) => {
+    if (!v.ein) return;
+    node.setAttribute("data-org-ein", String(v.ein));
+    node.setAttribute("data-org-name", String(v[y]));
+    node.setAttribute("data-org-href", `/org/${v.ein}`);
+    node.setAttribute("tabindex", "0");
+    node.setAttribute("role", "link");
+    node.setAttribute("aria-label", `${v[y]}, open profile`);
+    (node as SVGElement).style.cursor = "pointer";
+    (node as SVGElement).style.pointerEvents = "auto"; // vega draws axis labels non-interactive
+  };
+  el.querySelectorAll(".mark-rect.role-mark path").forEach((p, i) => vals[i] && mark(p, vals[i]));
+  el.querySelectorAll(".role-axis-label text").forEach((t) => {
+    const s = (t.textContent ?? "").replace(/…$/, "");
+    const v = s && vals.find((v) => String(v[y]).startsWith(s));
+    if (v) mark(t, v);
+  });
+  if (el.dataset.orgLinked) return;
+  el.dataset.orgLinked = "1";
+  const go = (t: EventTarget | null) => { const h = (t as Element | null)?.closest?.("[data-org-href]")?.getAttribute("data-org-href"); if (h) window.location.assign(h); };
+  el.addEventListener("click", (e) => go(e.target));
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter") go(e.target); });
+}
+
 export async function exportChart(view: View, kind: "png" | "svg"): Promise<string> {
   const bg = getComputedStyle(document.body).backgroundColor || "#ffffff";
   const before = view.background();

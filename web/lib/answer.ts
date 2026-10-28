@@ -969,7 +969,7 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
 // v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
 // v50: SDG causes (lib/sdg.ts): "(SDG n)" names stay last in org phrases and drop from the org search link.
-export const ANSWER_VERSION = "answer:v52"; // v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
+export const ANSWER_VERSION = "answer:v53"; // v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
 const answerMemo = memo<Answer>(ANSWER_VERSION, 1200, 6 * 3600_000); // room for every known question (prewarmed) plus asked ones; // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 // opts.memo false: the same queries as a cached answer, not kept here (Browse by cause keeps its own figures, lib/browse.ts).
@@ -1992,7 +1992,7 @@ SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name F
     bullets: [`${b(money(floor0))} in ${fd.short}${isLabel ? " to orgs where it's the main purpose" : ""}`,
       ...(compareBullet.length ? compareBullet : [`${b(pct(share))} of all nonprofits' ${fd.short}${where !== "the US" ? ` in ${where}` : ""}`]),
       `${b(int(m0.reporting))} of ${b(int(m0.orgs))} filers reported any ${fd.short}`],
-    chart: top.length ? { title: `Largest ${fd.short} to ${c0.name}, ${fy.year}`, sub: u.title, spec: hbar(top.map((t) => ({ name: orgName(t.name) + (t.tier === "partial" ? " (partial)" : ""), amount: +(t.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) } : null,
+    chart: top.length ? { title: `Largest ${fd.short} to ${c0.name}, ${fy.year}`, sub: u.title, spec: hbar(top.map((t) => ({ name: orgName(t.name) + (t.tier === "partial" ? " (partial)" : ""), ein: t.ein, amount: +(t.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) } : null,
     rows: top.map((t) => ({ ein: t.ein, name: t.name, state: t.state, tier: t.tier, tax_year: fy.year, usd: t.usd, revenue: t.revenue })),
     causeNote: notes.join(" "), caveats,
     coverage: [{ label: "Orgs in the set", value: int(universe) }, { label: `With a ${fy.year} e-filed return`, value: int(m0.orgs) }, { label: "Full Form 990", value: int(m0.full990) }, { label: `Report ${fd.short}`, value: int(m0.reporting) }],
@@ -2354,7 +2354,7 @@ FROM ${pl.g.clean} g ${gw2.cs.join} WHERE ${and(gw2.where)}`, p2);
       headline: `The ${int(n)} largest ${pl.g.givers} gave ${pct(share)} of ${pl.g.money} ${c ? `for ${causeName(c, pl)}` : "to US organizations"}${pl.label !== "the US" ? ` in ${pl.label}` : ""}, ${yrs(y.from, y.to)}`,
       numbers: [{ value: pct(share), label: `from the top ${int(n)}` }, { value: money(rows.slice(0, n).reduce((a, r) => a + v(r), 0)), label: `given by the top ${int(n)}` }, { value: int(tot.funders), label: `${pl.g.givers} in all` }],
       bullets: [`The top 10 gave ${b(pct(top10))} of ${b(money(v(tot)))}`, `${nm(rows[0].name)} led with ${b(money(v(rows[0])))}`],
-      chart: { title: `Top ${pl.g.adj} funders${c ? ` of ${causeName(c, pl)}` : ""}, ${yrs(y.from, y.to)}`, sub: u10.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), amount: +(v(r) / u10.div).toFixed(3) })), "funder", "amount", u10.title, u10.fmt) },
+      chart: { title: `Top ${pl.g.adj} funders${c ? ` of ${causeName(c, pl)}` : ""}, ${yrs(y.from, y.to)}`, sub: u10.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), ein: r.ein, amount: +(v(r) / u10.div).toFixed(3) })), "funder", "amount", u10.title, u10.fmt) },
       rows: rows.slice(0, n).map((r, i) => ({ rank: i + 1, funder_ein: r.ein, funder: r.name, state: r.state, usd: r.usd, primary_usd: isLabel ? r.primary_usd : null, recipients: r.orgs })),
       causeNote: note, caveats, coverage: [{ label: "Funders", value: int(tot.funders) }],
       method: `${pl.g.form}, tax years ${yrs(y.from, y.to)}, to ${c ? "identified recipients in the cause set" : "all recipients"} in ${pl.label}, summed by ${pl.g.adj}. The ${int(n)} with the most dollars are summed and divided by all ${pl.g.adj} dollars in the same set.`,
@@ -2366,7 +2366,7 @@ FROM ${pl.g.clean} g ${gw2.cs.join} WHERE ${and(gw2.where)}`, p2);
     headline: `${nm(rows[0].name)} is the largest ${pl.g.adj} funder of ${causeName(c, pl)}${pl.label !== "the US" ? ` in ${pl.label}` : ""}: ${money(v(rows[0]))}, ${yrs(y.from, y.to)}`,
     numbers: [{ value: money(v(rows[0])), label: nm(rows[0].name) }, { value: pct(top10), label: "from the top 10 funders" }, { value: int(tot.funders), label: `${pl.g.givers} in all` }],
     bullets: rows.slice(0, 3).map((r) => `${nm(r.name)} (${r.state}): ${b(money(v(r)))} to ${b(int(r.orgs))} orgs`).slice(0, 2).concat([`The top 10 gave ${b(pct(top10))} of ${b(money(v(tot)))}`]),
-    chart: { title: `Top ${pl.g.adj} funders of ${causeName(c, pl)}${isLabel ? " (primary)" : ""}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), amount: +(v(r) / u.div).toFixed(3) })), "funder", "amount", u.title, u.fmt) },
+    chart: { title: `Top ${pl.g.adj} funders of ${causeName(c, pl)}${isLabel ? " (primary)" : ""}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), ein: r.ein, amount: +(v(r) / u.div).toFixed(3) })), "funder", "amount", u.title, u.fmt) },
     rows: rows.map((r) => ({ funder_ein: r.ein, funder: r.name, state: r.state, usd: r.usd, primary_usd: isLabel ? r.primary_usd : null, recipients: r.orgs })),
     causeNote: note, caveats, coverage: [{ label: "Funders", value: int(tot.funders) }],
     method: `${pl.g.form}, tax years ${yrs(y.from, y.to)}, to ${c ? "identified recipients in the cause set" : "all recipients"} in ${pl.label}, summed by ${pl.g.adj}.`,
@@ -2392,7 +2392,7 @@ async function topRecipients(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       headline: `${nm(rows[0].name)} reported the most ${fd.short}${c ? ` among ${orgsOf(c.name)}` : ""}: ${money(rows[0].usd)} in ${fy.year}`,
       numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (partial)" : "") })),
       bullets: rows.slice(0, 2).map((r) => `${nm(r.name)} (${r.state}${r.tier === "partial" ? ", partial" : ""}): ${b(money(r.usd))}, ${b(pct(r.usd / Math.max(1, r.revenue)))} of its revenue`),
-      chart: { title: `Largest ${fd.short}${c ? `, ${c.name}` : ""}, ${fy.year}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
+      chart: { title: `Largest ${fd.short}${c ? `, ${c.name}` : ""}, ${fy.year}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
       rows: rows.map((r) => ({ ein: r.ein, name: r.name, state: r.state, usd: r.usd, revenue: r.revenue })),
       causeNote: note, caveats, coverage: [],
       method: `${fd.name}, tax year ${fy.year}, newest return per organization, largest first.`,
@@ -2417,7 +2417,7 @@ GROUP BY o.ein, o.name, o.state ORDER BY usd DESC LIMIT 10`, p);
     headline: `${nm(rows[0].name)} received the most ${pl.g.money} for ${causeName(c, pl)}: ${money(rows[0].usd)}, ${yrs(y.from, y.to)}`,
     numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (partial)" : "") })),
     bullets: rows.slice(0, 2).map((r) => `${nm(r.name)} (${r.state}): ${b(money(r.usd))} from ${b(int(r.funders))} ${pl.g.givers}`).concat([`Top 10 recipients shown, identified recipients only`]),
-    chart: { title: `Top recipients of ${pl.g.grants}, ${causeName(c, pl)}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
+    chart: { title: `Top recipients of ${pl.g.grants}, ${causeName(c, pl)}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
     rows: rows.map((r) => ({ ein: r.ein, name: r.name, state: r.state, usd: r.usd, tier: r.tier, funders: r.funders })),
     causeNote: note, caveats, coverage: [],
     method: `${pl.g.form}, tax years ${yrs(y.from, y.to)}, to identified recipients in the cause set in ${pl.label}, summed by recipient.`,
