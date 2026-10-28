@@ -2067,3 +2067,8 @@ article.org section[id] { scroll-margin-top: 64px; }
 /* Governance "ask about this" items: amber with a one-line why (round-2 audit O-2) */
 .checks li.watch { color: var(--warn); font-weight: 500; }
 .checks li .gov-why { display: block; font-weight: 400; color: var(--mute); font-size: var(--t-meta); margin: 1px 0 4px 14px; }
+/* Type scale: a bare <small> is 12px, not the browser's 83% (10.8, 11.7 px on the org page); classed rules still win */
+:where(small) { font-size: 12px; }
+.checks li.watch { color: #8b5e0a; } /* amber text at 5.4:1 (--warn is 3.6:1, for dots and bars) */
+@media screen and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .checks li.watch { color: #ffc56b; } }
+:root[data-theme="dark"] .checks li.watch { color: #ffc56b; }

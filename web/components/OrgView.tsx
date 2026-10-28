@@ -193,6 +193,19 @@ function Revoked({ r, conflict, onPub78 }: { r: NonNullable<TaxStatus["revocatio
   );
 }
 
+// What a "no" on a 990 governance question means, in one line (round-2 audit O-2). Only money used for the wrong purpose
+// stays red; the rest are amber "ask about this" items, usually explained on Schedule L.
+const CHECK_WHY: Record<string, string> = {
+  family_business_ties: "Common on small or family boards. Ask who approves deals with relatives.",
+  business_with_insiders: "Listed on Schedule L. Ask about the amount and who approved it.",
+  insider_loan: "Listed on Schedule L. Ask about the terms.",
+  excess_benefit: "The IRS can fine this. Ask what was corrected.",
+  conflict_policy: "Ask how conflicts are handled.",
+  whistleblower_policy: "Ask how staff can raise concerns.",
+  audited: "Ask for financial statements.",
+  diversion_of_assets: "A serious finding. Read the filing's explanation.",
+};
+
 // Long program text: the first few sentences, the rest one click away.
 function Clamp({ text, at = 180 }: { text: string; at?: number }) {
   if (text.length <= at + 80) return <p>{text}</p>;
@@ -297,7 +310,7 @@ function Leadership({ d, ein }: { d: Diligence; ein: string }) {
       )}
       {checks.length > 0 && (
         <ul className="checks">
-          {checks.map((c) => <li key={c.key} className={c.ok ? "ok" : c.minor ? "minor" : "bad"}>{c.ok ? "✓" : "!"} {c.label}</li>)}
+          {checks.map((c) => <li key={c.key} className={c.ok ? "ok" : c.minor ? "minor" : c.key === "diversion_of_assets" ? "bad" : "watch"} title={c.ok ? undefined : CHECK_WHY[c.key]} tabIndex={c.ok ? undefined : 0}>{c.ok ? "✓" : "!"} {c.label}{!c.ok && CHECK_WHY[c.key] && <small className="gov-why">{CHECK_WHY[c.key]}</small>}</li>)}
         </ul>
       )}
       <p className="note-small">Form {d.form === "990EZ" ? "990-EZ" : "990"}, tax year {d.year}, Parts IV, VI and VII{d.url && <> · <a href={d.url} target="_blank" rel="noreferrer">filing ↗</a></>}</p>

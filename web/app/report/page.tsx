@@ -143,7 +143,7 @@ const address = (r: Ranked) => [r.street && titleCase(r.street), [r.city && titl
 function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<ReturnType<typeof fundingOf>>; labels: Map<string, string[]> }) {
   return (
     <table className="report-table">
-      <thead><tr><th>Organization</th><th>Size and filings</th><th>Funding {GRANT_YEARS[0]} to {GRANT_YEARS[1]}</th><th>Relevance and evidence</th></tr></thead>
+      <thead><tr><th>Organization</th><th>Size and filings</th><th>Funding {GRANT_YEARS[0]} to {GRANT_YEARS[1]}</th><th>Why it fits</th></tr></thead>
       <tbody>
         {rows.map((r) => {
           const f = funding.get(r.ein.replace("-", ""));
@@ -169,7 +169,7 @@ function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<
                 {f?.top && <span>Top funder: {orgTitle(f.top.name)} ({money(f.top.amount)})</span>}
               </td>
               <td>
-                <span>{r.relevance ? `${r.relevance.score} of 100. ${r.relevance.why}` : "Not scored"}</span>
+                <span title={r.relevance ? `Match score ${r.relevance.score} of 100` : undefined}>{r.relevance ? r.relevance.why : "Not scored"}</span>
                 {r.place && <span>{r.place.note}{r.place.quote ? `: "${r.place.quote}"` : ""}</span>}
               </td>
             </tr>

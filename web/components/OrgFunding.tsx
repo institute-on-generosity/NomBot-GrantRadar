@@ -132,7 +132,6 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
           <h3>From public charities <small>Form 990 Schedule I</small></h3>
           {ci.byKind.length > 1 && <div className="income"><Bars total={ci.total} rows={ci.byKind.map((k) => ({ key: k.kind, label: k.label, total: k.total, note: `${plural(k.funders, "funder")}, ${plural(k.n, "grant")}` }))} /></div>}
           <More items={ci.top} noun="funders" extra={ci.more} render={(x) => <FunderRow key={x.ein} x={x} />} />
-          <p className="note-small">{FUNDING_NOTES.charities} Donor-advised fund sponsors pass on gifts their donors recommend.</p>
         </div>
       )}
 
@@ -140,7 +139,6 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
         <div className="fund-block">
           <h3>From private foundations <small>Form 990-PF</small></h3>
           <More items={pf.top} noun="foundations" extra={pf.more} render={(x) => <FunderRow key={x.ein} x={x} />} />
-          <p className="note-small">{FUNDING_NOTES.foundations}</p>
         </div>
       )}
 
@@ -157,11 +155,10 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
           {fed.places.length > 0 && (
             <p className="fund-places">Where the work happens: {fed.places.slice(0, 6).map((p, i) => <span key={p.place}>{i > 0 && " · "}{p.place} <b>{money(p.total)}</b></span>)}{fed.places.length > 6 && <> · {fed.places.length - 6} more</>}</p>
           )}
-          <p className="note-small">{FUNDING_NOTES.federal}</p>
         </div>
       )}
       {!!f.transfers?.received.length && <Transfers items={f.transfers.received} side="from" />}
-      <p className="note-small">{FUNDING_NOTES.overlap}</p>
+      <HowWeCount notes={[ci && `${FUNDING_NOTES.charities} Donor-advised fund sponsors pass on gifts their donors recommend.`, pf && FUNDING_NOTES.foundations, fed && FUNDING_NOTES.federal, FUNDING_NOTES.overlap]} />
     </section>
   );
 }
@@ -187,7 +184,6 @@ function GivenTypes({ types }: { types: GivenType[] }) {
           ))}
         </tbody>
       </table>
-      <p className="note-small">{FUNDING_NOTES.types}</p>
     </>
   );
 }
@@ -231,7 +227,7 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
         </div>
       )}
       {!!f.transfers?.given.length && <Transfers items={f.transfers.given} side="to" />}
-      <p className="note-small">{FUNDING_NOTES.given} Totals are summed across all listed years.</p>
+      <HowWeCount notes={[`${FUNDING_NOTES.given} Totals are summed across all listed years.`, pf?.byType.length ? FUNDING_NOTES.types : null]} />
     </section>
   );
 }
@@ -249,6 +245,18 @@ function YearFold({ n, values, children }: { n: number; values: number[]; childr
         <span className="when-closed">By year ({n})</span><span className="when-open">Hide years</span>
       </summary>
       {children}
+    </details>
+  );
+}
+
+// One "How we count" per section instead of a gray method paragraph under every block (round-2 audit O-1)
+function HowWeCount({ notes }: { notes: (string | null | false | undefined)[] }) {
+  const list = notes.filter((n): n is string => !!n);
+  if (!list.length) return null;
+  return (
+    <details className="more-info fund-how">
+      <summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary>
+      {list.map((n) => <p key={n} className="note-small">{n}</p>)}
     </details>
   );
 }
