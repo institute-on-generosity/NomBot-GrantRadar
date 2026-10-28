@@ -101,6 +101,7 @@ async function Table({ searchParams }: Props) {
     <>
       <p className={styles.lede}>
         {orgs.length < 2 ? "Add one more organization to compare" : sameYear ? "Largest figure in each row in bold · from IRS filings" : "Each column uses its own newest full filing year · from IRS filings"}
+        {orgs.length >= 2 && <> · <NavLink href={`/memo/compare?ein=${shown.join(",")}`} label="Preparing the memo…">Options memo (PDF or Word)</NavLink></>}
       </p>
       <div className={styles.scroll}>
         <table className={styles.table} style={{ minWidth: 130 + (orgs.length + slots) * 200 }}>

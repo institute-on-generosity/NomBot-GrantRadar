@@ -133,3 +133,6 @@ export function vetting(o: Org): Promise<Vetting> {
     };
   });
 }
+
+// How a reason reads after its question: "Because deficits in …", or a standard question said plainly
+export const becauseText = (q: Question) => (/^a standard/.test(q.because) ? q.because[0].toUpperCase() + q.because.slice(1) : `Because ${q.because}`);

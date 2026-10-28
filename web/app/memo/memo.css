@@ -1,0 +1,46 @@
+/* One-page memos (app/memo): a US Letter sheet on screen and in print. Calm print typography, one accent. */
+.memo-main { max-width: 8.5in; margin: 0 auto; padding: 24px 16px 48px; }
+.memo-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 16px; font-size: var(--t-small); color: var(--mute); }
+.memo-tools input { margin-left: 6px; padding: 6px 10px; border: 1px solid var(--fill-2); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; width: 16em; }
+.memo-tools button, .memo-tools a { padding: 6px 14px; border-radius: 999px; border: 0; background: var(--g-tint); color: var(--g-dark); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+.memo { page: memo; box-sizing: border-box; width: 100%; min-height: 11in; padding: 0.55in 0.6in; background: #fff; color: #1d1d1f; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.08);
+  font-size: 10pt; line-height: 1.38; font-variant-numeric: tabular-nums; }
+.memo header { border-bottom: 1px solid #e5e5e0; padding-bottom: 8pt; margin-bottom: 8pt; }
+.memo-kicker { margin: 0; font-size: 8pt; letter-spacing: .04em; text-transform: uppercase; color: #6c6c71; }
+.memo h1 { margin: 2pt 0 0; font-size: 17pt; line-height: 1.15; letter-spacing: -.01em; font-weight: 650; }
+.memo-meta, .memo-track { margin: 2pt 0 0; color: #45454a; font-size: 9pt; }
+.memo-track { color: #1e7d36; }
+.memo-mission { margin: 0 0 8pt; color: #2b2b2e; }
+.memo h2 { margin: 9pt 0 3pt; font-size: 9.5pt; font-weight: 650; color: #1d1d1f; }
+.memo-year { display: inline-block; margin-left: 4pt; padding: 0 5pt; border-radius: 99px; background: #f1f1ee; color: #5c5c61; font-size: 7.5pt; font-weight: 500; vertical-align: 1px; }
+.memo-nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6pt; margin: 0; }
+.memo-nums > div { padding: 6pt 8pt; border-radius: 6pt; background: #f6f6f3; }
+.memo-nums dt { font-size: 8pt; color: #5c5c61; }
+.memo-nums dd { margin: 1pt 0 0; font-size: 13pt; font-weight: 650; }
+.memo-nums dd.memo-year { margin: 3pt 0 0; font-size: 7.5pt; background: #fff; }
+.memo-two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18pt; }
+.memo ol, .memo ul { margin: 0; padding-left: 1.2em; }
+.memo-two li { display: grid; grid-template-columns: 1fr auto; column-gap: 8pt; padding: 1.5pt 0; }
+.memo-two li small { grid-column: 1; color: #6c6c71; font-size: 8pt; }
+.memo-two li span { grid-column: 2; grid-row: 1; font-weight: 600; }
+.memo-none { margin: 0; color: #6c6c71; }
+.memo-signals li { padding: 1pt 0; }
+.memo-asks li { padding: 1.5pt 0; }
+.memo-asks li small { display: block; color: #6c6c71; font-size: 8pt; }
+.memo-table { width: 100%; border-collapse: collapse; margin-top: 8pt; font-size: 9pt; }
+.memo-table th, .memo-table td { text-align: left; vertical-align: top; padding: 4pt 6pt 4pt 0; border-bottom: 1px solid #ececE8; }
+.memo-table thead th { font-weight: 650; }
+.memo-table thead th small { display: block; font-weight: 400; color: #6c6c71; font-size: 7.5pt; }
+.memo-table tbody th { font-weight: 500; color: #45454a; width: 22%; }
+.memo .memo-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1px solid #e5e5e0; font-size: 7.5pt; color: #6c6c71; }
+.memo .memo-foot p { margin: 0 0 2pt; }
+.memo-by { color: #1d1d1f; font-weight: 600; }
+@page memo { size: Letter; margin: 0; }
+@media print {
+  html:has(.memo), body:has(.memo) { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  body:has(.memo) .shell, body:has(.memo) .content { display: block !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; height: auto !important; }
+  .memo-tools { display: none !important; }
+  main.memo-main { zoom: 1 !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  /* One Letter sheet: a hair under 11in so rounding never spills a blank second page */
+  .memo { box-shadow: none; min-height: 0; height: 10.9in; overflow: hidden; break-after: avoid; }
+}

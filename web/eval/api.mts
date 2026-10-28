@@ -456,6 +456,22 @@ try {
     check(d?.questions_to_ask?.some((q: J) => q.key === "deficits" || q.key === "deficit"), "org: Dodgers Foundation deficits bring a question");
   }
 
+  // Memos (Oct 28): one-page org brief and options memo, print page and editable Word file
+  {
+    const html = (await (await fetch(`${BASE}/memo/org/954623022?by=Test%20Advisor`)).text()).replace(/<!-- -->/g, "");
+    check(/Questions to ask/.test(html) && /Prepared with NomBot by the Institute on Generosity/.test(html) && /Prepared by Test Advisor/.test(html) && /Tax-exempt since 1998/.test(html), "memo: org brief has questions, track record, prepared by and footer");
+    const t = performance.now();
+    const dx = await fetch(`${BASE}/api/memo/org/954623022/docx?by=Test`);
+    const buf = Buffer.from(await dx.arrayBuffer());
+    timings.push(["memo: org brief docx", Math.round(performance.now() - t)]);
+    check(dx.status === 200 && /wordprocessingml/.test(dx.headers.get("content-type") ?? "") && buf.subarray(0, 2).toString() === "PK" && buf.length > 5000, "memo: org brief Word file");
+    const cm = (await (await fetch(`${BASE}/memo/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");
+    check(/Takeaways/.test(cm) && /Figures from 2024/.test(cm) && /Surplus or deficit/.test(cm), "memo: options memo table and takeaways");
+    check((await fetch(`${BASE}/api/memo/compare/docx?ein=954623022,931724843`)).status === 200, "memo: options memo Word file");
+    check((await fetch(`${BASE}/api/memo/compare/docx?ein=954623022`)).status === 400, "memo: options memo needs 2 orgs");
+    check((await fetch(`${BASE}/api/memo/org/000000000/docx`)).status === 404, "memo: unknown EIN is 404");
+  }
+
   // Compare (round-2 audit V7): one filing year per org, vetting rows, no em dash for missing values
   {
     const html = (await (await fetch(`${BASE}/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");
