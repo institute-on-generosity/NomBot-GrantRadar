@@ -448,6 +448,14 @@ try {
     check((await pv("abc")).status === 404, "org-preview: bad EIN is 404");
   }
 
+  // Vetting card (Oct 28): track record line and questions to ask on /api/v1/org/{ein}
+  {
+    const d = (await get("/api/v1/org/954623022")).body.org;
+    check(d?.track_record?.tax_exempt_since === 1998 && /^Tax-exempt since 1998 · \d+ years · \d+ returns? on record/.test(d.track_record.text ?? ""), `org: track record line (${d?.track_record?.text})`);
+    check(Array.isArray(d?.questions_to_ask) && d.questions_to_ask.length >= 3 && d.questions_to_ask.length <= 5 && d.questions_to_ask.every((q: J) => q.question && q.because), "org: 3 to 5 questions, each with a reason");
+    check(d?.questions_to_ask?.some((q: J) => q.key === "deficits" || q.key === "deficit"), "org: Dodgers Foundation deficits bring a question");
+  }
+
   // Compare (round-2 audit V7): one filing year per org, vetting rows, no em dash for missing values
   {
     const html = (await (await fetch(`${BASE}/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");

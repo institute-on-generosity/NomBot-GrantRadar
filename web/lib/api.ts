@@ -4,6 +4,7 @@
 import { db } from "./db";
 import { search } from "./search";
 import { getOrg, LATEST_RETURN_NOTE } from "./org";
+import { vetting } from "./vetting";
 import { orgFinancialHealth, healthJson } from "./financialHealth";
 import { partialYears } from "./answer";
 import { orgNews, ORG_NEWS_NOTE } from "./orgNews";
@@ -97,10 +98,14 @@ export async function apiOrg(einRaw: string, base: string) {
   const latest = o.years[0] ?? null;
   const num = (v: unknown) => (v == null ? null : Number(v));
   const news = await newsP;
+  const vet = await vetting(o).catch(() => null); // track record and questions to ask (lib/vetting, fixed rules, Oct 28)
   return {
     org: {
       ein: o.ein,
       name: o.name,
+      track_record: vet ? { tax_exempt_since: vet.track.since, years: vet.track.age, returns_on_record: vet.track.filings, first_return: vet.track.firstFiling,
+        income_trend: vet.track.revenue && { from_year: vet.track.revenue.fromYear, to_year: vet.track.revenue.toYear, from: vet.track.revenue.from, to: vet.track.revenue.to, change: +vet.track.revenue.change.toFixed(4) }, text: vet.track.text } : null,
+      questions_to_ask: vet ? vet.questions.map((q) => ({ key: q.key, question: q.q, because: q.because })) : [],
       address: { street: o.street, city: o.city, state: o.state, zip: o.zip },
       ntee: o.ntee,
       // Corrected NTEE major group when the IRS code doesn't fit the org's own 990 text (generosity-data 072), else null

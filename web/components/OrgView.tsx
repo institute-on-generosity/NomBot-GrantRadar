@@ -15,6 +15,7 @@ import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase, orgTitle } from "@/components/text";
 import { getOrg, formName, LATEST_RETURN_NOTE, type Income } from "@/lib/org";
+import { trackText, vetting } from "@/lib/vetting";
 import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
@@ -75,6 +76,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.team?.staff != null && <li title={`Form 990 (${o.team.year}): ${o.team.staff.toLocaleString("en-US")} staff${o.team.volunteers != null ? `, ${o.team.volunteers.toLocaleString("en-US")} volunteers` : ""}`}><Icon name="people" size={18} /><b>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? o.team.volunteers!.toLocaleString("en-US") : o.team.staff.toLocaleString("en-US")}</b><span>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? "volunteers" : "staff"}</span></li>}
         {o.age != null && <li title={`Tax-exempt since ${o.ruling} (IRS ruling date)`}><Icon name="calendar" size={18} /><b>{o.age < 1 ? "<1" : o.age}</b><span>years</span></li>}
       </ul>
+      <Suspense fallback={<p className="org-track" aria-hidden="true">&nbsp;</p>}><TrackLine o={o} /></Suspense>
       {!modal && <OrgSectionNav />}
 
       <section>
@@ -122,6 +124,9 @@ async function Org({ params, searchParams, modal }: Props) {
 
       {/* Financial indicators over the full filing years, with flags and peers (lib/financialHealth); streams in */}
       <Suspense fallback={null}><OrgHealthSection ein={o.ein.replace(/\D/g, "")} /></Suspense>
+
+      {/* 3 to 5 questions for the follow-up call, each with its reason (lib/vetting, fixed rules) */}
+      <Suspense fallback={null}><OrgQuestions o={o} /></Suspense>
 
       {/* Grants received (foundations, charities, federal) and given; streams in after the profile */}
       <Suspense fallback={<p className="hint">Loading grants…</p>}><OrgFunding ein={o.ein} /></Suspense>
@@ -205,6 +210,23 @@ const CHECK_WHY: Record<string, string> = {
   audited: "Ask for financial statements.",
   diversion_of_assets: "A serious finding. Read the filing's explanation.",
 };
+
+type OrgT = NonNullable<Awaited<ReturnType<typeof getOrg>>>;
+// Track record under the key numbers: tax-exempt since, returns on record, the income trend (advisor brief, Oct 28)
+async function TrackLine({ o }: { o: OrgT }) {
+  const v = await vetting(o).catch(() => null);
+  return v?.track.text ? <p className="org-track" title="From the IRS ruling date and the returns we have loaded">{trackText({ ...v.track, age: o.age != null ? null : v.track.age })}</p> : null; // the years are already in the key numbers
+}
+async function OrgQuestions({ o }: { o: OrgT }) {
+  const v = await vetting(o).catch(() => null);
+  if (!v?.questions.length) return null;
+  return (
+    <section className="org-asks">
+      <h2>Questions to ask</h2>
+      <ol>{v.questions.map((x) => <li key={x.key}><b>{x.q}</b><small>Because {x.because}</small></li>)}</ol>
+    </section>
+  );
+}
 
 // Long program text: the first few sentences, the rest one click away.
 function Clamp({ text, at = 180 }: { text: string; at?: number }) {
@@ -348,13 +370,8 @@ function HealthRating({ d }: { d: Diligence }) {
       <ul>
         {signals.map((x) => <li key={x.key} className={x.level}><b>{x.label}</b>{x.note}</li>)}
       </ul>
-      {asks.length > 0 && (
-        <div className="asks">
-          <h3>Questions to ask</h3>
-          <ul>{asks.map((x) => <li key={x.key}>{x.ask}</li>)}</ul>
-          <p>Amber and red mean &ldquo;ask about this,&rdquo; not &ldquo;don&apos;t give.&rdquo;</p>
-        </div>
-      )}
+      {/* The questions themselves live in "Questions to ask" (lib/vetting), with the reason for each */}
+      {asks.length > 0 && <p className="note-small">Amber and red mean &ldquo;ask about this,&rdquo; not &ldquo;don&apos;t give.&rdquo;</p>}
     </section>
   );
 }

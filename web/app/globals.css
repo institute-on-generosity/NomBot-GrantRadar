@@ -2081,3 +2081,8 @@ article.org section[id] { scroll-margin-top: 64px; }
 /* Goal tiles: the trust mark sits in the tile's corner, so long names ("Consumption", "Partnerships") never wrap for it */
 .gg-tile { position: relative; }
 .gg-tile em .trust { position: absolute; top: 7px; right: 8px; margin: 0; }
+/* Org page: track record line and questions to ask (lib/vetting) */
+.org-track { margin: var(--s-2) 0 0; font-size: var(--t-small); color: var(--mute); min-height: 1.4em; }
+.org-asks ol { margin: var(--s-2) 0 0; padding-left: 1.3em; display: grid; gap: var(--s-3); }
+.org-asks li b { display: block; font-weight: 500; color: var(--ink); }
+.org-asks li small { display: block; margin-top: 2px; color: var(--mute); font-size: var(--t-meta); }

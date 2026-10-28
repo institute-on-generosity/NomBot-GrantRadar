@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 // screens, built from the page's own h2s as they stream in, the current section marked as you scroll.
 const LABEL: [RegExp, string][] = [
   [/^Mission/, "About"], [/^Financial health/, "Health"], [/^Finances/, "Money"], [/^Grants received/, "Funders"],
-  [/^Grants given/, "Grants given"], [/^Leadership/, "People"], [/^Similar/, "Similar"], [/^In the news/, "News"], [/^Sources/, "Sources"],
+  [/^Grants given/, "Grants given"], [/^Questions to ask/, "Ask"], [/^Leadership/, "People"], [/^Similar/, "Similar"], [/^In the news/, "News"], [/^Sources/, "Sources"],
 ];
 type Item = { id: string; label: string };
 

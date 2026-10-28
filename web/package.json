@@ -25,7 +25,8 @@
     "test:place": "tsx eval/place.mts",
     "test:browse": "tsx eval/browse.mts",
     "test:summary": "tsx eval/summary.mts",
-    "test:text": "tsx eval/text.mts"
+    "test:text": "tsx eval/text.mts",
+    "test:vetting": "tsx eval/vetting.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
