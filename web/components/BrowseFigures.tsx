@@ -4,6 +4,8 @@ import { connection } from "next/server";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { orgName } from "@/components/text";
+import { TrustMark } from "@/components/TrustMark";
+import { trustOf, trustText, type Trust } from "@/lib/sdg";
 import { askLink, cachedFigures, asks, entry, figures, perOrgHint, topOrgs, type Part } from "@/lib/browse";
 
 const val = (p: Part | null, i = 0) => (p && p.status !== "unanswerable" ? p.numbers[i] ?? null : null);
@@ -32,6 +34,7 @@ export async function Focal({ id, chart = false }: { id: string; chart?: boolean
     <section className="br-focal">
       <NavLink href={askLink(q.total)} className="br-big" label="Working out the answer…" title={t?.note ?? undefined}>{t?.value ?? "n/a"}</NavLink>
       <span className="br-big-l">foundation grants, 2022–24</span>
+      {(() => { const e = entry(id); const t = e ? trustOf(e.sub, e.isScope ? e.sdg : null) : null; return t === "estimated" ? <p className="trust-note br-est" title={trustText(e!.sub, e!.isScope ? e!.sdg : null)}>≈ Estimated from {e!.coverage === "keywords" ? "keywords" : "IRS codes"}</p> : null; })()}
       {tr && <NavLink href={askLink(q.trend)} className={`br-trend ${tr.value.startsWith("−") ? "down" : "up"}`} label="Working out the answer…" title={tr.label}>{tr.value} since 2020</NavLink>}
       {f.years.length > 1 && (chart
         ? <div className="br-bars" aria-label="Foundation grants by year">{f.years.map((y) => <span key={y.year} title={`${y.year}: ${money(y.usd)}`}><i style={{ height: `${Math.max(4, (y.usd / max) * 72)}px` }} /><small>{String(y.year).slice(2)}</small></span>)}</div>
@@ -43,7 +46,7 @@ export async function Focal({ id, chart = false }: { id: string; chart?: boolean
 }
 
 // Subcategories as a ranked list: name, dollars 2022 to 2024 and a bar for its size against the largest.
-export async function SubList({ items }: { items: { id: string; name: string; href: string | null; note?: string }[] }) {
+export async function SubList({ items }: { items: { id: string; name: string; href: string | null; note?: string; trust?: Trust; tip?: string }[] }) {
   await connection();
   const rows = await Promise.all(items.map(async (x) => ({ ...x, f: x.href ? await figures(x.id).catch(() => null) : null })));
   const usd = (r: (typeof rows)[number]) => (r.f?.status === "ok" ? r.f.usdYear : 0);
@@ -53,7 +56,7 @@ export async function SubList({ items }: { items: { id: string; name: string; hr
     <ol className="br-rank">
       {rows.map((r) => {
         const v = r.f?.status === "ok" ? val(r.f.parts.total)?.value : null;
-        const body = <><span className="br-rank-n">{r.name}</span><span className="br-rank-bar"><i style={{ width: `${(100 * usd(r)) / max}%` }} /></span><b>{v ?? (r.href ? "n/a" : "Not in our data")}</b></>;
+        const body = <><span className="br-rank-n">{r.name}{r.trust && r.tip && <TrustMark trust={r.trust} tip={r.tip} />}</span><span className="br-rank-bar"><i style={{ width: `${(100 * usd(r)) / max}%` }} /></span><b>{v ?? (r.href ? "n/a" : "Not in our data")}</b></>;
         return <li key={r.id} title={r.note}>{r.href ? <NavLink href={r.href} className="br-rank-row">{body}</NavLink> : <span className="br-rank-row off">{body}</span>}</li>;
       })}
     </ol>

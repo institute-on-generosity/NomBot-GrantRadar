@@ -158,3 +158,7 @@ a.br-rank-row:hover { background: var(--fill); }
 .br-list a { color: inherit; text-decoration: none; }
 .br-list a:hover { color: var(--g); text-decoration: underline; }
 @media (max-width: 640px) { .br-orgs .br-rank-row { grid-template-columns: minmax(0, 1fr) auto; } .br-orgs .br-rank-bar { display: none; } }
+.br-focal .br-est { grid-column: 1 / -1; margin: 0; cursor: help; }
+.br-goal-name .trust { margin-left: -3px; }
+.br-env .br-goal-tile { grid-column: span 2; }
+@media (max-width: 640px) { .br-env .br-goal-tile { grid-column: span 2; } }

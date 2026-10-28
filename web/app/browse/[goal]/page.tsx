@@ -6,7 +6,8 @@ import { Below, Focal, SubList } from "@/components/BrowseFigures";
 import { Icon } from "@/components/Icons";
 import { CauseIcon } from "@/components/CauseIcon";
 import { BrowseBack } from "@/components/BrowseBack";
-import { ENVIRONMENT, findSub, SDGS, sdgSlug, type Sdg, type Sub } from "@/lib/sdg";
+import { ENVIRONMENT, findSub, SDGS, sdgSlug, trustOf, trustText, type Sdg, type Sub } from "@/lib/sdg";
+import { TrustLegend, TrustMark } from "@/components/TrustMark";
 import "../browse.css";
 
 // A goal (sdg-4) or the Environment umbrella (Oct 27 redesign): the goal's foundation dollars as the focal number
@@ -31,7 +32,7 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
   const s = g.sdg;
   const see = (s?.seeAlso ?? []).map((id) => findSub(id)).filter((f) => !!f);
   const items = g.subs.map(({ sub, sdg, isScope }) => ({
-    id: sub.id, name: sub.name, note: [sub.plain, sub.note].filter(Boolean).join(". "),
+    id: sub.id, name: sub.name, note: [sub.plain, sub.note].filter(Boolean).join(". "), trust: trustOf(sub, isScope ? sdg : null), tip: trustText(sub, isScope ? sdg : null),
     href: sub.coverage === "none" ? null : `/browse/${sdg ? sdgSlug(sdg.n) : ENVIRONMENT.id}${isScope ? "" : `/${sub.id}`}`,
   }));
   return (
@@ -40,12 +41,13 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
       <h1 className="pagetitle br-title" title={s ? `${s.plain}. UN: “${s.goal}.”` : ENVIRONMENT.plain}>
         {s ? <CauseIcon n={s.n} color={s.color} size={48} /> : <CauseIcon label="Environment" size={48} />}
         {g.title}
-        {s?.limited && <span className="br-lim" title={`Limited nonprofit data. ${s.limited}`} aria-label="Limited nonprofit data" tabIndex={0}><Icon name="warn" size={18} /></span>}
+        <TrustMark trust={trustOf(g.scope, s)} tip={s?.limited ? `Limited nonprofit data for this cause. ${s.limited}` : trustText(g.scope, s)} />
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={g.scope.id} /></Suspense>
       <section className="br-sec">
         <h2>By subcategory</h2>
         <Suspense fallback={<p className="hint">Loading…</p>}><SubList items={items} /></Suspense>
+        <TrustLegend limited={items.some((x) => x.trust === "limited")} />
         {see.length > 0 && (
           <p className="br-see">Also: {see.map((f, i) => <span key={f!.sub.id}>{i > 0 && ", "}<Link href={`/browse/${f!.sdg ? sdgSlug(f!.sdg.n) : ENVIRONMENT.id}${f!.isScope ? "" : `/${f!.sub.id}`}`}>{f!.sub.name}</Link></span>)}</p>
         )}

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Below, Focal, TopOrgs } from "@/components/BrowseFigures";
 import { CauseIcon } from "@/components/CauseIcon";
-import { covered, ENVIRONMENT, findSub, sdgSlug } from "@/lib/sdg";
+import { covered, ENVIRONMENT, findSub, sdgSlug, trustOf, trustText } from "@/lib/sdg";
+import { TrustMark } from "@/components/TrustMark";
 import "../../browse.css";
 
 // One subcategory (Oct 27 redesign): its foundation dollars and growth as the focal point, one chart by year, then
@@ -31,7 +32,7 @@ export default async function SubPage(props: PageProps<"/browse/[goal]/[sub]">) 
     <main className="br-page">
       <Link href={`/browse/${sdgSlug(s.n)}`} className="back" title={`Goal ${s.n}: ${s.name}`}>← {s.name}</Link>
       <h1 className="pagetitle br-title" title={[sub.plain, sub.targets?.length ? `Serves UN targets ${sub.targets.join(", ")}` : "", sub.note].filter(Boolean).join(". ")}>
-        <CauseIcon n={s.n} color={s.color} size={48} />{sub.name}
+        <CauseIcon n={s.n} color={s.color} size={48} />{sub.name}<TrustMark trust={trustOf(sub)} tip={trustText(sub)} />
       </h1>
       <Suspense fallback={<p className="hint">Loading figures…</p>}><Focal id={sub.id} chart /></Suspense>
       <Suspense fallback={<p className="hint">Loading organizations…</p>}><TopOrgs id={sub.id} /></Suspense>

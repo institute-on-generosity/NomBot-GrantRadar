@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import type { Trust } from "@/lib/sdg";
 import { NavLink } from "@/components/NavLink";
 import { SearchBox } from "@/components/SearchBox";
 import { GoalGrid } from "@/components/GoalGrid";
 
 // A research group: an SDG block (sdg, its prompts by subcategory in subs) or a cross-cutting group (lib/examples.ts).
-export type PromptGroup = { label: string; prompts: string[]; sdg?: { n: number; name: string; color: string; href: string }; subs?: { label: string; prompts: string[] }[];
-  table?: { label: string; q: Record<"total" | "trend" | "top_funders" | "by_state" | "underfunded", string> | null }[]; more?: string[] };
+export type PromptGroup = { label: string; prompts: string[]; sdg?: { n: number; name: string; color: string; href: string; trust: Trust; tip: string }; subs?: { label: string; prompts: string[] }[];
+  table?: { label: string; q: Record<"total" | "trend" | "top_funders" | "by_state" | "underfunded", string> | null; trust?: Trust; tip?: string }[]; more?: string[] };
 export type PromptSet = { word: string; placeholder: string; prompts: string[]; groups?: PromptGroup[] };
 
 // Short tab names on phones (audit H2: the four tabs overflowed at 375px)

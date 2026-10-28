@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { TrustLegend, TrustMark } from "./TrustMark";
+import type { Trust } from "@/lib/sdg";
 import { createPortal } from "react-dom";
 import { NavLink } from "./NavLink";
 import { Icon } from "./Icons";
@@ -16,7 +18,7 @@ import { CauseIcon } from "./CauseIcon";
 
 const clean = (q: string) => q.replace(/\s\(SDG \d+\)/, "");
 type Ask = { q: string; label: string };
-type Topic = { label: string; prompts: Ask[] };
+type Topic = { label: string; prompts: Ask[]; trust?: Trust; tip?: string };
 // The header names the topic, so the Browse questions show short (each still asks the full question, its tooltip)
 const SHORT_Q: [keyof NonNullable<NonNullable<PromptGroup["table"]>[number]["q"]>, string][] = [
   ["total", "How much foundation money goes here?"], ["trend", "Is it growing?"], ["top_funders", "Who are the biggest funders?"],
@@ -34,7 +36,7 @@ function topicsOf(g: PromptGroup): Topic[] {
     if (mine.length) used.add(r.label);
     const asks: Ask[] = r.q ? SHORT_Q.map(([k, label]) => ({ q: r.q![k], label })) : [];
     const seen = new Set<string>();
-    return { label: r.label, prompts: [...mine.map(full), ...asks].filter((a) => !seen.has(a.q) && (seen.add(a.q), true)).slice(0, 5) };
+    return { label: r.label, trust: r.trust, tip: r.tip, prompts: [...mine.map(full), ...asks].filter((a) => !seen.has(a.q) && (seen.add(a.q), true)).slice(0, 5) };
   });
   // Curated prompts whose topic isn't a row (e.g. a goal-wide question) join the goal's own row
   const extra = (g.subs ?? []).filter((s) => !used.has(s.label)).flatMap((s) => s.prompts);
@@ -150,7 +152,7 @@ export function GoalGrid({ groups, onPick, from = "home" }: { groups: PromptGrou
     <div ref={pop} className={`pp${pos?.above ? " above" : ""}`} role="dialog" aria-modal="false" aria-label={title} onKeyDown={keys}
       style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? "visible" : "hidden", "--notch": `${pos?.notch ?? 40}px` } as React.CSSProperties}>
       <div className="pp-head">
-        <b className="pp-title"><CauseIcon n={group.sdg?.n} label={group.sdg ? undefined : group.label} color={group.sdg?.color} size={30} />{title}</b>
+        <b className="pp-title"><CauseIcon n={group.sdg?.n} label={group.sdg ? undefined : group.label} color={group.sdg?.color} size={30} />{title}{group.sdg && <TrustMark trust={group.sdg.trust} tip={group.sdg.tip} />}</b>
         {group.sdg && <NavLink href={`${group.sdg.href}?${new URLSearchParams({ from, back: typeof location === "undefined" ? "" : location.pathname + location.search })}`} className="pp-browse" label="Loading the cause…">Browse figures →</NavLink>}
         <button type="button" className="pp-close" onClick={close} aria-label="Close" title="Close (Esc)">✕</button>
       </div>
@@ -162,7 +164,7 @@ export function GoalGrid({ groups, onPick, from = "home" }: { groups: PromptGrou
         {!step2 ? (
           <ul key="topics" className="pp-list pp-step">
             {topics.map((t) => (
-              <li key={t.label}><button type="button" className="pp-row" onClick={() => setTopic(t.label)}><span>{t.label}</span><Icon name="chevronRight" size={15} /></button></li>
+              <li key={t.label}><button type="button" className="pp-row" onClick={() => setTopic(t.label)}><span>{t.label}{t.trust && t.tip && <TrustMark trust={t.trust} tip={t.tip} />}</span><Icon name="chevronRight" size={15} /></button></li>
             ))}
           </ul>
         ) : (
@@ -187,10 +189,11 @@ export function GoalGrid({ groups, onPick, from = "home" }: { groups: PromptGrou
             aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
             onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
             <CauseIcon n={g.sdg?.n} label={g.sdg ? undefined : g.label} color={g.sdg?.color} size={32} />
-            <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}</em>
+            <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}{g.sdg && <TrustMark trust={g.sdg.trust} tip={g.sdg.tip} />}</em>
           </button>
         ))}
       </div>
+      {key === "sdg" && <TrustLegend limited={gs.some((g) => g.sdg?.trust === "limited")} />}
     </div>
   );
 

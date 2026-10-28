@@ -273,6 +273,26 @@ export const coverageOf = (sub: Sub): Coverage => (liveLabel(sub) ? "label" : su
 // The cause the answer engine counts (answerSpec Cause). name: "<subcategory> (SDG n)", lower case mid-sentence, or
 // for a goal's own scope the goal's name ("quality education (SDG 4)"), unless nonprofit data covers the goal only in
 // part: then the scope's own name ("energy conservation (SDG 7)"), so a headline never claims the whole goal.
+// How far to trust a cause's counts (Oct 28, Hunter), from the same coverage the engine uses, so it flips by itself when
+// a pending label (environment, workforce, healthcare) goes live in lib/labels.ts:
+//   checked    a graded cause label (Claude read each org's 990, graded on a fresh sample against a 95% bar)
+//   estimated  IRS NTEE codes or keywords only: may include some off-topic orgs and miss others
+//   limited    the goal is mostly governments or infrastructure, or not in our data
+export type Trust = "checked" | "estimated" | "limited";
+export function trustOf(sub: Sub, sdg?: Sdg | null): Trust {
+  if (sdg && sub === sdg.scope && sdg.coverage === "limited") return "limited";
+  const c = coverageOf(sub);
+  return c === "label" ? "checked" : c === "none" ? "limited" : "estimated";
+}
+export function trustText(sub: Sub, sdg?: Sdg | null): string {
+  const t = trustOf(sub, sdg);
+  if (t === "checked") return "Checked cause label: each org's filing was read, graded about 95% right on a fresh sample.";
+  if (t === "limited") return "Limited nonprofit data for this cause.";
+  return coverageOf(sub) === "keywords"
+    ? "Estimated from words in names and filings. Not yet checked by our cause label, so counts may include some off-topic orgs and miss others."
+    : "Estimated from IRS cause codes. Not yet checked by our cause label, so counts may include some off-topic orgs and miss others.";
+}
+
 export function causeOf(sub: Sub, sdg: Sdg | null): { name: string; label: LabelSlug | null; ntee: string[]; keywords: string[] } | null {
   if (sub.coverage === "none") return null;
   const label = liveLabel(sub);

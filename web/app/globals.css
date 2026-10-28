@@ -2072,3 +2072,10 @@ article.org section[id] { scroll-margin-top: 64px; }
 .checks li.watch { color: #8b5e0a; } /* amber text at 5.4:1 (--warn is 3.6:1, for dots and bars) */
 @media screen and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .checks li.watch { color: #ffc56b; } }
 :root[data-theme="dark"] .checks li.watch { color: #ffc56b; }
+/* Cause trust marks (components/TrustMark): one small glyph, never shifts the name */
+.trust { display: inline-block; width: 1em; margin-left: .3em; text-align: center; font-size: .85em; font-weight: 500; line-height: 1; color: var(--faint); cursor: help; flex: none; }
+.trust-checked { color: var(--g); }
+.trust-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: var(--s-2) 0 0; font-size: 12px; color: var(--mute); }
+.trust-legend .trust { margin: 0 2px 0 0; cursor: default; }
+.trust-note { margin: 2px 0 0; font-size: var(--t-meta); color: var(--mute); }
+.pagetitle .trust { font-size: 20px; vertical-align: middle; margin-left: 10px; }

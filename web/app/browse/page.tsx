@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { MiniFigures, MiniSkeleton } from "@/components/BrowseFigures";
-import { Icon } from "@/components/Icons";
 import { CauseIcon } from "@/components/CauseIcon";
 import { askHref } from "@/lib/researchQuestions";
-import { ENVIRONMENT, SDG_SHORT, SDGS, sdgSlug } from "@/lib/sdg";
+import { ENVIRONMENT, SDG_SHORT, SDGS, sdgSlug, trustOf, trustText } from "@/lib/sdg";
+import { TrustLegend, TrustMark } from "@/components/TrustMark";
 import "./browse.css";
 
 export const metadata = { title: "Browse by cause · NomBot" };
@@ -22,23 +22,24 @@ export default function BrowsePage() {
           <Link key={g.n} href={`/browse/${sdgSlug(g.n)}`} className="br-goal-tile" title={`Goal ${g.n}: ${g.name}. ${g.plain}${g.coverage === "limited" ? ". Limited nonprofit data" : ""}`}>
             <CauseIcon n={g.n} color={g.color} size={34} />
             <Suspense fallback={<MiniSkeleton />}><MiniFigures id={g.scope.id} /></Suspense>
-            <span className="br-goal-name"><span className="br-goal-label">{SDG_SHORT[g.n] ?? g.name}</span>{g.coverage === "limited" && <span className="br-lim" aria-label="Limited nonprofit data"><Icon name="warn" size={12} /></span>}</span>
+            <span className="br-goal-name"><span className="br-goal-label">{SDG_SHORT[g.n] ?? g.name}</span><TrustMark trust={trustOf(g.scope, g)} tip={g.limited ? `Limited nonprofit data for this cause. ${g.limited}` : trustText(g.scope, g)} /></span>
           </Link>
         ))}
       </div>
       <div className="br-goals br-env">
         <Link href={`/browse/${ENVIRONMENT.id}`} className="br-goal-tile" title={`All environment and animal groups. ${ENVIRONMENT.plain}.`}>
-          <span className="br-goal-name"><CauseIcon label="Environment" size={34} />Environment</span>
+          <span className="br-goal-name"><CauseIcon label="Environment" size={34} />Environment<TrustMark trust={trustOf(ENVIRONMENT.scope)} tip={trustText(ENVIRONMENT.scope)} /></span>
           <Suspense fallback={<MiniSkeleton />}><MiniFigures id={ENVIRONMENT.id} /></Suspense>
         </Link>
       </div>
+      <TrustLegend limited />
       <p className="br-across">
         <span>Across causes</span>
         {[["Fastest growing", "Which causes are growing fastest in foundation funding?"], ["Overlooked food banks", "Which food banks are overlooked by foundations for their size?"], ["Top 100 foundations' share", "What share of foundation giving comes from the 100 largest foundations?"]].map(([l, q]) => (
           <Link key={q} href={askHref(q)} title={q}>{l}</Link>
         ))}
       </p>
-      <details className="more-info br-foot"><summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary><p>Each cause counts one set of orgs, named on its page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. Goals marked with a warning are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>). Foundation grants from IRS 990-PF filings.</p></details>
+      <details className="more-info br-foot"><summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary><p>Each cause counts one set of orgs, named on its page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. ≈ marks causes counted by IRS cause codes, not yet by a checked cause label. ✓ marks a checked label. ◌ marks goals that are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>). Foundation grants from IRS 990-PF filings.</p></details>
     </main>
   );
 }

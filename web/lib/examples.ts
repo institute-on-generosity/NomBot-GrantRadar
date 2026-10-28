@@ -1,5 +1,5 @@
 import type { PromptGroup, PromptSet } from "@/components/HeroFlip";
-import { causeOf, causeQuestions, displayCause, findSub, SDGS, sdgSlug } from "./sdg";
+import { causeOf, causeQuestions, displayCause, findSub, SDGS, sdgSlug, trustOf, trustText } from "./sdg";
 
 // Example questions (every state is loaded; the first five, the home-page pills, stay in Appalachia, IoG's focus).
 // The first five are the home-page pills; all of them feed the search-bar suggestions.
@@ -67,7 +67,7 @@ const COLS = ["total", "trend", "top_funders", "by_state", "underfunded"] as con
 const tableOf = (g: (typeof SDGS)[number]) => {
   const row = (label: string, sub: (typeof g.subs)[number]) => {
     const q = causeOf(sub, g) ? causeQuestions(displayCause(sub, g)) : null; // plain cause names, never "(SDG n)"
-    return { label, q: q ? Object.fromEntries(COLS.map((k) => [k, q[k]])) as Record<(typeof COLS)[number], string> : null };
+    return { label, q: q ? Object.fromEntries(COLS.map((k) => [k, q[k]])) as Record<(typeof COLS)[number], string> : null, trust: trustOf(sub, g), tip: trustText(sub, g) };
   };
   return [row(`All of ${g.name}`, g.scope), ...g.subs.map((s) => row(s.name, s))];
 };
@@ -78,7 +78,7 @@ export const RESEARCH_GROUPS: PromptGroup[] = [
     const asked = new Set(table.flatMap((r) => (r.q ? Object.values(r.q) : [])));
     const more = subs.flatMap((x) => x.prompts).filter((q) => !asked.has(q)).slice(0, 3);
     // prompts: every question the popover can ask (eval/browse checks each one routes to a covered cause)
-    return { label: `SDG ${g.n} ${g.name}`, prompts: [...new Set([...table.flatMap((r) => (r.q ? Object.values(r.q) : [])), ...subs.flatMap((x) => x.prompts)])], sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}` }, subs, table, more };
+    return { label: `SDG ${g.n} ${g.name}`, prompts: [...new Set([...table.flatMap((r) => (r.q ? Object.values(r.q) : [])), ...subs.flatMap((x) => x.prompts)])], sdg: { n: g.n, name: g.name, color: g.color, href: `/browse/${sdgSlug(g.n)}`, trust: trustOf(g.scope, g), tip: trustText(g.scope, g) }, subs, table, more };
   }),
   ...CROSS,
 ];

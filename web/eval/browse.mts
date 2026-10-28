@@ -93,6 +93,22 @@ for (const [i, f] of pick.entries()) {
 const pctl = (xs: number[], p: number) => { const s = [...xs].sort((a, z) => a - z); return s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; };
 console.log(`numbers: ${numChecks - numBad}/${numChecks} match the research answers (${pick.length} causes)`);
 console.log(`latency per cause: first read p50 ${pctl(cold, 0.5)} ms, p90 ${pctl(cold, 0.9)} ms, max ${Math.max(...cold)} ms (cold when nothing was cached), cached read p50 ${pctl(warm, 0.5)} ms`);
+// Trust marks (Oct 28): estimated exactly when the engine counts a cause without a label, so a pending label going
+// live (lib/labels.ts) flips its mark with no other change
+{
+  const { trustOf, findSub: fs } = await import("../lib/sdg");
+  for (const f of covered()) {
+    const c = causeOf(f.sub, f.sdg), t = trustOf(f.sub, f.isScope ? f.sdg : null);
+    if (t === "limited") continue;
+    if ((t === "checked") !== Boolean(c?.label)) bad.push(`trust ${f.sub.id}: ${t} but the engine counts it ${c?.label ? "by label" : "by codes"}`);
+  }
+  for (const [id, want] of [["education", "checked"], ["mental_health", "checked"], ["healthcare", LABEL_SLUGS.includes("healthcare" as never) ? "checked" : "estimated"], ["workforce", LABEL_SLUGS.includes("workforce" as never) ? "checked" : "estimated"], ["environment", LABEL_SLUGS.includes("environment" as never) ? "checked" : "estimated"]] as const) {
+    const f = id === "environment" ? { sub: ENVIRONMENT.scope } : fs(id);
+    const t = f ? trustOf(f.sub) : null;
+    if (t !== want) bad.push(`trust ${id}: ${t}, want ${want}`);
+  }
+  console.log("trust marks checked");
+}
 if (bad.length) { console.log(`\n${bad.length} failing:\n${bad.slice(0, 40).join("\n")}`); process.exitCode = 1; }
 else console.log("all pass");
 await new Promise((r) => setTimeout(r, 2500)); // let the disk cache save
