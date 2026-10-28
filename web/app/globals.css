@@ -2042,8 +2042,6 @@ a.prompt-help { color: var(--faint); }
 /* First load of /research/ask: the question (Suspense fallback), then the live steps beside it (PendingSteps) */
 .chat-thread.chat-echo { flex: 0 0 auto; padding-bottom: 0; }
 .chat-thread.chat-pending-first { padding-top: var(--s-6); }
-/* Home: one line on what NomBot is (round-2 audit V9) */
-.greet-sub { margin: -16px auto 26px; max-width: 34em; text-align: center; text-wrap: balance; color: var(--mute); font-size: var(--t-body); line-height: 1.45; }
 /* Answer actions: icon buttons name themselves at once on hover or focus (round-2 audit V8) */
 .chat-act { position: relative; }
 .chat-act[aria-label]:hover::after, .chat-act[aria-label]:focus-visible::after { content: attr(aria-label); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: var(--z-popover); white-space: nowrap; padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 500; pointer-events: none; }
@@ -2075,7 +2073,11 @@ article.org section[id] { scroll-margin-top: 64px; }
 /* Cause trust marks (components/TrustMark): one small glyph, never shifts the name */
 .trust { display: inline-block; width: 1em; margin-left: .3em; text-align: center; font-size: .85em; font-weight: 500; line-height: 1; color: var(--faint); cursor: help; flex: none; }
 .trust-checked { color: var(--g); }
+.trust-note svg { margin-right: 2px; }
 .trust-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: var(--s-2) 0 0; font-size: 12px; color: var(--mute); }
 .trust-legend .trust { margin: 0 2px 0 0; cursor: default; }
 .trust-note { margin: 2px 0 0; font-size: var(--t-meta); color: var(--mute); }
 .pagetitle .trust { font-size: 20px; vertical-align: middle; margin-left: 10px; }
+/* Goal tiles: the trust mark sits in the tile's corner, so long names ("Consumption", "Partnerships") never wrap for it */
+.gg-tile { position: relative; }
+.gg-tile em .trust { position: absolute; top: 7px; right: 8px; margin: 0; }

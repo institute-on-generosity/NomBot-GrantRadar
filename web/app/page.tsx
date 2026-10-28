@@ -405,11 +405,11 @@ function filterChips(f: Filters, p: Params): Chip[] {
       const sub = st ? (f.labelSub ?? st.default) : null;
       const subText = st && sub ? `: ${sub === "all" ? "both sub-types" : st.names[sub as LabelSub].toLowerCase()}` : "";
       return {
-        key: "label", kind: "set", label: `${labelName(l)}${subText}${f.labelPartial ? " (main or partial focus)" : " (main focus)"}`,
+        key: "label", kind: "set", label: `${labelName(l)}${subText}${f.labelPartial ? " (main focus or part of their work)" : " (main focus)"}`,
         removeHref: go({ label: "none", tier: "", sub: "" }),
         options: [
           { label: "Main focus only", href: go({ label: l, tier: "primary" }), on: !f.labelPartial, note: "The cause is most of their work" },
-          { label: "Include partial focus", href: go({ label: l, tier: "all" }), on: Boolean(f.labelPartial), note: "Also orgs with one named program for it" },
+          { label: "Include orgs where it's part of their work", href: go({ label: l, tier: "all" }), on: Boolean(f.labelPartial), note: "Also orgs with one named program for it" },
           ...(st ? [...(Object.keys(st.names) as LabelSub[]).map((k) => ({ label: st.names[k], href: go({ label: l, sub: k }), on: sub === k, note: st.notes[k] })),
             { label: "Both sub-types", href: go({ label: l, sub: "all" }), on: sub === "all", note: "The whole label" }] : []),
           ...LABEL_SLUGS.filter((x) => x !== l).map((x) => ({ label: `Switch to ${labelName(x)}`, href: go({ label: x, tier: "", sub: "" }), on: false })),

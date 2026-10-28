@@ -39,7 +39,7 @@ export default function BrowsePage() {
           <Link key={q} href={askHref(q)} title={q}>{l}</Link>
         ))}
       </p>
-      <details className="more-info br-foot"><summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary><p>Each cause counts one set of orgs, named on its page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. ≈ marks causes counted by IRS cause codes, not yet by a checked cause label. ✓ marks a checked label. ◌ marks goals that are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>). Foundation grants from IRS 990-PF filings.</p></details>
+      <details className="more-info br-foot"><summary><span className="when-closed">How we count</span><span className="when-open">Hide how we count</span></summary><p>Each cause counts one set of orgs, named on its page. Graded labels come from each org&apos;s own 990 text. IRS codes are the NTEE codes the IRS lists. ◐ partial marks causes counted by the IRS cause codes nonprofits choose, not yet by a checked cause label. ✓ marks a checked label. ◌ marks goals that are mostly the work of governments and companies. Goal names and texts are the UN&apos;s (<a href="https://sdgs.un.org/goals">sdgs.un.org/goals</a>). Foundation grants from IRS 990-PF filings.</p></details>
     </main>
   );
 }

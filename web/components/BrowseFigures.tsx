@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { orgName } from "@/components/text";
-import { TrustMark } from "@/components/TrustMark";
+import { Half, TrustMark } from "@/components/TrustMark";
 import { trustOf, trustText, type Trust } from "@/lib/sdg";
 import { askLink, cachedFigures, asks, entry, figures, perOrgHint, topOrgs, type Part } from "@/lib/browse";
 
@@ -34,7 +34,7 @@ export async function Focal({ id, chart = false }: { id: string; chart?: boolean
     <section className="br-focal">
       <NavLink href={askLink(q.total)} className="br-big" label="Working out the answer…" title={t?.note ?? undefined}>{t?.value ?? "n/a"}</NavLink>
       <span className="br-big-l">foundation grants, 2022–24</span>
-      {(() => { const e = entry(id); const t = e ? trustOf(e.sub, e.isScope ? e.sdg : null) : null; return t === "estimated" ? <p className="trust-note br-est" title={trustText(e!.sub, e!.isScope ? e!.sdg : null)}>≈ Estimated from {e!.coverage === "keywords" ? "keywords" : "IRS codes"}</p> : null; })()}
+      {(() => { const e = entry(id); const t = e ? trustOf(e.sub, e.isScope ? e.sdg : null) : null; return t === "partial" ? <p className="trust-note br-est" title={trustText(e!.sub, e!.isScope ? e!.sdg : null)}><Half /> Partial count, based on {e!.coverage === "keywords" ? "keywords" : "IRS codes"}</p> : null; })()}
       {tr && <NavLink href={askLink(q.trend)} className={`br-trend ${tr.value.startsWith("−") ? "down" : "up"}`} label="Working out the answer…" title={tr.label}>{tr.value} since 2020</NavLink>}
       {f.years.length > 1 && (chart
         ? <div className="br-bars" aria-label="Foundation grants by year">{f.years.map((y) => <span key={y.year} title={`${y.year}: ${money(y.usd)}`}><i style={{ height: `${Math.max(4, (y.usd / max) * 72)}px` }} /><small>{String(y.year).slice(2)}</small></span>)}</div>
@@ -109,7 +109,7 @@ export async function TopOrgs({ id }: { id: string }) {
       <ol className="br-rank">
         {t.orgs.map((o) => (
           <li key={o.ein} className="br-rank-row">
-            <NavLink href={`/org/${o.ein}`} label="Opening the organization…" className="br-rank-n">{orgName(o.name, 200)}{o.partial && <small title="One of its programs, not its main purpose"> · partly</small>}</NavLink>
+            <NavLink href={`/org/${o.ein}`} label="Opening the organization…" className="br-rank-n">{orgName(o.name, 200)}{o.partial && <small title="One of its programs, not its main focus"> · part of its work</small>}</NavLink>
             <span className="br-rank-bar"><i style={{ width: `${(100 * o.usd) / max}%` }} /></span>
             <b>{money(o.usd)}</b>
           </li>

@@ -1,5 +1,6 @@
 "use client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Half } from "./TrustMark";
 import { useState, useTransition } from "react";
 import type { Answer } from "@/lib/answer";
 import { AnswerMethod } from "./AnswerCard";
@@ -25,7 +26,7 @@ const Icon = ({ d }: { d: React.ReactNode }) => <svg width="16" height="16" view
 export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: boolean; since: number | null } }) {
   // A cause counted by IRS codes or keywords, not a checked cause label (Oct 28): one muted line under the headline
   const loose = a.status !== "unanswerable" ? a.spec.causes.find((c) => !c.label && (c.ntee.length || c.keywords.length)) : undefined;
-  const est = loose ? { by: loose.ntee.length ? "IRS codes" : "keywords", tip: `${loose.ntee.length ? "Estimated from IRS cause codes" : "Estimated from words in names and filings"}. Not yet checked by our cause label, so counts may include some off-topic orgs and miss others.` } : null;
+  const est = loose ? { by: loose.ntee.length ? "IRS codes" : "keywords", tip: `Partial: counted by ${loose.ntee.length ? "the IRS cause codes nonprofits choose themselves" : "words in nonprofits' names and filings"}, not yet checked by our cause label. Some off-topic orgs may be included and some missed.` } : null;
   const [method, setMethod] = useState(false);
   const [copied, setCopied] = useState(false);
   const none = a.status === "unanswerable";
@@ -52,7 +53,7 @@ export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: bool
         </p>
       )}
       <p className="chat-lead">{a.headline}</p>
-      {est && <p className="trust-note" title={est.tip}>≈ Estimated from {est.by}</p>}
+      {est && <p className="trust-note" title={est.tip}><Half /> Partial count, based on {est.by}</p>}
       {controls && (a.options?.corrected || a.options?.since || controls.corr || controls.since) && <AnswerSettings options={a.options ?? {}} on={controls} />}
       {a.chart && (
         <figure className="chat-chart">

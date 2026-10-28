@@ -49,8 +49,6 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
           </span>
         </span>
       </h1>
-      {/* What NomBot is, for a first-time visitor (round-2 audit V9) */}
-      <p className="greet-sub">Find and vet US nonprofits and foundations by cause and place, from public IRS filings.</p>
       <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={openGroup?.prompts[0] ? `e.g. ${openGroup.prompts[0].replace(/\s\(SDG \d+\)/, "")}` : set.placeholder} big /></div>
       <div className="flip-tabs" role="tablist" aria-label="Example searches" {...hold}>
         {sets.map((s, k) => (

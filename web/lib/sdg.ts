@@ -276,21 +276,22 @@ export const coverageOf = (sub: Sub): Coverage => (liveLabel(sub) ? "label" : su
 // How far to trust a cause's counts (Oct 28, Hunter), from the same coverage the engine uses, so it flips by itself when
 // a pending label (environment, workforce, healthcare) goes live in lib/labels.ts:
 //   checked    a graded cause label (Claude read each org's 990, graded on a fresh sample against a 95% bar)
-//   estimated  IRS NTEE codes or keywords only: may include some off-topic orgs and miss others
+//   partial    IRS NTEE codes (chosen by each nonprofit) or keywords only: may include some off-topic orgs and miss others
+//              ("partial" means only this in the UI: label tiers read "main focus" and "part of their work", Oct 28)
 //   limited    the goal is mostly governments or infrastructure, or not in our data
-export type Trust = "checked" | "estimated" | "limited";
+export type Trust = "checked" | "partial" | "limited";
 export function trustOf(sub: Sub, sdg?: Sdg | null): Trust {
   if (sdg && sub === sdg.scope && sdg.coverage === "limited") return "limited";
   const c = coverageOf(sub);
-  return c === "label" ? "checked" : c === "none" ? "limited" : "estimated";
+  return c === "label" ? "checked" : c === "none" ? "limited" : "partial";
 }
 export function trustText(sub: Sub, sdg?: Sdg | null): string {
   const t = trustOf(sub, sdg);
   if (t === "checked") return "Checked cause label: each org's filing was read, graded about 95% right on a fresh sample.";
   if (t === "limited") return "Limited nonprofit data for this cause.";
   return coverageOf(sub) === "keywords"
-    ? "Estimated from words in names and filings. Not yet checked by our cause label, so counts may include some off-topic orgs and miss others."
-    : "Estimated from IRS cause codes. Not yet checked by our cause label, so counts may include some off-topic orgs and miss others.";
+    ? "Partial: counted by words in nonprofits' names and filings, not yet checked by our cause label. Some off-topic orgs may be included and some missed."
+    : "Partial: counted by the IRS cause codes nonprofits choose themselves, not yet checked by our cause label. Some off-topic orgs may be included and some missed.";
 }
 
 export function causeOf(sub: Sub, sdg: Sdg | null): { name: string; label: LabelSlug | null; ntee: string[]; keywords: string[] } | null {

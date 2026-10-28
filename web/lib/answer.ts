@@ -552,15 +552,15 @@ const LABEL_CAVEAT: Partial<Record<LabelSlug, (g: Grade | undefined, primaryOnly
     : sub === "policy"
     ? `This counts immigration policy and advocacy groups of every viewpoint, from groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies) to groups that argue for more (FWD.us, the National Immigration Forum), so their funders count here whatever side they take. Groups that serve immigrants are left out unless they also run named policy work.${g?.subPolicy != null ? ` Lower confidence: ${pct(g.subPolicy)} of sampled policy orgs were judged policy groups, below the 90% bar. Most misses are immigrant community groups.` : ""}`
     : "This counts the whole immigrants and refugees label: orgs that serve immigrants and refugees and immigration policy groups on every side, including groups that argue for less immigration (FAIR, NumbersUSA, the Center for Immigration Studies)."}${g?.subRight != null ? ` The split into the two sub-types graded ${pct(g.subRight)} right on ${g.nSub ?? "a"} sampled orgs.` : ""}`,
-  education: () => "Education is graded within one org of the bar (95% main focus, 90% partial), and counts are a floor: the label finds about 73% of education orgs. It counts all learning, from schools and universities to tutoring, literacy, scholarships and libraries.",
+  education: () => "Education is graded within one org of the bar (95% main focus, 90% part of their work), and counts are a floor: the label finds about 73% of education orgs. It counts all learning, from schools and universities to tutoring, literacy, scholarships and libraries.",
   animal_welfare: (_g, primaryOnly) => primaryOnly
-    ? "Only orgs whose main focus is animal welfare are counted here, so this is a floor. Many animal welfare groups sit in the partial tier because they filed no 990 text to confirm their focus, and their money is left out."
-    : "Animal welfare counts main focus and partial orgs together. Most partial orgs are animal welfare groups at heart that filed no 990 text to confirm it, or trusts that support one animal charity. Main focus orgs alone would leave out much of the real animal welfare money.",
+    ? "Only orgs whose main focus is animal welfare are counted here, so this is a floor. Many animal welfare groups are counted as part of their work because they filed no 990 text to confirm their focus, and their money is left out."
+    : "Animal welfare counts main focus and part-of-their-work orgs together. Most part-of-their-work orgs are animal welfare groups at heart that filed no 990 text to confirm it, or trusts that support one animal charity. Main focus orgs alone would leave out much of the real animal welfare money.",
   health_equity: (g) => `Health equity counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of orgs doing this work.`,
   // generosity-data docs/labels/youth_development.md (c9f28ce): orgs with no 990 text count as main focus only when the
   // name says youth, 4-H, scouting or mentoring. Sports leagues, boosters, schools and tutoring alone are out.
   youth_development: (g) => `Youth development counts are a floor: the label finds about ${pct(g?.recall ?? 0.54)} of the orgs doing this work, so the true total is higher. Small orgs that filed no 990 text count as main focus only when their name says youth, 4-H, scouting or mentoring. Youth sports leagues and booster clubs that only run games, schools, and tutoring alone are not counted.`,
-  mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The partial tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so primary + partial is the less certain figure.`}`,
+  mental_health: (g, primaryOnly) => `Mental health is graded from each org's 990 text, not its NTEE code: F (Mental Health) also holds addiction treatment, and many counseling and crisis groups are coded elsewhere.${primaryOnly ? "" : ` The part-of-their-work tier graded ${pct(g?.partial ?? 0.9)}, right at the 90% bar, so main focus plus part of their work is the less certain figure.`}`,
 };
 
 async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<string> {
@@ -569,16 +569,16 @@ async function causeNote(c: C | null, cs: CauseSql, caveats: string[]): Promise<
   const via = c.via ? ` Matched to codes through our cause taxonomy (term "${c.via}").` : "";
   if (cs.kind === "label") {
     const g = (await grades())[c.label!];
-    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `primary was ${pct(g.primary)} right (${g.nPrimary} graded)` : "primary is graded"}${g?.partial != null ? `, partial ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only primary orgs are counted here." : bothTiers(c) ? "Primary and partial are both counted here." : "Primary is a floor, primary + partial an upper bound."}`);
+    caveats.push(`${g?.name ?? c.label} is a graded label: Claude read each candidate's 990 mission and programs. On a fresh sample, ${g?.primary != null ? `main focus was ${pct(g.primary)} right (${g.nPrimary} graded)` : "main focus is graded"}${g?.partial != null ? `, part of their work ${pct(g.partial)} (${g.nPartial} graded)` : ""}${g?.recall != null ? `, estimated recall ${pct(g.recall)}` : ""}. ${cs.primaryOnly ? "Only main-focus orgs are counted here." : bothTiers(c) ? "Main focus and part of their work are both counted here." : "Main focus is a floor, main focus plus part of their work an upper bound."}`);
     const extra = LABEL_CAVEAT[c.label as LabelSlug];
     const sub = labelSub(c);
     if (extra) caveats.push(extra(g, Boolean(cs.primaryOnly), sub));
     const subNote = sub ? `, ${LABEL_SUBTYPES[c.label as LabelSlug]!.names[sub].toLowerCase()} sub-type only` : "";
     return cs.primaryOnly
-      ? `${g?.name ?? c.label} label (org_labels)${subNote}, primary tier only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
+      ? `${g?.name ?? c.label} label${subNote}, main focus only: orgs whose main stated purpose it is. Orgs where it's one program among others are left out, because their whole budget would count.${via}`
       : bothTiers(c)
-      ? `${g?.name ?? c.label} label (org_labels)${subNote}, primary and partial counted together: primary = the main stated purpose, partial = mostly main focus orgs with no 990 text to confirm it, plus support trusts and orgs with one animal program.${via}`
-      : `${g?.name ?? c.label} label (org_labels)${subNote}: primary = the main stated purpose, partial = one program among others.${via}`;
+      ? `${g?.name ?? c.label} label${subNote}, main focus and part of their work counted together: main focus = the main stated purpose, part of their work = mostly main focus orgs with no 990 text to confirm it, plus support trusts and orgs with one animal program.${via}`
+      : `${g?.name ?? c.label} label${subNote}: main focus = the main stated purpose, part of their work = one program among others.${via}`;
   }
   if (cs.kind === "ntee") {
     if (c.ntee.some((n) => n.startsWith("X"))) caveats.push("Churches and other houses of worship don't have to file Form 990 or apply for recognition, so most congregations are missing from these figures.");
@@ -969,7 +969,7 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
 // v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
 // v50: SDG causes (lib/sdg.ts): "(SDG n)" names stay last in org phrases and drop from the org search link.
-export const ANSWER_VERSION = "answer:v54"; // v54: one chart palette (focus green, neutral rest); v53: chart values carry ein; v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
+export const ANSWER_VERSION = "answer:v55"; // v55: label tiers read "main focus" and "part of their work" (no "partial", "primary"); v54: one chart palette (focus green, neutral rest); v53: chart values carry ein; v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
 const answerMemo = memo<Answer>(ANSWER_VERSION, 1200, 6 * 3600_000); // room for every known question (prewarmed) plus asked ones; // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 // opts.memo false: the same queries as a cached answer, not kept here (Browse by cause keeps its own figures, lib/browse.ts).
@@ -1103,9 +1103,9 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
     if (s.source === "federal_awards" && fedProgram(c)) return { name: c.name, kind: "program" };
     if (c.label) {
       const g = gr[c.label];
-      const grade = g?.primary != null ? `primary graded ${pct(g.primary)} right on ${g.nPrimary ?? "a"} sampled orgs${g.recall != null ? `, recall about ${pct(g.recall)}` : ""}` : undefined;
+      const grade = g?.primary != null ? `main focus graded ${pct(g.primary)} right on ${g.nPrimary ?? "a"} sampled orgs${g.recall != null ? `, recall about ${pct(g.recall)}` : ""}` : undefined;
       return { name: c.name, kind: "label", labelName: g?.name ?? LABELS[c.label as LabelSlug] ?? c.label, grade, subtype: subs.get(c),
-        tiers: primaryOnly ? "primary tier only (main stated purpose)" : bothTiers(c as C) ? "primary and partial tiers, both in the headline" : grantSrc ? "primary as the headline, primary + partial as the upper bound" : "primary and partial tiers" };
+        tiers: primaryOnly ? "main focus only (main stated purpose)" : bothTiers(c as C) ? "main focus and part of their work, both in the headline" : grantSrc ? "main focus as the headline, main focus plus part of their work as the upper bound" : "main focus and part of their work" };
     }
     if (c.ntee.length) return { name: `${c.name} (NTEE ${c.ntee.join(", ")})`, kind: "ntee" };
     return { name: c.name, kind: "keyword" };
@@ -1613,8 +1613,8 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       const d = den.years.find((x) => x.year === r.year);
       rowsOut.push({ cause: c!.name, tax_year: r.year, usd: r.usd, primary_usd: label[i] ? r.primary_usd : null, ...(inf && s.metric === "trend" ? { [`${label[i] ? "primary_usd" : "usd"}_in_${inf.base}_dollars`]: Math.round(realOf(inf, label[i] ? r.primary_usd : r.usd, r.year!)) } : {}), recipients: r.orgs, funders: r.funders, share_of_linked: d ? r.usd / d.linked_usd : null });
       if (causes.length === 1 && label[i]) {
-        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "Main purpose (primary)", usd: r.primary_usd });
-        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "One program among others (partial)", usd: r.usd - r.primary_usd });
+        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "Main focus", usd: r.primary_usd });
+        series.push({ year: yearLabel(r.year!, pl.g.kind), tier: "Part of their work", usd: r.usd - r.primary_usd });
       } else series.push({ year: yearLabel(r.year!, pl.g.kind), tier: c!.name, usd: label[i] ? r.primary_usd : r.usd });
     }
   });
@@ -1640,10 +1640,10 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     return a && z && a !== z ? (prim ? z.primary_usd / a.primary_usd : z.usd / a.usd) - 1 : null;
   };
   const denGrowth = (() => { const a = den.years.find((r) => r.year === y.full[0]), z = den.years.find((r) => r.year === y.full.at(-1)); return a && z && a !== z ? z.linked_usd / a.linked_usd - 1 : null; })();
-  const upper = label[0] ? ` (up to ${money(m0.total.usd)} with partial)` : "";
+  const upper = label[0] ? ` (up to ${money(m0.total.usd)} counting orgs where it's part of their work)` : "";
   const method = `Sum of ${pl.g.form} paid in tax years ${yr} to identified recipients in ${where} (by the recipient's address) whose organization is in the cause set. Share = over all identified-recipient grant dollars in the same place and years${pl.g.kind === "charity" ? ` from the same ${pl.g.givers}` : ""}. Grants to individuals, unitemized lines, foreign recipients and other private foundations are excluded${pl.g.kind === "charity" ? ", and so are grants to other DAF sponsors, community foundations and United Ways" : ""}.${niMethod}`;
   const chart = { title: `${cap(pl.g.grants)} to ${causes.map((c) => c!.name).join(" vs ")}${where !== "the US" ? ` in ${where}` : ""}, by tax year`, sub: u.title, spec: vbar(chartVals, "year", "amount", "Tax year", u.title, u.fmt, causes.length > 1 || label[0] ? "tier" : undefined) };
-  const perYear = (i: number): NonNullable<Evidence["perYear"]>[number] => ({ label: causes.length > 1 ? causes[i]!.name : label[i] ? "main-purpose (primary) orgs" : "", primary: label[i],
+  const perYear = (i: number): NonNullable<Evidence["perYear"]>[number] => ({ label: causes.length > 1 ? causes[i]!.name : label[i] ? "main-focus orgs" : "", primary: label[i],
     years: ms[i]!.years.map((r) => ({ year: r.year!, usd: label[i] ? r.primary_usd : r.usd, grants: r.grants, funders: r.funders, orgs: r.orgs })) });
   const evMoved = await evMovers;
   const base = { chart, rows: rowsOut, causeNote: notes.join(" "), coverage, caveats, method, orgCount: m0.total.orgs, sources: [pl.g.src, ...(causes.some((c) => c?.label) ? [SRC.labels] : []), ...(causes.some((c) => c?.ntee.length) ? [SRC.ntee] : [])], searchQuery: searchFor(s, pl) };
@@ -1659,7 +1659,7 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       headline: ratio >= 1.95
         ? `${cap(causes[big]!.name)} got ${ratio.toFixed(ratio >= 10 ? 0 : 1)}x the ${pl.g.adj} dollars of ${causes[1 - big]!.name}, ${yr}`
         : `${cap(causes[big]!.name)} got ${pct(ratio - 1)} more ${pl.g.money} than ${causes[1 - big]!.name.replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())}, ${yr}`,
-      numbers: [{ value: money(a), label: `${causes[0]!.name}${label[0] ? " (primary)" : ""}` }, { value: money(z), label: `${causes[1]!.name}${label[1] ? " (primary)" : ""}` },
+      numbers: [{ value: money(a), label: `${causes[0]!.name}${label[0] ? " (main focus)" : ""}` }, { value: money(z), label: `${causes[1]!.name}${label[1] ? " (main focus)" : ""}` },
         { value: `${pct(a / baseUsd)} vs ${pct(z / baseUsd)}`, label: `share of ${ofWhat.replace(/^identified \S+( sponsor| foundation| Way)?/, "identified")} $` }],
       bullets: [`${b(money(a))} to ${causes[0]!.name}, ${b(pct(a / baseUsd))} of ${ofWhat.replace(/^identified \S+( sponsor| foundation| Way)?/, "identified")} dollars`,
         `${b(money(z))} to ${causes[1]!.name}, ${b(pct(z / baseUsd))}`,
@@ -1699,14 +1699,14 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       ev, ...(spike ? { options: { since: spike.since } } : {}),
       chart: idx.length ? { title: `Change since ${y.full[0]}: ${c0.name} vs all ${pl.g.grants}`, sub: "Percent change", spec: inf ? inflToggle(tSpec, "change", inf) : tSpec } : base.chart,
       headline: g == null ? `${cap(pl.g.grants)} to ${c0.name}: ${money(floor0)} in ${yr}` : `${cap(pl.g.money)} for ${c0.name} ${grewText(g, realG)} from ${y.full[0]} to ${y.full.at(-1)}`,
-      numbers: [...(g != null ? [{ value: signed(g), label: `${y.full[0]} to ${y.full.at(-1)}${label[0] ? ", primary" : ""}` }] : []),
+      numbers: [...(g != null ? [{ value: signed(g), label: `${y.full[0]} to ${y.full.at(-1)}${label[0] ? ", main focus" : ""}` }] : []),
         ...(realG != null ? [{ value: signed(realG), label: `after inflation (${inf!.base} dollars)` }] : []),
-        { value: money(perYear0), label: `a year${label[0] ? ", primary" : ""}` },
+        { value: money(perYear0), label: `a year${label[0] ? ", main focus" : ""}` },
         { value: int(m0.total.orgs), label: "recipient orgs" }],
       bullets: [spike ? `${spike.year} was a spike for ${c0.name} (${b(signed(spike.jump))} vs ${spike.prev}). Since ${spike.since}: ${b(signed(spike.sinceG))}` : "",
         denGrowth != null && g != null ? `All ${pl.g.grants} ${grewText(denGrowth, fl(denGrowth)).replace(/^(grew|fell) (\S+)/, (_, w, n) => `${w} ${b(n)}`)} over the same years` : "",
         `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`,
-        upper ? `${b(money(fullYearSum(m0, false) / fullYears))} a year counting partial` : ""].filter(Boolean),
+        upper ? `${b(money(fullYearSum(m0, false) / fullYears))} a year counting orgs where it's part of their work` : ""].filter(Boolean),
       method: `${base.method}${inf && realG != null ? inflMethod(inf) : ""}`,
       sources: [...base.sources, ...(inf && realG != null ? [SRC_CPI] : [])],
       ...(g != null ? { change: { subject: `${pl.g.money} for ${c0.name}`, g, from: String(y.full[0]), to: String(y.full.at(-1)) } } : {}),
@@ -1716,12 +1716,12 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
   return {
     ...base,
     headline: `${who} gave ${money(floor0)} to ${c0.name}${where !== "the US" ? ` in ${where}` : ""}, ${yr}: ${pct(share0)} of ${wide ? "all" : group ? "their identified" : "identified"} grant dollars`,
-    numbers: [{ value: money(floor0), label: `${label[0] ? "primary, " : ""}${yr}`, note: upper ? upper.trim().replace(/^\(|\)$/g, "") : undefined },
+    numbers: [{ value: money(floor0), label: `${label[0] ? "main focus, " : ""}${yr}`, note: upper ? upper.trim().replace(/^\(|\)$/g, "") : undefined },
       ...perResTile,
       { value: pct(share0), label: `of ${ofWhat} $` },
       { value: money(perYear0), label: "a year" },
       ...(entities ? [] : [{ value: int(m0.total.orgs), label: "recipient orgs" }])],
-    bullets: [`${b(money(perYear0))} a year to ${c0.name}${label[0] ? ` as a main purpose, ${b(money(fullYearSum(m0, false) / fullYears))} with partial` : ""}`,
+    bullets: [`${b(money(perYear0))} a year to ${c0.name}${label[0] ? ` as a main purpose, ${b(money(fullYearSum(m0, false) / fullYears))} counting part of their work` : ""}`,
       `${b(pct(share0))} of ${ofWhat} dollars${where !== "the US" ? ` in ${where}` : ""}`,
       // School districts and public colleges are matched by name, mostly without an EIN: count funders only.
       entities ? `${b(int(m0.total.funders))} ${pl.g.givers} gave to them` : `${b(int(m0.total.funders))} ${pl.g.givers} funded ${b(int(m0.total.orgs))} organizations`],
@@ -1974,7 +1974,7 @@ SELECT s.tax_year AS year, sum(s.v)::float8 AS usd, count(*)::int AS orgs FROM s
   if (isLabel) {
     const pp = new P();
     const w = [`f.tax_year = ${pp.add(fy.year)}`, "coalesce(f.foundation, '') NOT IN ('02', '03', '04')", ...placeWhere(pl, pp, "f.state", "f.county_fips"), ...filtEin(pl.f, pp, "f.ein")];
-    const [pt] = await ctx.q<{ usd: number; orgs: number; top: string | null; top_usd: number | null }>(`${fd.short}: orgs where ${c0.name} is one program among others (partial tier, left out)`, `WITH x AS (SELECT o.name, coalesce(${fd.col}, 0)::float8 AS v FROM flag_year f JOIN org_labels l ON l.ein = f.ein AND l.label = ${pp.add(c0.label)} AND l.tier = 'partial'${labelSub(c0) ? ` AND ${pp.add(labelSub(c0))}::text = ANY(l.subtypes)` : ""} JOIN orgs o ON o.ein = f.ein
+    const [pt] = await ctx.q<{ usd: number; orgs: number; top: string | null; top_usd: number | null }>(`${fd.short}: orgs where ${c0.name} is one program among others (part of their work, left out)`, `WITH x AS (SELECT o.name, coalesce(${fd.col}, 0)::float8 AS v FROM flag_year f JOIN org_labels l ON l.ein = f.ein AND l.label = ${pp.add(c0.label)} AND l.tier = 'partial'${labelSub(c0) ? ` AND ${pp.add(labelSub(c0))}::text = ANY(l.subtypes)` : ""} JOIN orgs o ON o.ein = f.ein
   WHERE ${and(w)})
 SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name FROM x ORDER BY v DESC LIMIT 1) AS top, (SELECT max(v) FROM x)::float8 AS top_usd FROM x`, pp);
     if (pt?.usd > 0) caveats.push(`Counted only for orgs whose main purpose is ${c0.name}. ${int(pt.orgs)} orgs where it's one program among others reported ${money(pt.usd)} more, led by ${pt.top ? orgName(pt.top) : "one org"} (${money(pt.top_usd ?? 0)}), but most of that money funds their other work.`);
@@ -1985,14 +1985,14 @@ SELECT coalesce(sum(v), 0)::float8 AS usd, count(*)::int AS orgs, (SELECT name F
     headline: s.metric === "compare" && causes[1] && ms[1]
       ? `${c0.name}: ${money(floor0)} vs ${causes[1].name}: ${money(causes[1].label ? ms[1].primary_usd : ms[1].usd)} in ${fd.short}, ${fy.year}`
       : `${cap(orgsOf(c0.name))}${where !== "the US" ? ` in ${where}` : ""} reported ${money(floor0)} in ${fd.short} for ${fy.year}`,
-    numbers: [{ value: money(floor0), label: `${fd.short}, ${fy.year}${isLabel ? " (primary)" : ""}`, note: upper },
+    numbers: [{ value: money(floor0), label: `${fd.short}, ${fy.year}${isLabel ? " (main focus)" : ""}`, note: upper },
       { value: pct(share), label: `of all nonprofits' ${fd.short}` },
       ...(s.source !== "revenue" ? [{ value: pct(ofRev), label: "of these orgs' revenue" }] : []),
       { value: int(m0.reporting), label: `orgs reporting ${fd.short}` }],
     bullets: [`${b(money(floor0))} in ${fd.short}${isLabel ? " to orgs where it's the main purpose" : ""}`,
       ...(compareBullet.length ? compareBullet : [`${b(pct(share))} of all nonprofits' ${fd.short}${where !== "the US" ? ` in ${where}` : ""}`]),
       `${b(int(m0.reporting))} of ${b(int(m0.orgs))} filers reported any ${fd.short}`],
-    chart: top.length ? { title: `Largest ${fd.short} to ${c0.name}, ${fy.year}`, sub: u.title, spec: hbar(top.map((t) => ({ name: orgName(t.name) + (t.tier === "partial" ? " (partial)" : ""), ein: t.ein, amount: +(t.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) } : null,
+    chart: top.length ? { title: `Largest ${fd.short} to ${c0.name}, ${fy.year}`, sub: u.title, spec: hbar(top.map((t) => ({ name: orgName(t.name) + (t.tier === "partial" ? " (part of its work)" : ""), ein: t.ein, amount: +(t.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) } : null,
     rows: top.map((t) => ({ ein: t.ein, name: t.name, state: t.state, tier: t.tier, tax_year: fy.year, usd: t.usd, revenue: t.revenue })),
     causeNote: notes.join(" "), caveats,
     coverage: [{ label: "Orgs in the set", value: int(universe) }, { label: `With a ${fy.year} e-filed return`, value: int(m0.orgs) }, { label: "Full Form 990", value: int(m0.full990) }, { label: `Report ${fd.short}`, value: int(m0.reporting) }],
@@ -2055,7 +2055,7 @@ GROUP BY 1`, p);
   })).sort((p1, p2) => (s.order === "least" ? p1.growth - p2.growth : p2.growth - p1.growth));
   if (!list.length) throw new Unanswerable("Too few grants in this place to compare causes.");
   const top = list[0], bottom = list.at(-1)!;
-  const caveats = [`Causes are NTEE major groups (the recipient's main code) plus the graded labels' primary tier (animal welfare counts primary and partial), which overlap NTEE groups. Groups under ${money(minBase)} in ${a} are left out.`, ...(await grantCaveats(pl))];
+  const caveats = [`Causes are NTEE major groups (the recipient's main code) plus the graded labels' main-focus orgs (animal welfare counts main focus and part of their work), which overlap NTEE groups. Groups under ${money(minBase)} in ${a} are left out.`, ...(await grantCaveats(pl))];
   return {
     headline: `${top.cause.replace(/ \(.+\)$/, "")} ${s.order === "least" ? "fell" : "grew"} ${s.order === "least" && top.growth < 0 ? "the most" : "fastest"}: ${signed(top.growth)} in ${pl.g.grants}, ${a} to ${z}`,
     numbers: [{ value: signed(top.growth), label: top.cause }, { value: signed(bottom.growth), label: bottom.cause }, { value: String(list.length), label: "causes compared" }],
@@ -2366,7 +2366,7 @@ FROM ${pl.g.clean} g ${gw2.cs.join} WHERE ${and(gw2.where)}`, p2);
     headline: `${nm(rows[0].name)} is the largest ${pl.g.adj} funder of ${causeName(c, pl)}${pl.label !== "the US" ? ` in ${pl.label}` : ""}: ${money(v(rows[0]))}, ${yrs(y.from, y.to)}`,
     numbers: [{ value: money(v(rows[0])), label: nm(rows[0].name) }, { value: pct(top10), label: "from the top 10 funders" }, { value: int(tot.funders), label: `${pl.g.givers} in all` }],
     bullets: rows.slice(0, 3).map((r) => `${nm(r.name)} (${r.state}): ${b(money(v(r)))} to ${b(int(r.orgs))} orgs`).slice(0, 2).concat([`The top 10 gave ${b(pct(top10))} of ${b(money(v(tot)))}`]),
-    chart: { title: `Top ${pl.g.adj} funders of ${causeName(c, pl)}${isLabel ? " (primary)" : ""}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), ein: r.ein, amount: +(v(r) / u.div).toFixed(3) })), "funder", "amount", u.title, u.fmt) },
+    chart: { title: `Top ${pl.g.adj} funders of ${causeName(c, pl)}${isLabel ? " (main focus)" : ""}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.slice(0, 10).map((r) => ({ funder: nm(r.name), ein: r.ein, amount: +(v(r) / u.div).toFixed(3) })), "funder", "amount", u.title, u.fmt) },
     rows: rows.map((r) => ({ funder_ein: r.ein, funder: r.name, state: r.state, usd: r.usd, primary_usd: isLabel ? r.primary_usd : null, recipients: r.orgs })),
     causeNote: note, caveats, coverage: [{ label: "Funders", value: int(tot.funders) }],
     method: `${pl.g.form}, tax years ${yrs(y.from, y.to)}, to ${c ? "identified recipients in the cause set" : "all recipients"} in ${pl.label}, summed by ${pl.g.adj}.`,
@@ -2390,9 +2390,9 @@ async function topRecipients(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
     const nm = (x: string) => orgName(x);
     return {
       headline: `${nm(rows[0].name)} reported the most ${fd.short}${c ? ` among ${orgsOf(c.name)}` : ""}: ${money(rows[0].usd)} in ${fy.year}`,
-      numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (partial)" : "") })),
+      numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (part of its work)" : "") })),
       bullets: rows.slice(0, 2).map((r) => `${nm(r.name)} (${r.state}${r.tier === "partial" ? ", partial" : ""}): ${b(money(r.usd))}, ${b(pct(r.usd / Math.max(1, r.revenue)))} of its revenue`),
-      chart: { title: `Largest ${fd.short}${c ? `, ${c.name}` : ""}, ${fy.year}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
+      chart: { title: `Largest ${fd.short}${c ? `, ${c.name}` : ""}, ${fy.year}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (part of its work)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
       rows: rows.map((r) => ({ ein: r.ein, name: r.name, state: r.state, usd: r.usd, revenue: r.revenue })),
       causeNote: note, caveats, coverage: [],
       method: `${fd.name}, tax year ${fy.year}, newest return per organization, largest first.`,
@@ -2415,9 +2415,9 @@ GROUP BY o.ein, o.name, o.state ORDER BY usd DESC LIMIT 10`, p);
   const nm = (x: string) => orgName(x);
   return {
     headline: `${nm(rows[0].name)} received the most ${pl.g.money} for ${causeName(c, pl)}: ${money(rows[0].usd)}, ${yrs(y.from, y.to)}`,
-    numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (partial)" : "") })),
+    numbers: rows.slice(0, 3).map((r) => ({ value: money(r.usd), label: nm(r.name) + (r.tier === "partial" ? " (part of its work)" : "") })),
     bullets: rows.slice(0, 2).map((r) => `${nm(r.name)} (${r.state}): ${b(money(r.usd))} from ${b(int(r.funders))} ${pl.g.givers}`).concat([`Top 10 recipients shown, identified recipients only`]),
-    chart: { title: `Top recipients of ${pl.g.grants}, ${causeName(c, pl)}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (partial)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
+    chart: { title: `Top recipients of ${pl.g.grants}, ${causeName(c, pl)}, ${yrs(y.from, y.to)}`, sub: u.title, spec: hbar(rows.map((r) => ({ name: nm(r.name) + (r.tier === "partial" ? " (part of its work)" : ""), ein: r.ein, amount: +(r.usd / u.div).toFixed(3) })), "name", "amount", u.title, u.fmt) },
     rows: rows.map((r) => ({ ein: r.ein, name: r.name, state: r.state, usd: r.usd, tier: r.tier, funders: r.funders })),
     causeNote: note, caveats, coverage: [],
     method: `${pl.g.form}, tax years ${yrs(y.from, y.to)}, to identified recipients in the cause set in ${pl.label}, summed by recipient.`,
@@ -2493,8 +2493,8 @@ FROM r ${who} CROSS JOIN t ORDER BY coalesce(r.a_rk, 1e9), coalesce(r.z_rk, 1e9)
     },
   };
   const per = (c: C, tot: number, top10: number, count: number, tier: boolean) => fund
-    ? `${cap(c.name)}: the top 10 gave ${b(pct(top10 / Math.max(1, tot)))} of ${b(money(tot))}${tier ? " (primary)" : ""} from ${b(int(count))} ${pl.g.givers}`
-    : `${cap(c.name)}: the top 10 got ${b(pct(top10 / Math.max(1, tot)))} of ${b(money(tot))}${tier ? " (primary)" : ""} across ${b(int(count))} recipients`;
+    ? `${cap(c.name)}: the top 10 gave ${b(pct(top10 / Math.max(1, tot)))} of ${b(money(tot))}${tier ? " (main focus)" : ""} from ${b(int(count))} ${pl.g.givers}`
+    : `${cap(c.name)}: the top 10 got ${b(pct(top10 / Math.max(1, tot)))} of ${b(money(tot))}${tier ? " (main focus)" : ""} across ${b(int(count))} recipients`;
   const rowOut = (r: DualRow, c: C, ci: 0 | 1) => ({ cause: c.name, rank: ci ? r.z_rk : r.a_rk, [fund ? "funder_ein" : "ein"]: r.k, [fund ? "funder" : "name"]: r.name, state: r.state,
     usd: ci ? r.z_usd : r.a_usd, primary_usd: (ci ? tierZ : tierA) ? (ci ? r.z_v : r.a_v) : null, [fund ? "recipients" : "funders"]: ci ? r.z_n : r.a_n, [`top_${OVERLAP_N}_in_both`]: r.b_rk != null });
   const tiered = tierA || tierZ;
@@ -2508,7 +2508,7 @@ FROM r ${who} CROSS JOIN t ORDER BY coalesce(r.a_rk, 1e9), coalesce(r.z_rk, 1e9)
     ],
     bullets: [per(a, t.ta, t.a10, t.na, tierA), per(z, t.tz, t.z10, t.nz, tierZ),
       both.length > 1 ? `Next in both: ${both.slice(1, 3).map((r) => nm(r.name)).join(" and ")}` : `${b(int(alsoA))} of the top ${int(nA)} ${a.name} ${whoTop} ${fund ? "also gave" : "also got money"} for ${z.name}`],
-    chart: { title: `Top ${fund ? `${pl.g.adj} funders` : "recipients"} of ${a.name} and of ${z.name}${tiered ? " (primary)" : ""}, ${yr}`, sub: u.title, spec },
+    chart: { title: `Top ${fund ? `${pl.g.adj} funders` : "recipients"} of ${a.name} and of ${z.name}${tiered ? " (main focus)" : ""}, ${yr}`, sub: u.title, spec },
     rows: [...listA.map((r) => rowOut(r, a, 0)), ...listZ.map((r) => rowOut(r, z, 1))],
     causeNote: notes.join(" "), caveats,
     coverage: [{ label: `${cap(a.name)} ${whoTop}`, value: int(t.na) }, { label: `${cap(z.name)} ${whoTop}`, value: int(t.nz) }, { label: `Top ${nTop} in both`, value: int(both.length) }],

@@ -145,7 +145,7 @@ async function Org({ params, searchParams, modal }: Props) {
               <small>{o.nteeSuggested.note}</small></span></dd></>}
           {o.labels.length > 0 && <><dt>Cause labels</dt><dd className="org-labels">{o.labels.map((l) => (
             <span key={l.label} title="Graded by NomBot from the organization's name and Form 990 text">
-              <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "partial focus"}{l.subtypes && LABEL_SUBTYPES[l.label] && ` · ${l.subtypes.map((x) => LABEL_SUBTYPES[l.label]!.names[x as LabelSub]?.toLowerCase() ?? x).join(" and ")}`}{l.why && <small>{l.why}</small>}
+              <b>{l.name}</b>: {l.tier === "primary" ? "main focus" : "part of their work"}{l.subtypes && LABEL_SUBTYPES[l.label] && ` · ${l.subtypes.map((x) => LABEL_SUBTYPES[l.label]!.names[x as LabelSub]?.toLowerCase() ?? x).join(" and ")}`}{l.why && <small>{l.why}</small>}
             </span>))}</dd></>}
           {o.subsection && <><dt>Type</dt><dd>501(c)({Number(o.subsection)}){o.status.kind && ` · ${o.status.kind}`}</dd></>}
           <dt>IRS status</dt><dd>{o.status.standing}</dd>
