@@ -11,7 +11,7 @@ import { z } from "zod";
 import { claude, fallback as fallbackOpts, FAST_MODEL } from "./llm";
 import { memo } from "./memo";
 import { ROUTER_SYSTEM, leanSchema, withSdg } from "./answerRoute";
-import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
+import { DEFAULT_SPEC, fromLooseLlmSpec, looseLlmSpecSchema, normalizeSpec, type Spec } from "./answerSpec";
 import { LOADED_STATES } from "./filters";
 import { fedProgram } from "./fedPrograms";
 
@@ -314,13 +314,17 @@ You are resolving a FOLLOW-UP in a research thread. You get the earlier question
 - The spec fields go at the top level, beside kind and standalone.
 - standalone: the follow-up rewritten as a complete question that makes sense alone, e.g. "How much foundation money goes to women and girls in New York?"`;
 
-const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend(llmSpecSchema.shape);
+const followSchema = z.object({ kind: z.enum(["answer", "text", "search"]), standalone: z.string() }).extend(looseLlmSpecSchema.shape);
 // Flat (spec fields beside kind and standalone) and without the prose descriptions, as the router's format: the nested
-// spec went over the structured-output grammar limit ("compiled grammar is too large", found Oct 21).
+// spec went over the structured-output grammar limit ("compiled grammar is too large", found Oct 21). It regrew by Oct 27
+// (new labels, metrics, city), so the growing enums are plain strings here, checked in fromLooseLlmSpec.
 const followZod = betaZodOutputFormat(followSchema);
-const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
+export const followFormat = { ...followZod, schema: leanSchema(followZod.schema) as typeof followZod.schema };
 
-const cached = memo<Resolved>("follow-up:v21", 1000, 24 * 3600_000); // v21: SDG phrasing (withSdg), a missing-part note means missing other; v20: youth_development label; v19: city in the router prompt; v18: financial_health metric (router prompt), its chips; v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+const cached = memo<Resolved>("follow-up:v22", 1000, 24 * 3600_000); // v22: loose enums (grammar limit, fromLooseLlmSpec); v21: SDG phrasing (withSdg), a missing-part note means missing other; v20: youth_development label; v19: city in the router prompt; v18: financial_health metric (router prompt), its chips; v17: router prompt, corrected covers orgs with no IRS code; v16: underfunded metric; v15: animal_welfare label; v14: health_equity label; v13: spec ntee irs | corrected; v12: education label; v11: immigrants_refugees sub-types (cause subtype); v9: racial_equity, immigrants_refugees, mental_health labels; v7: ai_tech_learning_work label; v6: housing_homelessness label; v5: substance_use label; v4: foundation_finances, org finances by year or size; v3: household_giving, Appalachia via area, topN, streak
+// Follow-ups that fell back to a text turn because the resolver call failed, since the server started.
+let followUpFallbacks = 0;
+export const followUpFallbackCount = () => followUpFallbacks;
 export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved> {
   const last = history.at(-1)!;
   const chip = candidateFollowUps(last.spec, history).find((x) => x.label.toLowerCase() === text.trim().toLowerCase());
@@ -338,12 +342,18 @@ export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved
     return Promise.resolve({ kind: "answer", spec, standalone: `${describeSpec(spec).replace(/\?$/, "")}, using our corrected categories?` });
   }
   const key = JSON.stringify([history.map((h) => h.spec), text.trim().toLowerCase()]);
-  return cached(key, () => resolveFresh(text, history));
+  return cached(key, () => resolveFresh(text, history)).catch((err) => {
+    // The follow-up is shown as a text turn instead (lib/thread). Counted so a schema or API regression shows in the log.
+    followUpFallbacks++;
+    console.error(`follow-up router fallback #${followUpFallbacks} (since start): ${String(err?.message ?? err).slice(0, 200)}`);
+    throw err;
+  });
 }
 
 async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
   const client = claude("followUp-route");
   if (!client) return { kind: "text", standalone: text };
+  const last = history.at(-1)!;
   const thread = history.map((h, i) => `${i + 1}. ${h.question}\nspec: ${JSON.stringify(h.spec)}`).join("\n\n");
   const res = await client.beta.messages.parse({
     model: FAST_MODEL,
@@ -358,8 +368,9 @@ async function resolveFresh(text: string, history: Turn[]): Promise<Resolved> {
   if (!o) return { kind: "text", standalone: text };
   if (o.kind === "answer") {
     // SDG phrasing in the follow-up maps to lib/sdg.ts causes, as in the router (withSdg).
-    const r = withSdg(o.standalone || text, { research: true, spec: normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }) });
-    return { kind: "answer", spec: r.research ? r.spec : normalizeSpec({ ...DEFAULT_SPEC, ...fromLlmSpec(o) }), standalone: o.standalone || text };
+    const spec = normalizeSpec({ ...DEFAULT_SPEC, ...fromLooseLlmSpec(o, last.spec) });
+    const r = withSdg(o.standalone || text, { research: true, spec });
+    return { kind: "answer", spec: r.research ? r.spec : spec, standalone: o.standalone || text };
   }
   return { kind: o.kind, standalone: o.standalone || text };
 }

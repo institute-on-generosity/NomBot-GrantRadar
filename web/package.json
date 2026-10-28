@@ -14,6 +14,7 @@
     "api-key": "tsx scripts/api-key.mts",
     "test:answer": "tsx eval/answer.mts",
     "test:followups": "tsx eval/followups.mts",
+    "test:schema": "tsx eval/schema-compile.mts",
     "eval:route": "tsx eval/route.mts",
     "eval:benchmark": "tsx eval/benchmark.mts",
     "test:labels": "tsx eval/labels.mts",

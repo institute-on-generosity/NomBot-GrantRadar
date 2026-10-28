@@ -6,7 +6,7 @@ import { connection } from "next/server";
 import { ChatAnswer } from "@/components/ChatAnswer";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { NavLink } from "@/components/NavLink";
-import { Chat, FollowUpText, Suggestions, ThinkingSteps } from "@/components/ResearchThread";
+import { Chat, FollowUpText, PendingSteps, Suggestions } from "@/components/ResearchThread";
 import { contentPlan } from "@/lib/answerSpec";
 import { PROMPT_SETS } from "@/lib/examples";
 import { pickFollowUps, type Turn } from "@/lib/followUp";
@@ -35,9 +35,11 @@ export default function AskPage(props: { searchParams: SP }) {
           New question
         </NavLink>
       </header>
-      <Suspense fallback={<div className="chat-thread"><Suspense fallback={null}><Echo searchParams={props.searchParams} /></Suspense><ThinkingSteps /></div>}>
+      <Suspense fallback={<div className="chat-thread chat-echo"><Suspense fallback={null}><Echo searchParams={props.searchParams} /></Suspense></div>}>
         <Ask searchParams={props.searchParams} />
       </Suspense>
+      {/* Beside the boundary, so it hydrates while the answer is worked out and follows the real stages */}
+      <PendingSteps />
     </main>
   );
 }

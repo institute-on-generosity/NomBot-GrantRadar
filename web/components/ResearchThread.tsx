@@ -43,7 +43,7 @@ export function Chat({ q, fs, max, children }: { q: string | null; fs: string[];
         {pending && asked && (
           <div className="chat-turn" id="chat-pending">
             <div className="chat-q"><p>{asked}</p></div>
-            <ThinkingSteps />
+            <ThinkingSteps thread={href(q, fs, asked).split("?")[1]} />
           </div>
         )}
       </div>
@@ -56,15 +56,36 @@ export function Thinking({ label }: { label: string }) {
   return <p className="chat-thinking" role="status"><span className="dots" aria-hidden><i /><i /><i /></span>{label}…</p>;
 }
 
-// While an answer is on its way (Oct 27): what is happening, in order, and the shape of the answer to come. The
-// router takes about 2 s on a new free-text question, the query under a second to a few; known questions skip both.
+// While an answer is on its way (Oct 27): what is happening, in order, and the shape of the answer to come. The steps
+// follow the server's real stages (/api/research/stages streams "routed" then "queried" for this thread, sharing the
+// page's own cached work); only if that stream fails do they advance on a timer (the router takes about 2 s on a new
+// free-text question, the query under a second to a few; known questions skip both).
 const STEPS: [number, string][] = [[0, "Understanding the question"], [1800, "Querying 5.3 million foundation grants"], [4500, "Drawing the chart"]];
-export function ThinkingSteps() {
+const STAGE_STEP: Record<string, number> = { routed: 1, queried: 2, done: 2 };
+
+// thread: the thread's URL query (?q=…&f=…); defaults to this page's own (the first load of /research/ask)
+export function ThinkingSteps({ thread }: { thread?: string }) {
   const [k, setK] = useState(0);
   useEffect(() => {
-    const ts = STEPS.slice(1).map(([at], i) => setTimeout(() => setK(i + 1), at));
-    return () => ts.forEach(clearTimeout);
-  }, []);
+    const ac = new AbortController();
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const fallback = () => { if (!timers.length) timers = STEPS.slice(1).map(([at], i) => setTimeout(() => setK((x) => Math.max(x, i + 1)), at)); };
+    const qs = thread ?? location.search;
+    (async () => {
+      const res = await fetch(`/api/research/stages${qs.startsWith("?") ? qs : `?${qs}`}`, { signal: ac.signal });
+      if (!res.ok || !res.body) throw new Error(`stages ${res.status}`);
+      const reader = res.body.getReader(), dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n"); buf = lines.pop() ?? "";
+        for (const l of lines) { const st = (JSON.parse(l) as { stage?: string }).stage; if (st && st in STAGE_STEP) setK((x) => Math.max(x, STAGE_STEP[st])); }
+      }
+    })().catch(() => { if (!ac.signal.aborted) fallback(); });
+    return () => { ac.abort(); timers.forEach(clearTimeout); };
+  }, [thread]);
   return (
     <div className="chat-wait">
       <p className="chat-thinking" role="status" aria-live="polite"><span className="dots" aria-hidden><i /><i /><i /></span>{STEPS[k][1]}…</p>
@@ -72,6 +93,21 @@ export function ThinkingSteps() {
       <div className="chat-skel" aria-hidden><i className="n" /><i className="l" /><i className="c" /></div>
     </div>
   );
+}
+
+// The first load of /research/ask: React doesn't hydrate a Suspense fallback the server is still working on, so the
+// steps sit beside that boundary instead (they hydrate with the page shell and follow the stage stream). Hidden once
+// the thread's first turn is on the page, or when there's no question (?new=1).
+export function PendingSteps() {
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    const done = () => !new URLSearchParams(location.search).get("q") || !!document.querySelector(".chat-turn, .chat-empty");
+    if (done()) { setGone(true); return; }
+    const mo = new MutationObserver(() => { if (done()) { setGone(true); mo.disconnect(); } });
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, []);
+  return gone ? null : <div className="chat-thread chat-pending-first"><ThinkingSteps /></div>;
 }
 
 // Suggested follow-ups, under the latest answer only.

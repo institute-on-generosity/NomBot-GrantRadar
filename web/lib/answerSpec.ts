@@ -109,6 +109,26 @@ export function fromLlmSpec(o: z.infer<typeof llmSpecSchema>): Spec {
   return { ...rest, area: area === "appalachia" ? null : area, region: area === "appalachia" ? "appalachia" : null, ein: null, city: city.trim() || null };
 }
 
+// The follow-up resolver's format (Oct 27): the router's fields plus kind and standalone went over the compiled-grammar
+// limit again as labels, metrics and the city field were added after the Oct 21 flattening. Here the five lists that
+// grow (metric, source, by, missing, cause label) are plain strings, checked against their lists below; the prompt
+// names every allowed value. eval/schema-compile.mts sends both formats to the API so a regrowth fails the evals.
+const LOOSE = { metric: z.string(), source: z.string(), by: z.string().nullable(), missing: z.array(z.string()) };
+export const looseLlmSpecSchema = llmSpecSchema.extend({ ...LOOSE, causes: z.array(causeSchema.extend({ label: z.string().nullable() })) });
+type Loose = z.infer<typeof looseLlmSpecSchema>;
+const oneOf = <T extends string>(list: readonly T[], v: unknown): T | null => (list as readonly string[]).includes(String(v)) ? (v as T) : null;
+// Unknown values fall back to the earlier spec's (metric, source) or none (by, label, missing parts).
+export function fromLooseLlmSpec(o: Loose, base: Spec): Spec {
+  return fromLlmSpec({
+    ...o,
+    metric: oneOf(METRICS, o.metric) ?? base.metric,
+    source: oneOf(SOURCES, o.source) ?? base.source,
+    by: oneOf(BY, o.by),
+    missing: o.missing.map((m) => oneOf(MISSING, m)).filter((m): m is (typeof MISSING)[number] => !!m),
+    causes: o.causes.map((c) => ({ ...c, label: oneOf(LABELS, c.label) })),
+  });
+}
+
 export type Cause = z.infer<typeof specCauseSchema>;
 export type Spec = z.infer<typeof specSchema>;
 export type Metric = Spec["metric"];

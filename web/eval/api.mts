@@ -447,6 +447,16 @@ try {
     check((await pv("abc")).status === 404, "org-preview: bad EIN is 404");
   }
 
+  // Research loading stages (Oct 27): /api/research/stages streams the thread's real stages in order
+  {
+    const t = performance.now();
+    const res = await fetch(`${BASE}/api/research/stages?${new URLSearchParams({ q: "Who are the biggest foundation funders of education?" })}`);
+    const stages = (await res.text()).trim().split("\n").map((l) => JSON.parse(l).stage);
+    timings.push(["stages: known question", Math.round(performance.now() - t)]);
+    check(res.status === 200 && stages.join(",") === "routed,queried,done", `stages: routed, queried, done in order (${stages.join(",")})`);
+    check((await fetch(`${BASE}/api/research/stages`)).status === 400, "stages: no q is 400");
+  }
+
   // Search export (Oct 26): place tiers with evidence, NTEE code, foundation grants 2022-24, top funder, latest 990,
   // website, and a relevance status on every row. unscored=1: no relevance calls (one cached question parse).
   {

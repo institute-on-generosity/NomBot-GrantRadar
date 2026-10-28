@@ -147,7 +147,7 @@ export const leanSchema = (o: unknown): unknown => {
   return out;
 };
 const zodFormat = betaZodOutputFormat(routerSchema);
-const routerFormat = { ...zodFormat, schema: leanSchema(zodFormat.schema) as typeof zodFormat.schema };
+export const routerFormat = { ...zodFormat, schema: leanSchema(zodFormat.schema) as typeof zodFormat.schema };
 
 export type Routed = { research: false } | { research: true; spec: Spec };
 

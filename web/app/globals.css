@@ -2044,3 +2044,6 @@ a.prompt-help { color: var(--faint); }
 .opv-stats b { font-size: var(--t-small); color: var(--ink); }
 .opv-foot { display: flex; justify-content: space-between; align-items: center; margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--faint); }
 .opv-foot a { color: var(--g-dark); text-decoration: none; margin-left: auto; }
+/* First load of /research/ask: the question (Suspense fallback), then the live steps beside it (PendingSteps) */
+.chat-thread.chat-echo { flex: 0 0 auto; padding-bottom: 0; }
+.chat-thread.chat-pending-first { padding-top: var(--s-6); }

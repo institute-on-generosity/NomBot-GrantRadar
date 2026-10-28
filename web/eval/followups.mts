@@ -77,6 +77,13 @@ for (const [q, fs] of threads) {
   }
   if (problems.length) { fails++; console.log(`FAIL  answer chips (food banks)`); for (const p of problems) console.log(`        ✗ ${p}`); }
 }
+// No follow-up may fall back to a text turn because the resolver call failed (grammar limit, Oct 27)
+{
+  const { followUpFallbackCount } = await import("../lib/followUp");
+  const n = followUpFallbackCount();
+  if (n) { fails++; console.log(`FAIL  ${n} follow-up(s) fell back because the resolver call failed`); }
+  else console.log("ok    no follow-up resolver fallbacks");
+}
 console.log(fails ? `\n${fails} thread(s) failed` : "\nAll threads passed");
 await db.end();
 process.exit(fails ? 1 : 0);
