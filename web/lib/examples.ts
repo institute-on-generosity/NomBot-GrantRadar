@@ -1,5 +1,5 @@
 import type { PromptGroup, PromptSet } from "@/components/HeroFlip";
-import { causeOf, causeQuestions, findSub, SDGS, sdgSlug } from "./sdg";
+import { causeOf, causeQuestions, displayCause, findSub, SDGS, sdgSlug } from "./sdg";
 
 // Example questions (every state is loaded; the first five, the home-page pills, stay in Appalachia, IoG's focus).
 // The first five are the home-page pills; all of them feed the search-bar suggestions.
@@ -24,33 +24,33 @@ export const EXAMPLES = [
 // Development Goals (lib/sdg.ts, Oct 26 ask from Helen Cashman and Julia Hess): SDG blocks first, one block's prompts
 // on tap, grouped by subcategory. Questions that cut across causes stay in their own groups after the goals.
 // After a change: copy the prompts to ~/iog-qa/home-prompts.json on the helper (eval/nightly_benchmark.py).
-const BY_SDG: Record<number, { sub: string; prompts: string[] }[]> = {
-  1: [{ sub: "no_poverty", prompts: ["How much foundation money goes to SDG 1, no poverty?"] }],
+export const BY_SDG: Record<number, { sub: string; prompts: string[] }[]> = {
+  1: [{ sub: "no_poverty", prompts: ["How much foundation money goes to poverty?"] }],
   2: [{ sub: "food_banks", prompts: ["Is food bank funding growing?", "Who are the biggest foundation funders of food banks?", "How many food banks are running deficits?"] },
     { sub: "zero_hunger", prompts: ["Is foundation money for zero hunger growing?"] }],
-  3: [{ sub: "healthcare", prompts: ["How much foundation money goes to Goal 3, good health and well-being?"] },
+  3: [{ sub: "healthcare", prompts: ["How much foundation money goes to health?"] },
     { sub: "mental_health", prompts: ["Is mental health funding growing?", "Which states get the most foundation money for mental health?", "Who are the biggest foundation funders of mental health?"] },
     { sub: "health_equity", prompts: ["How much foundation money goes to health equity?", "Who are the biggest foundation funders of health equity?", "Which states get the most foundation money for health equity?"] }],
-  4: [{ sub: "education", prompts: ["How much foundation money goes to education?", "Is education funding growing?", "How does foundation support for education compare to climate?", "How does SDG 4 compare to SDG 13?"] },
+  4: [{ sub: "education", prompts: ["How much foundation money goes to education?", "Is education funding growing?", "How does foundation support for education compare to climate?"] },
     { sub: "youth_development", prompts: ["How much foundation money goes to youth development?", "Who are the biggest foundation funders of youth development?", "Is youth development funding growing?", "Which states get the most foundation money for youth development?"] },
     { sub: "tech_ai", prompts: ["Who are the biggest funders of tech and AI skills?", "How much foundation money goes to tech and AI skills?", "Is tech and AI skills funding growing?"] }],
   5: [{ sub: "women_girls", prompts: ["How much foundation money goes to women and girls?", "How does foundation support for women and girls compare to climate?", "Which foundations fund climate, and which foundations fund women and girls?"] }],
-  6: [{ sub: "clean_water", prompts: ["Which states get the most foundation money for clean water (SDG 6)?"] }],
-  7: [{ sub: "energy", prompts: ["Who are the biggest foundation funders of affordable and clean energy (SDG 7)?"] }],
-  8: [{ sub: "workforce", prompts: ["How much foundation money goes to workforce development (SDG 8)?"] },
-    { sub: "economic_dev", prompts: ["Is community economic development funding growing (SDG 8)?"] }],
-  9: [{ sub: "science_research", prompts: ["How much foundation money goes to science and technology research (SDG 9)?"] }],
+  6: [{ sub: "clean_water", prompts: ["Which states get the most foundation money for clean water?"] }],
+  7: [{ sub: "energy", prompts: ["Who are the biggest foundation funders of clean energy?"] }],
+  8: [{ sub: "workforce", prompts: ["How much foundation money goes to workforce development?"] },
+    { sub: "economic_dev", prompts: ["Is community economic development funding growing?"] }],
+  9: [{ sub: "science_research", prompts: ["How much foundation money goes to science and technology research?"] }],
   10: [{ sub: "racial_equity", prompts: ["How has racial equity funding changed since 2020?", "Who are the biggest foundation funders of racial equity?", "Which foundations give the most to Native American communities?"] },
     { sub: "immigrants", prompts: ["How much goes to immigrant services vs immigration policy?", "Which states get the most foundation money for immigrants and refugees?", "Who are the top recipients of foundation money for immigrants?"] }],
   11: [{ sub: "housing", prompts: ["Which states get the most foundation money for housing?", "Is foundation money for housing growing faster than foundation giving overall?", "Who are the biggest foundation funders of homelessness work in Washington State?"] },
-    { sub: "disaster", prompts: ["How much foundation money goes to disaster preparedness and relief (SDG 11)?"] }],
-  12: [{ sub: "food_rescue", prompts: ["Who are the biggest foundation funders of food rescue (SDG 12)?"] }],
+    { sub: "disaster", prompts: ["How much foundation money goes to disaster preparedness and relief?"] }],
+  12: [{ sub: "food_rescue", prompts: ["Who are the biggest foundation funders of food rescue?"] }],
   13: [{ sub: "climate", prompts: ["How much foundation money goes to climate?", "Is climate funding growing?", "How concentrated is climate funding?", "Which federal agencies fund the most climate work at nonprofits?"] }],
-  14: [{ sub: "oceans", prompts: ["How much foundation money goes to life below water?", "Who are the biggest foundation funders of SDG 14?"] }],
+  14: [{ sub: "oceans", prompts: ["How much foundation money goes to life below water?", "Who are the biggest foundation funders of ocean conservation?"] }],
   15: [{ sub: "animal_welfare", prompts: ["How much foundation money goes to animal welfare?", "Who are the biggest foundation funders of animal welfare?", "Is animal welfare funding growing?", "Which states get the most foundation money for animal welfare?"] },
     { sub: "life_on_land", prompts: ["Is funding for life on land growing?"] }],
-  16: [{ sub: "legal_aid", prompts: ["Who are the biggest foundation funders of legal aid (SDG 16)?"] }],
-  17: [{ sub: "philanthropy", prompts: ["How much foundation money goes to community foundations and giving programs (SDG 17)?"] }],
+  16: [{ sub: "legal_aid", prompts: ["Who are the biggest foundation funders of legal aid?"] }],
+  17: [{ sub: "philanthropy", prompts: ["How much foundation money goes to community foundations and giving programs?"] }],
 };
 // Across causes: foundations, under-funded orgs, nonprofit finances, household giving.
 const CROSS = [
@@ -66,8 +66,7 @@ const subLabel = (id: string) => findSub(id)?.sub.name ?? id;
 const COLS = ["total", "trend", "top_funders", "by_state", "underfunded"] as const;
 const tableOf = (g: (typeof SDGS)[number]) => {
   const row = (label: string, sub: (typeof g.subs)[number]) => {
-    const c = causeOf(sub, g);
-    const q = c ? causeQuestions(c.name) : null;
+    const q = causeOf(sub, g) ? causeQuestions(displayCause(sub, g)) : null; // plain cause names, never "(SDG n)"
     return { label, q: q ? Object.fromEntries(COLS.map((k) => [k, q[k]])) as Record<(typeof COLS)[number], string> : null };
   };
   return [row(`All of ${g.name}`, g.scope), ...g.subs.map((s) => row(s.name, s))];

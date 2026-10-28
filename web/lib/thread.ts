@@ -3,7 +3,7 @@
 // adding a follow-up recomputes only the new turn. Shared by the page and the text follow-up API.
 import { answer, type Answer } from "./answer";
 import { routeQuestion } from "./answerRoute";
-import type { Spec } from "./answerSpec";
+import { normalizeSpec, type Spec } from "./answerSpec";
 import { resolveFollowUp, type Turn } from "./followUp";
 
 export const MAX_FOLLOW_UPS = 8;
@@ -14,7 +14,9 @@ export type ThreadTurn =
   | { kind: "search"; text: string; standalone: string };
 
 // null: the first question isn't a research question.
-export async function resolveThread(q: string, fs: string[]): Promise<ThreadTurn[] | null> {
+// mods: in-place settings for the latest answer (corrected categories, a start year), from the URL (?corr=1&since=2021)
+export type Mods = { corr?: boolean; since?: number };
+export async function resolveThread(q: string, fs: string[], mods: Mods = {}): Promise<ThreadTurn[] | null> {
   const r = await routeQuestion(q);
   if (!r.research) return null;
   const first = await answer(q, r.spec);
@@ -30,6 +32,12 @@ export async function resolveThread(q: string, fs: string[]): Promise<ThreadTurn
       turns.push({ kind: "answer", text: f, standalone: res.standalone, spec: res.spec, answer: a });
       history.push({ question: res.standalone, spec: res.spec });
     } else turns.push({ kind: res.kind, text: f, standalone: res.standalone });
+  }
+  // Settings apply to the latest answer only, in place (no new turn)
+  const last = turns.at(-1);
+  if (last?.kind === "answer" && (mods.corr || mods.since)) {
+    const spec = normalizeSpec({ ...last.spec, ...(mods.corr ? { ntee: "corrected" as const } : {}), ...(mods.since ? { yearFrom: mods.since } : {}) });
+    turns[turns.length - 1] = { ...last, spec, answer: await answer(last.standalone, spec) };
   }
   return turns;
 }

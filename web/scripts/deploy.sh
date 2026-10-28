@@ -12,6 +12,8 @@ sed -i '' 's#\.next-build#.next#g' .next-build/required-server-files.json
 rm -rf .next-prev && mv .next .next-prev && mv .next-build .next
 # The :3001 dev server (iMNet) lives in .next/dev: carry it over untouched, or it starts failing
 [[ -d .next-prev/dev ]] && rm -rf .next/dev && mv .next-prev/dev .next/dev
+# Keep the Browse figures disk cache across builds (else every deploy recomputes 69 causes)
+[[ -f .next-prev/cache/nombot-browse.json ]] && mkdir -p .next/cache && cp .next-prev/cache/nombot-browse.json .next/cache/
 launchctl kickstart -k gui/$(id -u)/org.iog.nombot
 for i in {1..20}; do sleep 1; code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/); [[ $code == 200 ]] && break; done
 if [[ $code != 200 ]]; then

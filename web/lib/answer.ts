@@ -10,6 +10,7 @@
 // Causes: a graded label (org_labels) when one fits, else NTEE prefixes, else a keyword set over org
 // names and 990 mission/program text (marked approximate). Headlines and bullets are templates over
 // computed numbers, never model-written.
+import { plainCauseText } from "./sdg";
 import { db } from "./db";
 import { memo } from "./memo";
 import { cityScope, placeEins } from "./place";
@@ -47,7 +48,10 @@ export type Answer = {
   premise?: { claim: string; holds: boolean } | null; // a direction the question assumed (spec.premise), checked against the data
   basis?: "codes" | "keywords" | null; // a cause counted without a checked label: shown under the answer as a trust note
   steps?: Step[];                  // "Show the steps": the evidence chain (lib/answerSteps), deterministic
-  followUps?: string[];            // chips the numbers suggest ("Since 2021?" after a start-year spike)
+  followUps?: string[];            // chips the numbers suggest (real follow-up questions)
+  // In-place settings the answer offers (Oct 27: settings, not chat turns): corrected categories (NTEE-coded causes
+  // whose count changes with org_ntee_suggested), and a start year after a start-year spike ("Since 2021")
+  options?: { corrected?: boolean; since?: number };
   recency?: Recency | null;        // the filing years the answer covers, and which are still arriving (recencyOf)
   orgs?: OrgPick[];                // metric underfunded: the orgs listed, linked to their pages
   who?: Who | null;                // "Who received it": foundation grant $ by recipient type (lib/recipientTypes)
@@ -965,15 +969,27 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
 // v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
 // v50: SDG causes (lib/sdg.ts): "(SDG n)" names stay last in org phrases and drop from the org search link.
-export const ANSWER_VERSION = "answer:v50";
-const answerMemo = memo<Answer>(ANSWER_VERSION, 500, 6 * 3600_000); // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
+export const ANSWER_VERSION = "answer:v52"; // v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
+const answerMemo = memo<Answer>(ANSWER_VERSION, 1200, 6 * 3600_000); // room for every known question (prewarmed) plus asked ones; // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 // opts.memo false: the same queries as a cached answer, not kept here (Browse by cause keeps its own figures, lib/browse.ts).
 export function answer(question: string, spec: Spec, opts: { cube?: boolean; memo?: boolean } = {}): Promise<Answer> {
   const s = normalizeSpec(spec);
-  if (opts.cube === false) return compute(question, s, false);
-  if (opts.memo === false) return compute(question, s, true);
-  return answerMemo(JSON.stringify(s), () => compute(question, s, true)).then((a) => ({ ...a, question }));
+  if (opts.cube === false) return compute(question, s, false).then(plainAnswer);
+  if (opts.memo === false) return compute(question, s, true).then(plainAnswer);
+  return answerMemo(JSON.stringify(s), () => compute(question, s, true).then(plainAnswer)).then((a) => ({ ...a, question }));
+}
+
+// Output side (Oct 27, Hunter): every text an answer shows reads in plain cause names, never "(SDG n)" or "Goal n"
+// (headline, numbers, chart titles, bullets, follow-up chips, notes, rows). The asker's own question is left as typed.
+function plainAnswer(a: Answer): Answer {
+  const walk = (v: unknown, key = ""): unknown => {
+    if (typeof v === "string") return key === "question" || key === "spec" ? v : plainCauseText(v);
+    if (Array.isArray(v)) return v.map((x) => walk(x));
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "spec" ? x : walk(x, k)]));
+    return v;
+  };
+  return walk(a) as Answer;
 }
 
 // A cause narrower than the label it routed to ("AI literacy" -> ai_tech_learning_work): the answer counts the
@@ -1296,8 +1312,8 @@ async function run(ctx: Ctx, s0: Spec): Promise<Out> {
   ctx.places.push(pl);
   if (s.county && !pl.county) throw new Unanswerable(`We couldn't find a county named "${s.county}"${s.states.length ? ` in ${s.states.join(", ")}` : ""}.`);
   const out = await dispatch(ctx, s, pl);
-  if (pl.corr) await corrNote(ctx, s, pl, out).catch((e) => console.error("corrected NTEE note failed", e));
-  else if (s.ntee !== "corrected" && s.source !== "household_giving" && s.source !== "foundation_finances" && await corrMoves(s)) out.followUps = [...(out.followUps ?? []), CORR_CHIP];
+  if (pl.corr) { await corrNote(ctx, s, pl, out).catch((e) => console.error("corrected NTEE note failed", e)); out.options = { ...out.options, corrected: true }; }
+  else if (s.ntee !== "corrected" && s.source !== "household_giving" && s.source !== "foundation_finances" && await corrMoves(s)) out.options = { ...out.options, corrected: true };
   // Years before e-filing was required: say so, and on a trend lead with it (much of the rise is filers moving to e-file).
   if (isGrantSrc(s) && grantYears(s).from < EFILE_REQUIRED) {
     const { from, to } = grantYears(s), note = await earlyCoverage(pl.g.kind, from).catch(() => "");
@@ -1312,7 +1328,7 @@ async function run(ctx: Ctx, s0: Spec): Promise<Out> {
 }
 
 // ---- corrected NTEE groups (spec.ntee "corrected", generosity-data 072)
-export const CORR_CHIP = "With corrected categories?";
+export const CORR_CHIP = "Use our corrected categories?"; // plain words (was "With corrected categories?", still understood)
 const CORR_GRADE = "Each moved org's IRS code didn't fit its own 990 text, so it counts under a suggested NTEE major group (graded 94% right on a sample of 150). Each added org had no IRS code and counts under a group suggested from similar orgs and its own filings (graded 98% right on a sample of 150). About half of them also have a detailed code (graded 98.7% on 150). The IRS codes are unchanged and stay the default.";
 // Offer the chip only when an NTEE-coded cause has orgs that move in or out of it.
 const corrMoves = async (s: Spec): Promise<boolean> => {
@@ -1680,7 +1696,7 @@ async function foundationTotal0(ctx: Ctx, s: Spec, pl: Place): Promise<Out> {
       ...(denGrowth != null && d0 && d0z ? { baseline: { label: `All ${pl.g.grants} to identified recipients`, a: d0.linked_usd, z: d0z.linked_usd, g: denGrowth, real: fl(denGrowth) } } : {}), ...(spike ? { spike } : {}) };
     return {
       ...base,
-      ev, ...(spike ? { followUps: [`Since ${spike.since}?`] } : {}),
+      ev, ...(spike ? { options: { since: spike.since } } : {}),
       chart: idx.length ? { title: `Change since ${y.full[0]}: ${c0.name} vs all ${pl.g.grants}`, sub: "Percent change", spec: inf ? inflToggle(tSpec, "change", inf) : tSpec } : base.chart,
       headline: g == null ? `${cap(pl.g.grants)} to ${c0.name}: ${money(floor0)} in ${yr}` : `${cap(pl.g.money)} for ${c0.name} ${grewText(g, realG)} from ${y.full[0]} to ${y.full.at(-1)}`,
       numbers: [...(g != null ? [{ value: signed(g), label: `${y.full[0]} to ${y.full.at(-1)}${label[0] ? ", primary" : ""}` }] : []),

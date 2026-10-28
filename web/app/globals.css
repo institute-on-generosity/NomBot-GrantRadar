@@ -2003,7 +2003,34 @@ a.prompt-help { color: var(--faint); }
 .pp-crumb .pp-back { padding: 0; font-size: var(--t-meta); }
 .pp-crumb span:last-child { color: var(--ink-2); font-weight: 600; }
 .pp-body { max-height: min(60vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
-@media (min-width: 641px) { .pp-q span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+
 @media (max-width: 640px) { .pp-body { max-height: none; } }
 /* Phones: the bottom sheet keeps one height across both steps (its top edge never moves); content scrolls inside */
 @media (max-width: 640px) { .pp { height: min(72vh, 560px); display: flex; flex-direction: column; } .pp-body { flex: 1; min-height: 0; overflow-y: auto; } }
+
+/* Popover rows never scroll sideways (Oct 27): questions wrap, the arrow sits on the first line; ✕ stays at the right */
+.pp { overflow-x: hidden; }
+.pp-list, .pp-row, .pp-q { white-space: normal; overflow-x: visible; }
+.pp-row, .pp-q { align-items: flex-start; line-height: 1.4; }
+.pp-row span, .pp-q span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pp-row .ico, .pp-q .ico { margin-top: .2em; }
+.pp-head .pp-close { margin-left: auto; }
+.pp-head .pp-browse { margin-left: auto; }
+.pp-head .pp-browse + .pp-close { margin-left: 0; }
+.pp-head b { min-width: 0; }
+/* Answer settings (corrected categories, start year): small segmented toggles under the headline */
+.chat-settings { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: 0 0 var(--s-4); font-size: var(--t-meta); }
+.chat-settings.pending { opacity: .6; }
+.seg-set { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 999px; background: var(--fill); }
+.seg-set .seg-l { padding: 0 6px 0 8px; color: var(--mute); }
+.seg-set button { font: inherit; font-size: var(--t-meta); padding: 3px 10px; border: 0; border-radius: 999px; background: none; color: var(--mute); cursor: pointer; }
+.seg-set button.on { background: var(--card); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.seg-i { padding: 0 6px; color: var(--faint); cursor: help; }
+/* Answer on its way: the current step, the steps list, and a skeleton of the number and chart */
+.chat-wait { display: grid; gap: var(--s-3); }
+.chat-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--t-meta); color: var(--faint); }
+.chat-steps li.done { color: var(--mute); text-decoration: line-through; text-decoration-color: var(--line); }
+.chat-steps li.now { color: var(--ink-2); font-weight: 600; }
+.chat-skel { display: grid; gap: 10px; max-width: 640px; }
+.chat-skel i { display: block; border-radius: 10px; background: var(--fill); animation: pulse 1.2s ease-in-out infinite alternate; }
+.chat-skel .n { width: 160px; height: 40px; } .chat-skel .l { width: 80%; height: 16px; } .chat-skel .c { width: 100%; height: 220px; }

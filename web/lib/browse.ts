@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { answer, ANSWER_VERSION, type Num } from "./answer";
 import { DEFAULT_SPEC, normalizeSpec, type Metric, type Spec } from "./answerSpec";
 import { askHref } from "./researchQuestions";
-import { causeOf, causeQuestions, covered, coverageOf, ENVIRONMENT, findSub, type Coverage, type Sdg, type Sub } from "./sdg";
+import { causeOf, causeQuestions, covered, coverageOf, plainCauseText, ENVIRONMENT, findSub, type Coverage, type Sdg, type Sub } from "./sdg";
 
 export const BROWSE_VERSION = "browse:v1";
 const KEY = `${BROWSE_VERSION}|${ANSWER_VERSION}`;
@@ -35,8 +35,9 @@ export type Figures = {
 };
 
 // The questions a Browse page links to: each routes (router + lib/sdg withSdg) to the spec its figure came from.
+// Plain cause names in the questions ("education", never "(SDG 4)"); lib/knownQuestions maps each back to its spec.
 export function asks(name: string): Record<Shown | "underfunded", string> {
-  return causeQuestions(name);
+  return causeQuestions(plainCauseText(name));
 }
 export const askLink = (q: string) => askHref(q);
 

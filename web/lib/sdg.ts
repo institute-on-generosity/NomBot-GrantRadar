@@ -94,6 +94,9 @@ export const SDGS: Sdg[] = [
     n: 4, name: "Quality Education", goal: "Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all", plain: "Schools, colleges, literacy and learning outside school", pillar: "people", color: "#C5192D", coverage: "label",
     scope: s({ id: "education", name: "Education and learning", plain: "Schools, colleges, early childhood, tutoring, literacy, scholarships, libraries, adult education (graded label)", coverage: "label", label: "education", targets: ["4.1", "4.2", "4.3", "4.6"] }),
     subs: [
+      // Environmental education sits with education (UN target 4.7, education for sustainable development), and under the
+      // Environment umbrella; it was under Climate until Oct 27, where researchers didn't expect it
+      s({ id: "env_education", name: "Environmental education", plain: "Environmental education and outdoor programs (NTEE C60)", coverage: "ntee", ntee: ["C60"], targets: ["4.7", "13.3"], alias: /\benvironmental education\b/i }),
       s({ id: "k12", name: "K-12 schools", plain: "Elementary, secondary, special education and charter schools", coverage: "ntee", ntee: ["B20", "B24", "B25", "B28", "B29"], targets: ["4.1"], alias: /\bk-?12\b|\b(elementary|secondary|high|charter) schools?\b/i }),
       s({ id: "early_childhood", name: "Early childhood", plain: "Preschools (NTEE B21)", coverage: "ntee", ntee: ["B21"], targets: ["4.2"], alias: /\b(early childhood|pre-?schools?|pre-?k)\b/i }),
       s({ id: "higher_ed", name: "Colleges and universities", plain: "Colleges, universities, graduate and professional schools", coverage: "ntee", ntee: ["B4", "B5"], targets: ["4.3"], note: "Public universities often don't file Form 990.", alias: /\b(higher education|colleges?|universit(y|ies))\b/i }),
@@ -192,7 +195,6 @@ export const SDGS: Sdg[] = [
     n: 13, name: "Climate Action", goal: "Take urgent action to combat climate change and its impacts", plain: "Climate change, clean energy and resilience", pillar: "planet", color: "#3F7E44", coverage: "label",
     scope: s({ id: "climate", name: "Climate", plain: "Mitigation, clean energy, adaptation and climate policy (graded label)", coverage: "label", label: "climate", targets: ["13.1", "13.2", "13.3"] }),
     subs: [
-      s({ id: "env_education", name: "Environmental education", plain: "Environmental education and outdoor programs (NTEE C60)", coverage: "ntee", ntee: ["C60"], targets: ["13.3"], alias: /\benvironmental education\b/i }),
     ],
     seeAlso: ["energy", "disaster"],
   },
@@ -327,4 +329,25 @@ export function causeQuestions(name: string) {
     count_orgs: `How many nonprofits work on ${name}?`,
     underfunded: `Which ${name} nonprofits get little foundation money for their size?`,
   };
+}
+
+// How a cause reads in questions and answers (Oct 27, Hunter): plain words, never "(SDG n)" or "Goal n". A goal's own
+// scope gets a short everyday name; a subcategory keeps its name, lower case mid-sentence.
+export const GOAL_NAME: Record<number, string> = { 1: "poverty", 2: "hunger", 3: "health", 4: "education", 5: "gender equality", 6: "clean water",
+  7: "clean energy", 8: "jobs and the economy", 9: "innovation and infrastructure", 10: "reducing inequality", 11: "cities and communities",
+  12: "responsible consumption", 13: "climate", 14: "oceans", 15: "land and wildlife", 16: "justice and peace", 17: "philanthropy and partnerships" };
+export function displayCause(sub: Sub, sdg: Sdg | null): string {
+  if (sdg && sub === sdg.scope && sdg.coverage !== "limited") return GOAL_NAME[sdg.n] ?? sdg.name.toLowerCase();
+  return sub.name.replace(/^[A-Z](?=[a-z])/, (m) => m.toLowerCase());
+}
+// Output side: any "(SDG n)" or "Goal n, " left in a generated text goes; a goal's full name becomes its short name.
+export function plainCauseText(t: string): string {
+  let s = t;
+  const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (const g of SDGS) {
+    const short = GOAL_NAME[g.n] ?? g.name.toLowerCase();
+    // "quality education (SDG 4)" -> "education"; at a sentence start "Quality education (SDG 4)" -> "Education"
+    s = s.replace(new RegExp(`${esc(g.name)} \\(SDG ${g.n}\\)`, "gi"), (m) => (/^[A-Z]/.test(m) ? short[0].toUpperCase() + short.slice(1) : short));
+  }
+  return s.replace(/\s\(SDG \d{1,2}\)/g, "").replace(/\b(SDG|Goal) \d{1,2}, /g, "");
 }

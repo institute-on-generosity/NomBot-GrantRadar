@@ -17,6 +17,7 @@ const { LABEL_SLUGS } = await import("../lib/labels");
 const { SDGS, ENVIRONMENT, covered, causeOf, sdgRefs } = await import("../lib/sdg");
 const { asks, entry, figures, METRICS_SHOWN, specFor } = await import("../lib/browse");
 const { RESEARCH_GROUPS } = await import("../lib/examples");
+const { knownSpec } = await import("../lib/knownQuestions");
 
 const bad: string[] = [];
 let checks = 0;
@@ -42,18 +43,20 @@ for (const f of covered()) {
   const e = entry(f.sub.id)!;
   const q = asks(e.name);
   for (const m of [...METRICS_SHOWN, "underfunded"] as const) {
-    const r = withSdg(q[m], { research: true, spec: { ...DEFAULT_SPEC, metric: m, causes: [dummy] } });
-    const got = r.research ? r.spec.causes[0] : null;
-    ok(same(got, e.spec!.causes[0]), `${f.sub.id} ${m}: "${q[m]}" maps to ${JSON.stringify(got)}, want ${JSON.stringify(e.spec!.causes[0])}`);
+    // Browse and the cause popover ask plain questions (no "(SDG n)"); each must map to its own spec with no router call
+    const got = knownSpec(q[m])?.causes[0] ?? null;
+    ok(same(got, e.spec!.causes[0]) && knownSpec(q[m])?.metric === m && !/\(SDG \d+\)|\bGoal \d/.test(q[m]), `${f.sub.id} ${m}: "${q[m]}" maps to ${JSON.stringify(got)}, want ${JSON.stringify(e.spec!.causes[0])}`);
   }
 }
+// Every question the home and /research popover can ask: no "(SDG n)" or "Goal n" in its text, and the standard ones
+// map to a covered cause with no router call
+let knownN = 0;
 for (const g of RESEARCH_GROUPS) for (const q of g.prompts) {
-  if (!sdgRefs(q).length) continue;
-  const r = withSdg(q, { research: true, spec: { ...DEFAULT_SPEC, causes: [dummy] } });
-  const c = r.research ? r.spec.causes[0] : null;
-  // Compared with the raw cause and with Browse's normalized one (subtype added), since the goal panel asks Browse's questions
-  ok(!!c && covered().some((f) => same(causeOf(f.sub, f.sdg), c) || same(entry(f.sub.id)?.spec?.causes[0], c)), `home prompt "${q}" maps to no covered cause: ${JSON.stringify(c)}`);
+  ok(!/\(SDG \d+\)|\b(SDG|Goal) \d/.test(q), `home prompt "${q}" shows an SDG label`);
+  const k = knownSpec(q);
+  if (k) { knownN++; ok(covered().some((f) => same(causeOf(f.sub, f.sdg), k.causes[0]) || same(entry(f.sub.id)?.spec?.causes[0], k.causes[0])), `home prompt "${q}" maps to no covered cause`); }
 }
+console.log(`home prompts with a known spec (no router): ${knownN}`);
 console.log(`taxonomy and links: ${checks - bad.length}/${checks}`);
 
 // 3. numbers, 4. latency

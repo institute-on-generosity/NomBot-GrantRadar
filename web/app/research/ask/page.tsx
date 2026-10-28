@@ -1,3 +1,4 @@
+import { plainCauseText } from "@/lib/sdg";
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -5,7 +6,7 @@ import { connection } from "next/server";
 import { ChatAnswer } from "@/components/ChatAnswer";
 import { RecordSearch } from "@/components/HistoryRecorder";
 import { NavLink } from "@/components/NavLink";
-import { Chat, FollowUpText, Suggestions, Thinking } from "@/components/ResearchThread";
+import { Chat, FollowUpText, Suggestions, ThinkingSteps } from "@/components/ResearchThread";
 import { contentPlan } from "@/lib/answerSpec";
 import { PROMPT_SETS } from "@/lib/examples";
 import { pickFollowUps, type Turn } from "@/lib/followUp";
@@ -34,7 +35,7 @@ export default function AskPage(props: { searchParams: SP }) {
           New question
         </NavLink>
       </header>
-      <Suspense fallback={<div className="chat-thread"><Thinking label="Working out the answer" /></div>}>
+      <Suspense fallback={<div className="chat-thread"><Suspense fallback={null}><Echo searchParams={props.searchParams} /></Suspense><ThinkingSteps /></div>}>
         <Ask searchParams={props.searchParams} />
       </Suspense>
     </main>
@@ -42,6 +43,14 @@ export default function AskPage(props: { searchParams: SP }) {
 }
 
 const list = (v: string | string[] | undefined) => (Array.isArray(v) ? v : v ? [v] : []);
+
+// The question, shown at once while the answer is worked out
+async function Echo({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams;
+  const q = String(list(sp.q)[0] ?? "").trim().slice(0, 300), fs = list(sp.f);
+  const last = fs.length ? fs[fs.length - 1] : q;
+  return last ? <div className="chat-q"><p>{plainCauseText(last)}</p></div> : null;
+}
 
 async function Ask({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
@@ -61,9 +70,12 @@ async function Ask({ searchParams }: { searchParams: SP }) {
     );
   }
   const fs = list(sp.f).map((f) => f.trim().slice(0, 300)).filter(Boolean).slice(0, MAX_FOLLOW_UPS);
+  // In-place settings for the latest answer (corrected categories, a start year): not chat turns
+  const sinceY = Number(list(sp.since)[0]);
+  const mods = { corr: list(sp.corr)[0] === "1", since: Number.isInteger(sinceY) && sinceY > 2000 && sinceY < 2100 ? sinceY : undefined };
   await connection();
   const toSearch = `/?${new URLSearchParams({ question: q })}`;
-  const turns = await resolveThread(q, fs).catch((err) => { console.error("research thread failed", err); return null; });
+  const turns = await resolveThread(q, fs, mods).catch((err) => { console.error("research thread failed", err); return null; });
   if (!turns) redirect(toSearch);
   const first = turns[0] as Extract<(typeof turns)[number], { kind: "answer" }>;
   if (contentPlan(first.spec, first.answer.status) !== "research") redirect(toSearch);
@@ -78,13 +90,13 @@ async function Ask({ searchParams }: { searchParams: SP }) {
         {turns.map((t, i) => (
           <section key={`${i}:${t.text}`} className="chat-turn" id={`turn-${i}`}>
             <div className="chat-q">
-              <p>{t.text}</p>
-              {i > 0 && t.kind === "answer" && t.standalone !== t.text && <small title="How NomBot read this follow-up">{t.standalone}</small>}
+              {/* One bubble: the full question (a follow-up chip's short label or a terse follow-up reads in full) */}
+              <p title={t.standalone !== t.text ? `You asked: ${t.text}` : undefined}>{t.kind === "answer" ? plainCauseText(t.standalone) : t.text}</p>
             </div>
             {/* Older answers fold to their headline; the latest stays open */}
             {t.kind === "answer" && (i < turns.length - 1
               ? <details className="chat-old"><summary>{t.answer.headline}</summary><ChatAnswer a={t.answer} /></details>
-              : <ChatAnswer a={t.answer} />)}
+              : <ChatAnswer a={t.answer} controls={{ corr: Boolean(mods.corr), since: mods.since ?? null }} />)}
             {t.kind === "text" && <FollowUpText q={q} fs={fs} i={i - 1} />}
             {t.kind === "search" && (
               <div className="chat-answer">

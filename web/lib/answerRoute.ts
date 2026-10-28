@@ -15,6 +15,7 @@ import { memo } from "./memo";
 import { db } from "./db";
 import { DEFAULT_SPEC, fromLlmSpec, llmSpecSchema, normalizeSpec, type Cause, type Spec } from "./answerSpec";
 import { causeOf, ENVIRONMENT, namesEnvironment, sdgRefs } from "./sdg";
+import { knownSpec } from "./knownQuestions";
 
 const SCREEN = new RegExp([
   String.raw`\bhow (much|many)\b`, String.raw`\bwhat (share|percent(age)?|portion|fraction|proportion)\b`, String.raw`\bshare of\b`, String.raw`\bpercent`,
@@ -155,6 +156,9 @@ const cached = memo<Routed>("answer-route:v32", 1000, 24 * 3600_000); // v32: SD
 // nightly benchmark uses it to measure its cost (app/api/v1/answer, X-App: nightly-benchmark).
 export function routeQuestion(question: string, onUsage?: (u: RouteUsage) => void): Promise<Routed> {
   const q = question.replace(/\s+/g, " ").trim();
+  // A question NomBot itself offers (cause popover, Browse, curated prompts): its spec is known, no router call
+  const known = knownSpec(q);
+  if (known) return Promise.resolve({ research: true, spec: known });
   if (!looksLikeResearch(q)) return Promise.resolve({ research: false });
   // A failed call isn't cached (memo drops rejections): the page falls back to a plain search this time.
   return cached(q.toLowerCase(), async () => withSdg(q, (await orgHealthRoute(q)) ?? await routeFresh(q, onUsage))).catch((err) => {

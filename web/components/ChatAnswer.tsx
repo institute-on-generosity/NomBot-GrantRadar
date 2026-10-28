@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
 import type { Answer } from "@/lib/answer";
 import { AnswerMethod } from "./AnswerCard";
 import { AnswerSteps } from "./AnswerSteps";
@@ -20,7 +21,8 @@ const slug = (q: string) => q.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
 
 const Icon = ({ d }: { d: React.ReactNode }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{d}</svg>;
 
-export function ChatAnswer({ a }: { a: Answer }) {
+// controls: the latest answer's in-place settings (from the URL); older answers show none.
+export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: boolean; since: number | null } }) {
   const [method, setMethod] = useState(false);
   const [copied, setCopied] = useState(false);
   const none = a.status === "unanswerable";
@@ -47,6 +49,7 @@ export function ChatAnswer({ a }: { a: Answer }) {
         </p>
       )}
       <p className="chat-lead">{a.headline}</p>
+      {controls && (a.options?.corrected || a.options?.since || controls.corr || controls.since) && <AnswerSettings options={a.options ?? {}} on={controls} />}
       {a.chart && (
         <figure className="chat-chart">
           <figcaption>{a.chart.title}<span>{a.chart.sub}</span></figcaption>
@@ -97,6 +100,38 @@ export function ChatAnswer({ a }: { a: Answer }) {
         </div>
       )}
       {method && <AnswerMethod a={a} />}
+    </div>
+  );
+}
+
+// Settings, not questions (Oct 27, Hunter): corrected categories and a start year switch the same answer in place
+// (router.replace on ?corr=1 / ?since=YYYY, no chat turn, no extra history).
+function AnswerSettings({ options, on }: { options: NonNullable<Answer["options"]>; on: { corr: boolean; since: number | null } }) {
+  const router = useRouter(), path = usePathname(), params = useSearchParams();
+  const [pending, start] = useTransition();
+  const set = (k: string, v: string | null) => {
+    const p = new URLSearchParams(params.toString());
+    if (v) p.set(k, v); else p.delete(k);
+    start(() => router.replace(`${path}?${p}`, { scroll: false }));
+  };
+  const since = on.since ?? options.since ?? null;
+  return (
+    <div className={`chat-settings${pending ? " pending" : ""}`} aria-busy={pending}>
+      {(options.corrected || on.corr) && (
+        <span className="seg-set" role="group" aria-label="Categories">
+          <span className="seg-l">Categories</span>
+          <button type="button" aria-pressed={!on.corr} className={!on.corr ? "on" : undefined} onClick={() => set("corr", null)}>IRS codes</button>
+          <button type="button" aria-pressed={on.corr} className={on.corr ? "on" : undefined} onClick={() => set("corr", "1")}>Corrected</button>
+          <span className="seg-i" tabIndex={0} title="Fixes organizations whose IRS cause code is missing or wrong, using the cause their own filings describe (graded, about 94–98% accurate)." aria-label="About corrected categories">ⓘ</span>
+        </span>
+      )}
+      {since && (
+        <span className="seg-set" role="group" aria-label="Years">
+          <span className="seg-l">Years</span>
+          <button type="button" aria-pressed={!on.since} className={!on.since ? "on" : undefined} onClick={() => set("since", null)}>All</button>
+          <button type="button" aria-pressed={Boolean(on.since)} className={on.since ? "on" : undefined} onClick={() => set("since", String(since))}>Since {since}</button>
+        </span>
+      )}
     </div>
   );
 }

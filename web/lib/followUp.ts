@@ -1,3 +1,4 @@
+import { plainCauseText } from "./sdg";
 // Follow-ups on a research answer (/research/ask?q=…&f=…&f=…). Each follow-up is resolved against the
 // thread's earlier specs into one of:
 //   answer  a modified spec (swap cause, add a state, change metric, source or years) → a new answer card
@@ -120,7 +121,8 @@ function householdChips(s: Spec, add: (label: string, change: Partial<Spec>) => 
 type Chip = { label: string; spec: Spec };
 export function candidateFollowUps(s: Spec, history: Turn[] = []): Chip[] {
   const out: Chip[] = [];
-  const add = (label: string, change: Partial<Spec>) => {
+  const add = (raw: string, change: Partial<Spec>) => {
+    const label = plainCauseText(raw); // plain cause names in chips, never "(SDG n)"
     if (!out.some((o) => o.label === label)) out.push({ label, spec: normalizeSpec({ ...s, missing: [], missingNote: null, premise: null, ...change }) });
   };
   const c = s.causes[0];
@@ -331,9 +333,9 @@ export function resolveFollowUp(text: string, history: Turn[]): Promise<Resolved
   }
   // "With corrected categories?": the chip an NTEE-coded cause answer offers (lib/answer CORR_CHIP). Same question,
   // orgs in org_ntee_suggested counted under their suggested code (detailed where graded, else major group).
-  if (/^with corrected (categories|ntee( codes)?)\??$/i.test(text.trim())) {
+  if (/^(with corrected (categories|ntee( codes)?)|use our corrected categories)\??$/i.test(text.trim())) {
     const spec = normalizeSpec({ ...last.spec, ntee: "corrected", missing: [], missingNote: null, premise: null });
-    return Promise.resolve({ kind: "answer", spec, standalone: `${describeSpec(spec).replace(/\?$/, "")}, with corrected categories?` });
+    return Promise.resolve({ kind: "answer", spec, standalone: `${describeSpec(spec).replace(/\?$/, "")}, using our corrected categories?` });
   }
   const key = JSON.stringify([history.map((h) => h.spec), text.trim().toLowerCase()]);
   return cached(key, () => resolveFresh(text, history));

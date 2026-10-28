@@ -43,7 +43,7 @@ export function Chat({ q, fs, max, children }: { q: string | null; fs: string[];
         {pending && asked && (
           <div className="chat-turn" id="chat-pending">
             <div className="chat-q"><p>{asked}</p></div>
-            <Thinking label="Working out the answer" />
+            <ThinkingSteps />
           </div>
         )}
       </div>
@@ -56,13 +56,33 @@ export function Thinking({ label }: { label: string }) {
   return <p className="chat-thinking" role="status"><span className="dots" aria-hidden><i /><i /><i /></span>{label}…</p>;
 }
 
+// While an answer is on its way (Oct 27): what is happening, in order, and the shape of the answer to come. The
+// router takes about 2 s on a new free-text question, the query under a second to a few; known questions skip both.
+const STEPS: [number, string][] = [[0, "Understanding the question"], [1800, "Querying 5.3 million foundation grants"], [4500, "Drawing the chart"]];
+export function ThinkingSteps() {
+  const [k, setK] = useState(0);
+  useEffect(() => {
+    const ts = STEPS.slice(1).map(([at], i) => setTimeout(() => setK(i + 1), at));
+    return () => ts.forEach(clearTimeout);
+  }, []);
+  return (
+    <div className="chat-wait">
+      <p className="chat-thinking" role="status" aria-live="polite"><span className="dots" aria-hidden><i /><i /><i /></span>{STEPS[k][1]}…</p>
+      <ol className="chat-steps" aria-hidden>{STEPS.map(([, l], i) => <li key={l} className={i < k ? "done" : i === k ? "now" : undefined}>{l}</li>)}</ol>
+      <div className="chat-skel" aria-hidden><i className="n" /><i className="l" /><i className="c" /></div>
+    </div>
+  );
+}
+
 // Suggested follow-ups, under the latest answer only.
 export function Suggestions({ chips }: { chips: string[] }) {
   const { ask, pending } = useContext(ChatCtx);
   if (!chips.length || pending) return null;
   return (
     <div className="chat-chips" aria-label="Suggested follow-ups">
-      {chips.map((c) => <button key={c} type="button" className="chip link" onClick={() => ask(c)}>{c}</button>)}
+      {chips.map((c) => <button key={c} type="button" className="chip link" onClick={() => ask(c)}
+        title={/corrected categories/i.test(c) ? "Some organizations carry the wrong IRS cause code. This recounts them under a corrected code, from their own filings." : undefined}>
+        {c}{/corrected categories/i.test(c) && <span className="chip-info" aria-hidden> ⓘ</span>}</button>)}
     </div>
   );
 }

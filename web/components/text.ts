@@ -44,6 +44,9 @@ export function orgName(raw: string, max = 56): string {
     return word + trail;
   });
   while (out.length > 1 && SMALL.has(out[out.length - 1].toLowerCase())) out.pop(); // IRS cut "FEDERATION OF"
+  // Display only: no legal suffix ("Walton Family Foundation Inc" -> "Walton Family Foundation"); data and exports keep the raw name
+  while (out.length > 1 && /^(inc|incorporated|corp|corporation|co|ltd|llc|lp)\.?,?$/i.test(out[out.length - 1])) out.pop();
+  if (out.length) out[out.length - 1] = out[out.length - 1].replace(/,$/, "");
   let s = out.join(" ");
   if (s.length > max) s = s.slice(0, max + 1).replace(/\s+\S*$/, "").replace(/[\s,&-]+$/, "") + "…";
   return s;
