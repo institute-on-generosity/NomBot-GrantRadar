@@ -969,7 +969,7 @@ type Out = Omit<Answer, "question" | "spec" | "ms" | "queries" | "missing" | "st
 // months of cash, program ratio, peer medians by size band), Answer.health and Answer.healthOrgs, spec.ein.
 // v49: youth_development label (graded g2, recall about 54%), with its caveat (LABEL_CAVEAT).
 // v50: SDG causes (lib/sdg.ts): "(SDG n)" names stay last in org phrases and drop from the org search link.
-export const ANSWER_VERSION = "answer:v55"; // v55: label tiers read "main focus" and "part of their work" (no "partial", "primary"); v54: one chart palette (focus green, neutral rest); v53: chart values carry ein; v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
+export const ANSWER_VERSION = "answer:v56"; // v56: method tiers read the new "main focus only" note; v55: label tiers read "main focus" and "part of their work" (no "partial", "primary"); v54: one chart palette (focus green, neutral rest); v53: chart values carry ein; v52: corrected categories and "since" as answer options, not chips // v51: plain cause names in every output text (no "(SDG n)", plainCauseText)
 const answerMemo = memo<Answer>(ANSWER_VERSION, 1200, 6 * 3600_000); // room for every known question (prewarmed) plus asked ones; // v50: SDG causes; v49: youth_development; v48: city (recipient ZIPs, HQ)
 // opts.cube false: the original grant_clean queries, uncached (eval/answer-cube.mts compares both paths).
 // opts.memo false: the same queries as a cached answer, not kept here (Browse by cause keeps its own figures, lib/browse.ts).
@@ -1087,7 +1087,7 @@ async function stepsFor(ctx: Ctx, s0: Spec, a: Answer, change?: Change, versus?:
   }
   // The cause set: graded label (tiers and grade), NTEE codes or keywords.
   const gr: Record<string, Grade> = s.causes.some((c) => c.label) ? await grades().catch(() => ({})) : {};
-  const primaryOnly = /primary tier only/.test(a.causeNote);
+  const primaryOnly = /main focus only/.test(a.causeNote); // causeNote wording, Oct 28 (was "primary tier only")
   // Labels with sub-types: which one was counted and how the label splits (orgs per sub-type).
   const subs = new Map<C, string>();
   for (const c of s.causes as C[]) {

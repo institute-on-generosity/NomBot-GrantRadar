@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useSyncExternalStore } from "react";
+import { Yr } from "./Yr";
 import { NavLink } from "./NavLink";
 import { SlideButton } from "./SlideButton";
 import type { OverviewFacts } from "@/lib/overviewFacts";
@@ -43,7 +44,7 @@ export function OverviewVisual({ facts, shown }: { facts: OverviewFacts; shown?:
       <dl className="kp-facts">
         {facts.tiles.map((t) => (
           <div key={t.label}>
-            <dt><span className="kp-dt"><Icon name={tileIcon(t.label)} />{label(t.label)}</span>{t.note && <small>{t.note}</small>}</dt>
+            <dt><span className="kp-dt"><Icon name={tileIcon(t.label)} />{label(t.label).replace(/ (19|20)\d\d–\d\d$/, "")}{/ (19|20)\d\d–\d\d$/.test(label(t.label)) ? <Yr>{label(t.label).match(/(19|20)\d\d–\d\d$/)![0]}</Yr> : /last year$/.test(t.label) ? <Yr title="Each organization's newest return">newest returns</Yr> : null}</span>{t.note && <small>{t.note}</small>}</dt>
             <dd>{t.value}</dd>
           </div>
         ))}

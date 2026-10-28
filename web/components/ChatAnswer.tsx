@@ -1,5 +1,6 @@
 "use client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { recencyBadge, Yr } from "./Yr";
 import { Half } from "./TrustMark";
 import { useState, useTransition } from "react";
 import type { Answer } from "@/lib/answer";
@@ -24,6 +25,9 @@ const Icon = ({ d }: { d: React.ReactNode }) => <svg width="16" height="16" view
 
 // controls: the latest answer's in-place settings (from the URL); older answers show none.
 export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: boolean; since: number | null } }) {
+  // Each number's years as a badge, unless its label already names a year (a label that is only years becomes the badge)
+  const onlyYears = (label: string) => /^(19|20)\d\d(–(\d\d|(19|20)\d\d))?$/.test(label.trim());
+  const yrOf = (label: string) => (/\b(19|20)\d\d\b/.test(label) ? null : recencyBadge(a.recency));
   // A cause counted by IRS codes or keywords, not a checked cause label (Oct 28): one muted line under the headline
   const loose = a.status !== "unanswerable" ? a.spec.causes.find((c) => !c.label && (c.ntee.length || c.keywords.length)) : undefined;
   const est = loose ? { by: loose.ntee.length ? "IRS codes" : "keywords", tip: `Partial: counted by ${loose.ntee.length ? "the IRS cause codes nonprofits choose themselves" : "words in nonprofits' names and filings"}, not yet checked by our cause label. Some off-topic orgs may be included and some missed.` } : null;
@@ -49,7 +53,7 @@ export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: bool
       {/* Focal point: the first key number, big; the headline under it; the other numbers as smaller figures. */}
       {a.numbers.length > 0 && (
         <p className="chat-nums" aria-label="Key number">
-          <span title={a.numbers[0].note}><b>{a.numbers[0].value}</b> {a.numbers[0].label}</span>
+          <span title={a.numbers[0].note}><b>{a.numbers[0].value}</b> {onlyYears(a.numbers[0].label) ? <Yr>{a.numbers[0].label}</Yr> : a.numbers[0].label}{yrOf(a.numbers[0].label) && <Yr title={a.recency?.note}>{yrOf(a.numbers[0].label)}</Yr>}</span>
         </p>
       )}
       <p className="chat-lead">{a.headline}</p>
@@ -73,7 +77,7 @@ export function ChatAnswer({ a, controls }: { a: Answer; controls?: { corr: bool
       {!none && (
         <details className="more-info chat-details">
           <summary><span className="when-closed">Details</span><span className="when-open">Hide details</span></summary>
-          {a.numbers.length > 1 && <p className="chat-nums more">{a.numbers.slice(1).map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {n.label}</span>)}</p>}
+          {a.numbers.length > 1 && <p className="chat-nums more">{a.numbers.slice(1).map((n) => <span key={n.label} title={n.note}><b>{n.value}</b> {onlyYears(n.label) ? <Yr>{n.label}</Yr> : n.label}{yrOf(n.label) && <Yr title={a.recency?.note}>{yrOf(n.label)}</Yr>}</span>)}</p>}
           {a.bullets.length > 0 && <ul className="chat-bullets">{a.bullets.map((p) => <li key={p}>{parts(p)}</li>)}</ul>}
           {a.who && <AnswerWho who={a.who} />}
           {a.missing.map((m) => (

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Yr, yy } from "./Yr";
 import { SummaryBody } from "./SummaryBody";
 import { money } from "@/lib/summaryFacts";
 import { Icon, type IconName } from "./Icons";
@@ -63,8 +64,8 @@ async function Tiles({ head }: { head: Promise<SummaryHead> }) {
   const [g0, g1] = f.grantYears;
   return (
     <p className="sum-tiles">
-      {f.revenue && <span title={`Median yearly income, ${f.revenue.reported} of the ${f.strong} report it`}><Icon name="money" /><b>{money(f.revenue.median)}</b> median income</span>}
-      {f.strong > 0 && <span title={`Got foundation grants, ${g0} to ${g1}`}><Icon name="gift" /><b>{Math.round((100 * f.funded) / f.strong)}%</b> got foundation grants</span>}
+      {f.revenue && <span title={`Median yearly income, ${f.revenue.reported} of the ${f.strong} report it`}><Icon name="money" /><b>{money(f.revenue.median)}</b> median income<Yr title="Each organization's newest return">newest returns</Yr></span>}
+      {f.strong > 0 && <span title={`Got foundation grants, ${g0} to ${g1}`}><Icon name="gift" /><b>{Math.round((100 * f.funded) / f.strong)}%</b> got foundation grants<Yr>{yy(g0, g1)}</Yr></span>}
       {caveat && <span className="sum-warn" title={caveat} tabIndex={0}><Icon name="warn" /><span className="sr-only">{caveat}</span></span>}
     </p>
   );

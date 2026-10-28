@@ -15,7 +15,8 @@ import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase, orgTitle } from "@/components/text";
 import { getOrg, formName, LATEST_RETURN_NOTE, type Income } from "@/lib/org";
-import { trackText, vetting } from "@/lib/vetting";
+import { becauseText, trackText, vetting } from "@/lib/vetting";
+import { Yr } from "@/components/Yr";
 import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
@@ -64,7 +65,7 @@ async function Org({ params, searchParams, modal }: Props) {
         : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
         : <BackLink fallback="/">← Back</BackLink>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
-      <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /><CompareButton org={{ ein: o.ein, name: o.name, city: o.city, state: o.state }} />{!modal && <PrintButton />}</div>
+      <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /><CompareButton org={{ ein: o.ein, name: o.name, city: o.city, state: o.state }} />{!modal && <Link href={`/memo/org/${o.ein.replace(/\D/g, "")}`} className="memo-link" title="Download a one-page brief to share, as PDF or Word"><Icon name="download" size={14} />Memo</Link>}{!modal && <PrintButton />}</div>
       {/* Top: name, place (website as an icon), then 3 icon stats. Cause, EIN and the latest 990 live in Details. */}
       <p className="sub org-place">
         <Icon name="pin" size={15} />{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
@@ -72,8 +73,8 @@ async function Org({ params, searchParams, modal }: Props) {
       </p>
       {o.tax?.revocation && (o.tax.status === "revoked" || o.tax.status === "conflict") && <Revoked r={o.tax.revocation} conflict={o.tax.status === "conflict"} onPub78={o.tax.pub78.eligible} />}
       <ul className="org-stats">
-        {o.years[0]?.revenue != null && <li title={`Yearly income, ${o.years[0].year}`}><Icon name="money" size={18} /><b>{money(o.years[0].revenue)}</b><span>income</span></li>}
-        {o.team?.staff != null && <li title={`Form 990 (${o.team.year}): ${o.team.staff.toLocaleString("en-US")} staff${o.team.volunteers != null ? `, ${o.team.volunteers.toLocaleString("en-US")} volunteers` : ""}`}><Icon name="people" size={18} /><b>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? o.team.volunteers!.toLocaleString("en-US") : o.team.staff.toLocaleString("en-US")}</b><span>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? "volunteers" : "staff"}</span></li>}
+        {o.years[0]?.revenue != null && <li title={`Yearly income, ${o.years[0].year}`}><Icon name="money" size={18} /><b>{money(o.years[0].revenue)}</b><span>income<Yr>{o.years[0].year}</Yr></span></li>}
+        {o.team?.staff != null && <li title={`Form 990 (${o.team.year}): ${o.team.staff.toLocaleString("en-US")} staff${o.team.volunteers != null ? `, ${o.team.volunteers.toLocaleString("en-US")} volunteers` : ""}`}><Icon name="people" size={18} /><b>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? o.team.volunteers!.toLocaleString("en-US") : o.team.staff.toLocaleString("en-US")}</b><span>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? "volunteers" : "staff"}<Yr>{o.team.year}</Yr></span></li>}
         {o.age != null && <li title={`Tax-exempt since ${o.ruling} (IRS ruling date)`}><Icon name="calendar" size={18} /><b>{o.age < 1 ? "<1" : o.age}</b><span>years</span></li>}
       </ul>
       <Suspense fallback={<p className="org-track" aria-hidden="true">&nbsp;</p>}><TrackLine o={o} /></Suspense>
@@ -223,7 +224,7 @@ async function OrgQuestions({ o }: { o: OrgT }) {
   return (
     <section className="org-asks">
       <h2>Questions to ask</h2>
-      <ol>{v.questions.map((x) => <li key={x.key}><b>{x.q}</b><small>Because {x.because}</small></li>)}</ol>
+      <ol>{v.questions.map((x) => <li key={x.key}><b>{x.q}</b><small>{becauseText(x)}</small></li>)}</ol>
     </section>
   );
 }

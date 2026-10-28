@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { PrintButton } from "@/components/PrintButton";
 import { readable, titleCase, orgTitle } from "@/components/text";
+import { Yr } from "@/components/Yr";
 import { applyOverrides, money, OVERRIDE_KEYS, type Overrides } from "@/lib/filters";
 import { NEAR_MILES, TIER_ORDER, tierNote, tierTitle, type Scope } from "@/lib/place";
 import { fundersOf, fundingOf, GRANT_YEARS, labelsOf, placeCoverage } from "@/lib/placeReport";
@@ -17,6 +18,14 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 // A search as a report to keep or send: the question, how the place and the matches were found, the organizations
 // in place tiers with their evidence, the funders active among them, plain caveats and leads to verify. Opened
 // from "Download report" on the results page. "Save as PDF" prints it (print styles drop the app around it).
+// A summary line's years as the site's data-year badge: a trailing ", 2022–24" becomes the badge, and figures from each
+// org's newest return say so
+function withYears(l: string) {
+  const m = /,? ((19|20)\d\d(–\d\d)?)$/.exec(l);
+  if (m) return <>{l.slice(0, m.index)}<Yr>{m[1]}</Yr></>;
+  return /median yearly income|^Largest:/.test(l) ? <>{l}<Yr title="Each organization's newest return">newest returns</Yr></> : l;
+}
+
 export default function ReportPage({ searchParams }: { searchParams: SP }) {
   return (
     <main className="report">
@@ -68,7 +77,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
           <h2>Summary</h2>
           {summary.map((l, i) => i === 0
             ? <p key={i} className="report-count"><b>{l.split(" ")[0]}</b> {l.split(" ").slice(1).join(" ")}</p>
-            : <p key={i}>{l}</p>)}
+            : <p key={i}>{withYears(l)}</p>)}
         </section>
       )}
 

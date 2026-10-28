@@ -53,14 +53,14 @@ export const specFor = (e: Entry, metric: Metric): Spec => normalizeSpec({ ...e.
 // The organizations a subcategory's money goes to (round-2 audit V4): its top 10 recipients by foundation dollars, the
 // research answer "Who gets the most foundation money for X?" (same spec, cached by the answer engine).
 export type TopOrg = { ein: string; name: string; state: string; usd: number; partial: boolean };
-export async function topOrgs(id: string): Promise<{ orgs: TopOrg[]; ask: string } | null> {
+export async function topOrgs(id: string): Promise<{ orgs: TopOrg[]; ask: string; years: [number, number] | null } | null> {
   const e = entry(id);
   if (!e?.spec) return null;
   const ask = causeQuestions(plainCauseText(e.name)).top_recipients;
   const a = await answer(ask, specFor(e, "top_recipients"));
   if (a.status === "unanswerable") return null;
   const orgs = (a.rows ?? []).filter((r) => r.ein).slice(0, 10).map((r) => ({ ein: String(r.ein), name: String(r.name), state: String(r.state ?? ""), usd: Number(r.usd) || 0, partial: r.tier === "partial" }));
-  return orgs.length ? { orgs, ask } : null;
+  return orgs.length ? { orgs, ask, years: a.recency ? [a.recency.from, a.recency.to] : null } : null;
 }
 
 // ------------------------------------------------------------------ cache

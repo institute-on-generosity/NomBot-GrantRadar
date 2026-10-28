@@ -5,6 +5,7 @@ import { NavLink } from "@/components/NavLink";
 import { money } from "@/components/money";
 import { orgName } from "@/components/text";
 import { Half, TrustMark } from "@/components/TrustMark";
+import { Yr, yy } from "@/components/Yr";
 import { trustOf, trustText, type Trust } from "@/lib/sdg";
 import { askLink, cachedFigures, asks, entry, figures, perOrgHint, topOrgs, type Part } from "@/lib/browse";
 
@@ -33,7 +34,7 @@ export async function Focal({ id, chart = false }: { id: string; chart?: boolean
   return (
     <section className="br-focal">
       <NavLink href={askLink(q.total)} className="br-big" label="Working out the answer…" title={t?.note ?? undefined}>{t?.value ?? "n/a"}</NavLink>
-      <span className="br-big-l">foundation grants, 2022–24</span>
+      <span className="br-big-l">foundation grants{f.years.length ? <Yr title="Form 990-PF tax years">{yy(f.years[0].year, f.years.at(-1)!.year)}</Yr> : null}</span>
       {(() => { const e = entry(id); const t = e ? trustOf(e.sub, e.isScope ? e.sdg : null) : null; return t === "partial" ? <p className="trust-note br-est" title={trustText(e!.sub, e!.isScope ? e!.sdg : null)}><Half /> Partial count, based on {e!.coverage === "keywords" ? "keywords" : "IRS codes"}</p> : null; })()}
       {tr && <NavLink href={askLink(q.trend)} className={`br-trend ${tr.value.startsWith("−") ? "down" : "up"}`} label="Working out the answer…" title={tr.label}>{tr.value} since 2020</NavLink>}
       {f.years.length > 1 && (chart
@@ -74,8 +75,8 @@ export async function Below({ id, searchName }: { id: string; searchName: string
   return (
     <>
       <div className="br-two">
-        <section><h3>Top funders</h3>{f.funders.length ? <ol className="br-list">{f.funders.slice(0, 5).map((x) => <li key={x.name}>{x.ein ? <NavLink href={`/org/${x.ein}`} label="Opening the foundation…">{orgName(x.name)}</NavLink> : <span title={x.state ?? undefined}>{orgName(x.name)}</span>}<b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
-        <section><h3>Top states</h3>{f.states.length ? <ol className="br-list">{f.states.slice(0, 5).map((x) => <li key={x.state}><span>{x.name}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
+        <section><h3>Top funders{f.years.length ? <Yr>{yy(f.years[0].year, f.years.at(-1)!.year)}</Yr> : null}</h3>{f.funders.length ? <ol className="br-list">{f.funders.slice(0, 5).map((x) => <li key={x.name}>{x.ein ? <NavLink href={`/org/${x.ein}`} label="Opening the foundation…">{orgName(x.name)}</NavLink> : <span title={x.state ?? undefined}>{orgName(x.name)}</span>}<b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
+        <section><h3>Top states{f.years.length ? <Yr>{yy(f.years[0].year, f.years.at(-1)!.year)}</Yr> : null}</h3>{f.states.length ? <ol className="br-list">{f.states.slice(0, 5).map((x) => <li key={x.state}><span>{x.name}</span><b>{money(x.usd)}</b></li>)}</ol> : <p className="muted">None found</p>}</section>
       </div>
       {hint && f.perOrg != null && (
         <p className={`br-crowd ${hint.tone}`} title={hint.text}>
@@ -105,7 +106,7 @@ export async function TopOrgs({ id }: { id: string }) {
   const max = Math.max(...t.orgs.map((o) => o.usd), 1);
   return (
     <section className="br-orgs">
-      <h3>Organizations it funds most</h3>
+      <h3>Organizations it funds most{t.years && <Yr>{yy(t.years[0], t.years[1])}</Yr>}</h3>
       <ol className="br-rank">
         {t.orgs.map((o) => (
           <li key={o.ein} className="br-rank-row">

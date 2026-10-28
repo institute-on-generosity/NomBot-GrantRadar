@@ -38,7 +38,7 @@ const flat = summaryFacts(orgs.map((o) => ({ ...o, tier: null })), { weaker: 3, 
 check("no place: cause split", JSON.stringify(flat.split) === JSON.stringify([{ label: "Recreation & Sports", count: 6 }, { label: "Human Services", count: 1 }]), JSON.stringify(flat.split));
 check("count line: no chips without place tiers", countLine(flat).parts.length === 0);
 const lab = summaryFacts([org("A", { label: "primary" }), org("B", { label: "primary" }), org("C", { label: "partial" })], { weaker: 0, related: 3, scored: true, topic: "girls coding programs", grantYears: [2022, 2024], labelFilter: true });
-check("label filter: main vs partial", JSON.stringify(lab.split.map((s) => [s.label, s.count])) === '[["main focus",2],["partial focus",1]]');
+check("label filter: main focus vs part of their work", JSON.stringify(lab.split.map((s) => [s.label, s.count])) === '[["main focus",2],["part of their work",1]]');
 check("count noun: group nouns only", countNoun("youth sports programs", true) === "youth sports programs" && countNoun("food banks", true) === "food banks" && countNoun("climate", true) === "climate groups" && countNoun("arts", true) === "arts groups" && countNoun("youth leadership", true) === "youth leadership groups" && countNoun("food banks", false) === "results");
 
 // 2. Count line and caveat

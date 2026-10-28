@@ -62,7 +62,7 @@ export function summaryFacts(orgs: SummaryOrg[], o: {
   let split: { label: string; count: number }[] = [];
   if (!o.tiers && o.labelFilter) {
     const main = orgs.filter((r) => r.label === "primary").length, part = orgs.filter((r) => r.label === "partial").length;
-    split = [{ label: "main focus", count: main }, { label: "partial focus", count: part }].filter((s) => s.count > 0);
+    split = [{ label: "main focus", count: main }, { label: "part of their work", count: part }].filter((s) => s.count > 0);
   } else if (!o.tiers) {
     const top = [...causes].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 2);
     split = top.map(([label, count]) => ({ label, count }));
