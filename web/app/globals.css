@@ -1996,3 +1996,14 @@ a.prompt-help { color: var(--faint); }
 .gg-tile .cause-ico { --s: 32px; }
 @media (max-width: 640px) { .gg-tile .cause-ico { width: 28px; height: 28px; } }
 @media (max-width: 900px) { .gg:not(.sdg) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Popover steps (Oct 27): fixed position and width; the header stays; a breadcrumb line; the body grows downward
+   up to the space below, then scrolls inside; only the content swaps (slide/fade) */
+.pp { width: min(440px, calc(100vw - 16px)); animation: pp-in .14s ease-out both; }
+.pp-crumb { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; margin: 2px 0 var(--s-1); font-size: var(--t-meta); color: var(--mute); min-height: 22px; }
+.pp-crumb .pp-back { padding: 0; font-size: var(--t-meta); }
+.pp-crumb span:last-child { color: var(--ink-2); font-weight: 600; }
+.pp-body { max-height: min(60vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+@media (min-width: 641px) { .pp-q span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+@media (max-width: 640px) { .pp-body { max-height: none; } }
+/* Phones: the bottom sheet keeps one height across both steps (its top edge never moves); content scrolls inside */
+@media (max-width: 640px) { .pp { height: min(72vh, 560px); display: flex; flex-direction: column; } .pp-body { flex: 1; min-height: 0; overflow-y: auto; } }

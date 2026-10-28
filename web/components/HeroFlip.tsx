@@ -51,7 +51,14 @@ export function HeroFlip({ sets, start = 0 }: { sets: PromptSet[]; start?: numbe
       <div style={{ display: "contents" }} onSubmitCapture={() => setChosen(true)}><SearchBox value="" placeholder={openGroup?.prompts[0] ? `e.g. ${openGroup.prompts[0].replace(/\s\(SDG \d+\)/, "")}` : set.placeholder} big /></div>
       <div className="flip-tabs" role="tablist" aria-label="Example searches" {...hold}>
         {sets.map((s, k) => (
-          <button key={s.word} type="button" role="tab" aria-label={s.word[0].toUpperCase() + s.word.slice(1)} aria-selected={shown && k === i} className={shown && k === i ? "on" : undefined} onClick={() => { setI(k); setPaused(true); setShown(true); setOpenGroup(null); }}>
+          <button key={s.word} type="button" role="tab" aria-label={s.word[0].toUpperCase() + s.word.slice(1)} aria-selected={shown && k === i} className={shown && k === i ? "on" : undefined} onClick={() => {
+            setI(k); setPaused(true); setShown(true); setOpenGroup(null);
+            // The research tab is in the URL (?tab=research), so coming back from Browse lands on it again
+            const u = new URL(location.href);
+            if (s.groups) u.searchParams.set("tab", "research"); else u.searchParams.delete("tab");
+            u.searchParams.delete("cause"); u.searchParams.delete("topic");
+            history.replaceState(history.state, "", u.href);
+          }}>
             <span className="t-long">{s.word[0].toUpperCase() + s.word.slice(1)}</span>
             <span className="t-short" aria-hidden>{TAB_SHORT[s.word] ?? s.word}</span>
           </button>

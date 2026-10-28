@@ -12,7 +12,7 @@ export function ResearchAsk({ groups, placeholder }: { groups: PromptGroup[]; pl
   return (
     <div className="ins-ask">
       <SearchBox action="/research/ask" name="q" placeholder={first ? `e.g. ${first.replace(/\s\(SDG \d+\)/, "")}` : placeholder} big />
-      <GoalGrid groups={groups} onPick={setG} />
+      <GoalGrid groups={groups} onPick={setG} from="research" />
     </div>
   );
 }

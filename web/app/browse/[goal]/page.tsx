@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Below, Focal, SubList } from "@/components/BrowseFigures";
 import { Icon } from "@/components/Icons";
 import { CauseIcon } from "@/components/CauseIcon";
+import { BrowseBack } from "@/components/BrowseBack";
 import { ENVIRONMENT, findSub, SDGS, sdgSlug, type Sdg, type Sub } from "@/lib/sdg";
 import "../browse.css";
 
@@ -35,7 +36,7 @@ export default async function GoalPage(props: PageProps<"/browse/[goal]">) {
   }));
   return (
     <main className="br-page">
-      <Link href="/browse" className="back">← All causes</Link>
+      <Suspense fallback={<Link href="/browse" className="back">← All causes</Link>}><BrowseBack /></Suspense>
       <h1 className="pagetitle br-title" title={s ? `${s.plain}. UN: “${s.goal}.”` : ENVIRONMENT.plain}>
         {s ? <CauseIcon n={s.n} color={s.color} size={48} /> : <CauseIcon label="Environment" size={48} />}
         {g.title}
