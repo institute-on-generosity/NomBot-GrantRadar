@@ -448,6 +448,13 @@ try {
     check((await pv("abc")).status === 404, "org-preview: bad EIN is 404");
   }
 
+  // Compare (round-2 audit V7): one filing year per org, vetting rows, no em dash for missing values
+  {
+    const html = (await (await fetch(`${BASE}/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");
+    check(/Figures from 2024/.test(html) && /Surplus or deficit/.test(html) && /Cash on hand/.test(html) && /Foundation grants, 2022/.test(html), "compare: one year per org and vetting rows");
+    check(!/—/.test(html.replace(/<script[\s\S]*?<\/script>/g, "")), "compare: no em dash for missing values");
+  }
+
   // Research loading stages (Oct 27): /api/research/stages streams the thread's real stages in order
   {
     const t = performance.now();

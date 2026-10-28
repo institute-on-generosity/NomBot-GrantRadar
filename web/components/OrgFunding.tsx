@@ -117,12 +117,14 @@ function Received({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
         {tiles.map((t) => <div key={t.k}><dt>{t.k}</dt><dd><b>{t.v}</b><small>{t.d}</small></dd></div>)}
       </dl>
       {allYears.length > 1 && (
+        <YearFold n={allYears.length} values={[...allYears].reverse().map((y) => [pf, ci, fed].reduce((t, src) => t + (src ? by(src.years, y) ?? 0 : 0), 0))}>
         <table className="fund-years">
           <thead><tr><th>Year</th>{pf && <th className="n">Foundations</th>}{ci && <th className="n">Public charities</th>}{fed && <th className="n">Federal (fiscal year)</th>}</tr></thead>
           <tbody>
             {allYears.map((y) => <tr key={y}><td>{y}</td>{pf && cell(by(pf.years, y))}{ci && cell(by(ci.years, y))}{fed && cell(by(fed.years, y))}</tr>)}
           </tbody>
         </table>
+        </YearFold>
       )}
 
       {ci && (
@@ -198,12 +200,14 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
       {si && (
         <div className="fund-block first">
           <h3>Schedule I grants <small>{si.n > 0 ? <>{plural(si.n, "grant")}, {money(si.total)}{si.notItemized > 0 && <>, plus {money(si.notItemized)} not itemized</>}</> : si.notItemized > 0 ? <>{money(si.notItemized)} reported, none itemized by recipient</> : <>no grants listed</>}{si.transfers > 0 && <>, {money(si.transfers)} of transfers left out</>}, {span(si.years)}</small></h3>
+          {si.years.length > 1 && <YearFold n={si.years.length} values={[...si.years].reverse().map((y) => y.total)}>
           <table className="fund-years">
             <thead><tr><th>Tax year</th><th className="n">Grants listed</th><th className="n">Listed total</th>{si.notItemized > 0 && <th className="n" title="Reported but not listed by recipient: Part IX line 1 minus the grants listed by name, including lines such as SEE ATTACHED or VARIOUS">Not itemized</th>}{si.transfers > 0 && <th className="n" title="Transfers between related organizations, left out of the listed total">Transfers</th>}<th className="n" title="Form 990 Part IX line 1, grants to domestic organizations">Return total (Part IX)</th></tr></thead>
             <tbody>
               {si.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td>{si.notItemized > 0 && <td className="n">{y.notItemized > 0 ? money(y.notItemized) : "–"}</td>}{si.transfers > 0 && <td className="n">{y.transfers > 0 ? money(y.transfers) : "–"}</td>}<td className="n">{y.line1 == null ? "–" : money(y.line1)}</td></tr>)}
             </tbody>
           </table>
+          </YearFold>}
           {si.top.length > 0 && <>
             <h3 className="fund-sub">Top recipients</h3>
             <More items={si.top} noun="recipients" extra={si.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
@@ -214,10 +218,12 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
         <div className={`fund-block${si ? "" : " first"}`}>
           <h3>Foundation grants <small>Form 990-PF, {plural(pf.n, "grant")}, {money(pf.total)}, {span(pf.years)}</small></h3>
           {pf.years.length > 1 && (
+            <YearFold n={pf.years.length} values={[...pf.years].reverse().map((y) => y.total)}>
             <table className="fund-years">
               <thead><tr><th>Tax year</th><th className="n">Grants</th><th className="n">Total</th></tr></thead>
               <tbody>{pf.years.map((y) => <tr key={y.year}><td>{y.year}</td><td className="n">{y.n.toLocaleString("en-US")}</td><td className="n">{money(y.total)}</td></tr>)}</tbody>
             </table>
+            </YearFold>
           )}
           <h3 className="fund-sub">Top recipients</h3>
           <More items={pf.top} noun="recipients" extra={pf.more} render={(x, i) => <RecipientRow key={`${x.ein ?? x.name}-${i}`} x={x} />} />
@@ -227,5 +233,22 @@ function Given({ f }: { f: Awaited<ReturnType<typeof orgFunding>> }) {
       {!!f.transfers?.given.length && <Transfers items={f.transfers.given} side="to" />}
       <p className="note-small">{FUNDING_NOTES.given} Totals are summed across all listed years.</p>
     </section>
+  );
+}
+
+// Year-by-year tables fold behind one line with a small bar sparkline of the totals, oldest to newest (round-2 audit V1):
+// the totals above already answer "how much"; the years are one click away.
+function YearFold({ n, values, children }: { n: number; values: number[]; children: React.ReactNode }) {
+  const max = Math.max(...values, 1), w = 4, gap = 2;
+  return (
+    <details className="more-info fund-by-year">
+      <summary>
+        <svg width={values.length * (w + gap)} height="18" viewBox={`0 0 ${values.length * (w + gap)} 18`} aria-hidden="true">
+          {values.map((v, i) => <rect key={i} x={i * (w + gap)} y={18 - Math.max(1, (16 * v) / max)} width={w} height={Math.max(1, (16 * v) / max)} rx="1" />)}
+        </svg>
+        <span className="when-closed">By year ({n})</span><span className="when-open">Hide years</span>
+      </summary>
+      {children}
+    </details>
   );
 }

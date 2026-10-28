@@ -9,6 +9,8 @@ import { nteeLabel } from "@/lib/ntee";
 import { BackLink } from "@/components/BackLink";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
+import { CompareButton } from "@/components/CompareButton";
+import { OrgSectionNav } from "@/components/OrgSectionNav";
 import { FolderPicker } from "@/components/FolderPicker";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { readable, titleCase, orgTitle } from "@/components/text";
@@ -61,7 +63,7 @@ async function Org({ params, searchParams, modal }: Props) {
         : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
         : <BackLink fallback="/">← Back</BackLink>)}
       {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
-      <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} />{!modal && <PrintButton />}</div>
+      <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /><CompareButton org={{ ein: o.ein, name: o.name, city: o.city, state: o.state }} />{!modal && <PrintButton />}</div>
       {/* Top: name, place (website as an icon), then 3 icon stats. Cause, EIN and the latest 990 live in Details. */}
       <p className="sub org-place">
         <Icon name="pin" size={15} />{[o.city && titleCase(o.city), o.state].filter(Boolean).join(", ")}
@@ -73,6 +75,7 @@ async function Org({ params, searchParams, modal }: Props) {
         {o.team?.staff != null && <li title={`Form 990 (${o.team.year}): ${o.team.staff.toLocaleString("en-US")} staff${o.team.volunteers != null ? `, ${o.team.volunteers.toLocaleString("en-US")} volunteers` : ""}`}><Icon name="people" size={18} /><b>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? o.team.volunteers!.toLocaleString("en-US") : o.team.staff.toLocaleString("en-US")}</b><span>{o.team.staff === 0 && (o.team.volunteers ?? 0) > 0 ? "volunteers" : "staff"}</span></li>}
         {o.age != null && <li title={`Tax-exempt since ${o.ruling} (IRS ruling date)`}><Icon name="calendar" size={18} /><b>{o.age < 1 ? "<1" : o.age}</b><span>years</span></li>}
       </ul>
+      {!modal && <OrgSectionNav />}
 
       <section>
         <h2>Mission</h2>

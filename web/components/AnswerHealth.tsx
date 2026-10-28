@@ -5,7 +5,7 @@ import { money } from "./money";
 // Financial health indicators (lib/financialHealth): one org's full filing years as a table with plain flags and
 // peer medians (research answers with an ein, and the org page), or a cause's listed orgs (AnswerHealthOrgs).
 // Indicators, not a rating: no colors for good or bad, only the flags in words.
-const pct = (x: number | null) => (x == null ? "n/a" : `${Math.round(x * 100)}%`);
+const pct = (x: number | null) => (x == null ? "–" : `${Math.round(x * 100)}%`); // "–" = not on that form or year (said once below the table)
 const signed = (x: number) => (x < 0 ? money(x) : `+${money(x)}`);
 
 export function AnswerHealth({ h, title }: { h: OrgHealth; title?: string }) {
@@ -31,11 +31,11 @@ export function AnswerHealth({ h, title }: { h: OrgHealth; title?: string }) {
           <tbody>
             {h.years.map((y) => (
               <tr key={y.year}>
-                <td>{y.year}<small>{y.source === "prior_year" ? "next year's 990" : y.form === "990EZ" ? "990-EZ" : "990"}</small></td>
+                <td>{y.year}<small>{y.source === "prior_year" ? `from the ${y.year + 1} return` : y.form === "990EZ" ? "990-EZ" : "990"}</small></td>
                 <td>{money(y.revenue)}</td>
                 <td>{money(y.expenses)}</td>
                 <td>{signed(y.surplus)}</td>
-                <td>{y.months_cash == null ? "n/a" : monthsText(y.months_cash)}</td>
+                <td>{y.months_cash == null ? "–" : monthsText(y.months_cash)}</td>
                 <td>{pct(y.program_ratio)}</td>
                 <td>{pct(y.contributions_share)} · {pct(y.program_revenue_share)} · {pct(y.government_share)}</td>
                 <td>{pct(y.liabilities_to_assets)}</td>
@@ -48,7 +48,7 @@ export function AnswerHealth({ h, title }: { h: OrgHealth; title?: string }) {
       <details className="more-info">
         <summary><span className="when-closed">Details ({facts.length + 1})</span><span className="when-open">Hide details</span></summary>
         {facts.map((f) => <p key={f} className="fh-fact">{f}</p>)}
-        <p className="chat-basis">{HEALTH_NOTE} Full years only{h.partial_return ? `, so ${h.partial_return} (still arriving) isn't shown` : ""}. n/a = not on that form or year.</p>
+        <p className="chat-basis">{HEALTH_NOTE} Full years only{h.partial_return ? `, so ${h.partial_return} (still arriving) isn't shown` : ""}. A dash means not on that form or year.</p>
       </details>
     </div>
   );
@@ -70,7 +70,7 @@ export function AnswerHealthOrgs({ orgs }: { orgs: HealthPick[] }) {
                 <td><a href={`/org/${o.ein}`}>{o.name}</a><small>{[o.city && o.city.charAt(0) + o.city.slice(1).toLowerCase(), o.state].filter(Boolean).join(", ")} · {o.tax_year}</small></td>
                 <td>{money(o.revenue)}</td>
                 <td>{o.deficit_years} of {o.years}{o.consecutive_deficits >= 2 && <small>{o.consecutive_deficits} in a row, {money(o.deficit_total)}</small>}</td>
-                <td>{o.months_cash == null ? "n/a" : monthsText(o.months_cash)}</td>
+                <td>{o.months_cash == null ? "–" : monthsText(o.months_cash)}</td>
                 <td>{pct(o.program_ratio)}</td>
                 <td className="fh-cell">{o.flags.length ? o.flags.join(". ") : "None"}</td>
               </tr>

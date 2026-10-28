@@ -2053,3 +2053,20 @@ a.prompt-help { color: var(--faint); }
 /* Answer actions: icon buttons name themselves at once on hover or focus (round-2 audit V8) */
 .chat-act { position: relative; }
 .chat-act[aria-label]:hover::after, .chat-act[aria-label]:focus-visible::after { content: attr(aria-label); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: var(--z-popover); white-space: nowrap; padding: 4px 8px; border-radius: 6px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 500; pointer-events: none; }
+/* Org page year tables folded behind a sparkline (round-2 audit V1) */
+.fund-by-year > summary { display: inline-flex; align-items: center; gap: 8px; }
+.fund-by-year > summary svg rect { fill: var(--g); opacity: .7; }
+/* Org page: Compare beside Save (round-2 audit V2) */
+.title-line > button[aria-pressed]:not(.star) { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 0; border-radius: 999px; background: var(--fill); color: var(--ink-2); font: inherit; font-size: 14px; cursor: pointer; }
+.title-line > button[aria-pressed="true"]:not(.star) { color: var(--g); background: var(--g-tint); }
+/* Org page section nav (round-2 audit V1) */
+.org-nav { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: var(--s-4) 0 0; padding: 8px 0; font-size: var(--t-small); }
+.org-nav a { padding: 5px 12px; border-radius: 999px; color: var(--mute); text-decoration: none; }
+.org-nav a:hover { color: var(--ink); background: var(--fill); }
+.org-nav a.on { color: var(--g-dark); background: var(--g-tint); font-weight: 600; }
+@media (min-width: 900px) { .org-nav { position: sticky; top: 0; z-index: var(--z-sticky); background: var(--bg); box-shadow: 0 1px 0 var(--line); } }
+article.org section[id] { scroll-margin-top: 64px; }
+@media print { .org-nav { display: none; } }
+.title-line { flex-wrap: wrap; row-gap: 8px; }
+.tone-bad { color: var(--bad); }
+.tone-good { color: var(--g); }
