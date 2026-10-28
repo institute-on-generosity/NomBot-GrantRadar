@@ -1,5 +1,6 @@
 import type { PromptGroup, PromptSet } from "@/components/HeroFlip";
 import { causeOf, causeQuestions, displayCause, findSub, SDGS, sdgSlug, trustOf, trustText } from "./sdg";
+import { sameAsk } from "./questionIntent";
 
 // Example questions (every state is loaded; the first five, the home-page pills, stay in Appalachia, IoG's focus).
 // The first five are the home-page pills; all of them feed the search-bar suggestions.
@@ -73,8 +74,17 @@ const tableOf = (g: (typeof SDGS)[number]) => {
 };
 export const RESEARCH_GROUPS: PromptGroup[] = [
   ...SDGS.filter((g) => BY_SDG[g.n]).map((g) => {
-    const subs = BY_SDG[g.n].map((x) => ({ label: subLabel(x.sub), prompts: x.prompts }));
     const table = tableOf(g);
+    // A curated prompt that asks what its topic's generated question already asks (same intent, place and years,
+    // lib/questionIntent) is dropped: one question per intent per topic (Oct 28, Hunter). eval/questions.mts counts them.
+    const rowOf = (id: string) => table.find((r) => r.label === (id === g.scope.id ? `All of ${g.name}` : subLabel(id)));
+    const subs = BY_SDG[g.n].map((x) => {
+      const seen = Object.values(rowOf(x.sub)?.q ?? {});
+      const keep: string[] = [];
+      const names = `${subLabel(x.sub)} ${g.name} ${findSub(x.sub)?.sub.plain ?? ""}`;
+      for (const q of x.prompts) if (!seen.some((g2) => sameAsk(q, g2, names))) { seen.push(q); keep.push(q); }
+      return { label: subLabel(x.sub), prompts: keep };
+    }).filter((x) => x.prompts.length);
     const asked = new Set(table.flatMap((r) => (r.q ? Object.values(r.q) : [])));
     const more = subs.flatMap((x) => x.prompts).filter((q) => !asked.has(q)).slice(0, 3);
     // prompts: every question the popover can ask (eval/browse checks each one routes to a covered cause)

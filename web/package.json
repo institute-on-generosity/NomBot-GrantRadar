@@ -26,7 +26,9 @@
     "test:browse": "tsx eval/browse.mts",
     "test:summary": "tsx eval/summary.mts",
     "test:text": "tsx eval/text.mts",
-    "test:vetting": "tsx eval/vetting.mts"
+    "test:vetting": "tsx eval/vetting.mts",
+    "test:popover": "tsx eval/popover.mts",
+    "test:questions": "tsx eval/questions.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

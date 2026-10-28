@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { TrustLegend, TrustMark } from "./TrustMark";
-import type { Trust } from "@/lib/sdg";
+import { topicsOf } from "@/lib/popoverTopics";
 import { createPortal } from "react-dom";
 import { NavLink } from "./NavLink";
 import { Icon } from "./Icons";
@@ -17,32 +17,7 @@ import { CauseIcon } from "./CauseIcon";
 // On phones it is a bottom sheet. onPick: tell the page which group is open (the ask box placeholder).
 
 const clean = (q: string) => q.replace(/\s\(SDG \d+\)/, "");
-type Ask = { q: string; label: string };
-type Topic = { label: string; prompts: Ask[]; trust?: Trust; tip?: string };
-// The header names the topic, so the Browse questions show short (each still asks the full question, its tooltip)
-const SHORT_Q: [keyof NonNullable<NonNullable<PromptGroup["table"]>[number]["q"]>, string][] = [
-  ["total", "How much foundation money goes here?"], ["trend", "Is it growing?"], ["top_funders", "Who are the biggest funders?"],
-  ["by_state", "Which states get the most?"], ["underfunded", "Which nonprofits get little for their size?"]];
-
-// A goal's topics: the whole goal first, then each subcategory with data. Curated prompts for a topic come first,
-// then its Browse questions (how much, growing, top funders, top states, under-funded), 5 at most.
-function topicsOf(g: PromptGroup): Topic[] {
-  const full = (q: string): Ask => ({ q, label: clean(q) });
-  if (!g.table) return [{ label: g.label, prompts: g.prompts.map(full) }];
-  const curated = new Map((g.subs ?? []).map((s) => [s.label, s.prompts]));
-  const used = new Set<string>();
-  const out = g.table.map((r) => {
-    const mine = curated.get(r.label) ?? [];
-    if (mine.length) used.add(r.label);
-    const asks: Ask[] = r.q ? SHORT_Q.map(([k, label]) => ({ q: r.q![k], label })) : [];
-    const seen = new Set<string>();
-    return { label: r.label, trust: r.trust, tip: r.tip, prompts: [...mine.map(full), ...asks].filter((a) => !seen.has(a.q) && (seen.add(a.q), true)).slice(0, 5) };
-  });
-  // Curated prompts whose topic isn't a row (e.g. a goal-wide question) join the goal's own row
-  const extra = (g.subs ?? []).filter((s) => !used.has(s.label)).flatMap((s) => s.prompts);
-  if (extra.length && out[0]) { const seen = new Set<string>(); out[0].prompts = [...extra.map(full), ...out[0].prompts].filter((a) => !seen.has(a.q) && (seen.add(a.q), true)).slice(0, 5); }
-  return out.filter((t) => t.prompts.length);
-}
+// Topics and their questions, one per intent, short forms for the standard ones (lib/popoverTopics)
 
 // The popover's state lives in the URL (?cause=3&topic=mental-health, replaceState so steps add no history), so the
 // browser Back from Browse, and Browse's "Back to chat", reopen it on the same cause and topic. from: where Browse
@@ -187,7 +162,7 @@ export function GoalGrid({ groups, onPick, from = "home" }: { groups: PromptGrou
         {gs.map((g) => (
           <button key={g.label} ref={(el) => { tiles.current[g.label] = el; }} type="button" className={`gg-tile${open === g.label ? " on" : ""}`}
             aria-pressed={open === g.label} aria-expanded={open === g.label} aria-haspopup="dialog"
-            onClick={() => pick(g)} title={g.sdg ? `Goal ${g.sdg.n}: ${g.sdg.name}` : g.label}>
+            onClick={() => pick(g)}>
             <CauseIcon n={g.sdg?.n} label={g.sdg ? undefined : g.label} color={g.sdg?.color} size={32} />
             <em>{g.sdg ? SHORT[g.sdg.n] ?? g.sdg.name : g.label}{g.sdg && <TrustMark trust={g.sdg.trust} tip={g.sdg.tip} />}</em>
           </button>

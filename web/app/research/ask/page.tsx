@@ -10,6 +10,7 @@ import { Chat, FollowUpText, PendingSteps, Suggestions } from "@/components/Rese
 import { contentPlan } from "@/lib/answerSpec";
 import { PROMPT_SETS } from "@/lib/examples";
 import { pickFollowUps, type Turn } from "@/lib/followUp";
+import { sameAsk } from "@/lib/questionIntent";
 import { recordQuestion } from "@/lib/researchQuestions";
 import { MAX_FOLLOW_UPS, resolveThread, threadHref } from "@/lib/thread";
 
@@ -115,8 +116,20 @@ async function Ask({ searchParams }: { searchParams: SP }) {
   );
 }
 
+// No chip that asks what the thread already asked, or what another chip asks, in other words (Oct 28, lib/questionIntent).
+// "Since 2021?"-style setting chips stay (they change the years in place).
+function distinctChips(chips: string[], asked: string[]): string[] {
+  const out: string[] = [];
+  for (const c of chips) {
+    if (out.includes(c)) continue;
+    if (!/^since \d{4}\??$/i.test(c) && [...asked, ...out].some((a) => sameAsk(c, a))) continue;
+    out.push(c);
+  }
+  return out.slice(0, 3);
+}
+
 // Chips the answer's own numbers suggest ("Since 2021?" after a start-year spike) come first, then the picked ones.
 async function FollowUpChips({ history, first }: { history: Turn[]; first: string[] }) {
   const picks = await pickFollowUps(history);
-  return <Suggestions chips={[...first, ...picks.filter((p) => !first.includes(p))].slice(0, 3)} />;
+  return <Suggestions chips={distinctChips([...first, ...picks], history.map((h) => h.question))} />;
 }
