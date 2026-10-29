@@ -17,7 +17,7 @@ const cell = (v: unknown) => {
 
 const HEADER = ["relevance", "relevance_status", "relevance_reason", "place_tier", "place_evidence", "name", "ein", "street", "city", "state", "zip",
   "ntee_code", "cause", "cause_label", "revenue", "revenue_year", "latest_990_year", "foundation_grants_2022_24", "top_funder", "top_funder_grants_2022_24",
-  "website", "exact_match", "mission", "nombot_page", "sources"];
+  "website", "exact_match", "mission", "from_website", "from_website_url", "from_website_read", "nombot_page", "sources"];
 const TIER: Record<string, string> = { in: "in the place", county: "in the county", serves: "serves the place, HQ elsewhere", nearby: "nearby", wider: "elsewhere in the county" };
 const BASIS: Record<string, string> = { hq: "HQ", zip: "HQ ZIP", name: "name", text: "990 text", grant: "grant purpose", nearby: "nearby", county: "HQ", wider: "HQ" };
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       r.name, r.ein, r.street, r.city, r.state, r.zip, r.ntee?.code, r.ntee?.label, [...new Set([r.label, ...(r.topicLabels ?? [])].filter((l) => l != null).map((l) => `${l!.label} (${l!.tier})`))].join(", "),
       r.revenue?.amount, r.revenue?.year, r.filing?.year ?? r.health?.year ?? r.financials?.tax_year ?? "",
       f ? Math.round(f.total) : 0, f?.top?.name ?? "", f?.top ? Math.round(f.top.amount) : "",
-      r.website ?? "", r.exact == null ? "" : r.exact ? "yes" : "no", r.mission, `${origin}/org/${r.ein}`,
+      r.website ?? "", r.exact == null ? "" : r.exact ? "yes" : "no", r.mission, r.web?.description ?? "", r.web?.url ?? "", r.web?.fetched ?? "", `${origin}/org/${r.ein}`,
       r.sources.map((s) => (s.url.startsWith("/") ? origin + s.url : s.url)).join(" "),
     ].map(cell).join(",");
   });

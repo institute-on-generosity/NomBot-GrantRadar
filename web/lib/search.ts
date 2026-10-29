@@ -1,6 +1,7 @@
 // Hybrid search: SQL filters + keyword (tsvector) + vector similarity over 990 text.
 // Requirements ("must do workforce training") split results into exact matches and closest results.
 import { db } from "./db";
+import { webProfiles } from "./webProfile";
 import { embedQuery, MODEL_ID, toSql } from "./embedder";
 import { LABEL_SUBTYPES, isLabel } from "./labels";
 import { nteeLabel } from "./ntee";
@@ -41,6 +42,7 @@ export type Result = {
   prefer?: string[]; // soft preferences this org's name or filing text mentions
   topicLabels?: { label: string; tier: "primary" | "partial" }[]; // boosted labels (preferred or the topic's) this org carries
   place?: PlaceEvidence; // tiered place search (lib/tiers.ts): which tier and why
+  web?: { description: string; url: string; site: string; fetched: string; servesPlaces: string[] } | null; // its own website, for orgs with no 990 text (lib/webProfile)
 };
 
 // One organization's financial signals, for the badges on its result row. Prefers the newest e-filed
@@ -233,6 +235,8 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
      zips, eins.map((e) => e.replace("-", "")), prefer.map((r) => wordRe(r.pattern)), preferLabel ?? null, boost, nameq, keep.map((e) => e.replace("-", "")),
      boostLabels.filter((l) => l !== label && isLabel(l))],
   );
+  // Orgs with no 990 text: what their own website says (generosity-data org_web_profile), shown apart from IRS data
+  const web = await webProfiles(rows.filter((r) => !r.mission && !r.programs).map((r) => r.ein));
   return {
     total: Number(rows[0]?.total ?? 0),
     exact_total: requirements.length ? Number(rows[0]?.exact_total ?? 0) : null,
@@ -261,6 +265,7 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
       score: Math.round(Number(r.score) * 100) / 100,
       data_completeness: r.has_text && r.has_fin ? "full" : r.has_text || r.has_fin ? "partial" : "basic",
       sources: sources({ ein: r.ein, state: r.state, revSrc: r.rev_src, finForm: r.fin_form, finYear: r.fin_year, objectId: r.object_id, textYear: r.text_year, textForm: r.text_form }),
+      web: (() => { const w = web.get(r.ein); return w ? { description: w.description, url: w.url, site: w.site, fetched: w.fetched, servesPlaces: w.servesPlaces } : null; })(),
     })),
   };
 }

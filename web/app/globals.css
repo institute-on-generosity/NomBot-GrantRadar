@@ -2092,3 +2092,10 @@ article.org section[id] { scroll-margin-top: 64px; }
 .yr { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--fill); color: var(--mute); font-size: 12px; font-weight: 500; line-height: 18px; vertical-align: middle; white-space: nowrap; letter-spacing: 0; }
 @media print { .yr { background: none; padding: 0; } }
 .title-line .memo-link + .print-btn, .title-line .memo-link ~ * .print-btn { margin-left: 0 !important; }
+/* "From their website": what an org says about itself, set apart from IRS data (lib/webProfile) */
+.from-web { margin-top: var(--s-3); padding: var(--s-3) var(--s-4); border-left: 3px solid var(--fill-2); background: var(--fill); border-radius: 0 10px 10px 0; }
+.from-web p { margin: 0; }
+.from-web .from-web-k { font-size: var(--t-meta); color: var(--mute); margin-bottom: 4px; }
+.from-web .from-web-k a { color: var(--g); text-decoration: none; margin-left: 4px; }
+.from-web .from-web-serves { margin-top: 4px; font-size: var(--t-meta); color: var(--mute); }
+.opv-web { margin: var(--s-2) 0 -4px; font-size: 12px; color: var(--mute); }

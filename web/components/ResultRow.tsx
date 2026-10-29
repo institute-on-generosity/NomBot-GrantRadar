@@ -41,7 +41,8 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
           {why && <span className={`fact place-why${r.place!.basis === "name" ? " flag" : ""}`} title={why} aria-label={why} tabIndex={0}><Icon name={r.place!.basis === "name" ? "warn" : "info"} size={14} /></span>}
           <HealthBadges h={r.health} />
         </div>
-        <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
+        {r.mission || r.programs || !r.web ? <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
+          : <p className="preview-line from-web-row" title={`From ${r.web.site}, read ${r.web.fetched}`}><span className="from-web-tag">From their website</span> {r.web.description}</p>}
         {r.prefer && r.prefer.length > 0 && <p className="prefer-hit">Mentions {r.prefer.join(", ")}</p>}
         <div className="row-tools">
           <StarButton withLabel org={{ ein: r.ein, name: r.name, city: r.city, state: r.state, cause: r.ntee?.label ?? null, revenue: r.revenue?.amount ?? null, year: r.revenue?.year ?? null }} />

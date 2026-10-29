@@ -1,0 +1,86 @@
+{
+  "_about": "Programs that serve a place but aren't separate nonprofits, or aren't in IRS filings as such (Oct 29 2026, Inglewood reports for Keith). Researched by hand from public web pages. Each entry: what it is, who runs it, whether it serves the place (confirmed only with a quote from the source), the evidence URL and the date it was read. No guessing: weak evidence is 'not confirmed'. Shown by the search report (app/report) for the matching place and topic.",
+  "places": {
+    "inglewood-ca": {
+      "dental": [
+        {
+          "name": "Inglewood Clinic Group",
+          "operator": "UCLA School of Dentistry students (UCLA Community Programs Office)",
+          "kind": "Student-run free and low-cost dental care",
+          "serves": "confirmed",
+          "evidence": "Children and adults of the underserved populations within Inglewood and Westwood.",
+          "detail": "Partner location: The Children's Dental Center of Greater Los Angeles (300 E. Buckthorn St., Inglewood). Exams, fluoride varnish, sealants, fillings, crowns and extractions.",
+          "schedule": "Not stated",
+          "url": "https://communitypartnerships.ucla.edu/project/inglewood-clinic-group/",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "The Children's Dental Center, Community Outreach Program",
+          "operator": "The Children's Dental Center of Greater Los Angeles (a nonprofit, EIN 95-4533883)",
+          "kind": "School and community dental screenings and education",
+          "serves": "not confirmed",
+          "evidence": "Its programs page says the outreach program brings oral health education and screenings to children where they live and attend school, and that it was suspended in 2020 due to pandemic restrictions.",
+          "detail": "The center's clinic in Inglewood is open. Whether school outreach has restarted is not stated.",
+          "schedule": "Suspended as of 2020 per its site",
+          "url": "https://www.tcdc.org/programs",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "USC Mobile Dental Clinics",
+          "operator": "USC Herman Ostrow School of Dentistry",
+          "kind": "Mobile dental vans at schools",
+          "serves": "not confirmed",
+          "evidence": "Serves 15 local elementary schools (USC partner schools) and, with QueensCare, low-income children in grades 2 to 5 in Hollywood-area elementary schools. Inglewood is not named.",
+          "detail": "Twelve mobile clinics in rotation across Central and Southern California.",
+          "schedule": "Not stated",
+          "url": "https://dentistry.usc.edu/community/mobile-dental-clinics",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "QueensCare Mobile Dental Program",
+          "operator": "QueensCare with LAUSD and USC",
+          "kind": "Mobile dental vans at elementary schools",
+          "serves": "not confirmed",
+          "evidence": "Visits qualifying Los Angeles Unified elementary schools. Inglewood schools are in Inglewood Unified, a separate district, and are not named.",
+          "detail": "Four vans with three chairs each, rotating among schools where most students qualify for free lunch.",
+          "schedule": "Not stated",
+          "url": "https://everychildfoundation.org/portfolio/year-2000-queenscare/",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "Venice Family Clinic, Inglewood Health Center",
+          "operator": "Venice Family Clinic (South Bay Family Health Care)",
+          "kind": "Community health center, 1091 S. La Brea Ave., Inglewood",
+          "serves": "not confirmed",
+          "evidence": "Its dental care page lists dental only at Culver City (4700 Inglewood Blvd.), Santa Monica and Redondo Beach. No dental location in Inglewood.",
+          "detail": "The Culver City dental site is the nearest Venice Family Clinic dental location to Inglewood.",
+          "schedule": "Not stated",
+          "url": "https://venicefamilyclinic.org/?p=282278",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "LA County Oral Health Program, priority schools",
+          "operator": "Los Angeles County Department of Public Health",
+          "kind": "School screenings, fluoride varnish and referrals",
+          "serves": "not confirmed",
+          "evidence": "The county lists priority elementary schools (October 2021), but the list could not be read to confirm Inglewood schools.",
+          "detail": "Schools chosen by free-meal eligibility.",
+          "schedule": "Not stated",
+          "url": "https://admin.publichealth.lacounty.gov/OHP/docs/LAC Priority Schools.pdf",
+          "read": "2026-10-29"
+        },
+        {
+          "name": "St. John's Community Health and Watts Healthcare",
+          "operator": "Federally qualified health centers in South LA",
+          "kind": "Clinic dental care, school wellness centers",
+          "serves": "not confirmed",
+          "evidence": "St. John's runs dental care at its South LA clinics and a school wellness center in Compton. No Inglewood dental site or van was found for either.",
+          "detail": "",
+          "schedule": "Not stated",
+          "url": "https://www.sjch.org/dental-services",
+          "read": "2026-10-29"
+        }
+      ]
+    }
+  }
+}

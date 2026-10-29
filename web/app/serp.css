@@ -310,3 +310,6 @@ p.sum-tiles .sum-warn { margin: 0; color: var(--warn); cursor: help; }
 .serp-main .row .fact.none { color: var(--faint); font-style: italic; }
 /* Export says so (round-2 audit V8): icon + word */
 .export-menu > summary { display: inline-flex !important; align-items: center; gap: 5px; width: auto !important; }
+/* No 990 text: what the org's own website says, labeled (lib/webProfile) */
+.from-web-row { color: var(--ink-2); }
+.from-web-tag { display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 999px; background: var(--fill); color: var(--mute); font-size: 12px; }

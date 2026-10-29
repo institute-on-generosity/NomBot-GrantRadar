@@ -28,7 +28,7 @@ Score each organization 0-100 for how well its actual work (mission, programs, n
 - 70-89: clearly the right kind of organization; a minor part unconfirmed.
 - 40-69: related, but missing a key part of the request.
 - 0-39: not what was asked (different cause, wrong place, only shares a word).
-Scores are absolute, not relative: if nothing fits well, score everything low. Judge only from the facts given; when the description is missing, rely on the name and cause and stay below 70 unless the name makes the fit unmistakable.
+Scores are absolute, not relative: if nothing fits well, score everything low. Judge only from the facts given; when the description is missing, rely on the name and cause and stay below 70 unless the name makes the fit unmistakable. "from_its_website" is what the organization says on its own website (no IRS filing text): treat it as evidence of its work, and say "per its website" in "why" when you rely on it.
 "why": one or two plain sentences (under 30 words) explaining the score: what fits the question and what is missing or unconfirmed. No semicolons or dashes.`;
 // Tiered place searches (lib/tiers.ts) group results by place themselves (in the city, serving it, nearby), so the
 // score is about the work, and a soft preference ("ideally", "especially") raises a score without capping it.
@@ -65,8 +65,10 @@ async function scoreBatch(question: string, results: Result[], placed = false, n
     id: `r${i + 1}`, name: r.name, place: [r.city, r.state].filter(Boolean).join(", ") + (r.place ? ` (${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""})` : ""), cause: r.ntee?.label ?? null,
     revenue: r.revenue ? `$${r.revenue.amount.toLocaleString("en-US")}` : null,
     // Graded labels (Claude read the org's filings, or its name when it filed no text): evidence for orgs with no description.
-    ...(r.topicLabels?.length ? { graded_labels: r.topicLabels.map((l) => `${labelName(l.label)} (${l.tier === "primary" ? "main focus" : "partial focus"})`).join(", ") } : {}),
+    ...(r.topicLabels?.length ? { graded_labels: r.topicLabels.map((l) => `${labelName(l.label)} (${l.tier === "primary" ? "main focus" : "part of their work"})`).join(", ") } : {}),
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
+    // No 990 text: what its own website says (checked as the same org, lib/webProfile), labeled as such
+    ...(!r.mission && !r.programs && r.web ? { from_its_website: `${r.web.description}${r.web.servesPlaces.length ? ` Says it serves: ${r.web.servesPlaces.join(", ")}.` : ""}` } : {}),
   }));
   const res = await client.beta.messages.parse({
     model: SCORE_MODEL,
@@ -85,8 +87,8 @@ async function scoreBatch(question: string, results: Result[], placed = false, n
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = diskMemo<Map<string, Relevance>>("rerank:v6", 300, 7 * 24 * 3600_000, { // on disk too: stable across restarts
-  toJSON: (m) => [...m], fromJSON: (j) => new Map(j as [string, Relevance][]), keep: (m) => m.size > 0 }); // v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
+const cached = diskMemo<Map<string, Relevance>>("rerank:v7", 300, 7 * 24 * 3600_000, { // on disk too: stable across restarts
+  toJSON: (m) => [...m], fromJSON: (j) => new Map(j as [string, Relevance][]), keep: (m) => m.size > 0 }); // v7: website descriptions for orgs with no 990 text; v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
 function score(question: string, results: Result[], placed = false, note = "") {
   const key = `${placed ? "placed|" : ""}${note ? "soft|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
   return cached(key, () => scoreFresh(question, results, placed, note).catch((err) => {

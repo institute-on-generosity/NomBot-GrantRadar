@@ -5,10 +5,11 @@ import { db } from "./db";
 import { memo } from "./memo";
 import { nteeLabel, nteeShort } from "./ntee";
 import { GRANT_YEARS } from "./placeReport";
+import { fetchedLabel, siteHost, webProfile } from "./webProfile";
 
 export type OrgPreview = {
   ein: string; name: string; place: string | null; type: "Private foundation" | "Public charity" | "Organization";
-  mission: string | null; computed?: boolean; latestYear: number | null; href: string;
+  mission: string | null; computed?: boolean; web?: { site: string; fetched: string } | null; latestYear: number | null; href: string;
   stats: { label: string; value: number; kind: "money" | "count" }[];
   causes: string[]; // top causes it funds (foundations) or its own cause (charities)
 };
@@ -49,19 +50,22 @@ async function build(ein: string): Promise<OrgPreview | null> {
     causes = c ? [c] : [];
   }
   const raw = t?.mission || t?.programs || null;
+  // No 990 text: what its own website says, labeled as such (lib/webProfile)
+  const w = raw ? null : await webProfile(ein).catch(() => null);
   const name = orgName(o?.name ?? f.name, 80);
   const city = o?.city ?? f?.city, state = o?.state ?? f?.state;
   return {
     ein, name, place: [city && orgName(city, 40), state].filter(Boolean).join(", ") || null,
     type: isPf ? "Private foundation" : o ? "Public charity" : "Organization",
-    mission: raw ? clip(sentence(raw)) : computed,
-    computed: !raw && !!computed,
+    mission: raw ? clip(sentence(raw)) : w ? clip(w.description) : computed,
+    computed: !raw && !w && !!computed,
+    web: !raw && w ? { site: siteHost(w.site), fetched: fetchedLabel(w.fetched) } : null,
     latestYear: Number(t?.tax_year ?? f?.tax_year ?? o?.yr) || null,
-    href: `/org/${ein}`, stats: stats.slice(0, 3), causes: !raw && computed ? [] : causes, // the computed line already names the causes
+    href: `/org/${ein}`, stats: stats.slice(0, 3), causes: !raw && !w && computed ? [] : causes, // the computed line already names the causes
   };
 }
 
-const cached = memo<OrgPreview | null>("org-preview:v2", 2000, 3600_000);
+const cached = memo<OrgPreview | null>("org-preview:v3", 2000, 3600_000);
 export function orgPreview(ein: string) {
   const e = ein.replace(/\D/g, "");
   if (!/^\d{9}$/.test(e)) return Promise.resolve(null);

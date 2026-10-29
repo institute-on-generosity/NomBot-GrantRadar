@@ -10,6 +10,7 @@ import { parseQuestion } from "@/lib/parse";
 import { labelPhrase } from "@/lib/labels";
 import { isStrong, rankedSearch, STRONG, type Ranked } from "@/lib/rerank";
 import { summaryFor, summaryLines } from "@/lib/searchSummary";
+import { reportBrief } from "@/lib/reportBrief";
 import "./report.css";
 
 export const metadata = { title: "Search report · NomBot" };
@@ -63,6 +64,8 @@ async function Report({ searchParams }: { searchParams: SP }) {
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const [g0, g1] = GRANT_YEARS;
   const noText = coverage ? coverage.orgs - coverage.withText : null;
+  const brief = await reportBrief(question, rows, scope, filters.topic, new Set([...funding.keys()]), filters.prefer?.length ? filters.prefer.map((p) => p.label).join(" and ") : null);
+  const place = scope?.kind === "city" ? titleCase(scope.city) : scope?.label ?? "the place";
 
   return (
     <>
@@ -71,6 +74,52 @@ async function Report({ searchParams }: { searchParams: SP }) {
         <h1>{question}</h1>
         <div className="report-tools"><PrintButton label="Save as PDF" /></div>
       </header>
+
+      {/* One printed page for an advisor: picks, who funds it here, gaps, method. Everything else is the appendix. */}
+      <section className="report-onepage">
+        <h2>Top picks</h2>
+        {brief.picks.length ? (
+          <ol className="op-picks">
+            {brief.picks.map((p) => (
+              <li key={p.ein}>
+                <p className="op-name"><b>{p.name}</b> <span className={`op-badge ${p.badge === "Active filer" ? "ok" : p.badge === "Website live" ? "web" : "none"}`}>{p.badge}</span>{p.year ? <Yr>{p.year}</Yr> : null}<span className="op-where">{p.where}</span></p>
+                <p className="op-why">{p.reason}</p>
+                {p.questions.length > 0 && <p className="op-asks">Ask: {p.questions.join(" ")}</p>}
+              </li>
+            ))}
+          </ol>
+        ) : <p className="report-note">No strong matches.</p>}
+        <div className="op-two">
+          <div>
+            <h2>Who funds this in {place} <Yr>{g0}–{String(g1).slice(2)}</Yr></h2>
+            {brief.funders.length ? <ol className="op-funders">{brief.funders.map((f) => <li key={f.ein}>{f.name}<span>{money(f.usd)} · {f.grants} {f.grants === 1 ? "grant" : "grants"}</span></li>)}</ol>
+              : <p className="report-note">No foundation grants to the strong matches based in {place}.</p>}
+          </div>
+          <div>
+            <h2>Gaps</h2>
+            {brief.gaps.length ? <ul className="op-gaps">{brief.gaps.map((g) => <li key={g}>{g}</li>)}</ul> : <p className="report-note">No clear gaps in the data.</p>}
+          </div>
+        </div>
+        <h2>Method and caveats</h2>
+        <ul className="op-method">
+          <li>Organizations from IRS filings ({place}, plus groups that name it and nearby ZIPs), scored 0 to 100 by AI for fit. Picks score 70 or more, {place}-based first.</li>
+          <li>Active filer: a Form 990 in the last 3 years. Website live: no recent 990, but its own site was read and confirmed as the same organization. Name only: neither.</li>
+          <li>Returns arrive 1 to 2 years late, and grants are placed where the recipient is based. Check each organization before relying on it.</li>
+        </ul>
+      </section>
+
+      <h2 className="report-appendix">Appendix: everything considered</h2>
+
+      {brief.programs.length > 0 && (
+        <section>
+          <h2>Programs serving {place} that aren&apos;t separate nonprofits</h2>
+          <p className="report-note">Found by hand on public web pages. Confirmed only when the source says so. Weak evidence is marked not confirmed.</p>
+          <table className="report-table compact">
+            <thead><tr><th>Program</th><th>Run by</th><th>Serves {place}?</th><th>Evidence</th></tr></thead>
+            <tbody>{brief.programs.map((p) => <tr key={p.name}><td><b>{p.name}</b><span>{p.kind}</span>{p.schedule && p.schedule !== "Not stated" && <span>{p.schedule}</span>}</td><td>{p.operator}</td><td className={p.serves === "confirmed" ? "op-yes" : "op-no"}>{p.serves === "confirmed" ? "Confirmed" : "Not confirmed"}</td><td><span>{p.evidence}</span>{p.detail && <span>{p.detail}</span>}<span><a href={p.url}>{p.url.replace(/^https?:\/\//, "").slice(0, 60)}</a>, read {p.read}</span></td></tr>)}</tbody>
+          </table>
+        </section>
+      )}
 
       {summary.length > 0 && (
         <section className="report-summary">
@@ -167,6 +216,7 @@ function OrgTable({ rows, funding, labels }: { rows: Ranked[]; funding: Awaited<
                 <span title={r.ntee?.code ?? undefined}>{r.ntee ? (r.ntee.label ?? r.ntee.code) : "No cause code"}</span>
                 {(labels.get(r.ein.replace("-", "")) ?? []).length > 0 && <span>{labels.get(r.ein.replace("-", ""))!.join(", ")}</span>}
                 {r.mission && <span className="mission">{clip(readable(r.mission, [r.name]), 220)}</span>}
+                {!r.mission && r.web && <span className="mission">From their website ({r.web.fetched}): {r.web.description} <a href={r.web.url}>{r.web.site.replace(/^https?:\/\/(www\.)?/, "")}</a></span>}
               </td>
               <td>
                 <span>{r.revenue ? `${money(r.revenue.amount)} revenue (${r.revenue.year ?? "year not given"})` : "No revenue reported"}</span>

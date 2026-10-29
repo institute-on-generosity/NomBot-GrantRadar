@@ -17,6 +17,7 @@ import { readable, titleCase, orgTitle } from "@/components/text";
 import { getOrg, formName, LATEST_RETURN_NOTE, type Income } from "@/lib/org";
 import { becauseText, trackText, vetting } from "@/lib/vetting";
 import { Yr } from "@/components/Yr";
+import { fetchedLabel, siteHost, webProfile } from "@/lib/webProfile";
 import { LABEL_SUBTYPES, type LabelSub } from "@/lib/labels";
 import type { TaxStatus } from "@/lib/taxStatus";
 import { prettyTitle, type Diligence } from "@/lib/flag";
@@ -83,6 +84,8 @@ async function Org({ params, searchParams, modal }: Props) {
       <section>
         <h2>Mission</h2>
         <p>{o.mission ? readable(o.mission, [o.name]) : "This organization hasn't e-filed a mission statement we've loaded yet."}</p>
+        {/* What the org says on its own site, apart from IRS data (lib/webProfile) */}
+        <Suspense fallback={null}><FromWebsite ein={o.ein} /></Suspense>
       </section>
 
       {o.programs && (
@@ -211,6 +214,18 @@ const CHECK_WHY: Record<string, string> = {
   audited: "Ask for financial statements.",
   diversion_of_assets: "A serious finding. Read the filing's explanation.",
 };
+
+async function FromWebsite({ ein }: { ein: string }) {
+  const w = await webProfile(ein).catch(() => null);
+  if (!w) return null;
+  return (
+    <div className="from-web">
+      <p className="from-web-k">From their website <a href={w.url} target="_blank" rel="noreferrer">{siteHost(w.site)} ↗</a> <Yr title={`Read ${w.fetched}`}>{fetchedLabel(w.fetched)}</Yr></p>
+      <p>{w.description}</p>
+      {w.servesPlaces.length > 0 && <p className="from-web-serves">Says it serves {w.servesPlaces.join(", ")}</p>}
+    </div>
+  );
+}
 
 type OrgT = NonNullable<Awaited<ReturnType<typeof getOrg>>>;
 // Track record under the key numbers: tax-exempt since, returns on record, the income trend (advisor brief, Oct 28)

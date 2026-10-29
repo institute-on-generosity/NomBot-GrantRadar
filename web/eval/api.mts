@@ -472,6 +472,17 @@ try {
     check((await fetch(`${BASE}/api/memo/org/000000000/docx`)).status === 404, "memo: unknown EIN is 404");
   }
 
+  // Web profiles and the report's one-page summary (Oct 29, Inglewood reports)
+  {
+    const pv = (await (await fetch(`${BASE}/api/org-preview/393805685`)).json()) as J;
+    check(pv.web?.site === "inglewoodextendedcareofcalifornia.com" && /clinic/i.test(pv.mission ?? ""), "web profile: a no-text org's hover card says what its website says, labeled");
+    const t = performance.now();
+    const rep = (await (await fetch(`${BASE}/report?question=${encodeURIComponent("Health nonprofits in Inglewood, CA, especially mobile dental care (dental bus)")}`)).text()).replace(/<!-- -->/g, "");
+    timings.push(["report: Inglewood dental (cached scores)", Math.round(performance.now() - t)]);
+    check(/Top picks/.test(rep) && /Who funds this in Inglewood/.test(rep) && /No confirmed mobile or school-based dental service/.test(rep) && /Programs serving Inglewood that aren/.test(rep) && /Inglewood Clinic Group/.test(rep), "report: one-page summary, dental gap and programs table");
+    check(/(Active filer|Website live|Name only)/.test(rep) && /Appendix: everything considered/.test(rep), "report: badges and appendix");
+  }
+
   // Compare (round-2 audit V7): one filing year per org, vetting rows, no em dash for missing values
   {
     const html = (await (await fetch(`${BASE}/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");
