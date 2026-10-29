@@ -2,6 +2,7 @@
 //   npm run test:webprofile
 import { matchOrg, nameWords, ownSite } from "../lib/webMatch";
 import { badgeOf, choosePicks, gapsOf, programsFor } from "../lib/reportBrief";
+import { localFirst } from "../lib/rerank";
 import type { Ranked } from "../lib/rerank";
 import type { Scope } from "../lib/place";
 let fails = 0;
@@ -29,7 +30,12 @@ const r = (o: Partial<Ranked> & { ein: string; tier: string; score: number }): R
   exact: null, score: 0, data_completeness: "basic", sources: [], label: null, place: { tier: o.tier as "in", basis: "hq", note: "" }, relevance: { score: o.score, why: "Fits. More detail." }, web: o.web ?? null, prefer: o.prefer } as Ranked);
 const y = new Date().getFullYear();
 const rows = [r({ ein: "1", tier: "nearby", score: 95 }), r({ ein: "2", tier: "in", score: 72, filing: { year: y - 1, form: "990" } }), r({ ein: "3", tier: "serves", score: 90 }), r({ ein: "4", tier: "in", score: 88 }), r({ ein: "5", tier: "in", score: 60 })];
-ok(choosePicks(rows).map((x) => x.ein).join() === "4,2,3,1", "picks: 70+, in the place first, then serving, then nearby, score within");
+ok(choosePicks(rows).map((x) => x.ein).join() === "1,3,4,2", `picks: 70+, local first on close scores, a clearly better nearby match still wins (${choosePicks(rows).map((x) => x.ein).join()})`);
+// Local-first tie-break (Inglewood v3): HOOP (in Inglewood, 80) above a nearby club (82); a nearby 90 still above a local 70
+const hoop = r({ ein: "h", tier: "in", score: 80 }), club = r({ ein: "c", tier: "nearby", score: 82 }), dodgers = r({ ein: "d", tier: "serves", score: 80 });
+ok(localFirst([club, dodgers, hoop]).map((x) => x.ein).join() === "h,d,c", "local first: in the place, then serving, above a nearby club 2 points higher");
+ok(localFirst([r({ ein: "l", tier: "in", score: 70 }), r({ ein: "n", tier: "nearby", score: 90 })])[0].ein === "n", "a much better nearby match still ranks first");
+ok(localFirst([club, hoop, r({ ein: "u", tier: "in", score: 10, relevance: null } as never)]).at(-1)!.ein === "u", "unscored rows last");
 ok(badgeOf(rows[1], false) === "Active filer" && badgeOf(rows[3], true) === "Website live" && badgeOf(rows[3], false) === "Name only", "badges: active filer, website live, name only");
 const inglewood = { kind: "city", city: "INGLEWOOD", state: "CA", label: "Inglewood, CA", zips: [], near: [], county: null } as Scope;
 const progs = programsFor(inglewood, "Health nonprofits in Inglewood, CA, especially mobile dental care (dental bus)");

@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
 import { applyOverrides, OVERRIDE_KEYS } from "@/lib/filters";
 import { parseQuestion } from "@/lib/parse";
 import { fundingOf } from "@/lib/placeReport";
-import { rankedSearch, searchCandidates, type Relevance } from "@/lib/rerank";
+import { rankedSearch, searchCandidates, type Relevance, localFirst } from "@/lib/rerank";
 import { summaryFor, summaryLines } from "@/lib/searchSummary";
 
 const cell = (v: unknown) => {
@@ -15,7 +15,7 @@ const cell = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-const HEADER = ["relevance", "relevance_status", "relevance_reason", "place_tier", "place_evidence", "name", "ein", "street", "city", "state", "zip",
+const HEADER = ["relevance", "overall_rank", "relevance_status", "relevance_reason", "place_tier", "place_evidence", "name", "ein", "street", "city", "state", "zip",
   "ntee_code", "cause", "cause_label", "revenue", "revenue_year", "latest_990_year", "foundation_grants_2022_24", "top_funder", "top_funder_grants_2022_24",
   "website", "exact_match", "mission", "from_website", "from_website_url", "from_website_read", "nombot_page", "sources"];
 const TIER: Record<string, string> = { in: "in the place", county: "in the county", serves: "serves the place, HQ elsewhere", nearby: "nearby", wider: "elsewhere in the county" };
@@ -37,10 +37,12 @@ export async function GET(request: NextRequest) {
   const funding = await fundingOf(rows.map((r) => r.ein));
   const origin = request.nextUrl.origin;
 
+  // One order across tiers, local first on close scores (lib/rerank localFirst); rows stay grouped by tier
+  const overall = new Map(localFirst(rows.filter((r) => r.relevance)).map((r, i) => [r.ein, i + 1]));
   const lines = rows.map((r) => {
     const f = funding.get(r.ein.replace("-", ""));
     return [
-      r.relevance?.score, r.relevance ? "scored" : "unscored", r.relevance?.why,
+      r.relevance?.score, overall.get(r.ein) ?? "", r.relevance ? "scored" : "unscored", r.relevance?.why,
       r.place ? TIER[r.place.tier] : "", r.place ? `${BASIS[r.place.basis]}: ${r.place.note}${r.place.quote ? `: "${r.place.quote}"` : ""}` : "",
       r.name, r.ein, r.street, r.city, r.state, r.zip, r.ntee?.code, r.ntee?.label, [...new Set([r.label, ...(r.topicLabels ?? [])].filter((l) => l != null).map((l) => `${l!.label} (${l!.tier})`))].join(", "),
       r.revenue?.amount, r.revenue?.year, r.filing?.year ?? r.health?.year ?? r.financials?.tax_year ?? "",

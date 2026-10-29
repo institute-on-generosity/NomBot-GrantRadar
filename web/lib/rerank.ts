@@ -28,22 +28,23 @@ Score each organization 0-100 for how well its actual work (mission, programs, n
 - 70-89: clearly the right kind of organization; a minor part unconfirmed.
 - 40-69: related, but missing a key part of the request.
 - 0-39: not what was asked (different cause, wrong place, only shares a word).
+Judge the substance of the work, not exact words: a program that clearly does what was asked counts even when it uses other words (youth mentoring or youth development that builds confidence, life skills or leadership is youth leadership development, a basketball league is a youth sports program). If the work is that kind of program, don't mark it down because the request's word is "implied but not explicit".
 Scores are absolute, not relative: if nothing fits well, score everything low. Judge only from the facts given; when the description is missing, rely on the name and cause and stay below 70 unless the name makes the fit unmistakable. "from_its_website" is what the organization says on its own website (no IRS filing text): treat it as evidence of its work, and say "per its website" in "why" when you rely on it.
 "why": one or two plain sentences (under 30 words) explaining the score: what fits the question and what is missing or unconfirmed. No semicolons or dashes.`;
 // Tiered place searches (lib/tiers.ts) group results by place themselves (in the city, serving it, nearby), so the
 // score is about the work, and a soft preference ("ideally", "especially") raises a score without capping it.
 const PLACE_NOTE = `
-Results are already grouped by place (in the city, serving it from elsewhere, nearby), and "place" says why each one is listed. Judge how well the work fits; don't lower a score because the address is outside the city.
+Results are already grouped by place (in the city, serving it from elsewhere, nearby), and "place" says why each one is listed. Judge how well the work fits; don't lower a score because the address is outside the city. When "place" quotes a grant purpose or filing that describes a program (for example a fiscal sponsor's project serving the city), that program is part of the organization's work: judge it too.
 Words after "ideally", "especially" or "preferably" are preferences, not requirements: an organization that fits the main request scores 70+ even without them, and higher with them.`;
 
 // A preferred cause label from the question ("girls mentoring and leadership programs", "ideally focused on girls"), not
 // "only girls": it ranks first, but co-ed programs that otherwise fit are still good matches (Oct 26, Keith's test).
 const softLabelNote = (name: string) => `
-The user named ${name} as a focus but not as the only group served: organizations focused on it fit best, and organizations that serve everyone but otherwise fit the request still score 50 or more, a little lower.`;
+The user named ${name} as a focus but not as the only group served: organizations focused on it fit best and score higher, and organizations that serve everyone but clearly fit the rest of the request still score 70 or more. Not being focused on it is never by itself a reason to score below 70.`;
 // The preferences read from the question, named: without them the scorer sometimes treated "especially mobile dental
 // care" as required and scored Inglewood clinics with no dental program 45 (Oct 26).
 const softPrefNote = (prefs: string[]) => `
-Preferences in this question (nice to have, never required): ${prefs.join(", ")}. An organization that fits the rest of the request scores 70 or more even when none of them is confirmed. One that also does them scores higher.`;
+Preferences in this question (nice to have, never required): ${prefs.join(", ")}. An organization that fits the rest of the request scores 70 or more even when none of them is confirmed: never score below 70 only because a preference is missing. One that also does them scores higher.`;
 
 // UI copy has no semicolons or dashes as punctuation, even when the model slips: they become sentences or commas.
 const plain = (t: string) => t.replace(/\s+[—–]\s+|\s*—\s*/g, ", ").replace(/\s*;\s*([a-z]?)/g, (_, c: string) => `. ${c.toUpperCase()}`).replace(/\s+/g, " ").trim();
@@ -68,7 +69,7 @@ async function scoreBatch(question: string, results: Result[], placed = false, n
     ...(r.topicLabels?.length ? { graded_labels: r.topicLabels.map((l) => `${labelName(l.label)} (${l.tier === "primary" ? "main focus" : "part of their work"})`).join(", ") } : {}),
     description: readable([r.mission, r.programs].filter(Boolean).join(" ")).slice(0, 600) || null,
     // No 990 text: what its own website says (checked as the same org, lib/webProfile), labeled as such
-    ...(!r.mission && !r.programs && r.web ? { from_its_website: `${r.web.description}${r.web.servesPlaces.length ? ` Says it serves: ${r.web.servesPlaces.join(", ")}.` : ""}` } : {}),
+    ...(r.web ? { from_its_website: `${r.web.description}${r.web.servesPlaces.length ? ` Says it serves: ${r.web.servesPlaces.join(", ")}.` : ""}` } : {}),
   }));
   const res = await client.beta.messages.parse({
     model: SCORE_MODEL,
@@ -87,8 +88,8 @@ async function scoreBatch(question: string, results: Result[], placed = false, n
 }
 
 // Same question + same candidates -> same scores: "Show more", going back and CSV export reuse them.
-const cached = diskMemo<Map<string, Relevance>>("rerank:v7", 300, 7 * 24 * 3600_000, { // on disk too: stable across restarts
-  toJSON: (m) => [...m], fromJSON: (j) => new Map(j as [string, Relevance][]), keep: (m) => m.size > 0 }); // v7: website descriptions for orgs with no 990 text; v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
+const cached = diskMemo<Map<string, Relevance>>("rerank:v10", 300, 7 * 24 * 3600_000, { // on disk too: stable across restarts
+  toJSON: (m) => [...m], fromJSON: (j) => new Map(j as [string, Relevance][]), keep: (m) => m.size > 0 }); // v10: no mark-down for an implied word; v9: a co-ed or preference-free org that otherwise fits scores 70 or more, website-read orgs ride into the pool; v8: judge substance not exact words, programs in place quotes count, website text for every org that has one; v7: website descriptions for orgs with no 990 text; v6: graded labels as evidence, notes naming the preferences and a preferred label; v5: no semicolons in reasons; v4: wider grant quotes; v3: place tiers and their evidence
 function score(question: string, results: Result[], placed = false, note = "") {
   const key = `${placed ? "placed|" : ""}${note ? "soft|" : ""}${question.toLowerCase().replace(/\s+/g, " ").trim()}|${results.map((r) => r.ein).join(",")}`;
   return cached(key, () => scoreFresh(question, results, placed, note).catch((err) => {
@@ -103,9 +104,15 @@ export const TIER_POOL: Record<string, number> = { in: POOL, county: POOL, serve
 // Orgs carrying a boosted label (the topic's, or a preferred one) just below a tier's pool are scored too, up to this
 // many from the next LABEL_REACH: the label is graded evidence the meaning search can miss (a girls' leadership group
 // for "youth leadership programs").
-const LABEL_EXTRA = 10, LABEL_REACH = 60;
-export const scoredPool = (results: Result[], n: number) =>
-  [...results.slice(0, n), ...results.slice(n, n + LABEL_REACH).filter((r) => r.topicLabels?.length).slice(0, LABEL_EXTRA)];
+// Orgs with no 990 text sit low in search order (only their name and cause code match), so one whose own website was
+// read and confirmed rides along to the scorer the same way (Oct 29: Beautiful I Am Foundation, an Inglewood girls'
+// leadership group, was never scored).
+const LABEL_EXTRA = 10, LABEL_REACH = 60, WEB_EXTRA = 10;
+export const scoredPool = (results: Result[], n: number) => {
+  const rest = results.slice(n, n + LABEL_REACH);
+  const extra = [...rest.filter((r) => r.topicLabels?.length).slice(0, LABEL_EXTRA), ...results.slice(n).filter((r) => r.web && !r.topicLabels?.length).slice(0, WEB_EXTRA)];
+  return [...results.slice(0, n), ...extra];
+};
 
 // Step 1: search candidates (fast, ~0.5s): enough for the page to show results right away.
 // One search serves the results, "Show more" and the landscape (its 200 closest): fetched once at SHARED
@@ -128,7 +135,9 @@ export async function searchCandidates(filters: Filters, { limit, includeInactiv
   const softPrefs = filters.prefer?.length ? filters.prefer.map((p) => p.label) : undefined;
   const keep = want + LABEL_REACH; // the label reach below a pool rides along (lib/rerank scoredPool)
   if (!res.tiers) return { ...res, softLabel, softPrefs, results: res.results.slice(0, keep) };
-  const tiers = res.tiers.map((t) => ({ ...t, results: t.results.slice(0, keep) }));
+  // Website-read orgs further down a tier stay too (at most WEB_EXTRA), so the scorer can see them (scoredPool)
+  const withWeb = (rs: Result[]) => [...rs.slice(0, keep), ...rs.slice(keep).filter((r) => r.web).slice(0, WEB_EXTRA)];
+  const tiers = res.tiers.map((t) => ({ ...t, results: withWeb(t.results) }));
   return { ...res, softLabel, softPrefs, tiers, results: tiers.flatMap((t) => t.results) };
 }
 
@@ -145,6 +154,16 @@ export async function rank(question: string, res: Found, limit: number) {
   // Each tier keeps every strong match it has (they're few: only TIER_POOL are scored), then fills up to limit.
   const seen = new Map<number, number>();
   return { results: ranked.filter((r) => { const t = tierOf(r), n = seen.get(t) ?? 0; seen.set(t, n + 1); return n < limit || (r.relevance != null && isStrong(r)); }), scored: scores.size > 0 };
+}
+
+// Local first across tiers (Oct 29, Inglewood v3): when one list mixes places (the report's top picks, the CSV's
+// overall_rank), an org based in the place gets a small boost over a nearby one, so close scores go to the local org
+// (HOOP Foundation 80 in Inglewood above a nearby club at 82) but a clearly better nearby match still wins.
+// Not a filter: each tier still lists its own orgs.
+export const LOCAL_BOOST: Record<string, number> = { in: 5, county: 5, serves: 3, nearby: 0, wider: -3 };
+export const localScore = (r: { relevance?: Relevance | null; place?: { tier: string } | null }) => (r.relevance?.score ?? -1) + (r.relevance ? LOCAL_BOOST[r.place?.tier ?? "in"] ?? 0 : 0);
+export function localFirst<T extends { relevance?: Relevance | null; place?: { tier: string } | null }>(rows: T[]): T[] {
+  return rows.map((r, i) => [r, i] as const).sort(([a, i], [b, j]) => localScore(b) - localScore(a) || i - j).map(([r]) => r);
 }
 
 // Both steps, for callers that want the final order in one go (CSV export, eval).

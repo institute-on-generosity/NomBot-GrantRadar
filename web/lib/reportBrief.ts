@@ -9,7 +9,7 @@ import { db } from "./db";
 import { getOrg } from "./org";
 import { GRANT_YEARS } from "./placeReport";
 import type { Scope } from "./place";
-import type { Ranked } from "./rerank";
+import { localFirst, type Ranked } from "./rerank";
 import { vetting } from "./vetting";
 import { webProfiles } from "./webProfile";
 
@@ -30,11 +30,9 @@ export function badgeOf(r: Pick0, hasWeb: boolean): Badge {
 }
 type Pick0 = { filing: Ranked["filing"]; health: Ranked["health"]; financials: Ranked["financials"]; revenue: Ranked["revenue"] };
 
-// Order for picks: in the place first, then serving it, then nearby; strongest score within each
-const TIER_RANK: Record<string, number> = { in: 0, county: 0, serves: 1, nearby: 2, wider: 3 };
+// Strong matches (70+), local first on close scores (lib/rerank localFirst), a clearly better nearby match still wins
 export function choosePicks(rows: Ranked[], k = 5): Ranked[] {
-  const strong = rows.filter((r) => (r.relevance?.score ?? 0) >= 70);
-  return [...strong].sort((a, b) => (TIER_RANK[a.place?.tier ?? "in"] - TIER_RANK[b.place?.tier ?? "in"]) || ((b.relevance?.score ?? 0) - (a.relevance?.score ?? 0))).slice(0, k);
+  return localFirst(rows.filter((r) => (r.relevance?.score ?? 0) >= 70)).slice(0, k);
 }
 
 // Programs that serve the place but aren't separate nonprofits (data/place-programs.json), for a topic they match
