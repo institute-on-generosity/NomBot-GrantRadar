@@ -123,17 +123,29 @@ export function overlap(read: string[], strong: string[]): number {
 }
 
 // Key facts in the analysis panel: the same set as the summary (the N shown in the list) and the same grant years.
-export type KeyTile = { value: string; label: string; note?: string };
-export function keyFactTiles(f: SummaryFacts, deficit: { count: number; of: number } | null): { tiles: KeyTile[]; basis: string; shown: number } {
+// key: which stat a tile shows, so one fact appears once across the Insights panel (keyFactsShown)
+export type KeyTile = { value: string; label: string; note?: string; key?: string };
+// One fact, one place (Oct 29): the summary line already shows the count, median income and the share with grants;
+// Did you know shows its stat with a chart (richer, so it wins); the Track record card shows years tax-exempt.
+export const SUMMARY_STATS = ["count", "median_income", "funded_share"];
+export const DYK_STAT: Record<string, string> = { finances: "deficit", growth: "income_trend", size: "size_bands" };
+export function keyFactsShown(tiles: KeyTile[], dykKeys: string[], hasTrack: boolean, k = 3): KeyTile[] {
+  const elsewhere = new Set([...SUMMARY_STATS, ...dykKeys.map((x) => DYK_STAT[x] ?? x), ...(hasTrack ? ["median_age"] : [])]);
+  const seen = new Set<string>();
+  return tiles.filter((t) => !t.key || (!elsewhere.has(t.key) && !seen.has(t.key) && (seen.add(t.key), true))).slice(0, k);
+}
+export function keyFactTiles(f: SummaryFacts, deficit: { count: number; of: number } | null, largest: { name: string; revenue: number }[] = []): { tiles: KeyTile[]; basis: string; shown: number } {
   const n = f.strong;
   const [g0, g1] = f.grantYears;
   // Only facts the summary doesn't show (it has the count, median income and the share with grants): the panel adds
   // the median years tax-exempt as a third (components/Landscape).
   const tiles: KeyTile[] = [];
   // The base ("Of the N shown") is stated once, in the card's footer, not under each fact.
-  if (f.grantsTotal > 0) tiles.push({ value: money(f.grantsTotal), label: `from foundations, ${g0}–${String(g1).slice(2)}` });
-  if (deficit && deficit.of >= 5) tiles.push({ value: pct(deficit.count, deficit.of), label: "overspent last year", note: deficit.of < n ? `${num(deficit.of)} report` : undefined });
-  return { tiles: tiles.slice(0, 3), basis: `Of the ${num(n)} shown`, shown: n };
+  if (f.grantsTotal > 0) tiles.push({ key: "grants_total", value: money(f.grantsTotal), label: `from foundations, ${g0}–${String(g1).slice(2)}` });
+  if (deficit && deficit.of >= 5) tiles.push({ key: "deficit", value: pct(deficit.count, deficit.of), label: "overspent last year", note: deficit.of < n ? `${num(deficit.of)} of ${num(n)} filed a recent return` : undefined });
+  // Backfill when a fact above is shown elsewhere (keyFactsShown): the largest match by income, named
+  if (largest[0]) tiles.push({ key: "largest", value: money(largest[0].revenue), label: "largest by yearly income", note: largest[0].name });
+  return { tiles, basis: `Of the ${num(n)} shown`, shown: n };
 }
 
 // The computed points under the summary's lead sentence (the scored set): typical size, foundation grants, and the

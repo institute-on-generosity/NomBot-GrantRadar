@@ -119,12 +119,16 @@ export function cityPointers(scope: CityScope): Promise<Map<string, PlaceEvidenc
   });
 }
 
+// Tier names say where an org is based (Oct 29, Hunter: "20 in Inglewood" vs "7 serving Inglewood" was unclear):
+// "Based in Inglewood", "Based elsewhere, work in Inglewood", "Nearby, within 3.5 mi" (the radius from NEAR_MILES).
+const placeName = (s: Scope) => (s.kind === "city" ? title(s.city) : s.name);
 export const tierTitle = (t: Tier, s: Scope) =>
-  t === "wider" ? `Elsewhere in ${s.kind === "city" && s.county ? s.county.name : "the county"}` : t === "in" ? `In ${s.kind === "city" ? title(s.city) : s.name}` : t === "county" ? `In ${s.label}`
-  : t === "serves" ? `Serving ${s.kind === "city" ? title(s.city) : s.name}, based elsewhere` : `Nearby, within ${NEAR_MILES} miles`;
+  t === "wider" ? `Elsewhere in ${s.kind === "city" && s.county ? s.county.name : "the county"}` : t === "in" ? `Based in ${placeName(s)}` : t === "county" ? `Based in ${s.label}`
+  : t === "serves" ? `Based elsewhere, work in ${placeName(s)}` : `Nearby, within ${NEAR_MILES} mi`;
+// One short line per tier, the same on the summary chips and the tier headings (tooltips)
 export const tierNote = (t: Tier, s: Scope) =>
-  t === "wider" ? `HQ elsewhere in ${s.kind === "city" && s.county ? s.county.name : "the county"}` : t === "in" ? "HQ address in the city, or the city in the name" : t === "county" ? `HQ address in ${s.label}`
-  : t === "serves" ? "A recent Form 990 or grant purpose names the city" : `HQ ZIP within ${NEAR_MILES} miles of a ZIP in ${s.kind === "city" ? title(s.city) : "the place"}`;
+  t === "wider" ? `Headquarters elsewhere in ${s.kind === "city" && s.county ? s.county.name : "the county"}` : t === "in" ? `Headquarters in ${placeName(s)}` : t === "county" ? `Headquarters in ${s.label}`
+  : t === "serves" ? `Headquarters outside ${placeName(s)}, but their filings or grants name it` : "Headquarters in a nearby ZIP code";
 
 // Every org with an HQ in the city (mailing city or a city ZIP), or in a ring of nearby ZIPs: lists that let the
 // search read each filing by key (lib/search.ts TINY) instead of walking the vector index with a place filter.

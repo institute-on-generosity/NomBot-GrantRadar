@@ -10,7 +10,7 @@ import { parseQuestion } from "@/lib/parse";
 import { labelPhrase } from "@/lib/labels";
 import { isStrong, rankedSearch, STRONG, type Ranked } from "@/lib/rerank";
 import { summaryFor, summaryLines } from "@/lib/searchSummary";
-import { reportBrief } from "@/lib/reportBrief";
+import { PICK_MIN, reportBrief } from "@/lib/reportBrief";
 import "./report.css";
 
 export const metadata = { title: "Search report · NomBot" };
@@ -102,7 +102,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         </div>
         <h2>Method and caveats</h2>
         <ul className="op-method">
-          <li>Organizations from IRS filings ({place}, plus groups that name it and nearby ZIPs), scored 0 to 100 by AI for fit. Picks score 70 or more, {place}-based first.</li>
+          <li>Organizations from IRS filings ({place}, plus groups that name it and nearby ZIPs), scored 0 to 100 by AI for fit. Top picks score {PICK_MIN} or more, {place}-based first on close scores. The appendix lists every match scoring {STRONG} or more.</li>
           <li>Active filer: a Form 990 in the last 3 years. Website live: no recent 990, but its own site was read and confirmed as the same organization. Name only: neither.</li>
           <li>Returns arrive 1 to 2 years late, and grants are placed where the recipient is based. Check each organization before relying on it.</li>
         </ul>
@@ -136,7 +136,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
         <ul>
           {scope ? <li><b>Place.</b> {placeText(scope)}</li> : <li><b>Place.</b> {filters.placeLabel ?? (filters.states.join(", ") || "Anywhere in the US")}, by HQ address.</li>}
           <li><b>Topic.</b> {filters.topic || "Any"}{filters.prefer?.length ? `. Preference (ranks higher, never required): ${filters.prefer.map((p) => p.label).join(" and ")}` : ""}{filters.preferLabel && filters.preferLabel !== filters.label ? `. Organizations graded ${labelPhrase(filters.preferLabel)} rank higher, and others that fit still show` : ""}{filters.boostLabels?.length ? `. Organizations graded ${filters.boostLabels.map(labelPhrase).join(" or ")} rank a little higher (graded labels miss some orgs, so they never filter here)` : ""}{filters.requirements.length ? `. Must mention ${filters.requirements.map((r) => r.label).join(" and ")} in the 990 text` : ""}.</li>
-          <li><b>Finding matches.</b> Meaning and keyword search over 990 mission and program text, plus the name and IRS cause code (NTEE) for organizations with no 990 text. Claude scored the closest {res.tiers ? "candidates in each group" : "40 candidates"} from 0 to 100 against the question. Strong matches score {STRONG} or more.</li>
+          <li><b>Finding matches.</b> Meaning and keyword search over 990 mission and program text, plus the name and IRS cause code (NTEE) for organizations with no 990 text. Claude scored the closest {res.tiers ? "candidates in each group" : "40 candidates"} from 0 to 100 against the question. Listed matches score {STRONG} or more, and the top picks on page 1 score {PICK_MIN} or more.</li>
           <li><b>Sources and years.</b> IRS exempt organization master file (names, addresses, cause codes, revenue), Form 990 and 990-EZ e-files for tax years 2021 to 2025 (mission, programs, finances), 990-PF foundation grants {g0} to {g1}, Schedule I grant purposes from 2021, Census 2024 ZIP code points.</li>
         </ul>
       </details>
@@ -193,7 +193,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
 function placeText(s: Scope) {
   if (s.kind === "county") return `${s.label}: organizations whose HQ address is in one of the county's ${s.zips.length} ZIP codes.`;
   const c = titleCase(s.city);
-  return `${s.label}. In ${c}: HQ in one of ${c}'s ${s.zips.length} ZIP codes (${s.zips.join(", ")}) or mailing city ${c}, plus organizations named for ${c} that mail from elsewhere. Serving ${c}: HQ elsewhere in ${s.state}, but a Form 990 since 2021 or a grant purpose line since 2021 names ${c}. Nearby: HQ in one of ${s.near.length} ZIP codes within ${NEAR_MILES} miles (${s.near.map((n) => n.zip).join(", ")}).`;
+  return `${s.label}. Based in ${c}: HQ in one of ${c}'s ${s.zips.length} ZIP codes (${s.zips.join(", ")}) or mailing city ${c}, plus organizations named for ${c} that mail from elsewhere. Based elsewhere, work in ${c}: HQ elsewhere in ${s.state}, but a Form 990 since 2021 or a grant purpose line since 2021 names ${c}. Nearby, within ${NEAR_MILES} mi: HQ in one of ${s.near.length} ZIP codes within ${NEAR_MILES} miles (${s.near.map((n) => n.zip).join(", ")}).`;
 }
 
 const address = (r: Ranked) => [r.street && titleCase(r.street), [r.city && titleCase(r.city), r.state].filter(Boolean).join(", "), r.zip?.slice(0, 5)].filter(Boolean).join(", ");

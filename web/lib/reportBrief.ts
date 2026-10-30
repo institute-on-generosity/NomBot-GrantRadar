@@ -31,8 +31,10 @@ export function badgeOf(r: Pick0, hasWeb: boolean): Badge {
 type Pick0 = { filing: Ranked["filing"]; health: Ranked["health"]; financials: Ranked["financials"]; revenue: Ranked["revenue"] };
 
 // Strong matches (70+), local first on close scores (lib/rerank localFirst), a clearly better nearby match still wins
+// PICK_MIN: a top pick scores this or more. The appendix lists every strong match (STRONG, lib/rerank) and says both.
+export const PICK_MIN = 70;
 export function choosePicks(rows: Ranked[], k = 5): Ranked[] {
-  return localFirst(rows.filter((r) => (r.relevance?.score ?? 0) >= 70)).slice(0, k);
+  return localFirst(rows.filter((r) => (r.relevance?.score ?? 0) >= PICK_MIN)).slice(0, k);
 }
 
 // Programs that serve the place but aren't separate nonprofits (data/place-programs.json), for a topic they match
@@ -64,7 +66,7 @@ export async function reportBrief(question: string, rows: Ranked[], scope: Scope
     const w = web.get(r.ein.replace(/\D/g, ""));
     return {
       ein: r.ein, name: orgTitle(r.name),
-      where: r.place?.tier === "in" ? `In ${place}` : r.place?.tier === "serves" ? `Serves ${place}, based in ${orgTitle(r.city ?? "")}` : `${orgTitle(r.city ?? "")}, nearby`,
+      where: r.place?.tier === "in" ? `Based in ${place}` : r.place?.tier === "serves" ? `Based in ${orgTitle(r.city ?? "")}, works in ${place}` : `Based in ${orgTitle(r.city ?? "")}, nearby`,
       reason: firstSentence(r.relevance?.why ?? (w?.description ?? "")),
       badge: badgeOf(r, !!w), year: Math.max(r.filing?.year ?? 0, r.revenue?.year ?? 0) || null,
       questions: (v?.questions ?? []).slice(0, 2).map((q) => q.q),

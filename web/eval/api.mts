@@ -483,6 +483,24 @@ try {
     check(/(Active filer|Website live|Name only)/.test(rep) && /Appendix: everything considered/.test(rep), "report: badges and appendix");
   }
 
+  // Every export path returns a non-empty file of the right type (Oct 29: Export looked dead on the results page)
+  {
+    const q = encodeURIComponent("Youth sports programs in Inglewood, CA");
+    const paths: [string, RegExp, number][] = [
+      [`/export?question=${q}`, /text\/csv/, 2000], [`/report?question=${q}`, /text\/html/, 5000],
+      ["/memo/org/954623022", /text\/html/, 3000], ["/api/memo/org/954623022/docx", /wordprocessingml/, 5000],
+      ["/memo/compare?ein=954623022,931724843", /text\/html/, 3000], ["/api/memo/compare/docx?ein=954623022,931724843", /wordprocessingml/, 5000],
+    ];
+    for (const [p, type, min] of paths) {
+      const r = await fetch(BASE + p);
+      const n = (await r.arrayBuffer()).byteLength;
+      check(r.status === 200 && type.test(r.headers.get("content-type") ?? "") && n >= min, `export path ${p.split("?")[0]}: ${r.status}, ${r.headers.get("content-type")}, ${n} bytes`);
+    }
+    // The results page's Export list opens under its own button (it opened off screen with no positioned parent)
+    const { readFileSync } = await import("node:fs");
+    check(/\.export-menu \{ position: relative;/.test(readFileSync(join(import.meta.dirname, "..", "app", "serp.css"), "utf8")), "export menu is anchored to its button");
+  }
+
   // Compare (round-2 audit V7): one filing year per org, vetting rows, no em dash for missing values
   {
     const html = (await (await fetch(`${BASE}/compare?ein=954623022,931724843`)).text()).replace(/<!-- -->/g, "");
@@ -514,14 +532,14 @@ try {
     check(res.status === 200 && want.every((k) => head.includes(k)), `export: CSV has ${want.join(", ")}`);
     const rows = lines.slice(1).filter(Boolean).map((l) => Object.fromEntries(parseCsv(l).map((v, i) => [head[i], v])));
     check(rows.length > 0 && rows.every((r) => r.relevance_status === "unscored" && r.relevance === ""), "export: unscored=1 marks every row unscored");
-    check(["in the place", "serves the place, HQ elsewhere", "nearby"].every((t) => rows.some((r) => r.place_tier === t)), "export: three place tiers");
+    check(["based in the place", "based elsewhere, works in the place", "nearby, within 3.5 mi"].every((t) => rows.some((r) => r.place_tier === t)), "export: three place tiers");
     const ill = rows.find((r) => r.ein === "84-3026438");
-    check(!!ill && ill.place_tier === "in the place" && /^name: Named for Inglewood, mailed from Los Angeles/.test(ill.place_evidence), "export: Inglewood Little League (LA 90065) in the place by name, flagged mailed from elsewhere");
+    check(!!ill && ill.place_tier === "based in the place" && /^name: Named for Inglewood, mailed from Los Angeles/.test(ill.place_evidence), "export: Inglewood Little League (LA 90065) in the place by name, flagged mailed from elsewhere");
     const [g] = await sql(`SELECT coalesce(sum(amount), 0)::bigint AS usd FROM grant_clean WHERE recipient_ein = '843026438' AND tax_year BETWEEN 2022 AND 2024`);
     check(!!ill && Number(ill.foundation_grants_2022_24) === Number(g.usd), "export: foundation grants 2022-24 vs SQL");
     const pp = rows.find((r) => r.ein === "95-4623022"); // Dodgers Foundation: a 2022 grant purpose names Inglewood
-    check(!!pp && pp.place_tier === "serves the place, HQ elsewhere" && /grant purpose: .*Inglewood/i.test(pp.place_evidence), "export: Dodgers Foundation serves Inglewood by grant purpose");
-    check(rows.filter((r) => r.place_tier === "in the place").every((r) => /^(HQ|HQ ZIP|name):/.test(r.place_evidence)), "export: every in-place row says why");
+    check(!!pp && pp.place_tier === "based elsewhere, works in the place" && /grant purpose: .*Inglewood/i.test(pp.place_evidence), "export: Dodgers Foundation serves Inglewood by grant purpose");
+    check(rows.filter((r) => r.place_tier === "based in the place").every((r) => /^(HQ|HQ ZIP|name):/.test(r.place_evidence)), "export: every in-place row says why");
   }
 } finally {
   execFileSync("npm", ["run", "-s", "api-key", "--", "revoke", KEY_ID], { cwd: join(import.meta.dirname, ".."), encoding: "utf8" });

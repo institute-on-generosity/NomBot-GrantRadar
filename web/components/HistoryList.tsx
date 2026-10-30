@@ -1,5 +1,5 @@
 "use client";
-import { HISTORY_KEY, type HistoryEntry, clearHistory, removeEntry } from "@/lib/history";
+import { HISTORY_KEY, type HistoryEntry, clearHistory, removeEntry, dedupeHistory } from "@/lib/history";
 import { NavLink } from "./NavLink";
 import { orgTitle } from "./text";
 import { useStoredList } from "./useStored";
@@ -16,7 +16,7 @@ export function ago(t: number) {
 export const historyTarget = (e: HistoryEntry) => (e.viewed ? `${e.href}&focus=${e.viewed.ein}` : e.href);
 
 export function HistoryList() {
-  const list = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
+  const list = dedupeHistory(useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history"));
   if (!list.length) return <p className="empty-note">No searches yet.</p>;
   return (
     <>

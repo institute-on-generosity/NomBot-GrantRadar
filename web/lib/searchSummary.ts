@@ -51,7 +51,7 @@ const schema = z.object({ summary: z.string(), explore: z.array(z.string()) });
 
 const shortTier = (t: string, s: Scope) => {
   const city = s.kind === "city" ? titleCase(s.city) : s.label;
-  return t === "in" ? `in ${city}` : t === "serves" ? `serving ${city}` : t === "nearby" ? "nearby" : t === "county" ? `in ${s.label}` : t === "wider" ? tierTitle("wider", s).toLowerCase() : t;
+  return t === "in" || t === "county" || t === "serves" || t === "nearby" ? tierTitle(t, s).replace(/^[A-Z]/, (c) => c.toLowerCase()) : t === "wider" ? tierTitle("wider", s).toLowerCase() : t;
 };
 
 type Found = { total: number; results: Result[]; tiers?: { tier: string; total: number; results: Result[] }[]; scope?: Scope | null; exact_total: number | null; softPrefs?: string[] };
@@ -106,7 +106,7 @@ export async function summaryHead(question: string, filters: Filters, res: Found
   const def = health.signals.find((s) => s.key === "deficit");
   // The largest strong matches by income (relevance-checked, so never an off-topic org), linked from the summary.
   const largest = orgs.filter((o) => o.revenue != null && o.revenue > 0).sort((a, b) => b.revenue! - a.revenue!).slice(0, 2).map((o) => ({ ein: o.r.ein, name: displayName(o.r.name), revenue: o.revenue! }));
-  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null), largest, shown: strong, orgs, scope: res.scope ?? null };
+  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null, largest), largest, shown: strong, orgs, scope: res.scope ?? null };
 }
 
 async function fresh(question: string, input: Input, basis: Basis): Promise<SummaryText | null> {

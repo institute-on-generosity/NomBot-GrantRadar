@@ -15,10 +15,11 @@ const cell = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
+import { NEAR_MILES } from "@/lib/place";
 const HEADER = ["relevance", "overall_rank", "relevance_status", "relevance_reason", "place_tier", "place_evidence", "name", "ein", "street", "city", "state", "zip",
   "ntee_code", "cause", "cause_label", "revenue", "revenue_year", "latest_990_year", "foundation_grants_2022_24", "top_funder", "top_funder_grants_2022_24",
   "website", "exact_match", "mission", "from_website", "from_website_url", "from_website_read", "nombot_page", "sources"];
-const TIER: Record<string, string> = { in: "in the place", county: "in the county", serves: "serves the place, HQ elsewhere", nearby: "nearby", wider: "elsewhere in the county" };
+const TIER: Record<string, string> = { in: "based in the place", county: "based in the county", serves: "based elsewhere, works in the place", nearby: `nearby, within ${NEAR_MILES} mi`, wider: "elsewhere in the county" };
 const BASIS: Record<string, string> = { hq: "HQ", zip: "HQ ZIP", name: "name", text: "990 text", grant: "grant purpose", nearby: "nearby", county: "HQ", wider: "HQ" };
 
 export async function GET(request: NextRequest) {

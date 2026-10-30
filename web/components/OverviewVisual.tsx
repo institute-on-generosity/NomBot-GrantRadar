@@ -44,7 +44,9 @@ export function OverviewVisual({ facts, shown }: { facts: OverviewFacts; shown?:
       <dl className="kp-facts">
         {facts.tiles.map((t) => (
           <div key={t.label}>
-            <dt><span className="kp-dt"><Icon name={tileIcon(t.label)} />{label(t.label).replace(/ (19|20)\d\d–\d\d$/, "")}{/ (19|20)\d\d–\d\d$/.test(label(t.label)) ? <Yr>{label(t.label).match(/(19|20)\d\d–\d\d$/)![0]}</Yr> : /last year$/.test(t.label) ? <Yr title="Each organization's newest return">newest returns</Yr> : null}</span>{t.note && <small>{t.note}</small>}</dt>
+            {/* The label wraps, its year pill and note sit on the line under it, the value never shrinks (Oct 29) */}
+            <dt><span className="kp-dt"><Icon name={tileIcon(t.label)} />{label(t.label).replace(/ (19|20)\d\d–\d\d$/, "")}</span>
+              {(/ (19|20)\d\d–\d\d$/.test(label(t.label)) || /last year$/.test(t.label) || t.note) && <small className="kp-sub">{/ (19|20)\d\d–\d\d$/.test(label(t.label)) ? <Yr>{label(t.label).match(/(19|20)\d\d–\d\d$/)![0]}</Yr> : /last year$/.test(t.label) ? <Yr title="Each organization's newest return">newest returns</Yr> : null}{t.note && <span>{t.note}</span>}</small>}</dt>
             <dd>{t.value}</dd>
           </div>
         ))}

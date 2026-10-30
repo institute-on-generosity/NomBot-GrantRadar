@@ -1,8 +1,8 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { useMemo, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { HISTORY_KEY, historyKey, type HistoryEntry } from "@/lib/history";
+import { dedupeHistory, HISTORY_KEY, historyKey, rowLabels, STARRED_KEY, toggleStar, type HistoryEntry, type StarredSearch } from "@/lib/history";
 import { FOLDERS_KEY, SAVED_KEY, type SavedOrg } from "@/lib/saved";
 import { historyTarget } from "./HistoryList";
 import { NavLink } from "./NavLink";
@@ -38,7 +38,12 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
   const saved = useStoredList<SavedOrg>(SAVED_KEY, "nombot-saved");
-  const history = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
+  const rawHistory = useStoredList<HistoryEntry>(HISTORY_KEY, "nombot-history");
+  const starred = useStoredList<StarredSearch>(STARRED_KEY, "nombot-history");
+  // One row per question, starred ones listed under Saved instead
+  const history = useMemo(() => { const st = new Set(starred.map((x) => x.key)); return dedupeHistory(rawHistory).filter((e) => !st.has(e.key)); }, [rawHistory, starred]);
+  const starLabels = useMemo(() => rowLabels(starred.map((e) => e.question)), [starred]);
+  const recentLabels = useMemo(() => rowLabels(history.slice(0, SHOWN).map((e) => e.question)), [history]);
   const folders = useStoredList<string>(FOLDERS_KEY, "nombot-saved");
   const [here, setHere] = useState<Here>({ path: "", question: "" });
   const item = (on: boolean) => `side-item${on ? " on" : ""}`;
@@ -63,8 +68,16 @@ export function Sidebar() {
 
         <nav className="side-scroll">
           <Section title="Saved" all="/saved" active={here.path === "/saved"}
-            empty="Tap ☆ on any organization to keep it here.">
+            empty="Tap ☆ on an organization or a search to keep it here.">
             {[
+              ...starred.map((e, i) => (
+                <div key={`s-${e.key}`} className="side-row">
+                  <NavLink href={e.href} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…" search>
+                    <span className="side-star">★</span>{starLabels[i]}
+                  </NavLink>
+                  <button type="button" className="side-starbtn on" aria-label={`Unstar "${e.question}"`} title="Unstar this search" onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); toggleStar(e); }}>★</button>
+                </div>
+              )),
               ...folders.map((f) => (
                 <NavLink key={`f-${f}`} href={`/saved?${new URLSearchParams({ folder: f })}`} className="side-item side-folder" title={f}>
                   <FolderIcon />{f}<small>{saved.filter((o) => o.folder === f).length}</small>
@@ -78,8 +91,11 @@ export function Sidebar() {
           </Section>
           <Section title="Recents" all="/history" active={here.path === "/history"}
             empty="Your questions will show up here.">
-            {history.slice(0, SHOWN).map((e) => (
-              <NavLink key={e.key} href={historyTarget(e)} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…" search>{e.question}</NavLink>
+            {history.slice(0, SHOWN).map((e, i) => (
+              <div key={e.key} className="side-row">
+                <NavLink href={historyTarget(e)} className={item(!!here.question && here.question === e.key)} current={here.path === "/" && here.question === e.key} title={e.question} label="Opening your results…" search>{recentLabels[i]}</NavLink>
+                <button type="button" className="side-starbtn" aria-label={`Star "${e.question}"`} title="Star this search" onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); toggleStar(e); }}>☆</button>
+              </div>
             ))}
           </Section>
         </nav>

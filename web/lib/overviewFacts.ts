@@ -107,7 +107,7 @@ export function overviewFacts(l: Landscape, total: number): OverviewFacts {
   if (l.medianIncome != null) tiles.push({ value: money(l.medianIncome), label: "median yearly income" });
   if (def && def.of >= 10) tiles.push({ value: pct(def.orgs.length, def.of), label: "spent more than they took in", note: `of ${num(def.of)} reporting` });
   if (grants > 0) tiles.push({ value: money(grants), label: `from foundations, ${l.grantYears[0]}–${l.grantYears[1]}`, note: l.funders[0] ? `Top funder: ${l.funders[0].name}` : undefined });
-  if (tiles.length < 4 && l.medianAge != null) tiles.push({ value: `${l.medianAge} yrs`, label: "median time tax-exempt" });
+  if (tiles.length < 4 && l.medianAge != null) tiles.push({ value: `${l.medianAge} yrs`, label: "median years tax-exempt" });
   return {
     headline: chart ? `${chart.takeaway.charAt(0).toUpperCase()}${chart.takeaway.slice(1)}` : `${num(total)} organizations match this search`,
     tiles: tiles.slice(0, 4),

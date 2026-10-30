@@ -313,3 +313,14 @@ p.sum-tiles .sum-warn { margin: 0; color: var(--warn); cursor: help; }
 /* No 990 text: what the org's own website says, labeled (lib/webProfile) */
 .from-web-row { color: var(--ink-2); }
 .from-web-tag { display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 999px; background: var(--fill); color: var(--mute); font-size: 12px; }
+/* Export menu: the list opens under its own button (Oct 29: with no positioned parent it opened below the fold,
+   off screen, so Export looked dead) */
+.export-menu { position: relative; display: inline-block; }
+.export-menu > div { z-index: var(--z-popover); }
+/* Key facts: labels wrap, the year pill and note go under the label, values always show in full (Oct 29) */
+.kp-facts .kp-dt { white-space: normal; display: inline; }
+.kp-facts .kp-dt .ico { vertical-align: -2px; margin-right: 6px; }
+.kp-facts dt .kp-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 3px; white-space: normal; overflow: visible; }
+.kp-facts dt .kp-sub .yr { margin-left: 0; }
+.kp-facts > div { align-items: flex-start; }
+.kp-facts dd { flex: none; padding-left: 8px; }

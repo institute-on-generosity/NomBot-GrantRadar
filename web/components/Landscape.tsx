@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { keyFactsShown } from "@/lib/summaryFacts";
 import Link from "next/link";
 
 import { FinanceView } from "./FinanceView";
@@ -38,8 +39,11 @@ export async function Landscape({ question, filters, includeInactive, total, map
   if (l.size < 5) return <LandscapeTabs views={[first]} />;
   const facts = overviewFacts(l, total);
   // Key facts wait for relevance scores (the summary's head), so they count the same organizations as the count line.
-  const age = l.medianAge != null ? [{ value: `${l.medianAge} yrs`, label: "median time tax-exempt" }] : [];
-  const withKey = keyFacts?.then((k) => ({ ...facts, tiles: [...k.tiles, ...age].slice(0, 3), basis: k.basis, shown: k.shown }));
+  const age = l.medianAge != null ? [{ key: "median_age", value: `${l.medianAge} yrs`, label: "median years tax-exempt" }] : [];
+  // One fact, one place: Key facts drops what the summary line, Did you know or Track record already show (keyFactsShown)
+  const dyk = didYouKnow(l);
+  const hasTrack = l.ages.some((b) => (b.orgs ?? []).length > 0);
+  const withKey = keyFacts?.then((k) => ({ ...facts, tiles: keyFactsShown([...k.tiles, ...age], dyk.map((f) => f.key), hasTrack), basis: k.basis, shown: k.shown }));
   const place = (o: { city: string | null; state: string | null }) => [o.city, o.state].filter(Boolean).join(", ");
   const track = <TrackRecord median={l.medianAge} brackets={l.ages.map((b) => ({ key: b.key, label: b.label, orgs: (b.orgs ?? []).map((i) => ({ ein: l.orgs[i].ein, name: l.orgs[i].name, place: place(l.orgs[i]), since: l.orgs[i].since })) }))} />;
   return (
@@ -49,7 +53,7 @@ export async function Landscape({ question, filters, includeInactive, total, map
           {withKey ? <Suspense fallback={<KeyFactsWait />}><KeyFacts facts={withKey} /></Suspense> : <OverviewVisual facts={facts} />}
           {/* The one control for the panel: More insights / Fewer insights (the #insights checkbox, remembered) */}
           <label htmlFor="insights" className="ins-more"><span className="ins-more-on">More insights</span><span className="ins-more-off">Fewer insights</span><Chevron right /></label>
-          <DidYouKnow facts={didYouKnow(l)} />
+          <DidYouKnow facts={dyk} />
           {track}
           <Related question={question} />
         </>

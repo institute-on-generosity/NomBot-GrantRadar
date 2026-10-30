@@ -2099,3 +2099,15 @@ article.org section[id] { scroll-margin-top: 64px; }
 .from-web .from-web-k a { color: var(--g); text-decoration: none; margin-left: 4px; }
 .from-web .from-web-serves { margin-top: 4px; font-size: var(--t-meta); color: var(--mute); }
 .opv-web { margin: var(--s-2) 0 -4px; font-size: 12px; color: var(--mute); }
+/* Starred searches (lib/history): a star on each Recents row, on hover or focus, always on touch screens */
+.side-row { position: relative; display: flex; align-items: center; }
+.side-row > .side-item { flex: 1; min-width: 0; padding-right: 28px; }
+.side-starbtn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: var(--mute); font-size: 14px; cursor: pointer; opacity: 0; }
+.side-row:hover .side-starbtn, .side-starbtn:focus-visible, .side-starbtn.on { opacity: 1; }
+.side-starbtn.on { color: var(--g); }
+.side-starbtn:hover { background: var(--fill-2); color: var(--ink); }
+@media (hover: none) { .side-starbtn { opacity: 1; } }
+.side.collapsed .side-starbtn { display: none; }
+.star-search { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 0; border-radius: 999px; background: none; color: var(--mute); font: inherit; font-size: var(--t-meta); font-weight: 600; cursor: pointer; }
+.star-search:hover { background: var(--fill); color: var(--ink); }
+.star-search[aria-pressed="true"] { color: var(--g); }

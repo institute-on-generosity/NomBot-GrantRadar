@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { StarSearch } from "@/components/StarSearch";
 import { connection } from "next/server";
 import { FilterChips, type Chip } from "@/components/FilterChips";
 import { RecordSearch } from "@/components/HistoryRecorder";
@@ -168,6 +169,7 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
   );
   const listTools = (
     <span className="list-tools">
+      <StarSearch question={question} />
       {exportMenu}
     </span>
   );  const rowProps = { patterns, back, focus, must, noMention: res.exact_total === 0, tiers, county, widened: res.widened, tools: card ? undefined : listTools };

@@ -5,7 +5,15 @@ import { money } from "@/lib/summaryFacts";
 import { Icon, type IconName } from "./Icons";
 
 // Tier chips: the same icons as the list's tier headings.
-const chipIcon = (x: string): IconName | null => / serving /.test(x) ? "arrowIn" : / nearby$/.test(x) ? "radius" : /^[\d,]+ in /.test(x) ? "pin" : null;
+const chipIcon = (x: string): IconName | null => / based elsewhere, /.test(x) ? "arrowIn" : / nearby, within /.test(x) ? "radius" : /^[\d,]+ based in /.test(x) ? "pin" : null;
+// What each place chip means, in one line (the same words as the tier headings' tooltips, lib/place tierNote)
+const chipTip = (x: string): string | undefined => {
+  const elsewhere = / based elsewhere, work in (.+)$/.exec(x);
+  if (elsewhere) return `Headquarters outside ${elsewhere[1]}, but their filings or grants name it`;
+  if (/ nearby, within /.test(x)) return "Headquarters in a nearby ZIP code";
+  const based = /^[\d,]+ based in (.+)$/.exec(x);
+  return based ? `Headquarters in ${based[1]}` : undefined;
+};
 import type { Summary, SummaryHead } from "@/lib/searchSummary";
 
 // The summary under the search bar (lib/searchSummary). The count (the focal number) shows at once and is
@@ -42,7 +50,7 @@ function Count({ main, parts, more, busy, strong, weaker }: { main: string; part
           {parts.map((x) => {
             const ic = chipIcon(x);
             return ic
-              ? <span key={x} className="sum-chip"><Icon name={ic} size={13} />{x}</span>
+              ? <span key={x} className="sum-chip" title={chipTip(x)}><Icon name={ic} size={13} />{x}</span>
               : <span key={x} className="sum-chip">{x}</span>;
           })}
           {more && <span className="sum-more">{busy && <span className="spinner" />}{busy ? "ranking…" : more}</span>}

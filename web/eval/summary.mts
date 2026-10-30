@@ -7,7 +7,7 @@
 // (each page costs Claude calls unless the server has it cached).
 //   npm run test:summary
 //   npm run test:summary -- --base=http://localhost:4000
-const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount, summaryPoints } = await import("../lib/summaryFacts");
+const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount, summaryPoints, keyFactsShown, DYK_STAT, SUMMARY_STATS } = await import("../lib/summaryFacts");
 type Org = import("../lib/summaryFacts").SummaryOrg;
 
 let fail = 0, pass = 0;
@@ -23,7 +23,7 @@ const orgs: Org[] = [
   org("Clockedin", { tier: "serves", cause: "Human Services", revenue: 60_000, grants: 25_000 }),
   org("Second To None Youth Sports Inc", { tier: "nearby", revenue: 135_000, hasText: false }),
 ];
-const tiers = [{ key: "in", label: "in Inglewood" }, { key: "serves", label: "serving Inglewood" }, { key: "nearby", label: "nearby" }];
+const tiers = [{ key: "in", label: "based in Inglewood" }, { key: "serves", label: "based elsewhere, work in Inglewood" }, { key: "nearby", label: "nearby, within 3.5 mi" }];
 const f = summaryFacts(orgs, { weaker: 9, related: 115, scored: true, topic: "youth sports programs", grantYears: [2022, 2024], tiers });
 
 // 1. Facts object
@@ -43,7 +43,7 @@ check("count noun: group nouns only", countNoun("youth sports programs", true) =
 
 // 2. Count line and caveat
 const line = countLine(f);
-check("count line", `${line.main} · ${line.parts.join(" · ")}` === "7 youth sports programs · 4 in Inglewood · 2 serving Inglewood · 1 nearby", `${line.main} · ${line.parts.join(" · ")}`);
+check("count line", `${line.main} · ${line.parts.join(" · ")}` === "7 youth sports programs · 4 based in Inglewood · 2 based elsewhere, work in Inglewood · 1 nearby, within 3.5 mi", `${line.main} · ${line.parts.join(" · ")}`);
 check("count line: weaker matches left to the list", line.more === null);
 check("count line: tiers sum to the strong count", f.tiers!.reduce((a, t) => a + t.count, 0) === f.strong);
 const fl = countLine(flat);
@@ -55,8 +55,8 @@ check("caveat: unconfirmed preference", (caveatLine(f, { prefer: ["mobile dental
 check("no caveat when it doesn't matter", caveatLine(summaryFacts(orgs.slice(0, 2), { weaker: 0, related: 2, scored: true, grantYears: [2022, 2024] })) === null);
 check("facts text has the median", factsText(f).includes("median $132K"));
 check("facts text: closest basis says so", factsText(f, "closest").startsWith("Closest matches read (by meaning, not yet checked one by one): 7") && factsText(f).startsWith("Strong matches read: 7"));
-const pl = pendingLine(115, [{ label: "in Inglewood", count: 40 }, { label: "serving Inglewood", count: 0 }, { label: "nearby", count: 75 }]);
-check("pending line: total and tier totals, empty tiers dropped", `${pl.main} · ${pl.parts.join(" · ")}` === "115 candidates · 40 in Inglewood · 75 nearby" && pl.more === "ranking by relevance…", JSON.stringify(pl));
+const pl = pendingLine(115, [{ label: "based in Inglewood", count: 40 }, { label: "based elsewhere, work in Inglewood", count: 0 }, { label: "nearby, within 3.5 mi", count: 75 }]);
+check("pending line: total and tier totals, empty tiers dropped", `${pl.main} · ${pl.parts.join(" · ")}` === "115 candidates · 40 based in Inglewood · 75 nearby, within 3.5 mi" && pl.more === "ranking by relevance…", JSON.stringify(pl));
 check("pending line: one candidate, no tiers", pendingLine(1).main === "1 candidate" && pendingLine(1).parts.length === 0);
 
 // 2b. Key facts: the summary's set ("of the N shown") and its grant years
@@ -64,7 +64,16 @@ const kf = keyFactTiles(f, { count: 3, of: 6 });
 check("key facts: at most 3 tiles, the count left to the summary", kf.shown === f.strong && kf.tiles.length <= 3 && !kf.tiles.some((t) => t.label.includes("shown")));
 check("key facts: no repeat of the summary's median income", !kf.tiles.some((t) => t.label.includes("median")), JSON.stringify(kf.tiles));
 check("key facts: grants use the summary's years", kf.tiles.some((t) => t.label === "from foundations, 2022–24" && t.value === "$1.2M" && !t.note), JSON.stringify(kf.tiles));
-check("key facts: deficit share, with how many report only when not all", kf.tiles.some((t) => t.value === "50%" && t.note === "6 report"));
+check("key facts: deficit share, with how many filed a recent return only when not all", kf.tiles.some((t) => t.value === "50%" && t.note === `6 of ${f.strong} filed a recent return`), JSON.stringify(kf.tiles));
+// One fact, one place (Oct 29): no stat key twice across the summary line, Key facts, Did you know and Track record
+{
+  const tiles = keyFactTiles(f, { count: 3, of: 6 }, [{ name: "Laxpoint", revenue: 31000 }]).tiles.concat([{ key: "median_age", value: "11 yrs", label: "median years tax-exempt" }]);
+  const shown = keyFactsShown(tiles, ["finances", "growth"], true);
+  const keys = [...SUMMARY_STATS, ...["finances", "growth"].map((k) => DYK_STAT[k]), "median_age", ...shown.map((t) => t.key)];
+  check("insights: no stat key appears twice in one payload", new Set(keys).size === keys.length, JSON.stringify(keys));
+  check("insights: overspent stays in Did you know, Key facts backfills with the largest match", !shown.some((t) => t.key === "deficit") && shown.some((t) => t.key === "largest" && t.note === "Laxpoint"), JSON.stringify(shown));
+  check("insights: without the Did you know chart, overspent stays in Key facts", keyFactsShown(tiles, [], false).some((t) => t.key === "deficit"));
+}
 check("key facts: the base is stated once", kf.basis === "Of the 7 shown", kf.basis);
 check("key facts: small deficit samples skipped", !keyFactTiles(f, { count: 1, of: 2 }).tiles.some((t) => t.label.includes("spent more")));
 
