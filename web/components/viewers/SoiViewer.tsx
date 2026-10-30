@@ -34,7 +34,7 @@ async function Viewer({ params, searchParams, compact }: Props) {
   if (!rec) {
     return (
       <article className={compact ? "viewer compact" : "org viewer"}>
-        {!compact && <BackLink fallback={`/org/${ein}`}>← Back</BackLink>}
+        {!compact && <BackLink fallback={`/org/${ein}`} />}
         <p className="notice">{orgTitle(soi.org.name)} has no record in the SOI extract. Small organizations that file Form 990-N aren&apos;t included.</p>
       </article>
     );
@@ -100,7 +100,7 @@ async function Viewer({ params, searchParams, compact }: Props) {
 
   return (
     <article className="org viewer">
-      <BackLink fallback={`/org/${ein}`}>← Back</BackLink>
+      <BackLink fallback={`/org/${ein}`} />
       <h1>IRS financial extract · {orgTitle(soi.org.name)}</h1>
       <p className="sub">
         Statistics of Income (SOI) annual extract · Form {formName(rec.form)} · tax year {rec.year} · EIN {ein} · <code>{zip.split("/").pop()}</code>

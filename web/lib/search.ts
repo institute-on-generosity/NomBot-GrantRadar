@@ -1,5 +1,6 @@
 // Hybrid search: SQL filters + keyword (tsvector) + vector similarity over 990 text.
 // Requirements ("must do workforce training") split results into exact matches and closest results.
+import { cleanPrograms, usableMission } from "./missionText";
 import { db } from "./db";
 import { webProfiles } from "./webProfile";
 import { embedQuery, MODEL_ID, toSql } from "./embedder";
@@ -237,6 +238,8 @@ export async function search({ q, semantic, states = [], cities = [], appalachia
      zips, eins.map((e) => e.replace("-", "")), prefer.map((r) => wordRe(r.pattern)), preferLabel ?? null, boost, nameq, keep.map((e) => e.replace("-", "")),
      boostLabels.filter((l) => l !== label && isLabel(l))],
   );
+  // "SEE SCHEDULE O" missions and pointer-only program lines: the next best text, else none (lib/missionText)
+  for (const r of rows) { const p = cleanPrograms(r.programs); r.mission = usableMission(r.raw_mission) ?? p; r.programs = p; }
   // Orgs with no 990 text: what their own website says (generosity-data org_web_profile), shown apart from IRS data
   const web = await webProfiles(rows.filter((r) => !r.mission && !r.programs).map((r) => r.ein));
   return {

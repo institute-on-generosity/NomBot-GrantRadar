@@ -24,7 +24,7 @@ async function Memo({ searchParams }: { searchParams: Promise<{ ein?: string | s
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   return (
     <>
-      <MemoTools docx={`/api/memo/compare/docx?ein=${eins.join(",")}`} />
+      <MemoTools docx={`/api/memo/compare/docx?ein=${eins.join(",")}`} back={`/compare?ein=${eins.join(",")}`} />
       <article className="memo">
         <header>
           <p className="memo-kicker">Options memo · {today}</p>

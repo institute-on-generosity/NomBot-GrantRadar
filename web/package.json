@@ -30,7 +30,8 @@
     "test:popover": "tsx eval/popover.mts",
     "test:questions": "tsx eval/questions.mts",
     "test:webprofile": "tsx eval/webprofile.mts",
-    "test:history": "tsx eval/history.mts"
+    "test:history": "tsx eval/history.mts",
+    "test:back": "tsx eval/back.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

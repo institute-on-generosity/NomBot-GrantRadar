@@ -23,7 +23,7 @@ async function Memo({ params, searchParams }: { params: Promise<{ ein: string }>
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   return (
     <>
-      <MemoTools docx={`/api/memo/org/${b.ein.replace(/\D/g, "")}/docx`} />
+      <MemoTools docx={`/api/memo/org/${b.ein.replace(/\D/g, "")}/docx`} back={`/org/${b.ein}`} />
       <article className="memo">
         <header>
           <p className="memo-kicker">Organization brief · {today}</p>

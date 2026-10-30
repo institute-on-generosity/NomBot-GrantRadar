@@ -72,7 +72,7 @@ async function Viewer({ params, searchParams, compact: compactFlag }: Props) {
 
   return (
     <article className="org viewer">
-      <BackLink fallback={ein ? `/org/${ein.slice(0, 2)}-${ein.slice(2)}` : "/"}>← Back</BackLink>
+      <BackLink fallback={ein ? `/org/${ein.slice(0, 2)}-${ein.slice(2)}` : "/"} />
       <h1>IRS master file · {STATE_NAMES[state]}</h1>
       <p className="sub">
         Exempt Organizations Business Master File · <code>{fileName}</code> · {file.rows.length.toLocaleString("en-US")} organizations · read from irs.gov {file.fetchedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}

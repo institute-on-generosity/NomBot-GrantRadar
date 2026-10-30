@@ -7,6 +7,7 @@ import { money } from "@/components/money";
 import { Icon } from "@/components/Icons";
 import { nteeLabel } from "@/lib/ntee";
 import { BackLink } from "@/components/BackLink";
+import { safeBack } from "@/lib/back";
 import { RecordViewed } from "@/components/HistoryRecorder";
 import { StarButton } from "@/components/StarButton";
 import { CompareButton } from "@/components/CompareButton";
@@ -56,16 +57,12 @@ async function Org({ params, searchParams, modal }: Props) {
   await connection();
   const o = await getOrg(ein);
   if (!o) notFound();
-  const fromResults = Boolean(back?.startsWith("/?"));
-  const fromStarred = Boolean(back && /^\/saved(\?|$)/.test(back));
-  const backHref = fromResults || fromStarred ? back! : "/";
+  const fromResults = Boolean(safeBack(back)?.startsWith("/?"));
 
   return (
     <article className="org">
-      {!modal && (fromResults ? <BackLink fallback={backHref}>← Back to results</BackLink>
-        : fromStarred ? <Link href={backHref} className="back">← Back to Starred</Link>
-        : <BackLink fallback="/">← Back</BackLink>)}
-      {!modal && back && back.startsWith("/?") && <RecordViewed back={back} ein={o.ein} name={o.name} />}
+      {!modal && <BackLink back={back ?? null} focus={o.ein} />}
+      {!modal && fromResults && <RecordViewed back={back!} ein={o.ein} name={o.name} />}
       <div className="title-line"><h1>{orgTitle(o.name)}</h1><StarButton withLabel org={{ ein: o.ein, name: o.name, city: o.city, state: o.state, cause: o.ntee?.label ?? null, revenue: o.years[0]?.revenue ?? null, year: o.years[0]?.year ?? null }} /><FolderPicker ein={o.ein} /><CompareButton org={{ ein: o.ein, name: o.name, city: o.city, state: o.state }} />{!modal && <Link href={`/memo/org/${o.ein.replace(/\D/g, "")}`} className="memo-link" title="Download a one-page brief to share, as PDF or Word"><Icon name="download" size={14} />Memo</Link>}{!modal && <PrintButton />}</div>
       {/* Top: name, place (website as an icon), then 3 icon stats. Cause, EIN and the latest 990 live in Details. */}
       <p className="sub org-place">

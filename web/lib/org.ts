@@ -1,4 +1,5 @@
 // Everything NomBot knows about one organization, with sources.
+import { cleanPrograms, usableMission } from "./missionText";
 import { db } from "./db";
 import { nteeLabel } from "./ntee";
 import { soiViewerUrl } from "./soi";
@@ -59,8 +60,9 @@ export async function getOrg(einParam: string) {
     labels, // climate, women and girls: tier (primary or partial) and a short why
     // The organization's own site as it lists it on its 990 header, so donors can look for themselves.
     website: w?.website as string | null ?? null,
-    mission: t?.mission as string | null ?? null,
-    programs: t?.programs as string | null ?? null,
+    // A "SEE SCHEDULE O" or "N/A" mission is no mission, and program lines lose their pointers (lib/missionText)
+    mission: usableMission(t?.mission as string | null),
+    programs: cleanPrograms(t?.programs as string | null),
     filing: t ? { year: t.tax_year as number, form: t.form as string, url: src[0]?.url } : null,
     // The newest return we have from any form (Joshua Elder, Oct 19: say how recent the data is)
     latest990,

@@ -8,6 +8,8 @@ import { prettyTitle } from "./flag";
 import { formName, getOrg } from "./org";
 import { GRANT_YEARS } from "./placeReport";
 import { vetting, type Question } from "./vetting";
+import { bestMission } from "./missionText";
+import { webProfile } from "./webProfile";
 
 const money = (n: number) => { const a = Math.abs(n); return `${n < 0 ? "−" : ""}$${a >= 1e9 ? `${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${(a / 1e6).toFixed(1)}M` : a >= 1e3 ? `${Math.round(a / 1e3)}K` : Math.round(a)}`; };
 const yy = (a: number, b: number) => (a === b ? String(a) : `${a}–${String(b).slice(2)}`);
@@ -31,6 +33,7 @@ export async function orgBrief(einRaw: string): Promise<OrgBrief | null> {
   const o = await getOrg(einRaw);
   if (!o) return null;
   const ein = o.ein.replace(/\D/g, "");
+  const web = o.mission || o.programs ? null : await webProfile(ein).catch(() => null); // the mission's last fallback
   const [v, { rows: funders }, { rows: leaders }, { rows: [given] }, { rows: [pf] }] = await Promise.all([
     vetting(o),
     db.query(`SELECT max(f.name) AS name, sum(g.amount)::float8 AS usd FROM grant_clean g LEFT JOIN funders f ON f.ein = g.funder_ein
@@ -68,7 +71,8 @@ export async function orgBrief(einRaw: string): Promise<OrgBrief | null> {
     place: [o.city && titleCase(o.city), o.state].filter(Boolean).join(", "),
     type: [o.status.kind ?? "Public charity", o.ntee?.label].filter(Boolean).join(" · "),
     track: v.track.text,
-    mission: o.mission ? clip(readable(o.mission, [o.name]).replace(/\s+/g, " "), 320) : null,
+    // Its mission, else its programs, else its website summary, never "SEE SCHEDULE O" (lib/missionText; getOrg cleans both)
+    mission: ((m) => m ? clip(readable(m.text, [o.name]).replace(/\s+/g, " "), 320) : null)(bestMission({ mission: o.mission, programs: o.programs, web: web?.description })),
     numbers,
     funders: funders.filter((r) => r.name).map((r) => ({ name: orgTitle(String(r.name)), usd: money(Number(r.usd)) })),
     fundersYears: yy(...GRANT_YEARS),

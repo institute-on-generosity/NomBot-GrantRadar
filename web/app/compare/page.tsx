@@ -17,7 +17,7 @@ type Props = { searchParams: Promise<{ ein?: string | string[] }> };
 export default function ComparePage({ searchParams }: Props) {
   return (
     <main className={styles.page}>
-      <BackLink fallback="/">← Back to results</BackLink>
+      <BackLink />
       <h1 className="pagetitle">Compare</h1>
       <Suspense fallback={<p className="hint">Loading…</p>}>
         <Table searchParams={searchParams} />
@@ -124,7 +124,7 @@ async function Table({ searchParams }: Props) {
                     <CompareIcon size={20} />
                     <b>Add one more</b>
                     <span>Compare needs at least two · pick one with Compare on a search result or an org page</span>
-                    <BackLink fallback="/">Back to results</BackLink>
+                    <BackLink />
                   </div>
                 </th>
               ))}

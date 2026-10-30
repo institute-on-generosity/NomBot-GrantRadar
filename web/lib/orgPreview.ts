@@ -1,5 +1,6 @@
 // The org hover card's data (Oct 27): a few facts about one organization or foundation, no AI text. Cached per EIN.
 //   GET /api/org-preview/[ein]
+import { cleanPrograms, usableMission } from "./missionText";
 import { orgName } from "../components/text";
 import { db } from "./db";
 import { memo } from "./memo";
@@ -49,7 +50,7 @@ async function build(ein: string): Promise<OrgPreview | null> {
     const c = o.ntee_cd ? nteeLabel(o.ntee_cd) ?? nteeLabel(o.ntee_cd[0]) : null;
     causes = c ? [c] : [];
   }
-  const raw = t?.mission || t?.programs || null;
+  const raw = usableMission(t?.mission) || cleanPrograms(t?.programs) || null; // never "SEE SCHEDULE O" (lib/missionText)
   // No 990 text: what its own website says, labeled as such (lib/webProfile)
   const w = raw ? null : await webProfile(ein).catch(() => null);
   const name = orgName(o?.name ?? f.name, 80);

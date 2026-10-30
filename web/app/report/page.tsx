@@ -72,7 +72,7 @@ async function Report({ searchParams }: { searchParams: SP }) {
       <header className="report-head">
         <p className="report-kicker">NomBot search report · {today}</p>
         <h1>{question}</h1>
-        <div className="report-tools"><PrintButton label="Save as PDF" /></div>
+        <div className="report-tools"><a className="back" href={`/?${new URLSearchParams(Object.entries({ question, all: one(sp.all) ?? "", ...overrides }).filter(([, v]) => v) as [string, string][])}`}>← Back to results</a><PrintButton label="Save as PDF" /></div>
       </header>
 
       {/* One printed page for an advisor: picks, who funds it here, gaps, method. Everything else is the appendix. */}
