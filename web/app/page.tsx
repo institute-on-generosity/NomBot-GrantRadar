@@ -8,7 +8,7 @@ import { NavLink } from "@/components/NavLink";
 import { ResearchBuddy } from "@/components/ResearchBuddy";
 import { ResultRow } from "@/components/ResultRow";
 import { SearchSummary } from "@/components/SearchSummary";
-import { searchSummary } from "@/lib/searchSummary";
+import { searchSummary, type SummaryHead } from "@/lib/searchSummary";
 import { Gems, Landscape } from "@/components/Landscape";
 import { landscape } from "@/lib/landscape";
 import { LandscapeTabs } from "@/components/LandscapeTabs";
@@ -27,6 +27,7 @@ import { applyOverrides, BUDGETS, MIN_BUDGETS, CAUSES, causeLabel, hasOverrides,
 import type { Filters } from "@/lib/parse";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "@/lib/rerank";
 import type { Result } from "@/lib/search";
+import { foldedPrefs, onlyPref, preferredLabel } from "@/lib/prefConfirm";
 import { PrintButton, PrintStamp } from "@/components/PrintButton";
 import { PersonView } from "@/components/PersonView";
 import { looksLikeName, personProfile } from "@/lib/people";
@@ -37,7 +38,7 @@ import { redirect } from "next/navigation";
 import { answer } from "@/lib/answer";
 import { AnswerCard, AnswerSkeleton } from "@/components/AnswerCard";
 
-type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string; ask?: string; tab?: string } & Overrides;
+type Params = { question?: string; n?: string; all?: string; focus?: string; buddy?: string; as?: string; ask?: string; tab?: string; only?: string } & Overrides;
 type SearchParams = Promise<Params>;
 
 const PLACEHOLDER = "e.g. food banks in rural Appalachia that do workforce training, under $500K";
@@ -141,9 +142,14 @@ async function Planned({ routed, ...v }: ViewProps & { routed: Promise<Routed> }
 async function SearchView({ question, p, n, includeInactive, overrides, card }: ViewProps & { card?: React.ReactNode }) {
   const filters = applyOverrides(await parseQuestion(question), overrides);
   // Results show as soon as the search returns; relevance scores stream in and re-sort the list once.
-  const res = await searchCandidates(filters, { includeInactive, limit: n });
-  const ranking = rank(question, res, n);
-  const rankingAll = n >= POOL ? ranking : rank(question, res, POOL); // the overview reads every scored candidate (same cached scores)
+  const found = await searchCandidates(filters, { includeInactive, limit: n });
+  // ?only=<preference>: the preference chip's filter. Same search and same scores, only the rows that do that part
+  // (lib/prefConfirm onlyPref), so the chip's count and the list agree.
+  const only = p.only ? onlyPref(filters, p.only) : null;
+  const res = only ? narrowFound(found, only) : found;
+  const keepOnly = <T extends { results: Result[] }>(x: T): T => (only ? { ...x, results: x.results.filter(only) } : x);
+  const ranking = only ? rank(question, found, POOL).then(keepOnly) : rank(question, res, n);
+  const rankingAll = only ? ranking : n >= POOL ? ranking : rank(question, res, POOL); // the overview reads every scored candidate (same cached scores)
   // Place tiers: the panel and AI overview describe the matches (strong, across tiers), not every org in the city.
   // The panel (Key facts, Did you know, Breakdown, Map, Themes, Funders) describes ONE set: the strong matches the
   // summary counts (lib/searchSummary listStrong), so every number on the page agrees (UX audit S1, Oct 27).
@@ -210,7 +216,8 @@ async function SearchView({ question, p, n, includeInactive, overrides, card }: 
       {/* Search bar + filters stay put; below them the results and the analysis panel scroll on their own. */}
       <div className="serp-head">
         <SearchBox key={question} value={question} placeholder={PLACEHOLDER} />
-        <FilterChips chips={filterChips(filters, p)} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", county: "", region: "", max: "", min: "", cause: "", label: "", tier: "", drop: "", n: "" }) : undefined} />
+        <FilterChips chips={filterChips(filters, p, Boolean(summary))} resetHref={hasOverrides(overrides) ? url(p, { st: "", city: "", county: "", region: "", max: "", min: "", cause: "", label: "", tier: "", drop: "", only: "", n: "" }) : undefined}
+          slot={summary && prefChipsFallback(filters).length ? <Suspense fallback={<PrefChips items={prefChipsFallback(filters)} />}><ScoredPrefChips head={summary.head} p={p} /></Suspense> : undefined} />
       </div>
       <RecordSearch question={question} href={url(p, {})} total={res.total} />
       {focus && <ScrollToResult id={`org-${focus}`} />}
@@ -363,7 +370,7 @@ function TieredList({ rows, pending = false, scored = false, patterns, back, foc
 }
 
 // Chips for the filters in effect. Each change keeps the question and starts from the top.
-function filterChips(f: Filters, p: Params): Chip[] {
+function filterChips(f: Filters, p: Params, prefChips = false): Chip[] {
   const go = (change: Partial<Params>) => url(p, { n: "", ...change });
   const dropped = p.drop ? p.drop.split(",") : [];
   return [
@@ -421,7 +428,8 @@ function filterChips(f: Filters, p: Params): Chip[] {
     })(f.label)] : []),
     // A preferred label ("girls mentoring and leadership programs", "ideally focused on girls"): ranks its orgs first and
     // keeps the rest. One tap makes it a filter ("only girls").
-    ...(f.preferLabel && f.preferLabel !== f.label ? [((l): Chip => ({
+    // With a summary, the preference chips (PrefChips, with their counts) stand in for this one.
+    ...(!prefChips && f.preferLabel && f.preferLabel !== f.label ? [((l): Chip => ({
       key: "prefer-label", kind: "set", label: `Ranks higher: ${labelName(l)}`,
       options: [{ label: `Ranks higher: ${labelName(l)}`, href: go({}), on: true, note: "Its orgs first, others still shown" },
         { label: `Only ${labelName(l)}`, href: go({ label: l, tier: "", sub: "" }), on: false, note: "Graded label, as a filter" }],
@@ -431,6 +439,42 @@ function filterChips(f: Filters, p: Params): Chip[] {
       removeHref: go({ drop: [...dropped, reqSlug(r.label)].join(",") }),
     })),
   ];
+}
+
+// A search narrowed to the rows a preference chip keeps (?only=): every tier and the totals recounted
+function narrowFound<F extends { total: number; results: Result[]; tiers?: { results: Result[]; total: number }[] }>(f: F, keep: (r: Result) => boolean): F {
+  const tiers = f.tiers?.map((t) => { const results = t.results.filter(keep); return { ...t, results, total: results.length }; });
+  const results = tiers ? tiers.flatMap((t) => t.results) : f.results.filter(keep);
+  return { ...f, tiers, results, total: results.length };
+}
+
+// Soft preferences as chips in the filter row ("mobile dental care (1)"): the count is the summary's (strong matches
+// that do it), and a tap shows only those (a text preference becomes "must mention", a cause label its filter).
+// Before scoring finishes: the same chips without counts.
+type PrefChipItem = { label: string; href?: string; title: string; on?: boolean; removeHref?: string };
+function prefChipsFallback(f: Filters): PrefChipItem[] {
+  const pl = preferredLabel(f), folded = foldedPrefs(f);
+  const text = (f.prefer ?? []).filter((x) => !folded.includes(x.label)).map((x) => x.label);
+  return [...(pl ? [folded[0] ?? labelName(pl).toLowerCase()] : []), ...text].map((label) => ({ label, title: "Ranks higher. Counting the matches that do it" }));
+}
+async function ScoredPrefChips({ head, p }: { head: Promise<SummaryHead>; p: Params }) {
+  const { prefs } = await head;
+  const go = (change: Partial<Params>) => url(p, { n: "", ...change });
+  return <PrefChips items={prefs.map(({ stat, chip, slug }) => p.only === slug
+    ? { label: chip, on: true, title: `Showing only the ${stat.mentions} that ${stat.kind === "label" ? "fit" : stat.mentions === 1 ? "mentions it" : "mention it"}`, removeHref: go({ only: "" }) }
+    : {
+      label: chip,
+      href: stat.mentions ? go({ only: slug }) : undefined,
+      title: stat.mentions ? `Ranks higher now. Show only the ${stat.mentions} that ${stat.kind === "label" ? "fit" : stat.mentions === 1 ? "mentions it" : "mention it"}` : "None of the matches mention it",
+    })} />;
+}
+function PrefChips({ items }: { items: PrefChipItem[] }) {
+  return <>{items.map((c) => (
+    <span key={c.label} className={`fchip pref${c.on ? " on" : ""}`} title={c.title}>
+      {c.href ? <NavLink href={c.href} className="fchip-main" label="Updating results…" search>{c.label}</NavLink> : <span className="fchip-main">{c.on ? `Only: ${c.label}` : c.label}</span>}
+      {c.removeHref && <NavLink href={c.removeHref} className="fchip-x" title="Show every match again" label="Updating results…" search><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-label="Show every match again"><path d="M6 6l12 12M18 6 6 18" /></svg></NavLink>}
+    </span>
+  ))}</>;
 }
 
 // Shown only while a question loads. Hidden for the first 300ms (CSS) so quick loads

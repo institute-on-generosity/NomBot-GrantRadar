@@ -146,6 +146,14 @@
 .place-why q { color: var(--mute); }
 .place-why.flag::before { content: "Mailed from elsewhere · "; font-weight: 600; color: var(--ink); }
 .prefer-hit { font-size: 13px; color: var(--g, var(--ink-2)); margin: 2px 0 0; }
+.prefer-hit.ok { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--g-dark, var(--ink)); }
+.prefer-hit small { font-weight: 400; color: var(--mute); }
+/* Soft preference lines in the summary, under the place chips: "Mobile dental care: 1 mentions it (...), none confirmed in Inglewood" */
+.sum-prefs { margin: 6px 0 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--ink-2); }
+.sum-prefs li { display: flex; gap: 6px; align-items: baseline; }
+.sum-prefs li .ico { flex: none; align-self: flex-start; margin-top: 3px; color: var(--g-dark); }
+.sum-prefs b { color: var(--ink); font-weight: 600; }
+.sum-prefs .none { color: var(--warn, #b45309); }
 
 /* ---------- Search summary and "Did you know" (components/SearchSummary, components/DidYouKnow), above the results ---------- */
 /* Summary = the primary card and the screen's focal point (the big count). Did you know = secondary: no fill, smaller type. */

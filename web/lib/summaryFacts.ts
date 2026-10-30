@@ -11,6 +11,8 @@ export type SummaryOrg = {
   grants: number;               // foundation grants (990-PF), GRANT_YEARS
   hasText: boolean;             // has 990 mission or program text (false: known by name and cause code only)
   prefers: string[];            // soft preferences its filings mention
+  confirmed?: string[];         // soft preferences its website or a place program confirms (lib/prefConfirm)
+  prefTier?: "primary" | "partial" | null; // the preferred cause label's tier for this org ("ideally focused on girls")
 };
 
 export type SummaryFacts = {
@@ -104,6 +106,59 @@ export function caveatLine(f: SummaryFacts, o: { prefer?: string[]; must?: strin
   if (f.nameOnly >= 3 && f.nameOnly / Math.max(1, f.strong) >= 0.2)
     out.push(`${num(f.nameOnly)} ${f.nameOnly === 1 ? "is" : "are"} known by name only (no IRS program details).`);
   return out.length ? out.slice(0, 2).join(" ") : null;
+}
+
+// Soft preferences ("especially mobile dental care", "ideally focused on girls"): how many strong matches do that part.
+// A text preference counts orgs whose filings mention it and those confirmed by their website or a place program
+// (data/place-programs.json, the report's gap line). A preferred cause label counts orgs carrying it (main focus or
+// part of their work), plus any whose filings mention the preference words.
+const PREF_FILLER = new Set("care services service programs program focused focusing focus on of and the for with in a an to who that their our".split(" "));
+// The preference's own words, all required ("mobile dental care": mobile and dental): what the 990 text needs for a
+// "mention", and a website or program for "confirmed". A word may be met by a close variant (PREF_WORD_VARIANTS:
+// "dental bus" or "school-based dental" is mobile dental, "young women" is girls). A general "dental care" or "oral
+// health" is not. Null when nothing specific is left.
+const PREF_WORD_VARIANTS: Record<string, string> = {
+  mobile: "mobile|bus|buses|van|vans|truck|trucks|school[- ]based|on[- ]site",
+  girl: "girls?|young wom[ae]n|female youth",
+  woman: "wom[ae]n|girls?",
+};
+export function strictPrefRe(label: string): RegExp | null {
+  const words = label.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w.length > 2 && !PREF_FILLER.has(w));
+  if (!words.length) return null;
+  const alt = (w: string) => { const stem = w.replace(/s$/, ""); return PREF_WORD_VARIANTS[stem] ?? `${stem}s?`; };
+  return new RegExp(words.map((w) => `(?=[\\s\\S]*\\b(?:${alt(w)})\\b)`).join(""), "i");
+}
+// "focused on girls" -> "girls", for "Mentions girls" on a result card
+export const prefNoun = (label: string) => label.replace(/^(focused|focusing|focus|centered|centred) on\s+/i, "").replace(/^serving\s+/i, "");
+export type PrefStat = { label: string; kind: "text" | "label"; of: number; mentions: number; names: string[]; confirmed: number; confirmedNames: string[]; main: number; programs: string[] };
+export function prefStats(orgs: SummaryOrg[], prefer: string[], o: { preferLabel?: { label: string; folded: string[] } | null; programs?: { name: string; kind: string; serves: string }[] } = {}): PrefStat[] {
+  const of = orgs.length, out: PrefStat[] = [];
+  const pl = o.preferLabel;
+  if (pl) {
+    const hit = orgs.filter((r) => r.prefTier || r.prefers.some((x) => pl.folded.includes(x)));
+    out.push({ label: pl.folded[0] ?? pl.label, kind: "label", of, mentions: hit.length, names: hit.slice(0, 2).map((r) => r.name), confirmed: 0, confirmedNames: [], main: orgs.filter((r) => r.prefTier === "primary").length, programs: [] });
+  }
+  for (const label of prefer) {
+    if (pl?.folded.includes(label)) continue;
+    const re = strictPrefRe(label);
+    const hit = orgs.filter((r) => r.prefers.includes(label)), conf = orgs.filter((r) => r.confirmed?.includes(label));
+    const programs = re ? (o.programs ?? []).filter((p) => p.serves === "confirmed" && re.test(`${p.kind} ${p.name}`)).map((p) => p.name) : [];
+    out.push({ label, kind: "text", of, mentions: hit.length, names: hit.slice(0, 2).map((r) => r.name), confirmed: conf.length, confirmedNames: conf.slice(0, 2).map((r) => r.name), main: 0, programs });
+  }
+  return out;
+}
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+// "Mobile dental care: 1 mentions it (Childrens Dental Center), none confirmed in Inglewood"
+// "Focused on girls: 18 of 65, 6 as their main focus"
+export function prefLine(s: PrefStat, place?: string | null): string | null {
+  if (!s.of) return null;
+  const head = `${cap(s.label)}: `;
+  if (s.kind === "label") return head + (s.mentions ? `${num(s.mentions)} of ${num(s.of)}${s.main ? `, ${num(s.main)} as their main focus` : ""}` : `none of the ${num(s.of)}`);
+  const m = s.mentions;
+  const said = !m ? `none of the ${num(s.of)} mention it` : m <= 2 ? `${m} ${m === 1 ? "mentions" : "mention"} it (${s.names.join(", ")})` : `${num(m)} of ${num(s.of)} mention it`;
+  const c = s.confirmed + s.programs.length, who = [...s.confirmedNames, ...s.programs];
+  const conf = !c ? `none confirmed${place ? ` in ${place}` : ""}` : `${num(c)} confirmed${who.length && c <= 2 ? ` (${who.slice(0, 2).join(", ")})` : ""}`;
+  return `${head}${said}, ${conf}`;
 }
 
 // While relevance scores are still coming in: what the search found, by place tier when there are tiers

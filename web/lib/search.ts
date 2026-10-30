@@ -41,6 +41,8 @@ export type Result = {
   label: { label: string; tier: "primary" | "partial"; subtypes?: string[] } | null; // the cause label filter's tier for this org (null without one); subtypes for labels with them
   prefer?: string[]; // soft preferences this org's name or filing text mentions
   topicLabels?: { label: string; tier: "primary" | "partial" }[]; // boosted labels (preferred or the topic's) this org carries
+  preferConfirmed?: { label: string; via: "website" | "program" }[]; // soft preferences its website or a place program confirms (lib/prefConfirm)
+  preferLabel?: { label: string; tier: "primary" | "partial" }; // the preferred cause label and its tier ("ideally focused on girls"), lib/prefConfirm
   place?: PlaceEvidence; // tiered place search (lib/tiers.ts): which tier and why
   web?: { description: string; url: string; site: string; fetched: string; servesPlaces: string[] } | null; // its own website, for orgs with no 990 text (lib/webProfile)
 };

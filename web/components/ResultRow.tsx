@@ -8,6 +8,8 @@ import { HealthBadges } from "./HealthBadges";
 import { Preview } from "./Snippet";
 import { titleCase, orgTitle } from "./text";
 import { Icon } from "./Icons";
+import { labelName } from "@/lib/labels";
+import { prefNoun, strictPrefRe } from "@/lib/summaryFacts";
 
 
 export { money };
@@ -43,7 +45,7 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
         </div>
         {r.mission || r.programs || !r.web ? <Preview mission={r.mission} programs={r.programs} patterns={patterns} />
           : <p className="preview-line from-web-row" title={`From ${r.web.site}, read ${r.web.fetched}`}><span className="from-web-tag">From their website</span> {r.web.description}</p>}
-        {r.prefer && r.prefer.length > 0 && <p className="prefer-hit">Mentions {r.prefer.join(", ")}</p>}
+        <PreferTags r={r} />
         <div className="row-tools">
           <StarButton withLabel org={{ ein: r.ein, name: r.name, city: r.city, state: r.state, cause: r.ntee?.label ?? null, revenue: r.revenue?.amount ?? null, year: r.revenue?.year ?? null }} />
           <CompareButton org={{ ein: r.ein, name: r.name, city: r.city, state: r.state }} />
@@ -71,5 +73,25 @@ export function ResultRow({ r, href, patterns, focused = false, index = 0, relev
         </div>
       </div>
     </div>
+  );
+}
+
+// The question's soft preferences on this row: confirmed by its website or a place program (a check, bold), a
+// preferred cause label as its main focus (bold) or part of its work, else "Mentions X" from its filings.
+function PreferTags({ r }: { r: Result }) {
+  const pl = r.preferLabel;
+  // A confirmed preference that says the same as a main-focus label ("girls" with Women and girls) shows once, as the label
+  const conf = (r.preferConfirmed ?? []).filter((c) => !(pl?.tier === "primary" && strictPrefRe(c.label)?.test(labelName(pl.label))));
+  // A mention that says the same as the preferred label ("focused on girls" with Women and girls) shows once, as the label
+  const mentions = (r.prefer ?? []).filter((p) => !(r.preferConfirmed ?? []).some((c) => c.label === p) && !(pl && strictPrefRe(p)?.test(labelName(pl.label))));
+  if (!conf.length && !pl && !mentions.length) return null;
+  return (
+    <>
+      {conf.map((c) => <p key={c.label} className="prefer-hit ok"><Icon name="check" size={14} />Confirmed: {prefNoun(c.label)} <small>({c.via === "website" ? "its website" : "place program"})</small></p>)}
+      {pl && (pl.tier === "primary"
+        ? <p className="prefer-hit ok"><Icon name="check" size={14} />{labelName(pl.label)}: main focus <small>(graded label)</small></p>
+        : <p className="prefer-hit">{labelName(pl.label)}: part of their work</p>)}
+      {mentions.length > 0 && <p className="prefer-hit">Mentions {mentions.map(prefNoun).join(", ")}</p>}
+    </>
   );
 }

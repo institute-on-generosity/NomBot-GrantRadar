@@ -8,6 +8,7 @@ import { readable } from "../components/text";
 import { claude, fallback, SCORE_MODEL } from "./llm";
 import { diskMemo, memo } from "./memo";
 import type { Filters } from "./parse";
+import { confirmPrefs } from "./prefConfirm";
 import { search, type Result } from "./search";
 import { placeScope, tieredSearch, type TierBlock } from "./tiers";
 import { TIER_ORDER } from "./place";
@@ -118,7 +119,7 @@ export const scoredPool = (results: Result[], n: number) => {
 // One search serves the results, "Show more" and the landscape (its 200 closest): fetched once at SHARED
 // rows and cached briefly, instead of the same candidate query running twice per page.
 const SHARED = 200; // = LANDSCAPE (lib/landscape.ts)
-const found = memo<Found>("candidates:v2", 200, 10 * 60_000); // v2: place tiers (city, serving, nearby; county)
+const found = memo<Found>("candidates:v3", 200, 10 * 60_000); // v3: confirmed soft preferences on rows; v2: place tiers (city, serving, nearby, county)
 export async function searchCandidates(filters: Filters, { limit, includeInactive = false }: { limit: number; includeInactive?: boolean }): Promise<Found> {
   const want = Math.max(limit, POOL), size = Math.max(want, SHARED);
   const res = await found(JSON.stringify([filters, includeInactive, size]), async () => {
@@ -128,8 +129,10 @@ export async function searchCandidates(filters: Filters, { limit, includeInactiv
     };
     const first: Found = await run(filters);
     // Thin results on a cause label's main focus: include its partial tier too, and say so.
-    if (filters.label && !filters.labelPartial && first.total < THIN) return { ...(await run({ ...filters, labelPartial: true })), widened: labelPhrase(filters.label) };
-    return first;
+    const out = filters.label && !filters.labelPartial && first.total < THIN ? { ...(await run({ ...filters, labelPartial: true })), widened: labelPhrase(filters.label) } : first;
+    // Soft preferences a website or place program confirms, on each row (lib/prefConfirm)
+    await confirmPrefs([...(out.tiers ?? []).flatMap((t) => t.results), ...out.results], filters, out.scope).catch((err) => console.error("confirmPrefs failed", err));
+    return out;
   });
   const softLabel = filters.preferLabel && filters.preferLabel !== filters.label ? labelPhrase(filters.preferLabel) : undefined;
   const softPrefs = filters.prefer?.length ? filters.prefer.map((p) => p.label) : undefined;

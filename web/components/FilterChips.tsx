@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { NavLink } from "./NavLink";
 
 export type ChipOption = { label: string; href: string; on: boolean; note?: string };
@@ -12,7 +12,8 @@ export type Chip = {
 };
 
 // The filters NomBot read from the question, as chips the user can change or remove.
-export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: string }) {
+// slot: server-rendered chips shown right after the topic chip (the soft preferences, with counts)
+export function FilterChips({ chips, resetHref, slot }: { chips: Chip[]; resetHref?: string; slot?: React.ReactNode }) {
   const [open, setOpen] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
 
@@ -28,8 +29,10 @@ export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: s
 
   return (
     <div className="chips filters" ref={root}>
-      {chips.map((c) => (
-        <span key={c.key} className={`fchip ${c.kind}${open === c.key ? " open" : ""}`}>
+      {chips[0]?.key !== "topic" && slot}
+      {chips.map((c, i) => (
+        <Fragment key={c.key}>
+        <span className={`fchip ${c.kind}${open === c.key ? " open" : ""}`}>
           {c.options ? (
             <button type="button" className="fchip-main" aria-haspopup="menu" aria-expanded={open === c.key} onClick={() => setOpen(open === c.key ? null : c.key)}>
               {c.label}
@@ -52,6 +55,8 @@ export function FilterChips({ chips, resetHref }: { chips: Chip[]; resetHref?: s
             </span>
           )}
         </span>
+        {i === 0 && c.key === "topic" && slot}
+        </Fragment>
       ))}
       {resetHref && <NavLink href={resetHref} className="freset" label="Updating results…" search>Reset filters</NavLink>}
     </div>

@@ -19,6 +19,7 @@ const paths = {
   printer: <><path d="M7 9V4h10v5" /><rect x="3.5" y="9" width="17" height="8" rx="2" /><path d="M7 14h10v6H7z" /></>,
   chevronRight: <path d="m9.5 6 6 6-6 6" />,
   arrowUpRight: <><path d="M7 17 17 7" /><path d="M8 7h9v9" /></>,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   table: <><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M3.5 9.5h17M3.5 14.5h17M10 9.5v10" /></>,
 } as const;
 export type IconName = keyof typeof paths;

@@ -29,6 +29,7 @@ export function SearchSummary({ summary, question }: { summary: Summary; questio
       <Suspense fallback={<Count main={p.main} parts={p.parts} more={p.more} busy />}>
         <ScoredCount head={summary.head} />
       </Suspense>
+      <Suspense fallback={null}><PrefLines head={summary.head} /></Suspense>
       <div aria-live="polite">
         <Suspense fallback={<SummarySkeleton />}><SummaryText summary={summary} question={question} /></Suspense>
       </div>
@@ -63,6 +64,23 @@ function Count({ main, parts, more, busy, strong, weaker }: { main: string; part
 async function ScoredCount({ head }: { head: Promise<SummaryHead> }) {
   const { line, facts } = await head;
   return <Count main={line.main} parts={line.parts} more={line.more} strong={facts.strong} weaker={facts.weaker} />;
+}
+
+// The question's soft preferences, under the place chips: how many strong matches do that part, and how many a
+// website or place program confirms ("Mobile dental care: 1 mentions it (...), none confirmed in Inglewood").
+// A zero is said plainly: that gap is the answer for a funder looking for it.
+async function PrefLines({ head }: { head: Promise<SummaryHead> }) {
+  const { prefs } = await head;
+  if (!prefs?.length) return null;
+  return (
+    <ul className="sum-prefs" aria-label="Preferences in your question">
+      {prefs.map((p) => {
+        const i = p.line.indexOf(": ");
+        const none = p.stat.mentions === 0 || (p.stat.kind === "text" && p.stat.confirmed + p.stat.programs.length === 0);
+        return <li key={p.stat.label}><Icon name={none ? "warn" : "check"} size={14} /><span><b>{p.line.slice(0, i)}:</b> {p.line.slice(i + 2)}</span></li>;
+      })}
+    </ul>
+  );
 }
 
 // Two small stat tiles after the line (median income, share with foundation grants; the years in the tooltip) and

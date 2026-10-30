@@ -7,7 +7,7 @@
 // (each page costs Claude calls unless the server has it cached).
 //   npm run test:summary
 //   npm run test:summary -- --base=http://localhost:4000
-const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount, summaryPoints, keyFactsShown, DYK_STAT, SUMMARY_STATS } = await import("../lib/summaryFacts");
+const { summaryFacts, countLine, caveatLine, factsText, checkSummary, allowedFrom, numbersIn, tidy, countNoun, pendingLine, overlap, REGEN_OVERLAP, keyFactTiles, statesCount, summaryPoints, keyFactsShown, DYK_STAT, SUMMARY_STATS, prefStats, prefLine, strictPrefRe, prefNoun } = await import("../lib/summaryFacts");
 type Org = import("../lib/summaryFacts").SummaryOrg;
 
 let fail = 0, pass = 0;
@@ -117,6 +117,53 @@ check("ranges keep their en dash", tidy("$100K–$1M") === "$100K–$1M");
 
 // 4. Live page: the instant count line streams first; the scored one equals the list's count and the Key facts';
 // the description never states the count.
+// Soft preferences (Oct 29, Keith's dental bus): how many strong matches do the "especially" part, said in the summary
+{
+  const md = "mobile dental care";
+  const health = (n: number, mention: number, confirmed = 0) => Array.from({ length: n }, (_, i) => org(i === 0 ? "Childrens Dental Center" : i === 1 ? "Venice Family Clinic" : `Clinic ${i}`, { prefers: i < mention ? [md] : [], confirmed: i < confirmed ? [md] : [] }));
+  const progs = [{ name: "Inglewood Clinic Group", kind: "Student-run free and low-cost dental care", serves: "confirmed" }, { name: "USC Mobile Dental Clinics", kind: "Mobile dental vans at schools", serves: "not confirmed" }];
+  // 0 matches
+  const [z] = prefStats(health(66, 0), [md], { programs: progs });
+  check("pref 0: plain none line", prefLine(z, "Inglewood") === "Mobile dental care: none of the 66 mention it, none confirmed in Inglewood", String(prefLine(z, "Inglewood")));
+  // 1 match (the live Inglewood case): a fixed-site dental program is not a mobile one, so nothing is confirmed
+  const [one] = prefStats(health(66, 1), [md], { programs: progs });
+  check("pref 1: names the one, none confirmed", prefLine(one, "Inglewood") === "Mobile dental care: 1 mentions it (Childrens Dental Center), none confirmed in Inglewood", String(prefLine(one, "Inglewood")));
+  check("pref: an unconfirmed mobile program doesn't count", one.programs.length === 0);
+  // many matches, some confirmed, and a confirmed place program
+  const [many] = prefStats(health(40, 12, 1), [md], { programs: [...progs, { name: "Smile Bus", kind: "Mobile dental bus", serves: "confirmed" }] });
+  check("pref many: N of M, confirmed count", prefLine(many, "Inglewood") === "Mobile dental care: 12 of 40 mention it, 2 confirmed (Childrens Dental Center, Smile Bus)", String(prefLine(many, "Inglewood")));
+  const [many2] = prefStats(health(40, 12, 3), [md]);
+  check("pref many: no names past 2 confirmed, no place", prefLine(many2, null) === "Mobile dental care: 12 of 40 mention it, 3 confirmed", String(prefLine(many2, null)));
+  check("pref: no line for an empty set", prefLine(prefStats([], [md])[0]) === null);
+  // Girls: the preferred cause label, with the "focused on girls" text folded into it (one line, a real count)
+  const girls = Array.from({ length: 65 }, (_, i) => org(`Org ${i}`, { prefTier: i < 6 ? "primary" : i < 15 ? "partial" : null, prefers: i >= 12 && i < 18 ? ["focused on girls"] : [] }));
+  const gs = prefStats(girls, ["focused on girls"], { preferLabel: { label: "women and girls", folded: ["focused on girls"] } });
+  check("girls: one line, not two", gs.length === 1 && gs[0].kind === "label", JSON.stringify(gs.map((x) => x.label)));
+  check("girls: label or mention counts", prefLine(gs[0]) === "Focused on girls: 18 of 65, 6 as their main focus", String(prefLine(gs[0])));
+  const g0 = prefStats(girls.map((o) => ({ ...o, prefTier: null, prefers: [] })), ["focused on girls"], { preferLabel: { label: "women and girls", folded: ["focused on girls"] } });
+  check("girls 0: plain none", prefLine(g0[0]) === "Focused on girls: none of the 65", String(prefLine(g0[0])));
+  // Confirmation needs the preference's own words
+  const re = strictPrefRe(md)!;
+  check("strict: mobile and dental both needed", re.test("Mobile dental vans at schools") && !re.test("Student-run dental care") && !re.test("mobile food pantry"));
+  check("strict: dental bus, dental van, school-based dental count", re.test("our dental bus visits") && re.test("a dental van") && re.test("school-based dental sealants"));
+  check("strict: general dental care or oral health is not a mention", !re.test("We provide dental care and oral health education") && !re.test("dental services for children"));
+  check("strict: girls variants", strictPrefRe("focused on girls")!.test("programs for young women") && strictPrefRe("focused on girls")!.test("teen girls") && !strictPrefRe("focused on girls")!.test("youth leadership"));
+  check("strict: girls", strictPrefRe("focused on girls")!.test("Women and girls") && !strictPrefRe("focused on girls")!.test("youth"));
+  check("prefNoun", prefNoun("focused on girls") === "girls" && prefNoun(md) === md);
+  // The preference chip's filter (?only=<slug>): the same rows the line counts
+  const { onlyPref, foldedPrefs } = await import("../lib/prefConfirm");
+  const fd = { topic: "health", states: ["CA"], cities: ["INGLEWOOD"], requirements: [], prefer: [{ label: md, pattern: "mobile dental care|dental bus" }] } as never;
+  const row = (o: object) => o as never;
+  const keepD = onlyPref(fd, "mobile-dental-care");
+  check("only=: keeps mentions and confirmed rows", !!keepD && keepD(row({ prefer: [md] })) && keepD(row({ preferConfirmed: [{ label: md, via: "website" }] })) && !keepD(row({ prefer: [] })));
+  check("only=: unknown slug is no filter", onlyPref(fd, "nope") === null);
+  const fg = { topic: "youth leadership development", states: ["CA"], cities: ["INGLEWOOD"], requirements: [], preferLabel: "women_girls", prefer: [{ label: "focused on girls", pattern: "focused on girls|girls|young women" }] } as never;
+  check("girls: text preference folds into the label", JSON.stringify(foldedPrefs(fg)) === '["focused on girls"]');
+  const keepG = onlyPref(fg, "focused-on-girls");
+  check("girls only=: label or mention", !!keepG && keepG(row({ preferLabel: { label: "women_girls", tier: "partial" } })) && keepG(row({ prefer: ["focused on girls"] })) && !keepG(row({})));
+  check("pref lines: no semicolons or em dashes", [z, one, many, gs[0]].every((x) => !/[;—]/.test(prefLine(x) ?? "")));
+}
+
 const base = process.argv.find((x) => x.startsWith("--base="))?.slice(7).replace(/\/$/, "");
 if (base) {
   for (const q of ["Youth sports programs in Inglewood, CA", "food banks in Ohio"]) {

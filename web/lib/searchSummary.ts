@@ -21,10 +21,16 @@ import { fundingOf, GRANT_YEARS } from "./placeReport";
 import { isStrong, POOL, rank, searchCandidates, type Ranked } from "./rerank";
 import type { Result } from "./search";
 import { healthOf } from "./landscape";
-import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTiles, money, overlap, pendingLine, REGEN_OVERLAP, summaryPoints, summaryFacts, tidy, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
+import { allowedFrom, caveatLine, checkSummary, countLine, factsText, keyFactTiles, money, overlap, pendingLine, prefLine, prefStats, REGEN_OVERLAP, summaryPoints, summaryFacts, tidy, type PrefStat, type SummaryFacts, type SummaryOrg } from "./summaryFacts";
+import { labelName } from "./labels";
+import { programsFor } from "./placePrograms";
+import { foldedPrefs, preferredLabel, prefSlug } from "./prefConfirm";
 
 export type KeyFacts = ReturnType<typeof keyFactTiles>;
-export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts; largest: { ein: string; name: string; revenue: number }[]; shown: Result[] }; // shown: the strong set, for the panel (server only)
+export type SummaryHead = { facts: SummaryFacts; line: ReturnType<typeof countLine>; caveat: string | null; keyFacts: KeyFacts; largest: { ein: string; name: string; revenue: number }[]; shown: Result[]; prefs: Pref[] };
+// A soft preference in the summary: its line ("Mobile dental care: 1 mentions it (...), none confirmed in Inglewood")
+// and what the filter chip shows and does (lib/prefConfirm, summaryFacts prefStats).
+export type Pref = { stat: PrefStat; line: string; chip: string; slug: string }; // slug: the chip's ?only= filter (lib/prefConfirm onlyPref) // shown: the strong set, for the panel (server only)
 export type Basis = "closest" | "strong";
 export type SummaryText = { text: string; explore: string[]; dropped: number; basis: Basis; computed?: boolean }; // computed: the fallback lead
 // pending: instant. ai: the first description (closest matches). head: after scoring (count line, caveat, Key facts).
@@ -85,6 +91,7 @@ async function orgsOf(rs: Result[]): Promise<(SummaryOrg & { r: Result })[]> {
     r, name: titleCase(r.name), tier: r.place?.tier ?? null, cause: r.ntee?.label ?? null, label: r.label?.tier ?? null,
     revenue: r.revenue?.amount ?? null, grants: funding.get(r.ein.replace("-", ""))?.total ?? 0,
     hasText: Boolean(r.mission || r.programs), prefers: r.prefer ?? [],
+    confirmed: (r.preferConfirmed ?? []).map((c) => c.label), prefTier: r.preferLabel?.tier ?? null,
   }));
 }
 type Input = { facts: SummaryFacts; orgs: (SummaryOrg & { r: Result })[]; scope: Scope | null };
@@ -102,11 +109,28 @@ export async function summaryHead(question: string, filters: Filters, res: Found
   const [orgs, health] = await Promise.all([orgsOf(strong), healthOf(strong.map((r) => r.ein.replace("-", "")))]);
   const facts = summaryFacts(orgs, { weaker, related: res.total, scored, topic: filters.topic, grantYears: [GRANT_YEARS[0], GRANT_YEARS[1]], tiers: tiersOf(res), labelFilter: Boolean(filters.label) });
   const must = filters.requirements.map((r) => r.label).join(" + ");
-  const caveat = caveatLine(facts, { prefer: filters.prefer?.map((p) => p.label), must, noMention: res.exact_total === 0 && Boolean(must) });
+  const prefs = prefsOf(question, filters, facts.strong ? orgs : [], res.scope ?? null);
+  // A preference nothing mentions is said once, in its own line (prefs), not again in the caveat
+  const caveat = caveatLine(facts, { prefer: prefs.length ? [] : filters.prefer?.map((p) => p.label), must, noMention: res.exact_total === 0 && Boolean(must) });
   const def = health.signals.find((s) => s.key === "deficit");
   // The largest strong matches by income (relevance-checked, so never an off-topic org), linked from the summary.
   const largest = orgs.filter((o) => o.revenue != null && o.revenue > 0).sort((a, b) => b.revenue! - a.revenue!).slice(0, 2).map((o) => ({ ein: o.r.ein, name: displayName(o.r.name), revenue: o.revenue! }));
-  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null, largest), largest, shown: strong, orgs, scope: res.scope ?? null };
+  return { facts, line: countLine(facts), caveat, keyFacts: keyFactTiles(facts, def ? { count: def.orgs.length, of: def.of } : null, largest), largest, shown: strong, orgs, scope: res.scope ?? null, prefs };
+}
+
+// The soft preferences, counted over the strong matches. Text preferences that say the same as a preferred cause label
+// ("focused on girls" with Women and girls) fold into the label's line, so each preference shows once.
+export function prefsOf(question: string, filters: Filters, orgs: SummaryOrg[], scope: Scope | null): Pref[] {
+  const pl = preferredLabel(filters);
+  const prefer = filters.prefer ?? [];
+  if (!orgs.length || (!prefer.length && !pl)) return [];
+  const folded = foldedPrefs(filters);
+  const place = scope?.kind === "city" ? titleCase(scope.city) : null;
+  const stats = prefStats(orgs, prefer.map((p) => p.label), { preferLabel: pl ? { label: labelName(pl).toLowerCase(), folded } : null, programs: programsFor(scope, question) });
+  return stats.flatMap((stat) => {
+    const line = prefLine(stat, place);
+    return line ? [{ stat, line, chip: `${stat.label} (${stat.mentions.toLocaleString("en-US")})`, slug: prefSlug(stat.label) }] : [];
+  });
 }
 
 async function fresh(question: string, input: Input, basis: Basis): Promise<SummaryText | null> {
@@ -174,7 +198,7 @@ export function searchSummary(question: string, filters: Filters, res: Found, ra
     if (t && overlap(input.orgs.map((o) => o.r.ein), strongEins) >= REGEN_OVERLAP) return null;
     return cached(keyOf("strong", question, strongEins), () => fresh(question, h, "strong"));
   }));
-  return { pending, ai, head: head.then(({ facts, line, caveat, keyFacts, largest, shown }) => ({ facts, line, caveat, keyFacts, largest, shown })), later };
+  return { pending, ai, head: head.then(({ facts, line, caveat, keyFacts, largest, shown, prefs }) => ({ facts, line, caveat, keyFacts, largest, shown, prefs })), later };
 }
 
 // The page's default view (10 rows, no "Show more"), for the CSV export and /report: same scores, same summary cache.
@@ -187,6 +211,6 @@ export async function summaryFor(question: string, filters: Filters, includeInac
 export async function summaryLines(s: Summary): Promise<string[]> {
   const [head, ai, later] = await Promise.all([s.head, s.ai, s.later]);
   const t = later ?? ai;
-  return [[head.line.main, ...head.line.parts].join(" · ") + (head.line.more ? ` (${head.line.more})` : ""), t?.text ?? "", ...summaryPoints(head.facts, head.largest).map((p) => p.text), head.caveat ?? ""].filter(Boolean);
+  return [[head.line.main, ...head.line.parts].join(" · ") + (head.line.more ? ` (${head.line.more})` : ""), t?.text ?? "", ...head.prefs.map((p) => p.line), ...summaryPoints(head.facts, head.largest).map((p) => p.text), head.caveat ?? ""].filter(Boolean);
 }
 

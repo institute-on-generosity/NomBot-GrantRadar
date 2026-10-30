@@ -2,13 +2,12 @@
 // picks with a one-line reason, a verified badge, the data year and 2 questions to ask; who funds this cause in the
 // place; the gaps; method and caveats in 3 lines. Facts and fixed rules only: the reasons are the relevance scorer's
 // own lines, cut to their first sentence. The full lists follow as the appendix (app/report).
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { orgTitle } from "../components/text";
 import { db } from "./db";
 import { getOrg } from "./org";
 import { GRANT_YEARS } from "./placeReport";
 import type { Scope } from "./place";
+import { programsFor, type Program } from "./placePrograms";
 import { localFirst, type Ranked } from "./rerank";
 import { vetting } from "./vetting";
 import { webProfiles } from "./webProfile";
@@ -16,7 +15,8 @@ import { webProfiles } from "./webProfile";
 export type Badge = "Active filer" | "Website live" | "Name only";
 export type Pick = { ein: string; name: string; where: string; reason: string; badge: Badge; year: number | null; questions: string[]; website: string | null };
 export type PlaceFunder = { ein: string; name: string; usd: number; grants: number; orgs: number };
-export type Program = { name: string; operator: string; kind: string; serves: "confirmed" | "not confirmed"; evidence: string; detail: string; schedule: string; url: string; read: string };
+export type { Program };
+export { programsFor };
 export type Brief = { picks: Pick[]; funders: PlaceFunder[]; gaps: string[]; programs: Program[]; method: string[] };
 
 const firstSentence = (t: string) => (t.split(/(?<=[.!?])\s+(?=[A-Z])/)[0] ?? t).replace(/\s*;\s*/g, ", ").trim();
@@ -37,15 +37,7 @@ export function choosePicks(rows: Ranked[], k = 5): Ranked[] {
   return localFirst(rows.filter((r) => (r.relevance?.score ?? 0) >= PICK_MIN)).slice(0, k);
 }
 
-// Programs that serve the place but aren't separate nonprofits (data/place-programs.json), for a topic they match
-const PROGRAMS = (() => { try { return JSON.parse(readFileSync(join(process.cwd(), "data", "place-programs.json"), "utf8")) as { places: Record<string, Record<string, Program[]>> }; } catch { return { places: {} }; } })();
-const TOPICS: [string, RegExp][] = [["dental", /\b(dental|dentist|teeth|oral health|dental bus|mobile dental)\b/i]];
-export function programsFor(scope: Scope | null, question: string): Program[] {
-  if (scope?.kind !== "city") return [];
-  const key = `${scope.city.toLowerCase().replace(/\s+/g, "-")}-${scope.state.toLowerCase()}`;
-  const byTopic = PROGRAMS.places[key] ?? {};
-  return TOPICS.filter(([, re]) => re.test(question)).flatMap(([t]) => byTopic[t] ?? []);
-}
+// Programs that serve the place but aren't separate nonprofits: lib/placePrograms (shared with the search summary)
 
 // Foundations that paid orgs in the place (the report's strong matches based there) for this cause, 2022–24
 async function placeFunders(eins: string[], k = 5): Promise<PlaceFunder[]> {
