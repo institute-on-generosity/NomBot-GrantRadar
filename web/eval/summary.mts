@@ -179,6 +179,9 @@ if (base) {
     check(`page: description present and never states the count (${q})`, text.length > 30 && !statesCount(text), text.slice(0, 120));
     check(`page: the lead is one complete sentence of at most 18 words (${q})`, text.split(/\s+/).filter(Boolean).length <= 18 && !text.endsWith("…"), text);
     check(`page: no semicolons or em dashes in the summary (${q})`, !/[;—]/.test(text));
+    // The nearby tier has no summary chip (Oct 30), the list keeps its Nearby section
+    const chips = [...html.matchAll(/class="sum-chip"[^>]*>([\s\S]*?)<\/span>/g)].map((m) => m[1].replace(/<[^>]+>/g, "").replace(/<!-- -->/g, ""));
+    check(`page: no nearby chip in the summary (${q})`, !chips.some((c) => /^[\d,]+ nearby\b/i.test(c)), JSON.stringify(chips));
   }
 }
 

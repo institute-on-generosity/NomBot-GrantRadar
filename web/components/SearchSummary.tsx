@@ -40,7 +40,10 @@ export function SearchSummary({ summary, question }: { summary: Summary; questio
 
 // The focal number big with a short noun ("42 programs"), the place tiers as small chips with their words ("9 in
 // Inglewood"): icon-only counts were unreadable to testers (round-2 audit V5).
-function Count({ main, parts, more, busy, strong, weaker }: { main: string; parts: string[]; more: string | null; busy?: boolean; strong?: number; weaker?: number }) {
+// The nearby tier has no chip (Oct 30, Hunter): its orgs stay in the list's Nearby section, the reports and the CSV
+const NEARBY_CHIP = /^[\d,]+ nearby\b/i;
+function Count({ main, parts: all, more, busy, strong, weaker }: { main: string; parts: string[]; more: string | null; busy?: boolean; strong?: number; weaker?: number }) {
+  const parts = all.filter((x) => !NEARBY_CHIP.test(x));
   const [n, ...rest] = main.split(" ");
   const noun = rest.join(" ");
   return (
